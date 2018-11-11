@@ -1,0 +1,30 @@
+(* program define *)
+program = block;
+(* block define *)
+block = {class_def | statement};
+(* statement define *)
+statement = func_def | var_def | if_stmt | while_stmt | for_stmt | break_stmt | return_stmt | expr_stmt;
+if_stmt = 'if' '(' 'expr' ')' block {'elseif' '(' expr ')' block} ['else' block] 'end';
+while_stmt = 'while' '(' expr ')' block 'end';
+for_stmt = 'for' '(' ID ':' [expr]')' block 'end';
+break_stmt = 'break' [';'];
+return_stmt = 'return' [expr] [';'];
+(* function define *)
+func_def = 'def' ID '(' [ID {',' ID}] ')' block 'end';
+(* class define *)
+class_def = 'class' ID [':' ID] class_block 'end';
+class_block = {'var' ID | func_define};
+(* variable define *)
+var_def = 'var' ID ['=' expr] {, ID ['=' expr]};
+(* expression define *)
+expr_stmt = assign_expr [';'];
+assign_expr = expr ['=' expr];
+relop = '<' | '<=' | '==' | '!=' | '>' | '>=';
+expr = simple_expr | unop expr | expr binop expr;
+binop = '<' | '<=' | '==' | '!=' | '>' | '>=' | '|' | '&' | '+' | '-' | '*' | '/' | '%';
+unop = '+' | '-' | '!';
+simple_expr =  NUM | BOOL | STRING | NIL | suffix_expr;
+suffix_expr = primary_expr {call_expr | ('.' ID) | '[' expr ']'};
+primary_expr = '(' expr ')' | ID | list_expr;
+call_expr = '(' [expr {',' expr}] ')';
+list_expr = '[' [expr {',' expr}] ']';
