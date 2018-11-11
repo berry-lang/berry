@@ -10,6 +10,8 @@
 #include "be_gc.h"
 #include "be_debug.h"
 
+#define MAX_TMPREG      10
+
 #define RA(i)   (vm->cf->reg + IGET_RA(i))
 #define RKB(i)  ((isKB(i) ? vm->cf->u.s.closure->proto->ktab \
                           : vm->cf->reg) + KR2idx(IGET_RKB(i)))
@@ -28,6 +30,9 @@
 #define setbool(val, x) { set_type((val), VT_BOOL); (val)->v.b = cast_bool(x); }
 
 #define ibinop(op, a, b)    ((a)->v.i op (b)->v.i)
+
+#define topreg(vm)      ((vm)->cf->reg + \
+    (vm)->cf->u.s.closure->proto->nlocal + MAX_TMPREG)
 
 #define define_function(name, block) \
     static void name(bvm *vm, binstruction ins) { \
@@ -55,7 +60,7 @@
     _c->reg = _reg + 1; \
     _c->u.s.ip = _cl->proto->code; \
     _c->u.s.closure = _cl; \
-    _c->status = 0; \
+    _c->status = NONE_FLAG; \
     _vm->cf = _c; \
 }
 
@@ -65,6 +70,7 @@
     _c = be_stack_top(_vm->callstack); \
     _c->reg = _reg + 1; \
     _c->u.top = _c->reg + _argc; \
+    _c->status = PRIM_FUNC; \
     _vm->cf = _c; \
 }
 
@@ -116,7 +122,7 @@ void do_funcvar(bvm *vm, bvalue *reg, bvalue *v, int argc)
 
 static bbool obj2bool(bvm *vm, bvalue *obj)
 {
-    bvalue *top = vm->cf->reg + vm->cf->u.s.closure->proto->nstack;
+    bvalue *top = topreg(vm);
     /* get operator method */
     be_object_member(obj->v.p, be_newstr(vm, "tobool"), top);
     top[1] = *obj; /* move self to argv[0] */
@@ -143,7 +149,7 @@ static bbool var2bool(bvm *vm, bvalue *v)
 static void object_binop(bvm *vm, const char *op,
                          bvalue *dst, bvalue *a, bvalue *b)
 {
-    bvalue *top = vm->cf->reg + vm->cf->u.s.closure->proto->nstack;
+    bvalue *top = topreg(vm);
     /* get operator method */
     be_object_member(a->v.p, be_newstr(vm, op), top);
     top[1] = *a; /* move self to argv[0] */
@@ -155,7 +161,7 @@ static void object_binop(bvm *vm, const char *op,
 static void object_unop(bvm *vm, const char *op,
                         bvalue *dst, bvalue *src)
 {
-    bvalue *top = vm->cf->reg + vm->cf->u.s.closure->proto->nstack;
+    bvalue *top = topreg(vm);
     /* get operator method */
     be_object_member(src->v.p, be_newstr(vm, op), top);
     top[1] = *src; /* move self to argv[0] */
@@ -343,7 +349,7 @@ static void i_return(bvm *vm, binstruction ins)
     bcallframe *cf = be_stack_top(vm->callstack);
     bvalue *ret = cf->reg - 1, *src = RKB(ins);
     be_stack_pop(vm->callstack); /* pop don't delete */
-    if (cf->status) { /* main function */
+    if (cf->status & BASE_FRAME) { /* entrance function */
         *ret = *src;
         vm->cf = NULL; /* mainfunction return */
     } else {
@@ -447,7 +453,7 @@ static void i_getindex(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
     if (type(b) == VT_INSTANCE) {
-        bvalue *top = vm->cf->reg + vm->cf->u.s.closure->proto->nstack;
+        bvalue *top = topreg(vm);
         /* get method 'item' */
         be_object_member(b->v.p, be_newstr(vm, "item"), top);
         top[1] = *b; /* move object to argv[0] */
@@ -463,7 +469,7 @@ static void i_setindex(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
     if (type(a) == VT_INSTANCE) {
-        bvalue *top = vm->cf->reg + vm->cf->u.s.closure->proto->nstack;
+        bvalue *top = topreg(vm);
         /* get method 'item' */
         be_object_member(a->v.p, be_newstr(vm, "setitem"), top);
         top[1] = *a; /* move object to argv[0] */
@@ -495,11 +501,9 @@ bvm* be_vm_new(int nstack)
     bvm *vm = be_malloc(sizeof(bvm));
     be_gc_init(vm);
     be_string_init(vm);
+    be_globalvar_init(vm);
     vm->stack = be_malloc(sizeof(bvalue) * nstack);
     vm->callstack = be_stack_new(sizeof(bcallframe));
-    vm->gbldesc.idxtab = be_map_new(vm);
-    vm->gbldesc.gvalist = be_vector_new(sizeof(bvalue));
-    vm->gbldesc.nglobal = 0;
     vm->cf = NULL;
     vm->upvalist = NULL;
     return vm;
@@ -509,7 +513,7 @@ void be_exec(bvm *vm)
 {
     bcallframe *cf;
     binstruction ins;
-    vm->cf->status = 1;
+    vm->cf->status |= BASE_FRAME;
     newframe:
     cf = vm->cf;
     for (;;) {
@@ -564,7 +568,7 @@ void be_exec(bvm *vm)
 void be_dofunc(bvm *vm, bclosure *cl, int argc)
 {
     bvalue *reg = vm->cf ? vm->cf->u.top : vm->stack;
-    be_gc_collect(vm);
+    be_gc_setpause(vm, 1);
     do_closure(vm, reg, cl, argc);
     be_gc_collect(vm);
 }

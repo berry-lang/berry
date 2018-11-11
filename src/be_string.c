@@ -5,7 +5,7 @@
 #include "be_gc.h"
 #include <string.h>
 
-#define SHORT_STR_MAX_LEN   64
+#define SHORT_STR_MAX_LEN   32
 
 struct bstringtable {
     bstring **table;
@@ -76,7 +76,8 @@ void be_string_init(bvm *vm)
 bstring* createstrobj(bvm *vm, int len, uint32_t hash)
 {
     int size = sizeof(bstring) + len;
-    bstring *s = cast_str(be_newgcobj(vm, VT_STRING, size));
+    bgcobject *gco = be_newgcobj(vm, VT_STRING, size);
+    bstring *s = cast_str(gco);
     if (s) {
         s->hash = hash;
         s->s[len] = '\0';
@@ -90,10 +91,10 @@ static bstring* newshortstr(bvm *vm, const char *str, int len)
     bstring *s;
     int size = vm->strtab->size;
     uint32_t hash = string_hash(str, len);
-    bstring **list = vm->strtab->table + hash % size;
+    bstring **list = vm->strtab->table + (hash & (size - 1));
 
     for (s = *list; s != NULL; s = s->u.next) {
-        if (len == s->slen && strncmp(str, s->s, len) == 0) {
+        if (hash == s->hash && !strncmp(str, s->s, len)) {
             return s;
         }
     }
@@ -131,9 +132,10 @@ bstring* be_newstrn(bvm *vm, const char *str, int len)
 void be_deletestrgc(bvm *vm, bstring *str)
 {
     if (str->slen < 255) { /* remove short string */
-        int size = vm->strtab->size;
-        bstring **list = vm->strtab->table + str->hash % size;
-        vm->strtab->count--;
+        bstringtable *strtab = vm->strtab;
+        int size = strtab->size;
+        bstring **list = strtab->table + (str->hash & (size - 1));
+        strtab->count--;
         if (*list == str) {
             *list = str->u.next;
         } else {
@@ -145,7 +147,7 @@ void be_deletestrgc(bvm *vm, bstring *str)
                 prev->u.next = str->u.next;
             }
         }
-        if ((vm->strtab->count << 1) < size && size > 16) {
+        if ((strtab->count << 1) < size && size > 16) {
             strtab_resize(vm, size >> 1);
         }
     }

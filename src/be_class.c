@@ -9,7 +9,7 @@
 
 bclass* be_newclass(bvm *vm, bstring *name, bclass *super)
 {
-    bgcobject *gco = be_newgcobj(vm, VT_CLASS, sizeof(bclass));
+    bgcobject *gco = be_gcnew(vm, VT_CLASS, bclass);
     bclass *obj = cast_class(gco);
     if (obj) {
         obj->super = super;
@@ -23,28 +23,17 @@ bclass* be_newclass(bvm *vm, bstring *name, bclass *super)
     return obj;
 }
 
-void be_member_bind(bvm *vm, bclass *c, bstring *name)
+void be_member_bind(bclass *c, bstring *name)
 {
     bmap *map = c->members;
     bvalue *v = be_map_insertstr(map, name, NULL);
     v->v.i = c->nvar++;
     v->type = MT_VARIABLE;
-    be_gc_addgray(vm, gc_object(name));
-}
-
-static bvalue* method_bind(bvm *vm, bclass *c, bstring *name)
-{
-    bmap *map = c->members;
-    bvalue *m = be_map_insertstr(map, name, NULL);
-    m->v.p = be_newclosure(vm, 0);
-    be_gc_addgray(vm, gc_object(name));
-    be_gc_addgray(vm, gc_object(m->v.p));
-    return m;
 }
 
 void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p)
 {
-    bvalue *m = method_bind(vm, c, name);
+    bvalue *m = be_map_insertstr(c->members, name, NULL);
     bclosure *cl = be_newclosure(vm, 0);
     cl->proto = p;
     m->v.p = cl;
@@ -53,7 +42,7 @@ void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p)
 
 void be_prim_method_bind(bvm *vm, bclass *c, const char *name, bcfunction f, int argc)
 {
-    bvalue *m = method_bind(vm, c, be_newstr(vm, name));
+    bvalue *m = be_map_insertstr(c->members, be_newstr(vm, name), NULL);
     m->v.p = be_newprimfunc(vm, f, argc);
     m->type = MT_PRIMMETHOD;
 }

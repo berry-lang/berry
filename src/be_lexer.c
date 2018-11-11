@@ -1,6 +1,7 @@
 #include "be_lexer.h"
 #include "be_string.h"
 #include "be_mem.h"
+#include "be_gc.h"
 #include "be_debug.h"
 #include <string.h>
 #include <stdlib.h>
@@ -29,6 +30,7 @@ void keyword_registe(bvm *vm)
     int i, n = (int)(sizeof(kwords_tab) / sizeof(kwords_tab[0]));
     for (i = KeyIf; i < n; ++i) {
         bstring *s = be_newstr(vm, kwords_tab[i]);
+        be_gc_addgray(vm, gc_object(s));
         str_setextra(s, i);
     }
 }

@@ -29,7 +29,7 @@ struct bobject {
 };
 
 bclass* be_newclass(bvm *vm, bstring *name, bclass *super);
-void be_member_bind(bvm *vm, bclass *c, bstring *name);
+void be_member_bind(bclass *c, bstring *name);
 void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p);
 void be_prim_method_bind(bvm *vm, bclass *c, const char *name, bcfunction f, int argc);
 bvalue* be_class_member(bclass *c, bstring *name);

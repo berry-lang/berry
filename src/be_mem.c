@@ -33,7 +33,7 @@ void* be_realloc(void *p, size_t size)
 {
     if (p != NULL) {
         mnode *obj = (mnode*)((char*)p - sizeof(mnode));
-        m_mem_usage += (int)size - (int)obj->size;
+        m_mem_usage = m_mem_usage + size - obj->size;
         obj = realloc(obj, size + sizeof(mnode));
         if (obj != NULL) {
             obj->size = size;
@@ -44,7 +44,7 @@ void* be_realloc(void *p, size_t size)
     return be_malloc(size);
 }
 
-size_t be_mem_usage(void)
+size_t be_mcount(void)
 {
     return m_mem_usage;
 }

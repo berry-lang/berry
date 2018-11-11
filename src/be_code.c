@@ -3,6 +3,7 @@
 #include "be_lexer.h"
 #include "be_opcode.h"
 #include "be_vector.h"
+#include "be_list.h"
 #include "be_var.h"
 #include <stdio.h>
 
@@ -48,10 +49,7 @@ static void free_expreg(bfuncinfo *finfo, bexpdesc *e)
 int be_code_allocregs(bfuncinfo *finfo, int count)
 {
     int base = finfo->freereg;
-    if (count) {
-        finfo->freereg += (char)count;
-        finfo->nstack = max(finfo->nstack, finfo->freereg);
-    }
+    finfo->freereg += (char)count;
     return base;
 }
 
@@ -230,7 +228,7 @@ static int exp2const(bfuncinfo *finfo, bexpdesc *e)
 static void free_suffix(bfuncinfo *finfo, bexpdesc *e)
 {
     int idx = e->v.ss.idx;
-    int nlocal = be_vector_count(finfo->local);
+    int nlocal = be_list_count(finfo->local);
     if (!isK(idx) && idx > nlocal) {
         be_code_freeregs(finfo, 1);
     }

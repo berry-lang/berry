@@ -53,14 +53,14 @@ typedef struct bfuncinfo {
     struct bfuncinfo *prev;
     bblockinfo *binfo; /* block infomation */
     struct bvector *code;
-    struct bvector *local; /* local variable */
-    struct bvector *upval; /* upvalue variable */
+    blist *local; /* local variable */
+    bmap *upval; /* upvalue variable */
     struct bvector *global; /* global variable */
     struct bvector *kvec; /* constants table */
     struct bvector *pvec; /* proto table */
     int pc; /* program count */
     int jpc;  /* list of pending jumps to 'pc' */
-    bbyte nstack; /* number of stack (local and temp) variables */
+    bbyte nlocal; /* local variable count */
     bbyte freereg; /* first free register */
 } bfuncinfo;
 

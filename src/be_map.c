@@ -99,6 +99,8 @@ static void moveto_newslot(bmap *map, bmapentry *slot)
     if (slot->next) {
         slot->next->prev = newslot;
     }
+    newslot->key = slot->key;
+    newslot->value = slot->value;
 }
 
 static bmapentry* linkto_newslot(bmap *map, bmapentry *slot)
@@ -190,7 +192,7 @@ void be_map_delete(bmap *map)
 bvalue* be_map_find(bmap *map, bvalue *key)
 {
     bmapentry *entry = find(map, key, hashcode(key));
-    return entry ? &entry->value : NULL;
+    return entry ? value(entry) : NULL;
 }
 
 bvalue* be_map_insert(bmap *map, bvalue *key, bvalue *value)
@@ -207,7 +209,7 @@ bvalue* be_map_insert(bmap *map, bvalue *key, bvalue *value)
     if (value) {
         entry->value = *value;
     }
-    return &entry->value;
+    return value(entry);
 }
 
 void be_map_remove(bmap *map, bvalue *key)
@@ -222,6 +224,7 @@ void be_map_remove(bmap *map, bvalue *key)
             entry->next->prev = entry->prev;
         }
         freelist_insert(map, entry); /* link node to free-list */
+        setnil(entry); /* reset key to nil */
         --map->count;
     }
 }

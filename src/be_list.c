@@ -2,6 +2,7 @@
 #include "be_mem.h"
 #include "be_gc.h"
 #include "be_vm.h"
+#include "be_vector.h"
 
 #define DEF_LIST_CAP    4
 
@@ -35,4 +36,16 @@ bvalue* be_list_append(blist *list, bvalue *value)
         *slot = *value;
     }
     return slot;
+}
+
+void be_list_resize(blist *list, int count)
+{
+    int newcap = be_nextpow(count);
+    if (count != list->count) {
+        list->count = count;
+        if (newcap > list->capacity) {
+            list->capacity = newcap;
+            list->data = be_realloc(list->data, newcap * sizeof(bvalue));
+        }
+    }
 }

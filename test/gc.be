@@ -1,15 +1,26 @@
-def func(a)
+def func(a, b)
     def retf()
-        return a
+        return a + b
     end
     return retf
 end
-f = func(100)
-
+f = func(100, 20)
 print(f())
-print(f())
-l = list()
-l.append("hello")
-print(l)
 
+l = []
+i = 0
+c = clock()
+while (i < 100000000) # need 64bit
+    l.append("hello world")
+    l.append(i)
+    i = i + 1
+end
+print("loop time usage:", clock() - c, "s")
+print(l[100])
+
+f = nil
 l = nil
+
+c = clock()
+l = []
+print("gc time usage:", clock() - c, "s")

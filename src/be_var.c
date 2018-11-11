@@ -3,6 +3,15 @@
 #include "be_vector.h"
 #include "be_string.h"
 #include "be_map.h"
+#include "be_gc.h"
+
+void be_globalvar_init(bvm *vm)
+{
+    vm->gbldesc.idxtab = be_map_new(vm);
+    vm->gbldesc.gvalist = be_vector_new(sizeof(bvalue));
+    vm->gbldesc.nglobal = 0;
+    be_gc_addgray(vm, gc_object(vm->gbldesc.idxtab));
+}
 
 int be_globalvar_find(bvm *vm, bstring *name)
 {

@@ -13,9 +13,9 @@
 #define cast_map(o)         gc_cast(o, VT_MAP, bmap)
 #define cast_list(o)        gc_cast(o, VT_LIST, blist)
 
-#define gc_isdark(o)        ((o)->marked == GC_WHITE)
+#define gc_iswhite(o)       ((o)->marked == GC_WHITE)
 #define gc_isgray(o)        ((o)->marked == GC_GRAY)
-#define gc_isblack(o)       ((o)->marked == GC_BLACK)
+#define gc_isdark(o)        ((o)->marked == GC_BLACK)
 #define gc_setwhite(o)      ((o)->marked = GC_WHITE)
 #define gc_setgray(o)       ((o)->marked = GC_GRAY)
 #define gc_setdark(o)       ((o)->marked = GC_BLACK)
@@ -29,8 +29,12 @@ enum {
 } bgcmark;
 
 void be_gc_init(bvm *vm);
+void be_gc_setsteprate(bvm *vm, int rate);
+void be_gc_setpause(bvm *vm, int pause);
 bgcobject* be_newgcobj(bvm *vm, int type, int size);
 void be_gc_addgray(bvm *vm, bgcobject *obj);
+void be_gc_removegray(bvm *vm, bgcobject *obj);
 void be_gc_collect(bvm *vm);
+void be_gc_auto(bvm *vm);
 
 #endif

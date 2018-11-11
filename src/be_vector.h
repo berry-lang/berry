@@ -36,5 +36,6 @@ void be_vector_resize(bvector *vector, int count);
 void be_vector_clear(bvector *vector);
 void be_vector_release(bvector *vector);
 void* be_vector_swap_delete(bvector *vector);
+int be_nextpow(int v);
 
 #endif

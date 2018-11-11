@@ -57,23 +57,14 @@ void be_vector_remove_end(bvector *vector)
     }
 }
 
-int nextpow(int v)
-{
-    int i;
-
-    for (i = 4; i < v; i <<= 1);
-    return i;
-}
-
 void be_vector_resize(bvector *vector, int count)
 {
     size_t size = vector->size;
-    int newcap = nextpow(count);
-
+    int newcap = be_nextpow(count);
     if (count != vector->count) {
         vector->count = count;
         if (newcap > vector->capacity) {
-            vector->capacity = (int)newcap;
+            vector->capacity = newcap;
             vector->data = be_realloc(vector->data, newcap * size);
         }
         vector->end = (char*)vector->data + size * (count - 1);
@@ -106,4 +97,11 @@ void* be_vector_swap_delete(bvector *vector)
     data = vector->data;
     be_free(vector);
     return data;
+}
+
+int be_nextpow(int v)
+{
+    int i;
+    for (i = 4; i < v; i <<= 1);
+    return i;
 }

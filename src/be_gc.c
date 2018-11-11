@@ -11,15 +11,33 @@
 
 struct bgc {
     bgcobject *list;
-    bgcobject *graylist;
+    bgcobject *gray;
+    size_t mcount;
+    bbyte steprate;
+    bbyte pause;
 };
+
+void auto_collect(bvm *vm);
 
 void be_gc_init(bvm *vm)
 {
     bgc *gc = be_malloc(sizeof(bgc));
     gc->list = NULL;
-    gc->graylist = NULL;
+    gc->gray = NULL;
+    gc->mcount = be_mcount();
+    gc->steprate = 200;
+    gc->pause = 0;
     vm->gc = gc;
+}
+
+void be_gc_setsteprate(bvm *vm, int rate)
+{
+    vm->gc->steprate = (bbyte)rate;
+}
+
+void be_gc_setpause(bvm *vm, int pause)
+{
+    vm->gc->pause = (bbyte)pause;
 }
 
 bgcobject* be_newgcobj(bvm *vm, int type, int size)
@@ -29,6 +47,7 @@ bgcobject* be_newgcobj(bvm *vm, int type, int size)
 
     set_type(obj, type);
     gc_setwhite(obj);
+    be_gc_auto(vm);
     obj->next = gc->list; /* insert to head */
     gc->list = obj;
     return obj;
@@ -37,7 +56,7 @@ bgcobject* be_newgcobj(bvm *vm, int type, int size)
 void be_gc_addgray(bvm *vm, bgcobject *obj)
 {
     bgc *gc = vm->gc;
-    if (gc->list == obj) {
+    if (gc->list == obj) { /* first node */
         gc->list = obj->next;
     } else {
         bgcobject *prev = gc->list;
@@ -50,9 +69,30 @@ void be_gc_addgray(bvm *vm, bgcobject *obj)
         }
         prev->next = obj->next;
     }
-    obj->next = gc->graylist;
-    gc->graylist = obj;
+    obj->next = gc->gray;
+    gc->gray = obj;
     gc_setgray(obj);
+}
+
+void be_gc_removegray(bvm *vm, bgcobject *obj)
+{
+    bgc *gc = vm->gc;
+    if (gc->gray == obj) {
+        gc->gray = obj->next;
+    } else {
+        bgcobject *prev = gc->gray;
+        /* find node */
+        while (prev && prev->next != obj) {
+            prev = prev->next;
+        }
+        if (!prev) {
+            return;
+        }
+        prev->next = obj->next;
+    }
+    obj->next = gc->list;
+    gc->list = obj;
+    gc_setwhite(obj);
 }
 
 static int is_gcobject(bvalue *v)
@@ -87,8 +127,8 @@ static void mark_instance(bvm *vm, bgcobject *obj)
             }
             var++;
         }
-        gc_setdark(o);
         o = be_object_super(o);
+        gc_setdark(obj);
     }
 }
 
@@ -110,7 +150,7 @@ static void mark_map(bvm *vm, bgcobject *obj)
                 }
             }
         }
-        gc_setdark(map);
+        gc_setdark(obj);
     }
 }
 
@@ -125,7 +165,7 @@ static void mark_list(bvm *vm, bgcobject *obj)
                 mark_object(vm, val->v.p);
             }
         }
-        gc_setdark(list);
+        gc_setdark(obj);
     }
 }
 
@@ -140,6 +180,7 @@ static void mark_closure(bvm *vm, bgcobject *obj)
                 mark_object(vm, uv->value->v.p);
             }
         }
+        gc_setdark(obj);
     }
 }
 
@@ -229,11 +270,11 @@ static void mark_unscanned(bvm *vm)
     }
 }
 
-static void mark_graylist(bvm *vm)
+static void mark_gray(bvm *vm)
 {
     bgc *gc = vm->gc;
-    bgcobject *node = gc->graylist;
-    for (node = gc->graylist; node; node = node->next) {
+    bgcobject *node;
+    for (node = gc->gray; node; node = node->next) {
         if (gc_isgray(node)) {
             mark_object(vm, node);
         }
@@ -244,15 +285,14 @@ static void delete_white(bvm *vm)
 {
     bgc *gc = vm->gc;
     bgcobject *node, *prev, *next;
-
     for (node = gc->list, prev = node; node; node = next) {
         next = node->next;
-        if (gc_isdark(node)) {
+        if (gc_iswhite(node)) {
             if (node == gc->list) { /* first node */
                 gc->list = node->next;
-                prev = gc->list;
+                prev = node->next;
             } else { /* not first node */
-                prev->next = node->next;
+                prev->next = next;
             }
             free_object(vm, node);
         } else {
@@ -262,27 +302,60 @@ static void delete_white(bvm *vm)
     }
 }
 
-static int nstack_closure(bvm *vm)
+static void clear_graylist(bvm *vm)
+{
+    bgc *gc = vm->gc;
+    bgcobject *node;
+    for (node = gc->gray; node; node = node->next) {
+        if (gc_isdark(node)) {
+            switch(type(node)) {
+            case VT_CLASS:
+            case VT_INSTANCE: case VT_CLOSURE:
+            case VT_MAP: case VT_LIST:
+                gc_setgray(node);
+                break;
+            default:
+                break;
+            }
+        }
+    }
+}
+
+static int nstack(bvm *vm)
 {
     bcallframe *cf = vm->cf;
     if (be_stack_isempty(vm->callstack)) {
         return 0;
     }
-    return cf->reg - vm->stack + vm->cf->u.s.closure->proto->nstack;
+    if (cf->status & PRIM_FUNC) {
+        return cf->u.top - vm->stack;
+    }
+    return cf->reg - vm->stack + cf->u.s.closure->proto->nlocal;
+}
+
+void be_gc_auto(bvm *vm)
+{
+    bgc *gc = vm->gc;
+    size_t mcount = be_mcount();
+    if (gc->pause && mcount > gc->mcount * gc->steprate / 100) {
+        be_gc_collect(vm);
+    }
 }
 
 void be_gc_collect(bvm *vm)
 {
-    size_t memusage = be_mem_usage();
+    size_t memusage = be_mcount();
     /* step 1: set root-set reference object to unscanned */
-    set_gray(vm->global, be_globalvar_count(vm)); /* global objects */
-    set_gray(vm->stack, nstack_closure(vm)); /* stack objects */
+    set_gray(vm->global, vm->gbldesc.nglobal); /* global objects */
+    set_gray(vm->stack, nstack(vm)); /* stack objects */
     /* step 2: set unscanned object to black */
-    mark_graylist(vm);
+    mark_gray(vm);
     mark_unscanned(vm);
     /* step 3: delete unreachable object */
-    be_printf("<-- used %d bytes, ", memusage);
     delete_white(vm);
-    be_printf("gc free %d bytes, ", memusage - be_mem_usage());
-    be_printf("now used %d bytes. -->\n", be_mem_usage());
+    clear_graylist(vm);
+    vm->gc->mcount = be_mcount();
+    be_printf("<-- used %lu bytes, ", memusage);
+    be_printf("gc free %lu bytes, ", memusage - be_mcount());
+    be_printf("now used %lu bytes. -->\n", be_mcount());
 }

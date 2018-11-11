@@ -28,9 +28,13 @@ struct bvm {
     bvalue *stack; /* stack space */
     bupval *upvalist; /* open upvalue list */
     struct bvector *callstack; /* function call stack */
-    bglobaldesc gbldesc;
+    bglobaldesc gbldesc; /* global description */
     bcallframe *cf; /* function call frame */
 };
+
+#define NONE_FLAG           0
+#define BASE_FRAME          (1 << 0)
+#define PRIM_FUNC           (1 << 1)
 
 bvm* be_vm_new(int nstack);
 void be_exec(bvm *vm);

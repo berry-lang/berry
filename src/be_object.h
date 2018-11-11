@@ -36,6 +36,7 @@ typedef struct bclosure bclosure;
 typedef struct bprimfunc bprimfunc;
 typedef struct bclass bclass;
 typedef struct bobject bobject;
+typedef struct blist blist;
 typedef struct bmap bmap;
 
 typedef struct bstring {
@@ -75,7 +76,6 @@ typedef struct {
 } bvaldesc;
 
 typedef struct {
-    bstring *name; /* upvalue name (for debug infomation) */
     bbyte instack;
     bbyte idx;
 } bupvaldesc;
@@ -99,7 +99,7 @@ typedef struct bproto {
     int codesize; /* code size */
     int nconst; /* constants count */
     int nproto; /* proto count */
-    bbyte nstack; /* stack usage */
+    bbyte nlocal; /* local variable count */
     bbyte nupvals; /* upvalue count */
     char argc; /* argument count */
 } bproto;
@@ -118,10 +118,16 @@ struct bprimfunc {
     char argc; /* argument count */
 };
 
-#define value_type(v)               ((v)->type)
-#define value_settype(v, t)         ((v)->type = t)
-#define value_istype(v, t)          (value_type(v) == t)
-#define value_setnil(v)             value_settype(v, VT_NIL)
-#define value_isnil(v)              value_istype(v, VT_NIL)
+#define value_type(v)           ((v)->type)
+#define value_settype(v, t)     ((v)->type = t)
+#define value_istype(v, t)      (value_type(v) == t)
+#define value_setnil(v)         value_settype(v, VT_NIL)
+#define value_isnil(v)          value_istype(v, VT_NIL)
+#define value_setbool(_v, _b)   { value_settype(_v, VT_BOOL); (_v)->v.b = _b; }
+#define value_setint(_v, _i)    { value_settype(_v, VT_INT); (_v)->v.i = _i; }
+#define value_setreal(_v, _r)   { value_settype(_v, VT_REAL); (_v)->v.r = _r; }
+#define value_setstr(_v, _s)    { value_settype(_v, VT_STRING); (_v)->v.s = _s; }
+#define value_getint(_v)        ((_v)->v.i)
+#define value_getstr(_v)        ((_v)->v.s)
 
 #endif

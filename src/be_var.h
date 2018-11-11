@@ -11,6 +11,7 @@
 
 #define be_globalvar_count(vm)  ((vm)->gbldesc.nglobal)
 
+void be_globalvar_init(bvm *vm);
 int be_globalvar_find(bvm *vm, bstring *name);
 int be_globalvar_new(bvm *vm, bstring *name);
 

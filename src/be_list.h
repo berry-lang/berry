@@ -3,11 +3,11 @@
 
 #include "be_object.h"
 
-typedef struct blist {
+struct blist {
     bcommon_header;
     int count, capacity;
     bvalue *data;
-} blist;
+};
 
 #define be_list_data(list)          ((list)->data)
 #define be_list_count(list)         ((list)->count)
@@ -16,5 +16,6 @@ typedef struct blist {
 blist* be_list_new(bvm *vm);
 void be_list_delete(blist *list);
 bvalue* be_list_append(blist *list, bvalue *value);
+void be_list_resize(blist *list, int count);
 
 #endif

@@ -89,7 +89,7 @@ static int m_setitem(bvm *vm)
 static bclass* newlist(bvm *vm)
 {
     bclass *c = be_newclass(vm, be_newstr(vm, "list"), NULL);
-    be_member_bind(vm, c, m_data());
+    be_member_bind(c, m_data());
     be_prim_method_bind(vm, c, "init", m_init, 1);
     be_prim_method_bind(vm, c, "print", m_print, 1);
     be_prim_method_bind(vm, c, "append", m_append, 2);

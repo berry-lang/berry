@@ -62,7 +62,7 @@ void be_upvals_close(bvm *vm, bvalue *level)
 
 bproto* be_newproto(bvm *vm)
 {
-    bgcobject *gco = be_newgcobj(vm, VT_PROTO, sizeof(bproto));
+    bgcobject *gco = be_gcnew(vm, VT_PROTO, bproto);
     bproto *p = cast_proto(gco);
 
     if (p) {
@@ -71,7 +71,7 @@ bproto* be_newproto(bvm *vm)
         p->ptab = NULL;
         p->code = NULL;
         p->codesize = 0;
-        p->nstack = 0;
+        p->nlocal = 0;
         p->nupvals = 0;
     }
     return p;

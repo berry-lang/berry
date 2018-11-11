@@ -8,7 +8,7 @@
 static void bparserest(const char *fname, char *buffer)
 {
     bclosure *cl;
-    bvm *vm = be_vm_new(128);
+    bvm *vm = be_vm_new(16);
     be_loadlibs(vm);
     cl = be_parser_source(vm, fname, buffer);
 #if 0
