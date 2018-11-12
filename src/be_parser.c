@@ -139,13 +139,16 @@ static void end_block(bparser *parser)
 static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
 {
     bvm *vm = parser->vm;
+    bproto *proto = be_newproto(parser->vm);
+    proto->ktab = NULL;
+    proto->nconst = 0;
     finfo->prev = parser->finfo;
     finfo->code = be_vector_new(sizeof(binstruction));
     finfo->local = be_list_new(vm);
     finfo->upval = be_map_new(vm);
     finfo->kvec = be_vector_new(sizeof(bvalue));
     finfo->pvec = be_vector_new(sizeof(bproto*));
-    finfo->proto = be_newproto(parser->vm);
+    finfo->proto = proto;
     finfo->global = parser->global;
     finfo->freereg = 0;
     finfo->nlocal = 0;
@@ -154,21 +157,9 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     finfo->jpc = NO_JUMP;
     parser->finfo = finfo;
     begin_block(finfo, binfo, 0);
+    be_gc_addgray(vm, gc_object(proto));
     be_gc_addgray(vm, gc_object(finfo->local));
     be_gc_addgray(vm, gc_object(finfo->upval));
-}
-
-static void mark_proto(bparser *parser, bfuncinfo *finfo)
-{
-    bvm *vm = parser->vm;
-    bvalue *kval = be_vector_data(finfo->kvec);
-    bvalue *kend = be_vector_end(finfo->kvec);
-    /* add constances to gray list */
-    for (; kval <= kend; ++kval) {
-        if (type(kval) == VT_STRING) {
-            be_gc_addgray(vm, gc_object(kval->v.p));
-        }
-    }
 }
 
 static void setupvals(bfuncinfo *finfo)
@@ -203,11 +194,11 @@ static void end_func(bparser *parser)
         be_code_ret(finfo, NULL);
     }
     end_block(parser);
-    mark_proto(parser, finfo);
     setupvals(finfo);
     proto->codesize = finfo->pc;
     proto->nlocal = finfo->nlocal;
     proto->nproto = be_vector_count(finfo->pvec);
+    proto->nconst = be_vector_count(finfo->kvec);
     proto->code = be_vector_swap_delete(finfo->code);
     proto->ktab = be_vector_swap_delete(finfo->kvec);
     proto->ptab = be_vector_swap_delete(finfo->pvec);
@@ -749,10 +740,9 @@ static void continue_stmt(bparser *parser)
 
 static bstring* func_name(bparser *parser, bexpdesc *e, int ismethod)
 {
-    bstring *name;
     btokentype type = next_token(parser).type;
     if (type == TokenId) {
-        name = next_token(parser).u.s;
+        bstring *name = next_token(parser).u.s;
         if (!ismethod) {
             singlevar(parser, e);
             if (e->type == ETVOID) { /* new variable */
@@ -760,21 +750,19 @@ static bstring* func_name(bparser *parser, bexpdesc *e, int ismethod)
             }
         }
         scan_next_token(parser); /* skip name */
+        return name;
     } else if (ismethod && type >= OptAdd && type <= OptGE) {
         scan_next_token(parser); /* skip token */
         /* '-*' neg method */
         if (type == OptSub && next_token(parser).type == OptMul) {
             scan_next_token(parser); /* skip '*' */
-            name = be_newstr(parser->vm, "-*");
+            return be_newstr(parser->vm, "-*");
         } else {
-            name = be_newstr(parser->vm, be_token2str(type));
+            return be_newstr(parser->vm, be_token2str(type));
         }
-    } else {
-        parser_error(parser, "token is not identifier.", NULL);
-        return NULL;
     }
-    be_gc_addgray(parser->vm, gc_object(name));
-    return name;
+    parser_error(parser, "token is not identifier.", NULL);
+    return NULL;
 }
 
 static void func_varlist(bparser *parser)
@@ -813,8 +801,6 @@ static bproto* funcbody(bparser *parser, bexpdesc *e, int ismethod)
     name = func_name(parser, e, ismethod);
     begin_func(parser, &finfo, &binfo);
     finfo.proto->name = name;
-    /* add proto to gray list */
-    be_gc_addgray(parser->vm, gc_object(finfo.proto));
     if (ismethod) {
         new_localvar(parser->finfo, be_newstr(parser->vm, "self"));
     }

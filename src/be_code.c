@@ -181,6 +181,8 @@ static int newconst(bfuncinfo *finfo, bexpdesc *e)
         break;
     }
     be_vector_append(finfo->kvec, &k);
+    finfo->proto->ktab = be_vector_data(finfo->kvec);
+    finfo->proto->nconst = be_vector_count(finfo->kvec);
     return idx;
 }
 

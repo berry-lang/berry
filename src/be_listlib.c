@@ -71,10 +71,10 @@ static int m_item(bvm *vm)
 
 static int m_setitem(bvm *vm)
 {
+    bvalue data;
     blist *list;
     int idx = be_api_getint(vm, 1);
     bobject *obj = be_api_getptr(vm, 0);
-    bvalue data;
 
     be_object_member(obj, m_data(), &data);
     list = data.v.p;
@@ -82,6 +82,37 @@ static int m_setitem(bvm *vm)
         bvalue *src = be_api_getvalue(vm, 2);
         bvalue *dst = be_list_at(list, idx);
         *dst = *src;
+    }
+    return 0;
+}
+
+static int m_size(bvm *vm)
+{
+    bvalue data;
+    blist *list;
+    bobject *obj = be_api_getptr(vm, 0);
+
+    be_object_member(obj, m_data(), &data);
+    list = data.v.p;
+    be_api_retint(vm, be_list_count(list));
+    return 0;
+}
+
+static int m_resize(bvm *vm)
+{
+    blist *list;
+    bvalue data, *v, *end;
+    bvalue *fill = be_api_getvalue(vm, 2);
+    int lastsize, size = be_api_getint(vm, 1);
+    bobject *obj = be_api_getptr(vm, 0);
+
+    be_object_member(obj, m_data(), &data);
+    list = data.v.p;
+    lastsize = be_list_count(list);
+    be_list_resize(list, size);
+    end = be_list_end(list);
+    for (v = be_list_at(list, lastsize); v < end; ++v) {
+        *v = *fill;
     }
     return 0;
 }
@@ -95,6 +126,8 @@ static bclass* newlist(bvm *vm)
     be_prim_method_bind(vm, c, "append", m_append, 2);
     be_prim_method_bind(vm, c, "item", m_item, 2);
     be_prim_method_bind(vm, c, "setitem", m_setitem, 3);
+    be_prim_method_bind(vm, c, "size", m_size, 1);
+    be_prim_method_bind(vm, c, "resize", m_resize, 3);
     return c;
 }
 

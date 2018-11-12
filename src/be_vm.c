@@ -308,6 +308,8 @@ static void i_neg(bvm *vm, binstruction ins)
     bvalue *dst = RA(ins), *a = RKB(ins);
     if (isint(a)) {
         setint(dst, -a->v.i);
+    } else if (isreal(a)) {
+        setreal(dst, -a->v.r);
     } else if (isinstance(a)) {
         object_unop(vm, "-*", dst, a);
     } else {

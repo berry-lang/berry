@@ -4,6 +4,7 @@
 #include "be_debug.h"
 #include "be_class.h"
 #include "be_string.h"
+#include "be_mem.h"
 #include <time.h>
 
 static int l_print(bvm *vm)
@@ -22,6 +23,12 @@ static int l_print(bvm *vm)
 static int l_clock(bvm *vm)
 {
     be_api_retreal(vm, clock() / (breal)CLOCKS_PER_SEC);
+    return 0;
+}
+
+static int l_memcount(bvm *vm)
+{
+    be_api_retreal(vm, (breal)be_mcount());
     return 0;
 }
 
@@ -46,4 +53,5 @@ void be_loadbaselib(bvm *vm)
     be_api_regcfunc(vm, "print", l_print, -1);
     be_api_regcfunc(vm, "clock", l_clock, 0);
     be_api_regcfunc(vm, "super", l_super, 1);
+    be_api_regcfunc(vm, "memcount", l_memcount, 0);
 }

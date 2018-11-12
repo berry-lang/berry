@@ -284,7 +284,6 @@ static btokentype scan_string(blexer *lexer)
         }
     }
     tr_string(lexer, begin, lexer->cursor);
-    lexer->token.u.s = be_newstr(lexer->vm, lexer->data);
     setstr(lexer, be_newstr(lexer->vm, lexer->data));
     next(lexer); /* skip '"' or '\'' */
     return TokenString;

@@ -12,6 +12,7 @@ struct blist {
 #define be_list_data(list)          ((list)->data)
 #define be_list_count(list)         ((list)->count)
 #define be_list_at(list, index)     ((list)->data + index)
+#define be_list_end(list)           ((list)->data + (list)->count)
 
 blist* be_list_new(bvm *vm);
 void be_list_delete(blist *list);

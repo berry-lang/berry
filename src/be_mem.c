@@ -5,7 +5,7 @@ typedef struct {
     size_t size;
 } mnode;
 
-static size_t m_mem_usage = 0;
+static size_t m_mem_count = 0;
 
 void* be_malloc(size_t size)
 {
@@ -13,7 +13,7 @@ void* be_malloc(size_t size)
 
     if (obj != NULL) {
         obj->size = size;
-        m_mem_usage += size;
+        m_mem_count += size;
         return (char*)obj + sizeof(mnode);
     }
     return NULL;
@@ -23,8 +23,7 @@ void be_free(void *p)
 {
     if (p != NULL) {
         mnode *obj = (mnode*)((char*)p - sizeof(mnode));
-
-        m_mem_usage -= obj->size;
+        m_mem_count -= obj->size;
         free(obj);
     }
 }
@@ -33,7 +32,7 @@ void* be_realloc(void *p, size_t size)
 {
     if (p != NULL) {
         mnode *obj = (mnode*)((char*)p - sizeof(mnode));
-        m_mem_usage = m_mem_usage + size - obj->size;
+        m_mem_count = m_mem_count + size - obj->size;
         obj = realloc(obj, size + sizeof(mnode));
         if (obj != NULL) {
             obj->size = size;
@@ -46,5 +45,5 @@ void* be_realloc(void *p, size_t size)
 
 size_t be_mcount(void)
 {
-    return m_mem_usage;
+    return m_mem_count;
 }

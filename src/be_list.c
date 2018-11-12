@@ -40,8 +40,8 @@ bvalue* be_list_append(blist *list, bvalue *value)
 
 void be_list_resize(blist *list, int count)
 {
-    int newcap = be_nextpow(count);
     if (count != list->count) {
+        int newcap = be_nextpow(count);
         list->count = count;
         if (newcap > list->capacity) {
             list->capacity = newcap;
