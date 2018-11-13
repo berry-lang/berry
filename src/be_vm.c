@@ -1,4 +1,4 @@
-﻿#include "be_vm.h"
+#include "be_vm.h"
 #include "be_opcode.h"
 #include "be_string.h"
 #include "be_class.h"
@@ -18,10 +18,12 @@
 #define RKC(i)  ((isKC(i) ? vm->cf->u.s.closure->proto->ktab \
                           : vm->cf->reg) + KR2idx(IGET_RKC(i)))
 
-#define isbool(val)     (type(val) == VT_BOOL)
+#define isnil(val)      value_isnil(val)
+#define isbool(val)     value_isbool(val)
 #define isint(val)      (type(val) == VT_INT)
 #define isreal(val)     (type(val) == VT_REAL)
-#define isnumber(val)   (type(val) == VT_INT || type(val) == VT_REAL)
+#define isstr(val)      (type(val) == VT_STRING)
+#define isnumber(val)   (isint(val) || isreal(val))
 #define isinstance(val) (type(val) == VT_INSTANCE)
 #define toreal(val)     (isreal(val) ? (val)->v.r : (breal)(val)->v.i)
 #define setnil(val)     set_type((val), VT_NIL)
@@ -46,6 +48,24 @@
     } else if (isnumber(a) && isnumber(b)) { \
         breal x = toreal(a), y = toreal(b); \
         setbool(dst, x op y); \
+    } else if (isinstance(a)) { \
+        object_binop(vm, #op, dst, a, b); \
+    } else { \
+        vm_error(vm, "a " #op " b param error."); \
+    }
+
+#define equal_block(op, opstr) \
+    bvalue *dst = RA(ins), *a = RKB(ins), *b = RKC(ins); \
+    if (isint(a) && isint(b)) { \
+        setbool(dst, ibinop(op, a, b)); \
+    } else if (isnumber(a) && isnumber(b)) { \
+        breal x = toreal(a), y = toreal(b); \
+        setbool(dst, x op y); \
+    } else if (isnil(a) || isnil(b)) { \
+        bbool res = type(a) op type(b); \
+        setbool(dst, res); \
+    } else if (isstr(a) && isstr(b)) { \
+        setbool(dst, opstr be_eqstr(a->v.s, b->v.s)); \
     } else if (isinstance(a)) { \
         object_binop(vm, #op, dst, a, b); \
     } else { \
@@ -319,8 +339,8 @@ static void i_neg(bvm *vm, binstruction ins)
 
 define_function(i_lt, relop_block(<))
 define_function(i_le, relop_block(<=))
-define_function(i_eq, relop_block(==))
-define_function(i_ne, relop_block(!=))
+define_function(i_eq, equal_block(==, ))
+define_function(i_ne, equal_block(!=, !))
 define_function(i_gt, relop_block(>))
 define_function(i_ge, relop_block(>=))
 
@@ -487,7 +507,7 @@ static void i_setsuper(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins);
     if (type(a) == VT_CLASS && type(b) == VT_CLASS) {
-        be_class_setsuper((bobject*)a->v.p, b->v.p);
+        be_class_setsuper((bclass*)a->v.p, b->v.p);
     } else {
         vm_error(vm, "set super: class error\n");
     }

@@ -9,6 +9,7 @@
 #define SHORT_STR_LEN       32
 
 #define next(lex)           (++(lex)->cursor)
+#define prev(lex)           (--(lex)->cursor)
 #define lgetc(lex)          (*(lex)->cursor)
 #define match(lex, pattern) while (pattern(lgetc(lex))) { next(lex); }
 #define setstr(lex, v)      ((lex)->token.u.s = (v))
@@ -18,9 +19,9 @@
 static const char* kwords_tab[] = {
         "NONE", "EOS", "ID", "INT", "REAL", "STR",
         "=", "+", "-", "*", "/", "%", "<", "<=",
-        "==", "!=", ">", ">=", "&", "|", "!",
-        "(", ")", "[", "]", "{", "}", ".", ",", ";",
-        ":", "if", "elif", "else", "while", "for",
+        "==", "!=", ">", ">=", "&&", "||", "!", "(",
+        ")", "[", "]", "{", "}", ".", ",", ";", ":",
+        "..", "if", "elif", "else", "while", "for",
         "def", "end", "class", "break", "continue",
         "return", "true", "false", "nil", "var", "do"
 };
@@ -221,12 +222,15 @@ static int scan_realexp(blexer *lexer)
 static btokentype scan_dot_real(blexer *lexer)
 {
     const char *begin = lexer->cursor;
-
-    next(lexer); /* skip '.' */
+    if (*next(lexer) == '.') { /* is '..' */
+        next(lexer);
+        return OptRange;
+    }
     if (is_digit(lgetc(lexer))) {
         match(lexer, is_digit);
         scan_realexp(lexer);
         copy_text(lexer, begin, lexer->cursor + 1);
+        setreal(lexer, atof(lexer->data));
         return TokenReal;
     }
     return OptDot;
@@ -238,10 +242,13 @@ static btokentype scan_numeral(blexer *lexer)
     btokentype type = TokenInteger;
 
     match(lexer, is_digit);
-    if (lgetc(lexer) == '.') {
-        type = TokenReal;
-        next(lexer); /* skip '.' */
-        match(lexer, is_digit);
+    if (lgetc(lexer) == '.') { /* '..' or real */
+        if (*next(lexer) == '.') { /* '..' */
+            prev(lexer);
+        } else { /* real */
+            match(lexer, is_digit);
+            type = TokenReal;
+        }
     }
     if (scan_realexp(lexer)) {
         type = TokenReal;
@@ -289,6 +296,24 @@ static btokentype scan_string(blexer *lexer)
     return TokenString;
 }
 
+static btokentype opt_and(blexer *lexer)
+{
+    next(lexer);
+    if (!check_next(lexer, '&')) {
+        lexer_error(lexer, "operator '&&' spelling mistakes");
+    }
+    return OptAnd;
+}
+
+static btokentype opt_or(blexer *lexer)
+{
+    next(lexer);
+    if (!check_next(lexer, '|')) {
+        lexer_error(lexer, "operator '||' spelling mistakes");
+    }
+    return OptOr;
+}
+
 static btokentype lexer_next(blexer *lexer)
 {
     for (;;) {
@@ -308,8 +333,6 @@ static btokentype lexer_next(blexer *lexer)
         case '*': next(lexer); return OptMul;
         case '/': next(lexer); return OptDiv;
         case '%': next(lexer); return OptMod;
-        case '&': next(lexer); return OptAnd;
-        case '|': next(lexer); return OptOr;
         case '(': next(lexer); return OptLBK;
         case ')': next(lexer); return OptRBK;
         case '[': next(lexer); return OptLSB;
@@ -319,6 +342,8 @@ static btokentype lexer_next(blexer *lexer)
         case ',': next(lexer); return OptComma;
         case ';': next(lexer); return OptSemic;
         case ':': next(lexer); return OptColon;
+        case '&': return opt_and(lexer);
+        case '|': return opt_or(lexer);
         case '<':
             next(lexer);
             return check_next(lexer, '=') ? OptLE : OptLT;

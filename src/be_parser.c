@@ -1,4 +1,4 @@
-﻿#include "be_parser.h"
+#include "be_parser.h"
 #include "be_lexer.h"
 #include "be_vector.h"
 #include "be_mem.h"
@@ -45,7 +45,7 @@ static void expr(bparser *parser, bexpdesc *e);
 
 static const int binary_op_prio_tab[] = {
     6, 6, 7, 7, 7, /* + - * / % */
-    5, 5, 5, 5, 5, 5, 4, 3 /* < <= == != > >= & | */
+    5, 5, 5, 5, 5, 5, 4, 3 /* < <= == != > >= && || */
 };
 
 void parser_error(bparser *parser, const char *msg, const char *tk)
@@ -337,12 +337,15 @@ static int singlevaraux(bvm *vm, bfuncinfo *finfo, bstring *s, bexpdesc *var)
         } else {
             idx = find_upval(finfo, s);
             if (idx < 0) {
-                if (be_globalvar_find(vm, s) >= 0) {
-                    return ETGLOBAL; /* global */
-                } else if (singlevaraux(vm, finfo->prev, s, var) == ETVOID) {
-                    return ETVOID; /* unknow */
+                /* find the previous scope  */
+                int res = singlevaraux(vm, finfo->prev, s, var);
+                if (res == ETUPVAL || res == ETLOCAL) {
+                    idx = new_upval(finfo, s, var); /* new upvalue */
+                } else if (be_globalvar_find(vm, s) >= 0) {
+                    return ETGLOBAL; /* global variable */
+                } else {
+                    return ETVOID; /* unknow (new variable or error) */
                 }
-                idx = new_upval(finfo, s, var); /* new upvalue */
             }
             init_exp(var, ETUPVAL, idx);
             return ETUPVAL;
@@ -584,7 +587,7 @@ static void assign_expr(bparser *parser)
     }
 }
 
-/* binary operator: + - * / % & | < <= == != > >=
+/* binary operator: + - * / % && || < <= == != > >=
  * unary operator: + - ! 
  */
 static void sub_expr(bparser *parser, bexpdesc *e, int prio)
@@ -744,10 +747,7 @@ static bstring* func_name(bparser *parser, bexpdesc *e, int ismethod)
     if (type == TokenId) {
         bstring *name = next_token(parser).u.s;
         if (!ismethod) {
-            singlevar(parser, e);
-            if (e->type == ETVOID) { /* new variable */
-                new_var(parser, e->v.s, e);
-            }
+            new_var(parser, name, e); /* new variable */
         }
         scan_next_token(parser); /* skip name */
         return name;

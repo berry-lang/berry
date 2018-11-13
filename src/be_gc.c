@@ -46,7 +46,7 @@ bgcobject* be_newgcobj(bvm *vm, int type, int size)
     bgcobject *obj = be_malloc(size);
 
     set_type(obj, type);
-    gc_setwhite(obj);
+    gc_setdark(obj);
     be_gc_auto(vm);
     obj->next = gc->list; /* insert to head */
     gc->list = obj;
@@ -107,8 +107,8 @@ static void mark_instance(bvm *vm, bgcobject *obj)
             mark_object(vm, var->v.p, type(var));
             var++;
         }
+        gc_setdark(o);
         o = be_object_super(o);
-        gc_setdark(obj);
     }
 }
 
@@ -176,6 +176,16 @@ static void mark_proto(bvm *vm, bgcobject *obj)
 static void mark_object(bvm *vm, bgcobject *obj, int type)
 {
     switch (type) {
+    case VT_STRING: case VT_CLASS: case VT_PROTO:
+    case VT_INSTANCE: case VT_MAP: case VT_LIST:
+    case VT_CLOSURE:
+        if (gc_isdark(obj)) {
+            return;
+        }
+        break;
+    default: return;
+    }
+    switch (type) {
     case VT_STRING: gc_setdark(obj); break;
     case VT_CLASS: gc_setdark(obj); break;
     case VT_PROTO: mark_proto(vm, obj); break;
@@ -183,8 +193,7 @@ static void mark_object(bvm *vm, bgcobject *obj, int type)
     case VT_MAP: mark_map(vm, obj); break;
     case VT_LIST: mark_list(vm, obj); break;
     case VT_CLOSURE: mark_closure(vm, obj); break;
-    default:
-        break;
+    default: break;
     }
 }
 

@@ -1,4 +1,4 @@
-﻿#include "be_vector.h"
+#include "be_vector.h"
 #include "be_mem.h"
 #include "be_string.h"
 #include <string.h>

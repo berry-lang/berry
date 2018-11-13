@@ -1,4 +1,4 @@
-﻿#ifndef __BE_OPCODE_H
+#ifndef __BE_OPCODE_H
 #define __BE_OPCODE_H
 
 #define NO_JUMP                 -1

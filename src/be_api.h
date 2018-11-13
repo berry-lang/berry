@@ -25,6 +25,7 @@ void be_api_retnil(bvm *vm);
 void be_api_retint(bvm *vm, bint i);
 void be_api_retreal(bvm *vm, breal r);
 void be_api_retbool(bvm *vm, bbool b);
+void be_api_retstr(bvm *vm, bstring *str);
 void be_api_retclass(bvm *vm, bclass *c);
 void be_api_retinstance(bvm *vm, bobject *i);
 

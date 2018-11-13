@@ -5,7 +5,7 @@
 #include "be_gc.h"
 #include <string.h>
 
-#define SHORT_STR_MAX_LEN   32
+#define SHORT_STR_MAX_LEN   64
 
 struct bstringtable {
     bstring **table;

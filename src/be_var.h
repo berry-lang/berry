@@ -5,8 +5,8 @@
 
 #define type(v)             ((v)->type)
 #define basetype(v)         (type(v) & 0x1F)
-#define set_type(v, t)      ((v)->type = (bbyte)(t))
-#define cast_bool(v)        ((bbool)(v) != bfalse ? btrue : bfalse)
+#define set_type(v, t)      value_settype(v, t)
+#define cast_bool(v)        ((v) ? btrue : bfalse)
 #define globalvar(vm, idx)  ((vm)->global + (idx))
 
 #define be_globalvar_count(vm)  ((vm)->gbldesc.nglobal)

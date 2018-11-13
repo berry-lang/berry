@@ -19,9 +19,8 @@ var_def = 'var' ID ['=' expr] {, ID ['=' expr]};
 (* expression define *)
 expr_stmt = assign_expr [';'];
 assign_expr = expr ['=' expr];
-relop = '<' | '<=' | '==' | '!=' | '>' | '>=';
 expr = simple_expr | unop expr | expr binop expr;
-binop = '<' | '<=' | '==' | '!=' | '>' | '>=' | '|' | '&' | '+' | '-' | '*' | '/' | '%';
+binop = '..' | '<' | '<=' | '==' | '!=' | '>' | '>=' | '|' | '&' | '+' | '-' | '*' | '/' | '%';
 unop = '+' | '-' | '!';
 simple_expr =  NUM | BOOL | STRING | NIL | suffix_expr;
 suffix_expr = primary_expr {call_expr | ('.' ID) | '[' expr ']'};

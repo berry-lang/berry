@@ -1,4 +1,4 @@
-﻿#include "be_api.h"
+#include "be_api.h"
 #include "be_vm.h"
 #include "be_func.h"
 #include "be_class.h"
@@ -68,6 +68,13 @@ void be_api_retbool(bvm *vm, bbool b)
     bvalue *ret = be_api_retvar(vm);
     set_type(ret, VT_BOOL);
     ret->v.b = b;
+}
+
+void be_api_retstr(bvm *vm, bstring *str)
+{
+    bvalue *ret = be_api_retvar(vm);
+    set_type(ret, VT_STRING);
+    ret->v.s = str;
 }
 
 void be_api_retclass(bvm *vm, bclass *c)

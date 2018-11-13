@@ -118,11 +118,12 @@ struct bprimfunc {
     char argc; /* argument count */
 };
 
-#define value_type(v)           ((v)->type)
-#define value_settype(v, t)     ((v)->type = t)
-#define value_istype(v, t)      (value_type(v) == t)
-#define value_setnil(v)         value_settype(v, VT_NIL)
-#define value_isnil(v)          value_istype(v, VT_NIL)
+#define value_type(_v)          ((_v)->type)
+#define value_settype(_v, _t)   ((_v)->type = (bbyte)_t)
+#define value_istype(_v, _t)    (value_type(_v) == _t)
+#define value_setnil(_v)        value_settype(_v, VT_NIL)
+#define value_isnil(_v)         value_istype(_v, VT_NIL)
+#define value_isbool(_v)        value_istype(_v, VT_BOOL)
 #define value_setbool(_v, _b)   { value_settype(_v, VT_BOOL); (_v)->v.b = _b; }
 #define value_setint(_v, _i)    { value_settype(_v, VT_INT); (_v)->v.i = _i; }
 #define value_setreal(_v, _r)   { value_settype(_v, VT_REAL); (_v)->v.r = _r; }

@@ -35,6 +35,7 @@ class A : Base
 		return -self.test
 	end
 end
+
 #-
  @ multi-line comment
 -#
@@ -44,8 +45,8 @@ print(obj.test, obj.method(5, 2))
 print('print object:', obj)
 print("reload operator test: A(100) + A(20) =", A(100) + A(20))
 print("reload operator test: A(100) > A(20) =", A(100) > A(20))
-print("reload operator test: A(100) & A(0) =", A(100) & A(0))
-print("reload operator test: A(100) | A(0) =", A(100) | A(0))
+print("reload operator test: A(100) && A(0) =", A(100) && A(0))
+print("reload operator test: A(100) || A(0) =", A(100) || A(0))
 print("reload operator test: -A(100) =", -A(100))
 print("obj[30] =", obj[30])
 
@@ -64,6 +65,8 @@ while (idx <= 5)
 	l.append(idx * idx * idx)
 	idx = idx + 1
 end
+
+print(.5)
 
 print("test list print 1:", l)
 # 这是一个通过下标读取的测试，实际上是item()方法的语法糖
