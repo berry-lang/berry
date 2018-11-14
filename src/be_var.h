@@ -5,7 +5,7 @@
 
 #define type(v)             ((v)->type)
 #define basetype(v)         (type(v) & 0x1F)
-#define set_type(v, t)      value_settype(v, t)
+#define set_type(v, t)      var_settype(v, t)
 #define cast_bool(v)        ((v) ? btrue : bfalse)
 #define globalvar(vm, idx)  ((vm)->global + (idx))
 

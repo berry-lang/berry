@@ -10,7 +10,7 @@
 static int l_print(bvm *vm)
 {
     bvalue *v = be_api_getvalue(vm, 0);
-    bvalue *end = be_api_regtop(vm);
+    bvalue *end = be_api_topreg(vm);
 
     while (v < end) {
         be_print_value(vm, v++, 0);

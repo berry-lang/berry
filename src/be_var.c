@@ -10,7 +10,7 @@ void be_globalvar_init(bvm *vm)
     vm->gbldesc.idxtab = be_map_new(vm);
     vm->gbldesc.gvalist = be_vector_new(sizeof(bvalue));
     vm->gbldesc.nglobal = 0;
-    be_gc_addgray(vm, gc_object(vm->gbldesc.idxtab));
+    be_gc_fix(vm, gc_object(vm->gbldesc.idxtab));
 }
 
 int be_globalvar_find(bvm *vm, bstring *name)

@@ -13,13 +13,13 @@
 #define MAX_TMPREG      10
 
 #define RA(i)   (vm->cf->reg + IGET_RA(i))
-#define RKB(i)  ((isKB(i) ? vm->cf->u.s.closure->proto->ktab \
+#define RKB(i)  ((isKB(i) ? vm->cf->s.uf.cl->proto->ktab \
                           : vm->cf->reg) + KR2idx(IGET_RKB(i)))
-#define RKC(i)  ((isKC(i) ? vm->cf->u.s.closure->proto->ktab \
+#define RKC(i)  ((isKC(i) ? vm->cf->s.uf.cl->proto->ktab \
                           : vm->cf->reg) + KR2idx(IGET_RKC(i)))
 
-#define isnil(val)      value_isnil(val)
-#define isbool(val)     value_isbool(val)
+#define isnil(val)      var_isnil(val)
+#define isbool(val)     var_isbool(val)
 #define isint(val)      (type(val) == VT_INT)
 #define isreal(val)     (type(val) == VT_REAL)
 #define isstr(val)      (type(val) == VT_STRING)
@@ -34,7 +34,7 @@
 #define ibinop(op, a, b)    ((a)->v.i op (b)->v.i)
 
 #define topreg(vm)      ((vm)->cf->reg + \
-    (vm)->cf->u.s.closure->proto->nlocal + MAX_TMPREG)
+    (vm)->cf->s.uf.cl->proto->nlocal + MAX_TMPREG)
 
 #define define_function(name, block) \
     static void name(bvm *vm, binstruction ins) { \
@@ -78,18 +78,19 @@
     be_stack_push(_vm->callstack, NULL); \
     _c = be_stack_top(_vm->callstack); \
     _c->reg = _reg + 1; \
-    _c->u.s.ip = _cl->proto->code; \
-    _c->u.s.closure = _cl; \
+    _c->s.ur.ip = _cl->proto->code; \
+    _c->s.uf.cl = _cl; \
     _c->status = NONE_FLAG; \
     _vm->cf = _c; \
 }
 
-#define push_cfunction(_vm, _reg, _argc) { \
+#define push_ntvfunc(_vm, _f, _reg, _argc) { \
     bcallframe *_c; \
     be_stack_push(_vm->callstack, NULL); \
     _c = be_stack_top(_vm->callstack); \
     _c->reg = _reg + 1; \
-    _c->u.top = _c->reg + _argc; \
+    _c->s.ur.top = _c->reg + _argc; \
+    _c->s.uf.f = _f; \
     _c->status = PRIM_FUNC; \
     _vm->cf = _c; \
 }
@@ -115,12 +116,12 @@ void do_closure(bvm *vm, bvalue *reg, bclosure *cl, int argc)
     be_exec(vm);
 }
 
-void do_primfunc(bvm *vm, bvalue *reg, bprimfunc *f, int argc)
+void do_ntvfunc(bvm *vm, bvalue *reg, bntvfunc *f, int argc)
 {
     if (argc != f->argc && f->argc != -1) {
         vm_error(vm, "function argc error");
     }
-    push_cfunction(vm, reg, argc);
+    push_ntvfunc(vm, f, reg, argc);
     f->f(vm); /* call C primitive function */
     ret_cfunction(vm);
 }
@@ -131,8 +132,8 @@ void do_funcvar(bvm *vm, bvalue *reg, bvalue *v, int argc)
     case VT_CLOSURE:
         do_closure(vm, reg, v->v.p, argc);
         break;
-    case VT_PRIMFUNC: {
-        do_primfunc(vm, reg, v->v.p, argc);
+    case VT_NTVFUNC: {
+        do_ntvfunc(vm, reg, v->v.p, argc);
         break;
     }
     default:
@@ -199,7 +200,7 @@ static void i_ldbool(bvm *vm, binstruction ins)
     bvalue *v = RA(ins);
     setbool(v, IGET_RKB(ins));
     if (IGET_RKC(ins)) { /* skip next instruction */
-        vm->cf->u.s.ip++;
+        vm->cf->s.ur.ip++;
     }
 }
 
@@ -229,20 +230,20 @@ static void i_getupval(bvm *vm, binstruction ins)
 {
     bvalue *v = RA(ins);
     int idx = IGET_Bx(ins);
-    *v = *vm->cf->u.s.closure->upvals[idx]->value;
+    *v = *vm->cf->s.uf.cl->upvals[idx]->value;
 }
 
 static void i_setupval(bvm *vm, binstruction ins)
 {
     bvalue *v = RA(ins);
     int idx = IGET_Bx(ins);
-    *vm->cf->u.s.closure->upvals[idx]->value = *v;
+    *vm->cf->s.uf.cl->upvals[idx]->value = *v;
 }
 
 static void i_ldconst(bvm *vm, binstruction ins)
 {
     bvalue *dst = RA(ins);
-    *dst = vm->cf->u.s.closure->proto->ktab[IGET_Bx(ins)];
+    *dst = vm->cf->s.uf.cl->proto->ktab[IGET_Bx(ins)];
 }
 
 static void i_move(bvm *vm, binstruction ins)
@@ -347,14 +348,14 @@ define_function(i_ge, relop_block(>=))
 static void i_jump(bvm *vm, binstruction ins)
 {
     bcallframe *cf = vm->cf;
-    cf->u.s.ip += IGET_sBx(ins);
+    cf->s.ur.ip += IGET_sBx(ins);
 }
 
 static void i_jumptrue(bvm *vm, binstruction ins)
 {
     bcallframe *cf = vm->cf;
     if (var2bool(vm, RA(ins))) {
-        cf->u.s.ip += IGET_sBx(ins);
+        cf->s.ur.ip += IGET_sBx(ins);
     }
 }
 
@@ -362,7 +363,7 @@ static void i_jumpfalse(bvm *vm, binstruction ins)
 {
     bcallframe *cf = vm->cf;
     if (!var2bool(vm, RA(ins))) {
-        cf->u.s.ip += IGET_sBx(ins);
+        cf->s.ur.ip += IGET_sBx(ins);
     }
 }
 
@@ -395,7 +396,7 @@ static void i_call(bvm *vm, binstruction ins)
             ++var; /* to next register */
             goto recall; /* call constructor */
         }
-        ++vm->cf->u.s.ip; /* to next instruction */
+        ++vm->cf->s.ur.ip; /* to next instruction */
         break;
     case VT_CLOSURE: {
         bclosure *cl = var->v.p;
@@ -405,15 +406,15 @@ static void i_call(bvm *vm, binstruction ins)
         push_closure(vm, cl, var);
         break;
     }
-    case VT_PRIMFUNC: {
-        bprimfunc *f = var->v.p;
+    case VT_NTVFUNC: {
+        bntvfunc *f = var->v.p;
         if (argc != f->argc && f->argc != -1) {
             vm_error(vm, "function argc error");
         }
-        push_cfunction(vm, var, argc);
+        push_ntvfunc(vm, f, var, argc);
         f->f(vm); /* call C primitive function */
         ret_cfunction(vm);
-        ++vm->cf->u.s.ip; /* to next instruction */
+        ++vm->cf->s.ur.ip; /* to next instruction */
         break;
     }
     default:
@@ -424,7 +425,7 @@ static void i_call(bvm *vm, binstruction ins)
 static void i_closure(bvm *vm, binstruction ins)
 {
     bvalue *reg = RA(ins);
-    bproto *p = vm->cf->u.s.closure->proto->ptab[IGET_Bx(ins)];
+    bproto *p = vm->cf->s.uf.cl->proto->ptab[IGET_Bx(ins)];
     bclosure *cl = be_newclosure(vm, p->nupvals);
     cl->proto = p;
     be_initupvals(vm, cl);
@@ -539,7 +540,7 @@ void be_exec(bvm *vm)
     newframe:
     cf = vm->cf;
     for (;;) {
-        ins = *cf->u.s.ip;
+        ins = *cf->s.ur.ip;
         switch (IGET_OP(ins)) {
         case OP_LDNIL: i_ldnil(vm, ins); break;
         case OP_LDBOOL: i_ldbool(vm, ins); break;
@@ -583,26 +584,26 @@ void be_exec(bvm *vm)
             cf = vm->cf;
             break;
         }
-        ++cf->u.s.ip;
+        ++cf->s.ur.ip;
     }
 }
 
 void be_dofunc(bvm *vm, bclosure *cl, int argc)
 {
-    bvalue *reg = vm->cf ? vm->cf->u.top : vm->stack;
+    bvalue *reg = vm->cf ? vm->cf->s.ur.top : vm->stack;
     be_gc_setpause(vm, 1);
     do_closure(vm, reg, cl, argc);
     be_gc_collect(vm);
 }
 
-void be_doprimfunc(bvm *vm, bprimfunc *f, int argc)
+void be_dontvfunc(bvm *vm, bntvfunc *f, int argc)
 {
-    bvalue *reg = vm->cf ? vm->cf->u.top : vm->stack;
-    do_primfunc(vm, reg, f, argc);
+    bvalue *reg = vm->cf ? vm->cf->s.ur.top : vm->stack;
+    do_ntvfunc(vm, reg, f, argc);
 }
 
 void be_dofuncvar(bvm *vm, bvalue *v, int argc)
 {
-    bvalue *reg = vm->cf ? vm->cf->u.top : vm->stack;
+    bvalue *reg = vm->cf ? vm->cf->s.ur.top : vm->stack;
     do_funcvar(vm, reg, v, argc);
 }

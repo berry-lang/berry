@@ -12,7 +12,7 @@ void be_initupvals(bvm *vm, bclosure *cl)
     int i, count = cl->proto->nupvals;
     bupvaldesc *desc = cl->proto->upvals;
     bvalue *stack = vm->cf->reg;
-    bupval **superuv = vm->cf->u.s.closure->upvals;
+    bupval **superuv = vm->cf->s.uf.cl->upvals;
     for (i = 0; i < count; ++i) {
         bvalue *ref;
         if (desc->instack) {
@@ -91,11 +91,31 @@ bclosure* be_newclosure(bvm *vm, int nupval)
     return cl;
 }
 
-bprimfunc* be_newprimfunc(bvm *vm, bcfunction cf, int argc)
+static void init_upvals(bntvfunc *f)
 {
-    bprimfunc *f = be_malloc(sizeof(bprimfunc));
-    f->f = cf;
-    f->argc = (char)argc;
-    (void)vm;
+    int count = f->nupvals;
+    bupval **upvals = &be_ntvfunc_upval(f, 0);
+    while (count--) {
+        bupval *uv = be_malloc(sizeof(bupval)); /* was closed */
+        uv->value = &uv->u.value;
+        uv->refcnt = 1;
+        var_setnil(uv->value);
+        *upvals++ = uv;
+    }
+}
+
+bntvfunc* be_newprimclosure(bvm *vm, bcfunction cf, int argc, int nupvals)
+{
+    int size = (int)(sizeof(bntvfunc) + sizeof(bupval*) * nupvals);
+    bgcobject *gco = be_newgcobj(vm, VT_NTVFUNC, size);
+    bntvfunc *f = cast_ntvfunc(gco);
+    if (f) {
+        f->f = cf;
+        f->argc = (char)argc;
+        f->nupvals = nupvals;
+        if (nupvals) {
+            init_upvals(f);
+        }
+    }
     return f;
 }

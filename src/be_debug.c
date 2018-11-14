@@ -24,7 +24,7 @@ void be_printf(const char *format, ...)
 
 static void print_instance(bvm *vm, bobject *obj)
 {
-    bvalue v, *top = be_api_regtop(vm);
+    bvalue v, *top = be_api_topreg(vm);
     be_object_member(obj, be_newstr(vm, "print"), &v);
     if (be_isnil(&v)) {
         be_printf("print error: object without 'print' method.");

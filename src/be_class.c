@@ -16,9 +16,9 @@ bclass* be_newclass(bvm *vm, bstring *name, bclass *super)
         obj->members = be_map_new(vm);
         obj->nvar = 0;
         obj->name = name;
-        be_gc_addgray(vm, gc_object(obj->members));
-        be_gc_addgray(vm, gc_object(obj->name));
-        be_gc_addgray(vm, gc_object(obj));
+        be_gc_fix(vm, gc_object(obj->members));
+        be_gc_fix(vm, gc_object(obj->name));
+        be_gc_fix(vm, gc_object(obj));
     }
     return obj;
 }
@@ -43,7 +43,7 @@ void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p)
 void be_prim_method_bind(bvm *vm, bclass *c, const char *name, bcfunction f, int argc)
 {
     bvalue *m = be_map_insertstr(c->members, be_newstr(vm, name), NULL);
-    m->v.p = be_newprimfunc(vm, f, argc);
+    m->v.p = be_newntvfunc(vm, f, argc);
     m->type = MT_PRIMMETHOD;
 }
 
@@ -64,8 +64,8 @@ static bobject* newobject(bvm *vm, bclass *c)
         if (obj) {
             obj->class = c;
             obj->super = newobject(vm, c->super);
+            return obj;
         }
-        return obj;
     }
     return NULL;
 }
@@ -76,8 +76,7 @@ int be_class_newobj(bvm *vm, bclass *c, bvalue *argv, int argc)
     bmap *map = obj->class->members;
     bvalue *init = be_map_findstr(map, be_newstr(vm, "init"));
 
-    set_type(argv, VT_INSTANCE);
-    argv->v.p = obj;
+    var_setinstance(argv, obj);
     if (init && init->type != MT_VARIABLE) { /* user constructor */
         bvalue *reg = argv + 1;
         /* copy argv */

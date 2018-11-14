@@ -5,7 +5,7 @@
 
 #define MT_VARIABLE                     VT_INT
 #define MT_METHOD                       VT_CLOSURE
-#define MT_PRIMMETHOD                   VT_PRIMFUNC
+#define MT_PRIMMETHOD                   VT_NTVFUNC
 
 #define be_class_super(cl)              ((cl)->super)
 #define be_class_setsuper(self, sup)    ((self)->super = (sup))

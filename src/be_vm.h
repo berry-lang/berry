@@ -11,13 +11,16 @@ typedef struct bglobaldesc {
 
 typedef struct {
     bvalue *reg; /* base register pointer */
-    union {
-        bvalue *top; /* top register pointer (only C-function) */
-        struct {
+    struct {
+        union {
+            bclosure *cl; /* closure */
+            bntvfunc *f; /* ntvfunc */
+        } uf;
+        union {
+            bvalue *top;  /* top register pointer (only C-function) */
             binstruction *ip; /* instruction pointer */
-            bclosure *closure;
-        } s; /* closure frame data */
-    } u;
+        } ur;
+    } s;
     int status;
 } bcallframe;
 
@@ -39,7 +42,7 @@ struct bvm {
 bvm* be_vm_new(int nstack);
 void be_exec(bvm *vm);
 void be_dofunc(bvm *vm, bclosure *cl, int argc);
-void be_doprimfunc(bvm *vm, bprimfunc *f, int argc);
+void be_dontvfunc(bvm *vm, bntvfunc *f, int argc);
 void be_dofuncvar(bvm *vm, bvalue *v, int argc);
 
 #endif

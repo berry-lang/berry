@@ -9,28 +9,28 @@ The implementation of berry include a one pass compiler and register-based VM. B
 ## Features
 
 * Base Type
-  * Numerical value：Integer (`int`) and Real (`real`).
-  * Boolean: `true` and `false`.
-  * String: Single quotation-mark string and double quotation-mark string.
-  * List: Continuous memory list, like `[1, 2, 3]`.
-  * Map: Hash Map, like `{ 'a' = 1, 2 = 3 }`.
-  * Range: include a lower and a upper integer value, like `0..5`.
+  * Numerical value：Integer (`int`) and Real (`real`)
+  * Boolean: `true` and `false`
+  * String: Single quotation-mark string and double quotation-mark string
+  * List: Continuous memory list, like `[1, 2, 3]`
+  * Map: Hash Map, like `{ 'a' = 1, 2 = 3 }`
+  * Range: include a lower and a upper integer value, like `0..5`
 * Operator and Expression
-  * Assign operator: `=`.
-  * Relational operator: `<`, `<=`, `==`, `!=`, `>`, `>=`.
-  * Logic operator: `&&`, `||`, `!`.
-  * Arithmetic operator: `+`, `-`, `*`, `/`, `%`.
-  * Field operator: `.`.
-  * Index operator: `[]`.
-  * Connect string operator: `+`.
-  * Brackets: `()`.
+  * Assign operator: `=`
+  * Relational operator: `<`, `<=`, `==`, `!=`, `>`, `>=`
+  * Logic operator: `&&`, `||`, `!`
+  * Arithmetic operator: `+`, `-`, `*`, `/`, `%`
+  * Field operator: `.`
+  * Index operator: `[]`
+  * Connect string operator: `+`
+  * Brackets: `()`
 * Control Structure
   * Conditional statement: `if-else`
   * Iteration statement: `while` and `for`
   * Jump statement: `break`
 * Function
   * Local variable and block scope
-  * Return statement`
+  * Return statement
   * Nested functions definition
   * Closure based on Upvalue
 * Class

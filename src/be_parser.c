@@ -157,9 +157,9 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     finfo->jpc = NO_JUMP;
     parser->finfo = finfo;
     begin_block(finfo, binfo, 0);
-    be_gc_addgray(vm, gc_object(proto));
-    be_gc_addgray(vm, gc_object(finfo->local));
-    be_gc_addgray(vm, gc_object(finfo->upval));
+    be_gc_fix(vm, gc_object(proto));
+    be_gc_fix(vm, gc_object(finfo->local));
+    be_gc_fix(vm, gc_object(finfo->upval));
 }
 
 static void setupvals(bfuncinfo *finfo)
@@ -171,7 +171,7 @@ static void setupvals(bfuncinfo *finfo)
     bupvaldesc *upvals = be_malloc(sizeof(bupvaldesc) * nupvals);
 
     for (; size--; slots++) {
-        if (!value_isnil(&slots->key)) {
+        if (!var_isnil(&slots->key)) {
             uint32_t v = (uint32_t)slots->value.v.i;
             int idx = upval_index(v);
             upvals[idx].idx = upval_target(v);
@@ -255,7 +255,7 @@ static int new_localvar(bfuncinfo *finfo, bstring *s)
         bvalue *var;
         reg = be_list_count(finfo->local); /* new local index */
         var = be_list_append(finfo->local, NULL);
-        value_setstr(var, s);
+        var_setstr(var, s);
         be_code_allocregs(finfo, 1); /* use a register */
     }
     return reg;
@@ -290,7 +290,7 @@ static int new_upval(bfuncinfo *finfo, bstring *name, bexpdesc *var)
     }
     index = be_map_count(finfo->upval);
     desc = be_map_insertstr(finfo->upval, name, NULL);
-    value_setint(desc, upval_desc(index, target, instack));
+    var_setint(desc, upval_desc(index, target, instack));
     return index;
 }
 
@@ -947,7 +947,7 @@ bclosure* be_parser_source(bvm *vm, const char *fname, const char *text)
 
     parser.vm = vm;
     parser.finfo = NULL;
-    be_gc_addgray(vm, gc_object(cl)); /* add main closure to gray list */
+    be_gc_fix(vm, gc_object(cl)); /* add main closure to gray list */
     be_lexer_init(&parser.lexer, vm);
     be_lexer_set_source(&parser.lexer, fname, text);
     scan_next_token(&parser); /* scan first token */

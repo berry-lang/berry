@@ -7,8 +7,8 @@
 
 #define key(entry)          (&(entry)->key)
 #define value(entry)        (&(entry)->value)
-#define isnil(entry)        value_isnil(key(entry))
-#define setnil(entry)       value_setnil(key(entry))
+#define isnil(entry)        var_isnil(key(entry))
+#define setnil(entry)       var_setnil(key(entry))
 #define hash2slot(m, h)     ((m)->slots + ((h) & ((m)->size - 1)))
 #define is_mainslot(m, s)   (hash2slot(m, hashcode(&(s)->key)) == (s))
 #define alloc_slot(m)       freelist_remove(m, m->freelist)

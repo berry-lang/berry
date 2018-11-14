@@ -6,24 +6,27 @@
 #include "be_string.h"
 #include "be_class.h"
 #include "be_list.h"
+#include "be_func.h"
 #include "be_map.h"
 #include "be_debug.h"
 
 struct bgc {
     bgcobject *list;
     bgcobject *gray;
+    bgcobject *fixed;
     size_t mcount;
     bbyte steprate;
     bbyte pause;
 };
 
-void auto_collect(bvm *vm);
+static void mark_object(bvm *vm, bgcobject *obj, int type);
 
 void be_gc_init(bvm *vm)
 {
     bgc *gc = be_malloc(sizeof(bgc));
     gc->list = NULL;
     gc->gray = NULL;
+    gc->fixed = NULL;
     gc->mcount = be_mcount();
     gc->steprate = 200;
     gc->pause = 0;
@@ -53,7 +56,7 @@ bgcobject* be_newgcobj(bvm *vm, int type, int size)
     return obj;
 }
 
-void be_gc_addgray(bvm *vm, bgcobject *obj)
+void be_gc_fix(bvm *vm, bgcobject *obj)
 {
     bgc *gc = vm->gc;
     if (gc->list == obj) { /* first node */
@@ -69,18 +72,18 @@ void be_gc_addgray(bvm *vm, bgcobject *obj)
         }
         prev->next = obj->next;
     }
-    obj->next = gc->gray;
-    gc->gray = obj;
+    obj->next = gc->fixed;
+    gc->fixed = obj;
     gc_setgray(obj);
 }
 
 void be_gc_removegray(bvm *vm, bgcobject *obj)
 {
     bgc *gc = vm->gc;
-    if (gc->gray == obj) {
-        gc->gray = obj->next;
+    if (gc->fixed == obj) {
+        gc->fixed = obj->next;
     } else {
-        bgcobject *prev = gc->gray;
+        bgcobject *prev = gc->fixed;
         /* find node */
         while (prev && prev->next != obj) {
             prev = prev->next;
@@ -95,8 +98,6 @@ void be_gc_removegray(bvm *vm, bgcobject *obj)
     gc_setwhite(obj);
 }
 
-static void mark_object(bvm *vm, bgcobject *obj, int type);
-
 static void mark_instance(bvm *vm, bgcobject *obj)
 {
     bobject *o = cast_object(obj);
@@ -104,7 +105,7 @@ static void mark_instance(bvm *vm, bgcobject *obj)
         bvalue *var = be_object_members(o);
         int nvar = be_object_member_count(o);
         while (nvar--) {
-            mark_object(vm, var->v.p, type(var));
+            mark_object(vm, var->v.gc, type(var));
             var++;
         }
         gc_setdark(o);
@@ -120,10 +121,10 @@ static void mark_map(bvm *vm, bgcobject *obj)
         int nslots = be_map_size(map);
         for (; nslots--; slot++) {
             bvalue *key = &slot->key;
-            if (!value_isnil(key)) {
+            if (!var_isnil(key)) {
                 bvalue *val = &slot->value;
-                mark_object(vm, key->v.p, type(key));
-                mark_object(vm, val->v.p, type(val));
+                mark_object(vm, key->v.gc, type(key));
+                mark_object(vm, val->v.gc, type(val));
             }
         }
         gc_setdark(obj);
@@ -137,7 +138,7 @@ static void mark_list(bvm *vm, bgcobject *obj)
         bvalue *val = be_list_data(list);
         int count = be_list_count(list);
         for (; count--; val++) {
-            mark_object(vm, val->v.p, type(val));
+            mark_object(vm, val->v.gc, type(val));
         }
         gc_setdark(obj);
     }
@@ -152,7 +153,23 @@ static void mark_closure(bvm *vm, bgcobject *obj)
         for (; count--; ++uv) {
             if ((*uv)->refcnt) {
                 bvalue *v = (*uv)->value;
-                mark_object(vm, v->v.p, type(v));
+                mark_object(vm, v->v.gc, type(v));
+            }
+        }
+        gc_setdark(obj);
+    }
+}
+
+static void mark_ntvfunc(bvm *vm, bgcobject *obj)
+{
+    bntvfunc *f = cast_ntvfunc(obj);
+    if (f) {
+        int count = f->nupvals;
+        bupval **uv = &be_ntvfunc_upval(f, 0);
+        for (; count--; ++uv) {
+            if ((*uv)->refcnt) {
+                bvalue *v = (*uv)->value;
+                mark_object(vm, v->v.gc, type(v));
             }
         }
         gc_setdark(obj);
@@ -167,7 +184,7 @@ static void mark_proto(bvm *vm, bgcobject *obj)
         bvalue *k = p->ktab;
         mark_object(vm, gc_object(p->name), type(p->name));
         for (; count--; ++k) {
-            mark_object(vm, k->v.p, type(k));
+            mark_object(vm, k->v.gc, type(k));
         }
     }
     gc_setdark(obj);
@@ -175,29 +192,22 @@ static void mark_proto(bvm *vm, bgcobject *obj)
 
 static void mark_object(bvm *vm, bgcobject *obj, int type)
 {
-    switch (type) {
-    case VT_STRING: case VT_CLASS: case VT_PROTO:
-    case VT_INSTANCE: case VT_MAP: case VT_LIST:
-    case VT_CLOSURE:
-        if (gc_isdark(obj)) {
-            return;
+    if (be_isgctype(type)) {
+        switch (type) {
+        case VT_STRING: gc_setdark(obj); break;
+        case VT_CLASS: gc_setdark(obj); break;
+        case VT_PROTO: mark_proto(vm, obj); break;
+        case VT_INSTANCE: mark_instance(vm, obj); break;
+        case VT_MAP: mark_map(vm, obj); break;
+        case VT_LIST: mark_list(vm, obj); break;
+        case VT_CLOSURE: mark_closure(vm, obj); break;
+        case VT_NTVFUNC: mark_ntvfunc(vm, obj); break;
+        default: break;
         }
-        break;
-    default: return;
-    }
-    switch (type) {
-    case VT_STRING: gc_setdark(obj); break;
-    case VT_CLASS: gc_setdark(obj); break;
-    case VT_PROTO: mark_proto(vm, obj); break;
-    case VT_INSTANCE: mark_instance(vm, obj); break;
-    case VT_MAP: mark_map(vm, obj); break;
-    case VT_LIST: mark_list(vm, obj); break;
-    case VT_CLOSURE: mark_closure(vm, obj); break;
-    default: break;
     }
 }
 
-void free_map(bgcobject *obj)
+static void free_map(bgcobject *obj)
 {
     bmap *map = cast_map(obj);
     if (map) {
@@ -206,7 +216,7 @@ void free_map(bgcobject *obj)
     be_free(obj);
 }
 
-void free_list(bgcobject *obj)
+static void free_list(bgcobject *obj)
 {
     blist *list = cast_list(obj);
     if (list) {
@@ -215,7 +225,7 @@ void free_list(bgcobject *obj)
     be_free(obj);
 }
 
-void free_closure(bgcobject *obj)
+static void free_closure(bgcobject *obj)
 {
     bclosure *cl = cast_closure(obj);
     if (cl) {
@@ -234,6 +244,18 @@ void free_closure(bgcobject *obj)
     be_free(obj);
 }
 
+static void free_ntvfunc(bgcobject *obj)
+{
+    bntvfunc *f = cast_ntvfunc(obj);
+    if (f) {
+        int count = f->nupvals;
+        bupval **uv = &be_ntvfunc_upval(f, 0);
+        while (count--) {
+            be_free(*uv++);
+        }
+    }
+}
+
 static void free_object(bvm *vm, bgcobject *obj)
 {
     switch (obj->type) {
@@ -242,6 +264,7 @@ static void free_object(bvm *vm, bgcobject *obj)
     case VT_MAP: free_map(obj); break;
     case VT_LIST: free_list(obj); break;
     case VT_CLOSURE: free_closure(obj); break;
+    case VT_NTVFUNC: free_ntvfunc(obj); break;
     default:
         break;
     }
@@ -251,12 +274,8 @@ static void set_gray(bvalue *begin, int count)
 {
     bvalue *end;
     for (end = begin + count; begin < end; ++begin) {
-        switch (type(begin)) {
-        case VT_CLOSURE: case VT_PROTO:
-        case VT_CLASS: case VT_INSTANCE:
-        case VT_STRING: case VT_LIST: case VT_MAP:
-            gc_setgray(gc_object(begin->v.p));
-        default: break;
+        if (be_isgcobj(begin)) {
+            gc_setgray(begin->v.gc);
         }
     }
 }
@@ -276,7 +295,7 @@ static void mark_gray(bvm *vm)
 {
     bgc *gc = vm->gc;
     bgcobject *node;
-    for (node = gc->gray; node; node = node->next) {
+    for (node = gc->fixed; node; node = node->next) {
         if (gc_isgray(node)) {
             mark_object(vm, node, type(node));
         }
@@ -308,7 +327,7 @@ static void clear_graylist(bvm *vm)
 {
     bgc *gc = vm->gc;
     bgcobject *node;
-    for (node = gc->gray; node; node = node->next) {
+    for (node = gc->fixed; node; node = node->next) {
         if (gc_isdark(node)) {
             gc_setgray(node);
         }
@@ -322,9 +341,9 @@ static int nstack(bvm *vm)
         return 0;
     }
     if (cf->status & PRIM_FUNC) {
-        return cf->u.top - vm->stack;
+        return cf->s.ur.top - vm->stack;
     }
-    return cf->reg - vm->stack + cf->u.s.closure->proto->nlocal;
+    return cf->reg - vm->stack + cf->s.uf.cl->proto->nlocal;
 }
 
 void be_gc_auto(bvm *vm)
