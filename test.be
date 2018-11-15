@@ -16,3 +16,4 @@ while (v != nil)
     v = it()
 end
 print(lout)
+print(memcount(), type(1.25), type([]), type(list))

@@ -24,6 +24,12 @@ $(OBJS): %.o: %.c
 
 sinclude $(DEPS)
 
+install:
+	cp $(TARGET) /usr/local/bin
+
+uninstall:
+	rm /usr/local/bin/$(TARGET)
+
 clean:
 	@ echo [Clean...]
 	@ $(RM) $(OBJS) $(DEPS)

@@ -1,15 +1,15 @@
-# berry
+# Berry
 
 ## Introduction
 
-Berry is a small dynamically typed scripting language. Berry's design goals include running on very small memory devices, and so, berry must be very streamlined. Its core language only supports a small number of types, but we still provide class and closure support.
+Berry is a small dynamically typed embedded scripting language. Berry's design goals include running on very small memory devices, and so, Berry must be very streamlined. Its core language only supports a few types, but we still provide class and closure support.
 
-The implementation of berry include a one pass compiler and register-based VM. Berry is not everything is object. Some simple value types, such as int, real, boolean and string are not class object, but list, map and range are class object. This is a consideration about performance. Register-based VM is also based on this consideration.
+The implementation of Berry include a one pass compiler and register-based VM, all the codes are written in ANSI C. Berry is not everything is object. Some simple value types, such as int, real, boolean and string are not class object, but list, map and range are class object. This is a consideration about performance. Register-based VM is also based on this consideration.
 
 ## Features
 
 * Base Type
-  * Numerical value：Integer (`int`) and Real (`real`)
+  * Numerical value: Integer (`int`) and Real (`real`)
   * Boolean: `true` and `false`
   * String: Single quotation-mark string and double quotation-mark string
   * List: Continuous memory list, like `[1, 2, 3]`
@@ -38,7 +38,22 @@ The implementation of berry include a one pass compiler and register-based VM. B
   * Method and Operator Overload
   * Constructor method
 
-## Examples
+## Build
+
+Build:
+```
+$ make
+```
+
+Run:
+
+```
+$ ./berry test.be
+```
+
+# Examples
+
+Berry does not support REPL (Read Eval Print Loop) yet. You can only run the code in the source file. If no command line parameters are specified, Berry will run "./test.be" by default.
 
 Type:
 

@@ -23,15 +23,15 @@ uint32_t hashptr(bvalue *v)
 static uint32_t hashcode(bvalue *key)
 {
     switch (key->type) {
-    case VT_NIL:
+    case BE_NIL:
         return 0;
-    case VT_BOOL:
+    case BE_BOOL:
         return (uint32_t)key->v.b;
-    case VT_INT:
+    case BE_INT:
         return (uint32_t)key->v.i;
-    case VT_REAL:
+    case BE_REAL:
         return (uint32_t)key->v.i; /* test */
-    case VT_STRING:
+    case BE_STRING:
         return key->v.s->hash;
     default:
         return hashptr(key);
@@ -43,15 +43,15 @@ static int eq_entry(bmapentry *entry, bvalue *key)
     bvalue *ekey = &entry->key;
     if (ekey->type == key->type) {
         switch (key->type) {
-        case VT_NIL:
+        case BE_NIL:
             return 0;
-        case VT_BOOL:
+        case BE_BOOL:
             return key->v.b == ekey->v.b;
-        case VT_INT:
+        case BE_INT:
             return key->v.b == ekey->v.b;
-        case VT_REAL:
+        case BE_REAL:
             return key->v.r == ekey->v.r;
-        case VT_STRING:
+        case BE_STRING:
             return be_eqstr(key->v.s, ekey->v.s);
         default:
             return key->v.p == ekey->v.p;
@@ -171,7 +171,7 @@ static void resize(bmap *map, int size)
 
 bmap* be_map_new(bvm *vm)
 {
-    bgcobject *gco = be_gcnew(vm, VT_MAP, bmap);
+    bgcobject *gco = be_gcnew(vm, BE_MAP, bmap);
     bmap *map = cast_map(gco);
     if (map) {
         map->freelist = NULL;
@@ -233,7 +233,7 @@ bvalue* be_map_findstr(bmap *map, bstring *key)
 {
     bvalue v = {
         .v.s = key,
-        .type = VT_STRING
+        .type = BE_STRING
     };
     return be_map_find(map, &v);
 }
@@ -242,7 +242,7 @@ bvalue* be_map_insertstr(bmap *map, bstring *key, bvalue *value)
 {
     bvalue v = {
         .v.s = key,
-        .type = VT_STRING
+        .type = BE_STRING
     };
     return be_map_insert(map, &v, value);
 }
@@ -251,7 +251,7 @@ void be_map_removestr(bmap *map, bstring *key)
 {
     bvalue v = {
         .v.s = key,
-        .type = VT_STRING
+        .type = BE_STRING
     };
     be_map_remove(map, &v);
 }

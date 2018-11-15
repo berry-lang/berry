@@ -166,15 +166,15 @@ static int newconst(bfuncinfo *finfo, bexpdesc *e)
     int idx = be_vector_count(finfo->kvec);
     switch (e->type) {
     case ETINT:
-        k.type = VT_INT;
+        k.type = BE_INT;
         k.v.i = e->v.i;
         break;
     case ETREAL:
-        k.type = VT_REAL;
+        k.type = BE_REAL;
         k.v.r = e->v.r;
         break;
     case ETSTRING:
-        k.type = VT_STRING;
+        k.type = BE_STRING;
         k.v.s = e->v.s;
         break;
     default:
@@ -194,17 +194,17 @@ static int findconst(bfuncinfo *finfo, bexpdesc *e)
         bvalue *k = be_vector_at(finfo->kvec, i);
         switch (e->type) {
         case ETINT:
-            if (k->type == VT_INT && k->v.i == e->v.i) {
+            if (k->type == BE_INT && k->v.i == e->v.i) {
                 return i;
             }
             break;
         case ETREAL:
-            if (k->type == VT_REAL && k->v.r == e->v.r) {
+            if (k->type == BE_REAL && k->v.r == e->v.r) {
                 return i;
             }
             break;
         case ETSTRING:
-            if (k->type == VT_STRING && be_eqstr(k->v.p, e->v.s)) {
+            if (k->type == BE_STRING && be_eqstr(k->v.p, e->v.s)) {
                 return i;
             }
             break;
@@ -448,10 +448,10 @@ int be_code_setvar(bfuncinfo *finfo, bexpdesc *e1, bexpdesc *e2)
     case ETUPVAL:
         setsupvar(finfo, OP_SETUPV, e1, e2);
         break;
-    case ETMEMBER: /* store to member R(A).RK(B) <- RK(C) */
+    case ETMEMBER: /* store to field R(A).RK(B) <- RK(C) */
         setsfxvar(finfo, OP_SETMBR, e1, e2);
         break;
-    case ETINDEX: /* store to member R(A)[RK(B)] <- RK(C) */
+    case ETINDEX: /* store to field R(A)[RK(B)] <- RK(C) */
         setsfxvar(finfo, OP_SETIDX, e1, e2);
         break;
     default:
@@ -540,7 +540,7 @@ void be_code_ret(bfuncinfo *finfo, bexpdesc *e)
     }
 }
 
-void be_code_member(bfuncinfo *finfo, bexpdesc *c, bexpdesc *k)
+void be_code_field(bfuncinfo *finfo, bexpdesc *c, bexpdesc *k)
 {
     c->v.ss.obj = (bbyte)exp2anyreg(finfo, c);
     c->v.ss.idx = (short)exp2anyreg(finfo, k);

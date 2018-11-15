@@ -71,7 +71,7 @@ static void lexer_error(blexer *lexer, const char *err)
     be_abort();
 }
 
-static char *lexer_resize_data(blexer *lexer, int len)
+static char* lexer_resize_data(blexer *lexer, int len)
 {
     int size = len > SHORT_STR_LEN ? len : SHORT_STR_LEN;
 
@@ -83,14 +83,6 @@ static char *lexer_resize_data(blexer *lexer, int len)
         lexer->data = be_malloc(size);
     }
     return lexer->data;
-}
-
-static void copy_text(blexer *lexer, const char *src, const char *end)
-{
-    int len = (int)(end - src);
-    lexer_resize_data(lexer, len);
-    memcpy(lexer->data, src, len);
-    lexer->data[len] = '\0';
 }
 
 static int char2hex(blexer *lexer, char c)
@@ -229,8 +221,7 @@ static btokentype scan_dot_real(blexer *lexer)
     if (is_digit(lgetc(lexer))) {
         match(lexer, is_digit);
         scan_realexp(lexer);
-        copy_text(lexer, begin, lexer->cursor + 1);
-        setreal(lexer, atof(lexer->data));
+        setreal(lexer, atof(begin));
         return TokenReal;
     }
     return OptDot;
@@ -253,11 +244,10 @@ static btokentype scan_numeral(blexer *lexer)
     if (scan_realexp(lexer)) {
         type = TokenReal;
     }
-    copy_text(lexer, begin, lexer->cursor);
     if (type == TokenReal) {
-        setreal(lexer, atof(lexer->data));
+        setreal(lexer, atof(begin));
     } else {
-        setint(lexer, atoi(lexer->data));
+        setint(lexer, atoi(begin));
     }
     return type;
 }

@@ -320,7 +320,7 @@ static void new_class(bparser *parser, bstring *name, bclass *c, bexpdesc *e)
         e->v.idx = new_localvar(finfo, name);
         var = be_code_localobject(finfo, e->v.idx);
     }
-    set_type(var, VT_CLASS);
+    set_type(var, BE_CLASS);
     var->v.p = c;
 }
 
@@ -395,7 +395,7 @@ static void list_nextfield(bparser *parser, bexpdesc *l)
     key.v.s = be_newstr(parser->vm, "append");
     /* copy list object to next register */
     be_code_reg(finfo, &v, reg);
-    be_code_member(finfo, &v, &key);
+    be_code_field(finfo, &v, &key);
     base = be_code_nextreg(finfo, &v);
     be_code_getmethod(finfo);
     /* copy source value to next register */
@@ -449,13 +449,13 @@ static void call_expr(bparser *parser, bexpdesc *e)
     bexpdesc args;
     bfuncinfo *finfo = parser->finfo;
     int argc = 0, base = finfo->freereg;
-    int ismember = e->type == ETMEMBER;
+    int isfield = e->type == ETMEMBER;
 
     /* '(' [exprlist] ')' */
     check_vardefine(parser, e);
     /* code function index to next register */
     base = be_code_nextreg(finfo, e);
-    if (ismember) {
+    if (isfield) {
         be_code_getmethod(finfo);
     }
     scan_next_token(parser); /* skip '(' */
@@ -463,7 +463,7 @@ static void call_expr(bparser *parser, bexpdesc *e)
         argc = exprlist(parser, &args);
     }
     match_token(parser, OptRBK); /* skip ')' */
-    argc += ismember;
+    argc += isfield;
     be_code_freeregs(finfo, argc);
     be_code_call(finfo, base, argc);
     if (e->type != ETREG) {
@@ -472,7 +472,7 @@ static void call_expr(bparser *parser, bexpdesc *e)
     }
 }
 
-static void member_expr(bparser *parser, bexpdesc *e)
+static void field_expr(bparser *parser, bexpdesc *e)
 {
     /* . ID */
     check_vardefine(parser, e);
@@ -481,7 +481,7 @@ static void member_expr(bparser *parser, bexpdesc *e)
         bexpdesc key;
         init_exp(&key, ETSTRING, 0);
         key.v.s = next_token(parser).u.s;
-        be_code_member(parser->finfo, e, &key);
+        be_code_field(parser->finfo, e, &key);
         scan_next_token(parser); /* skip ID */
     }
 }
@@ -524,8 +524,8 @@ static void suffix_expr(bparser *parser, bexpdesc *e)
         case OptLBK: /* '(' function call */
             call_expr(parser, e);
             break;
-        case OptDot: /* '.' member */
-            member_expr(parser, e);
+        case OptDot: /* '.' field */
+            field_expr(parser, e);
             break;
         case OptLSB: /* '[' index */
             index_expr(parser, e);
@@ -833,12 +833,12 @@ static void classvar_stmt(bparser *parser, bclass *c)
     /* 'var' ID {',' ID} */
     scan_next_token(parser); /* skip 'var' */
     if (next_token(parser).type == TokenId) {
-        be_member_bind(c, next_token(parser).u.s);
+        be_field_bind(c, next_token(parser).u.s);
         scan_next_token(parser);
         while (next_token(parser).type == OptComma) {
             scan_next_token(parser);
             if (next_token(parser).type == TokenId) {
-                be_member_bind(c, next_token(parser).u.s);
+                be_field_bind(c, next_token(parser).u.s);
                 scan_next_token(parser);
             } else {
                 parser_error(parser, "class var error", NULL);

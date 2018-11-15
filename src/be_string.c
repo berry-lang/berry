@@ -76,7 +76,7 @@ void be_string_init(bvm *vm)
 bstring* createstrobj(bvm *vm, int len, uint32_t hash)
 {
     int size = sizeof(bstring) + len;
-    bgcobject *gco = be_newgcobj(vm, VT_STRING, size);
+    bgcobject *gco = be_newgcobj(vm, BE_STRING, size);
     bstring *s = cast_str(gco);
     if (s) {
         s->hash = hash;

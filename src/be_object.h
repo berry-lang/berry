@@ -3,24 +3,8 @@
 
 #include "berry.h"
 
-typedef enum {
-    VT_NIL = 0,
-    VT_INT,
-    VT_REAL,
-    VT_BOOL,
-    VT_NOTMETHOD,
-    /* gc objects */
-    VT_FUNCTION,
-    VT_PROTO,
-    VT_CLASS,
-    VT_INSTANCE,
-    VT_STRING,
-    VT_LIST,
-    VT_MAP
-} bvaluetype;
-
-#define VT_CLOSURE      ((0 << 5) | VT_FUNCTION)
-#define VT_NTVFUNC      ((1 << 5) | VT_FUNCTION)
+#define BE_CLOSURE      ((0 << 5) | BE_FUNCTION)
+#define BE_NTVFUNC      ((1 << 5) | BE_FUNCTION)
 
 #define bcommon_header        \
     struct bgcobject *next;   \
@@ -36,9 +20,11 @@ typedef struct bstringtable bstringtable;
 typedef struct bclosure bclosure;
 typedef struct bntvfunc bntvfunc;
 typedef struct bclass bclass;
-typedef struct bobject bobject;
+typedef struct binstance binstance;
 typedef struct blist blist;
 typedef struct bmap bmap;
+
+typedef uint32_t binstruction;
 
 typedef struct bstring {
     bcommon_header;
@@ -63,8 +49,6 @@ typedef struct bvalue {
     } v;
     int type;
 } bvalue;
-
-typedef int (*bcfunction)(bvm *vm);
 
 typedef struct {
   bstring *name;
@@ -126,22 +110,23 @@ struct bntvfunc {
 #define var_settype(_v, _T)     ((_v)->type = (bbyte)_T)
 #define var_setobj(_v, _T, _o)  { var_settype(_v, _T); (_v)->v.p = _o; }
 
-#define var_isnil(_v)           var_istype(_v, VT_NIL)
-#define var_isbool(_v)          var_istype(_v, VT_BOOL)
-#define var_isint(_v)           var_istype(_v, VT_INT)
-#define var_isreal(_v)          var_istype(_v, VT_REAL)
-#define var_isclass(_v)         var_istype(_v, VT_CLASS)
-#define var_isinstance(_v)      var_istype(_v, VT_INSTANCE)
+#define var_isnil(_v)           var_istype(_v, BE_NIL)
+#define var_isbool(_v)          var_istype(_v, BE_BOOL)
+#define var_isint(_v)           var_istype(_v, BE_INT)
+#define var_isreal(_v)          var_istype(_v, BE_REAL)
+#define var_isclass(_v)         var_istype(_v, BE_CLASS)
+#define var_isinstance(_v)      var_istype(_v, BE_INSTANCE)
 
-#define var_setnil(_v)          var_settype(_v, VT_NIL)
-#define var_setbool(_v, _b)     { var_settype(_v, VT_BOOL); (_v)->v.b = _b; }
-#define var_setint(_v, _i)      { var_settype(_v, VT_INT); (_v)->v.i = _i; }
-#define var_setreal(_v, _r)     { var_settype(_v, VT_REAL); (_v)->v.r = _r; }
-#define var_setstr(_v, _s)      var_setobj(_v, VT_STRING, _s)
-#define var_setinstance(_v, _o) var_setobj(_v, VT_INSTANCE, _o)
-#define var_setclass(_v, _o)    var_setobj(_v, VT_CLASS, _o)
-#define var_setclosure(_v, _o)  var_setobj(_v, VT_CLOSURE, _o)
-#define var_setntvfunc(_v, _o)  var_setobj(_v, VT_NTVFUNC, _o)
+#define var_setnil(_v)          var_settype(_v, BE_NIL)
+#define var_setval(_v, _s)      (*(_v) = *(_s))
+#define var_setbool(_v, _b)     { var_settype(_v, BE_BOOL); (_v)->v.b = _b; }
+#define var_setint(_v, _i)      { var_settype(_v, BE_INT); (_v)->v.i = _i; }
+#define var_setreal(_v, _r)     { var_settype(_v, BE_REAL); (_v)->v.r = _r; }
+#define var_setstr(_v, _s)      var_setobj(_v, BE_STRING, _s)
+#define var_setinstance(_v, _o) var_setobj(_v, BE_INSTANCE, _o)
+#define var_setclass(_v, _o)    var_setobj(_v, BE_CLASS, _o)
+#define var_setclosure(_v, _o)  var_setobj(_v, BE_CLOSURE, _o)
+#define var_setntvfunc(_v, _o)  var_setobj(_v, BE_NTVFUNC, _o)
 
 #define var_getbool(_v)         ((_v)->v.b)
 #define var_getint(_v)          ((_v)->v.i)

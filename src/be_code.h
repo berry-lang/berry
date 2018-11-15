@@ -25,7 +25,7 @@ void be_code_call(bfuncinfo *finfo, int base, int argc);
 void be_code_closure(bfuncinfo *finfo, bexpdesc *e, bproto *proto);
 void be_code_close(bfuncinfo *finfo, int isret);
 void be_code_ret(bfuncinfo *finfo, bexpdesc *e);
-void be_code_member(bfuncinfo *finfo, bexpdesc *e1, bexpdesc *e2);
+void be_code_field(bfuncinfo *finfo, bexpdesc *e1, bexpdesc *e2);
 void be_code_index(bfuncinfo *finfo, bexpdesc *c, bexpdesc *k);
 bvalue* be_code_localobject(bfuncinfo *finfo, int dst);
 void be_code_setsuper(bfuncinfo *finfo, bexpdesc *c, bexpdesc *s);

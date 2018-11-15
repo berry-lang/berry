@@ -100,16 +100,16 @@ void be_gc_removegray(bvm *vm, bgcobject *obj)
 
 static void mark_instance(bvm *vm, bgcobject *obj)
 {
-    bobject *o = cast_object(obj);
+    binstance *o = cast_object(obj);
     while (o) {
-        bvalue *var = be_object_members(o);
-        int nvar = be_object_member_count(o);
+        bvalue *var = be_instance_fields(o);
+        int nvar = be_instance_member_count(o);
         while (nvar--) {
             mark_object(vm, var->v.gc, type(var));
             var++;
         }
         gc_setdark(o);
-        o = be_object_super(o);
+        o = be_instance_super(o);
     }
 }
 
@@ -194,14 +194,14 @@ static void mark_object(bvm *vm, bgcobject *obj, int type)
 {
     if (be_isgctype(type)) {
         switch (type) {
-        case VT_STRING: gc_setdark(obj); break;
-        case VT_CLASS: gc_setdark(obj); break;
-        case VT_PROTO: mark_proto(vm, obj); break;
-        case VT_INSTANCE: mark_instance(vm, obj); break;
-        case VT_MAP: mark_map(vm, obj); break;
-        case VT_LIST: mark_list(vm, obj); break;
-        case VT_CLOSURE: mark_closure(vm, obj); break;
-        case VT_NTVFUNC: mark_ntvfunc(vm, obj); break;
+        case BE_STRING: gc_setdark(obj); break;
+        case BE_CLASS: gc_setdark(obj); break;
+        case BE_PROTO: mark_proto(vm, obj); break;
+        case BE_INSTANCE: mark_instance(vm, obj); break;
+        case BE_MAP: mark_map(vm, obj); break;
+        case BE_LIST: mark_list(vm, obj); break;
+        case BE_CLOSURE: mark_closure(vm, obj); break;
+        case BE_NTVFUNC: mark_ntvfunc(vm, obj); break;
         default: break;
         }
     }
@@ -259,12 +259,12 @@ static void free_ntvfunc(bgcobject *obj)
 static void free_object(bvm *vm, bgcobject *obj)
 {
     switch (obj->type) {
-    case VT_STRING: be_deletestrgc(vm, cast_str(obj)); break;
-    case VT_INSTANCE: be_free(obj); break;
-    case VT_MAP: free_map(obj); break;
-    case VT_LIST: free_list(obj); break;
-    case VT_CLOSURE: free_closure(obj); break;
-    case VT_NTVFUNC: free_ntvfunc(obj); break;
+    case BE_STRING: be_deletestrgc(vm, cast_str(obj)); break;
+    case BE_INSTANCE: be_free(obj); break;
+    case BE_MAP: free_map(obj); break;
+    case BE_LIST: free_list(obj); break;
+    case BE_CLOSURE: free_closure(obj); break;
+    case BE_NTVFUNC: free_ntvfunc(obj); break;
     default:
         break;
     }
@@ -337,7 +337,7 @@ static void clear_graylist(bvm *vm)
 static int nstack(bvm *vm)
 {
     bcallframe *cf = vm->cf;
-    if (be_stack_isempty(vm->callstack)) {
+    if (!cf) {
         return 0;
     }
     if (cf->status & PRIM_FUNC) {

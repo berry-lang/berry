@@ -33,6 +33,7 @@ struct bvm {
     struct bvector *callstack; /* function call stack */
     bglobaldesc gbldesc; /* global description */
     bcallframe *cf; /* function call frame */
+    bbyte spos; /* C function stack postion */
 };
 
 #define NONE_FLAG           0

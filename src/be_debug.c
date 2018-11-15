@@ -22,14 +22,14 @@ void be_printf(const char *format, ...)
     va_end(arg_ptr);
 }
 
-static void print_instance(bvm *vm, bobject *obj)
+static void print_instance(bvm *vm, binstance *obj)
 {
     bvalue v, *top = be_api_topreg(vm);
-    be_object_member(obj, be_newstr(vm, "print"), &v);
+    be_instance_field(obj, be_newstr(vm, "print"), &v);
     if (be_isnil(&v)) {
         be_printf("print error: object without 'print' method.");
     } else {
-        be_settype(top + 1, VT_INSTANCE);
+        be_settype(top + 1, BE_INSTANCE);
         top[1].v.p = obj;
         be_dofuncvar(vm, &v, 1);
     }
@@ -38,25 +38,25 @@ static void print_instance(bvm *vm, bobject *obj)
 void be_print_value(bvm *vm, bvalue *v, int refstr)
 {
     switch (v->type) {
-    case VT_NIL:
+    case BE_NIL:
         be_printf("nil");
         break;
-    case VT_BOOL:
+    case BE_BOOL:
         be_printf("%s", v->v.b == bfalse ? "false" : "true");
         break;
-    case VT_INT:
+    case BE_INT:
         be_printf("%d", v->v.i);
         break;
-    case VT_REAL:
+    case BE_REAL:
         be_printf("%g", v->v.r);
         break;
-    case VT_STRING:
+    case BE_STRING:
         be_printf(refstr ? "\"%s\"" : "%s", v->v.s->s);
         break;
-    case VT_CLOSURE:
+    case BE_CLOSURE:
         be_printf("%p", v->v.p);
         break;
-    case VT_INSTANCE:
+    case BE_INSTANCE:
         print_instance(vm, v->v.p);
         break;
     default:

@@ -62,7 +62,7 @@ void be_upvals_close(bvm *vm, bvalue *level)
 
 bproto* be_newproto(bvm *vm)
 {
-    bgcobject *gco = be_gcnew(vm, VT_PROTO, bproto);
+    bgcobject *gco = be_gcnew(vm, BE_PROTO, bproto);
     bproto *p = cast_proto(gco);
 
     if (p) {
@@ -79,7 +79,7 @@ bproto* be_newproto(bvm *vm)
 
 bclosure* be_newclosure(bvm *vm, int nupval)
 {
-    bgcobject *gco = be_newgcobj(vm, VT_CLOSURE, clousersize(nupval));
+    bgcobject *gco = be_newgcobj(vm, BE_CLOSURE, clousersize(nupval));
     bclosure *cl = cast_closure(gco);
     if (cl) {
         cl->proto = NULL;
@@ -107,7 +107,7 @@ static void init_upvals(bntvfunc *f)
 bntvfunc* be_newprimclosure(bvm *vm, bcfunction cf, int argc, int nupvals)
 {
     int size = (int)(sizeof(bntvfunc) + sizeof(bupval*) * nupvals);
-    bgcobject *gco = be_newgcobj(vm, VT_NTVFUNC, size);
+    bgcobject *gco = be_newgcobj(vm, BE_NTVFUNC, size);
     bntvfunc *f = cast_ntvfunc(gco);
     if (f) {
         f->f = cf;

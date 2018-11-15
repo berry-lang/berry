@@ -11,11 +11,11 @@
 
 #define m_data(vm)      be_newstr(vm, "__data__")
 
-static bvalue* list_getitem(bvm *vm, bobject *obj, int index)
+static bvalue* list_getitem(bvm *vm, binstance *obj, int index)
 {
     bvalue data;
     blist *list;
-    be_object_member(obj, m_data(vm), &data);
+    be_instance_field(obj, m_data(vm), &data);
     list = data.v.p;
     if (index < be_list_count(list)) {
         return be_list_at(list, index);
@@ -26,10 +26,10 @@ static bvalue* list_getitem(bvm *vm, bobject *obj, int index)
 static int m_init(bvm *vm)
 {
     bvalue data;
-    bobject *obj = be_api_getptr(vm, 0);
-    be_settype(&data, VT_LIST);
+    binstance *obj = be_getptr(vm, 0);
+    be_settype(&data, BE_LIST);
     data.v.p = be_list_new(vm);
-    be_object_setmember(obj, m_data(vm), &data);
+    be_instance_setfield(obj, m_data(vm), &data);
     return 0;
 }
 
@@ -38,9 +38,9 @@ static int m_print(bvm *vm)
     int count, i;
     bvalue data;
     blist *list;
-    bobject *obj = be_api_getptr(vm, 0);
+    binstance *obj = be_getptr(vm, 0);
 
-    be_object_member(obj, m_data(vm), &data);
+    be_instance_field(obj, m_data(vm), &data);
     list = data.v.p;
     count = be_list_count(list);
     be_printf("[");
@@ -57,10 +57,10 @@ static int m_print(bvm *vm)
 static int m_append(bvm *vm)
 {
     blist *list;
-    bobject *obj = be_api_getptr(vm, 0);
-    bvalue data, *value = be_api_getvalue(vm, 1);
+    binstance *obj = be_getptr(vm, 0);
+    bvalue data, *value = be_getvalue(vm, 1);
 
-    be_object_member(obj, m_data(vm), &data);
+    be_instance_field(obj, m_data(vm), &data);
     list = data.v.p;
     be_list_append(list, value);
     return 0;
@@ -68,9 +68,9 @@ static int m_append(bvm *vm)
 
 static int m_item(bvm *vm)
 {
-    int idx = be_api_getint(vm, 1);
-    bobject *obj = be_api_getptr(vm, 0);
-    be_api_retvalue(vm, list_getitem(vm, obj, idx));
+    int idx = be_getint(vm, 1);
+    binstance *obj = be_getptr(vm, 0);
+    be_retvalue(vm, list_getitem(vm, obj, idx));
     return 0;
 }
 
@@ -78,13 +78,13 @@ static int m_setitem(bvm *vm)
 {
     bvalue data;
     blist *list;
-    int idx = be_api_getint(vm, 1);
-    bobject *obj = be_api_getptr(vm, 0);
+    int idx = be_getint(vm, 1);
+    binstance *obj = be_getptr(vm, 0);
 
-    be_object_member(obj, m_data(vm), &data);
+    be_instance_field(obj, m_data(vm), &data);
     list = data.v.p;
     if (idx < be_list_count(list)) {
-        bvalue *src = be_api_getvalue(vm, 2);
+        bvalue *src = be_getvalue(vm, 2);
         bvalue *dst = be_list_at(list, idx);
         *dst = *src;
     }
@@ -95,11 +95,11 @@ static int m_size(bvm *vm)
 {
     bvalue data;
     blist *list;
-    bobject *obj = be_api_getptr(vm, 0);
+    binstance *obj = be_getptr(vm, 0);
 
-    be_object_member(obj, m_data(vm), &data);
+    be_instance_field(obj, m_data(vm), &data);
     list = data.v.p;
-    be_api_retint(vm, be_list_count(list));
+    be_retint(vm, be_list_count(list));
     return 0;
 }
 
@@ -107,11 +107,11 @@ static int m_resize(bvm *vm)
 {
     blist *list;
     bvalue data, *v, *end;
-    bvalue *fill = be_api_getvalue(vm, 2);
-    int lastsize, size = be_api_getint(vm, 1);
-    bobject *obj = be_api_getptr(vm, 0);
+    bvalue *fill = be_getvalue(vm, 2);
+    int lastsize, size = be_getint(vm, 1);
+    binstance *obj = be_getptr(vm, 0);
 
-    be_object_member(obj, m_data(vm), &data);
+    be_instance_field(obj, m_data(vm), &data);
     list = data.v.p;
     lastsize = be_list_count(list);
     be_list_resize(list, size);
@@ -126,7 +126,7 @@ static int m_it(bvm *vm)
 {
     int idx;
     bupval *uv;
-    bobject *obj;
+    binstance *obj;
     bntvfunc *f = vm->cf->s.uf.f;
 
     uv = be_ntvfunc_upval(f, 0);
@@ -134,7 +134,7 @@ static int m_it(bvm *vm)
     uv = be_ntvfunc_upval(f, 1);
     idx = var_getint(uv->value);
     var_setint(uv->value, idx + 1);
-    be_api_retvalue(vm, list_getitem(vm, obj, idx));
+    be_retvalue(vm, list_getitem(vm, obj, idx));
     return 0;
 }
 
@@ -143,22 +143,22 @@ static int m_iter(bvm *vm)
     bvalue data;
     bntvfunc *f;
     bupval *uv;
-    bobject *obj = be_api_getptr(vm, 0);
+    binstance *obj = be_getptr(vm, 0);
 
-    be_object_member(obj, m_data(vm), &data);
+    be_instance_field(obj, m_data(vm), &data);
     f = be_newprimclosure(vm, m_it, 0, 2);
     uv = be_ntvfunc_upval(f, 0);
     var_setinstance(uv->value, obj);
     uv = be_ntvfunc_upval(f, 1);
     var_setint(uv->value, 0);
-    be_api_retfunc(vm, f);
+    be_retfunc(vm, f);
     return 0;
 }
 
 static bclass* newlist(bvm *vm)
 {
     bclass *c = be_newclass(vm, be_newstr(vm, "list"), NULL);
-    be_member_bind(c, m_data(vm));
+    be_field_bind(c, m_data(vm));
     be_prim_method_bind(vm, c, "init", m_init, 1);
     be_prim_method_bind(vm, c, "print", m_print, 1);
     be_prim_method_bind(vm, c, "append", m_append, 2);
@@ -173,5 +173,5 @@ static bclass* newlist(bvm *vm)
 void be_list_init(bvm *vm)
 {
     bclass *c = newlist(vm);
-    be_reg_class(vm, "list", c);
+    be_regclass(vm, "list", c);
 }

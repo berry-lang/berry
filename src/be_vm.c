@@ -20,16 +20,16 @@
 
 #define isnil(val)      var_isnil(val)
 #define isbool(val)     var_isbool(val)
-#define isint(val)      (type(val) == VT_INT)
-#define isreal(val)     (type(val) == VT_REAL)
-#define isstr(val)      (type(val) == VT_STRING)
+#define isint(val)      (type(val) == BE_INT)
+#define isreal(val)     (type(val) == BE_REAL)
+#define isstr(val)      (type(val) == BE_STRING)
 #define isnumber(val)   (isint(val) || isreal(val))
-#define isinstance(val) (type(val) == VT_INSTANCE)
+#define isinstance(val) (type(val) == BE_INSTANCE)
 #define toreal(val)     (isreal(val) ? (val)->v.r : (breal)(val)->v.i)
-#define setnil(val)     set_type((val), VT_NIL)
-#define setint(val, x)  { set_type((val), VT_INT); (val)->v.i = (x); }
-#define setreal(val, x) { set_type((val), VT_REAL); (val)->v.r = (x); }
-#define setbool(val, x) { set_type((val), VT_BOOL); (val)->v.b = cast_bool(x); }
+#define setnil(val)     set_type((val), BE_NIL)
+#define setint(val, x)  { set_type((val), BE_INT); (val)->v.i = (x); }
+#define setreal(val, x) { set_type((val), BE_REAL); (val)->v.r = (x); }
+#define setbool(val, x) { set_type((val), BE_BOOL); (val)->v.b = cast_bool(x); }
 
 #define ibinop(op, a, b)    ((a)->v.i op (b)->v.i)
 
@@ -129,10 +129,10 @@ void do_ntvfunc(bvm *vm, bvalue *reg, bntvfunc *f, int argc)
 void do_funcvar(bvm *vm, bvalue *reg, bvalue *v, int argc)
 {
     switch (v->type) {
-    case VT_CLOSURE:
+    case BE_CLOSURE:
         do_closure(vm, reg, v->v.p, argc);
         break;
-    case VT_NTVFUNC: {
+    case BE_NTVFUNC: {
         do_ntvfunc(vm, reg, v->v.p, argc);
         break;
     }
@@ -145,7 +145,7 @@ static bbool obj2bool(bvm *vm, bvalue *obj)
 {
     bvalue *top = topreg(vm);
     /* get operator method */
-    be_object_member(obj->v.p, be_newstr(vm, "tobool"), top);
+    be_instance_field(obj->v.p, be_newstr(vm, "tobool"), top);
     top[1] = *obj; /* move self to argv[0] */
     do_funcvar(vm, top, top, 1); /* call method 'item' */
     return isbool(top) ? top->v.b : btrue;
@@ -154,13 +154,13 @@ static bbool obj2bool(bvm *vm, bvalue *obj)
 static bbool var2bool(bvm *vm, bvalue *v)
 {
     switch (basetype(v)) {
-    case VT_BOOL:
+    case BE_BOOL:
         return v->v.b;
-    case VT_INT:
+    case BE_INT:
         return cast_bool(v->v.i);
-    case VT_REAL:
+    case BE_REAL:
         return cast_bool(v->v.r);
-    case VT_INSTANCE:
+    case BE_INSTANCE:
         return obj2bool(vm, v);
     default:
         return btrue;
@@ -172,7 +172,7 @@ static void object_binop(bvm *vm, const char *op,
 {
     bvalue *top = topreg(vm);
     /* get operator method */
-    be_object_member(a->v.p, be_newstr(vm, op), top);
+    be_instance_field(a->v.p, be_newstr(vm, op), top);
     top[1] = *a; /* move self to argv[0] */
     top[2] = *b; /* move other to argv[1] */
     do_funcvar(vm, top, top, 2); /* call method 'item' */
@@ -184,7 +184,7 @@ static void object_unop(bvm *vm, const char *op,
 {
     bvalue *top = topreg(vm);
     /* get operator method */
-    be_object_member(src->v.p, be_newstr(vm, op), top);
+    be_instance_field(src->v.p, be_newstr(vm, op), top);
     top[1] = *src; /* move self to argv[0] */
     do_funcvar(vm, top, top, 1); /* call method 'item' */
     *dst = *top; /* copy result to dst */
@@ -208,7 +208,7 @@ static void i_ldint(bvm *vm, binstruction ins)
 {
     bvalue *v = RA(ins);
 
-    set_type(v, VT_INT);
+    set_type(v, BE_INT);
     v->v.i = IGET_sBx(ins);
 }
 
@@ -376,7 +376,7 @@ static void i_return(bvm *vm, binstruction ins)
         *ret = *src;
         vm->cf = NULL; /* mainfunction return */
     } else {
-        ret[type(ret - 1) != VT_NOTMETHOD ? 0 : -1] = *src;
+        ret[type(ret - 1) != BE_NOTMETHOD ? 0 : -1] = *src;
         vm->cf = be_stack_top(vm->callstack);
     }
 }
@@ -388,17 +388,17 @@ static void i_call(bvm *vm, binstruction ins)
 
     recall: /* goto: instantiation class and call constructor */
     switch (type(var)) {
-    case VT_NOTMETHOD:
+    case BE_NOTMETHOD:
         ++var; --argc;
         goto recall;
-    case VT_CLASS:
+    case BE_CLASS:
         if (be_class_newobj(vm, var->v.p, var, ++argc)) {
             ++var; /* to next register */
             goto recall; /* call constructor */
         }
         ++vm->cf->s.ur.ip; /* to next instruction */
         break;
-    case VT_CLOSURE: {
+    case BE_CLOSURE: {
         bclosure *cl = var->v.p;
         if (argc != cl->proto->argc) {
             vm_error(vm, "function argc error");
@@ -406,7 +406,7 @@ static void i_call(bvm *vm, binstruction ins)
         push_closure(vm, cl, var);
         break;
     }
-    case VT_NTVFUNC: {
+    case BE_NTVFUNC: {
         bntvfunc *f = var->v.p;
         if (argc != f->argc && f->argc != -1) {
             vm_error(vm, "function argc error");
@@ -429,15 +429,15 @@ static void i_closure(bvm *vm, binstruction ins)
     bclosure *cl = be_newclosure(vm, p->nupvals);
     cl->proto = p;
     be_initupvals(vm, cl);
-    set_type(reg, VT_CLOSURE);
+    set_type(reg, BE_CLOSURE);
     reg->v.p = cl;
 }
 
-static void i_getmember(bvm *vm, binstruction ins)
+static void i_getfield(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
-    if (type(b) == VT_INSTANCE && type(c) == VT_STRING) {
-        be_object_member(b->v.p, c->v.s, a);
+    if (type(b) == BE_INSTANCE && type(c) == BE_STRING) {
+        be_instance_field(b->v.p, c->v.s, a);
     } else {
         vm_error(vm, "object error\n");
     }
@@ -446,27 +446,27 @@ static void i_getmember(bvm *vm, binstruction ins)
 static void i_getmethod(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
-    if (type(b) == VT_INSTANCE && type(c) == VT_STRING) {
+    if (type(b) == BE_INSTANCE && type(c) == BE_STRING) {
         bvalue self = *b;
-        bvalue *m = be_object_member(b->v.p, c->v.s, a);
+        bvalue *m = be_instance_field(b->v.p, c->v.s, a);
         if (m && m->type != MT_VARIABLE) {
             a[1] = self;
-        } else if (basetype(a) == VT_FUNCTION) {
+        } else if (basetype(a) == BE_FUNCTION) {
             a[1] = *a;
-            set_type(a, VT_NOTMETHOD);
+            set_type(a, BE_NOTMETHOD);
         } else {
-            vm_error(vm, "member is not function\n");
+            vm_error(vm, "field is not function\n");
         }
     } else {
         vm_error(vm, "object error\n");
     }
 }
 
-static void i_setmember(bvm *vm, binstruction ins)
+static void i_setfield(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
-    if (type(a) == VT_INSTANCE && type(b) == VT_STRING) {
-        be_object_setmember(a->v.p, b->v.s, c);
+    if (type(a) == BE_INSTANCE && type(b) == BE_STRING) {
+        be_instance_setfield(a->v.p, b->v.s, c);
     } else {
         vm_error(vm, "object error\n");
     }
@@ -475,10 +475,10 @@ static void i_setmember(bvm *vm, binstruction ins)
 static void i_getindex(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
-    if (type(b) == VT_INSTANCE) {
+    if (type(b) == BE_INSTANCE) {
         bvalue *top = topreg(vm);
         /* get method 'item' */
-        be_object_member(b->v.p, be_newstr(vm, "item"), top);
+        be_instance_field(b->v.p, be_newstr(vm, "item"), top);
         top[1] = *b; /* move object to argv[0] */
         top[2] = *c; /* move key to argv[1] */
         do_funcvar(vm, top, top, 2); /* call method 'item' */
@@ -491,10 +491,10 @@ static void i_getindex(bvm *vm, binstruction ins)
 static void i_setindex(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
-    if (type(a) == VT_INSTANCE) {
+    if (type(a) == BE_INSTANCE) {
         bvalue *top = topreg(vm);
         /* get method 'item' */
-        be_object_member(a->v.p, be_newstr(vm, "setitem"), top);
+        be_instance_field(a->v.p, be_newstr(vm, "setitem"), top);
         top[1] = *a; /* move object to argv[0] */
         top[2] = *b; /* move key to argv[1] */
         top[3] = *c; /* move src to argv[2] */
@@ -507,7 +507,7 @@ static void i_setindex(bvm *vm, binstruction ins)
 static void i_setsuper(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins);
-    if (type(a) == VT_CLASS && type(b) == VT_CLASS) {
+    if (type(a) == BE_CLASS && type(b) == BE_CLASS) {
         be_class_setsuper((bclass*)a->v.p, b->v.p);
     } else {
         vm_error(vm, "set super: class error\n");
@@ -529,6 +529,7 @@ bvm* be_vm_new(int nstack)
     vm->callstack = be_stack_new(sizeof(bcallframe));
     vm->cf = NULL;
     vm->upvalist = NULL;
+    vm->spos = 0;
     return vm;
 }
 
@@ -568,9 +569,9 @@ void be_exec(bvm *vm)
         case OP_JMPF: i_jumpfalse(vm, ins); break;
         case OP_CALL: i_call(vm, ins); goto newframe;
         case OP_CLOSURE: i_closure(vm, ins); break;
-        case OP_GETMBR: i_getmember(vm, ins); break;
+        case OP_GETMBR: i_getfield(vm, ins); break;
         case OP_GETMET: i_getmethod(vm, ins); break;
-        case OP_SETMBR: i_setmember(vm, ins); break;
+        case OP_SETMBR: i_setfield(vm, ins); break;
         case OP_GETIDX: i_getindex(vm, ins); break;
         case OP_SETIDX: i_setindex(vm, ins); break;
         case OP_SETSUPER: i_setsuper(vm, ins); break;
@@ -578,7 +579,10 @@ void be_exec(bvm *vm)
         case OP_RET: i_return(vm, ins); goto retpoint;
         default: retpoint:
             if (vm->cf == NULL) {
-                vm->cf = be_stack_top(vm->callstack);
+                bstack *cs = vm->callstack;
+                if (!be_stack_isempty(cs)) {
+                    vm->cf = be_stack_top(cs);
+                }
                 return;
             }
             cf = vm->cf;

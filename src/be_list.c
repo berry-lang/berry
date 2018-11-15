@@ -8,7 +8,7 @@
 
 blist* be_list_new(bvm *vm)
 {
-    bgcobject *gco = be_gcnew(vm, VT_LIST, blist);
+    bgcobject *gco = be_gcnew(vm, BE_LIST, blist);
     blist *list = cast_list(gco);
     if (list) {
         list->count = 0;
