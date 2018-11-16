@@ -7,6 +7,7 @@
 #include "be_var.h"
 #include "be_list.h"
 #include "be_map.h"
+#include "be_parser.h"
 #include "be_debug.h"
 
 #define getbase(vm)     ((vm)->cf->reg)
@@ -35,10 +36,9 @@ void be_regcfunc(bvm *vm, const char *name, bcfunction f, int argc)
         bntvfunc *func;
         bvalue *var;
         idx = be_globalvar_new(vm, s);
-        var = globalvar(vm, idx);
+        var = be_globalvar(vm, idx);
         func = be_newntvfunc(vm, f, argc);
-        set_type(var, BE_NTVFUNC);
-        var->v.p = func;
+        var_setntvfunc(var, func);
     } /* else error */
 }
 
@@ -46,7 +46,7 @@ void be_regclass(bvm *vm, const char *name, const bfieldinfo *lib)
 {
     bstring *s = be_newstr(vm, name);
     bclass *c = be_newclass(vm, s, NULL);
-    bvalue *var = globalvar(vm, be_globalvar_new(vm, s));
+    bvalue *var = be_globalvar(vm, be_globalvar_new(vm, s));
     var_setclass(var, c);
     /* bind fields */
     while (lib->name) {
@@ -80,6 +80,78 @@ int be_isnil(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isnil(v);
+}
+
+int be_isbool(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    return var_isbool(v);
+}
+
+int be_isint(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    return var_isint(v);
+}
+
+int be_isreal(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    return var_isreal(v);
+}
+
+int be_isstring(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    return var_isstring(v);
+}
+
+int be_isclosure(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    return var_isclosure(v);
+}
+
+int be_isntvfunc(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    return var_isntvfunc(v);
+}
+
+int be_isfunction(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    return var_isfunction(v);
+}
+
+int be_isproto(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    return var_isproto(v);
+}
+
+int be_isclass(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    return var_isclass(v);
+}
+
+int be_isinstance(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    return var_isinstance(v);
+}
+
+int be_islist(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    return var_islist(v);
+}
+
+int be_ismap(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    return var_ismap(v);
 }
 
 int be_toint(bvm *vm, int index)
@@ -173,20 +245,38 @@ void be_getsuper(bvm *vm, int index)
     var_setnil(top);
 }
 
-void be_getobjtype(bvm *vm, int index)
+const char* be_typename(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
-    bvalue *top = pushtop(vm);
+    switch(var_type(v)) {
+    case BE_NIL: return "nil";
+    case BE_INT: return "int";
+    case BE_REAL: return "real";
+    case BE_BOOL: return "bool";
+    case BE_CLOSURE: return "closure";
+    case BE_NTVFUNC: return "ntvfunc";
+    case BE_PROTO: return "proto";
+    case BE_CLASS: return "class";
+    case BE_STRING: return "string";
+    case BE_LIST: return "list";
+    case BE_MAP: return "map";
+    case BE_INSTANCE: return "instance";
+    default: return "invalid type";
+    }
+}
 
+const char* be_objecttype(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
     if (var_isclass(v)) {
         bclass *c = var_toobj(v);
-        var_setstr(top, be_class_name(c));
-    } else if (var_isinstance(v)) {
-        binstance *o = var_toobj(v);
-        var_setstr(top, be_instance_name(o));
-    } else {
-        var_setnil(top);
+        return str(be_class_name(c));
     }
+    if (var_isinstance(v)) {
+        binstance *i = var_toobj(v);
+        return str(be_instance_name(i));
+    }
+    return NULL;
 }
 
 void be_newlist(bvm *vm)
@@ -393,4 +483,10 @@ void be_printvalue(bvm *vm, int quote, int index)
         be_printf("Unknow type: %d", var_type(v));
         break;
     }
+}
+
+void be_dostring(bvm *vm, const char *src)
+{
+    bclosure *cl = be_parser_source(vm, "", src);
+    be_dofunc(vm, cl, 1);
 }

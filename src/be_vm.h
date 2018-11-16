@@ -14,7 +14,6 @@ typedef struct {
     struct {
         union {
             bclosure *cl; /* closure */
-            bntvfunc *f; /* ntvfunc */
         } uf;
         union {
             bvalue *top;  /* top register pointer (only C-function) */
@@ -33,14 +32,12 @@ struct bvm {
     struct bvector *callstack; /* function call stack */
     bglobaldesc gbldesc; /* global description */
     bcallframe *cf; /* function call frame */
-    bbyte spos; /* C function stack postion */
 };
 
 #define NONE_FLAG           0
 #define BASE_FRAME          (1 << 0)
 #define PRIM_FUNC           (1 << 1)
 
-bvm* be_vm_new(int nstack);
 void be_exec(bvm *vm);
 void be_dofunc(bvm *vm, bclosure *cl, int argc);
 void be_dontvfunc(bvm *vm, bntvfunc *f, int argc);

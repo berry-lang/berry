@@ -314,13 +314,13 @@ static void new_class(bparser *parser, bstring *name, bclass *c, bexpdesc *e)
     if (finfo->prev == NULL && finfo->binfo->prev == NULL) {
         init_exp(e, ETGLOBAL, 0);
         e->v.idx = be_globalvar_new(parser->vm, name);
-        var = globalvar(parser->vm, e->v.idx);
+        var = be_globalvar(parser->vm, e->v.idx);
     } else {
         init_exp(e, ETLOCAL, 0);
         e->v.idx = new_localvar(finfo, name);
         var = be_code_localobject(finfo, e->v.idx);
     }
-    set_type(var, BE_CLASS);
+    var_settype(var, BE_CLASS);
     var->v.p = c;
 }
 

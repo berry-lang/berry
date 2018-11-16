@@ -103,7 +103,7 @@ bvalue* be_instance_field(binstance *obj, bstring *name, bvalue *dst)
         }
         obj = obj->super;
     }
-    set_type(dst, BE_NIL);
+    var_setnil(dst);
     return NULL;
 }
 

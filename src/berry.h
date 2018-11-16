@@ -44,9 +44,24 @@ typedef struct {
 
 int be_top(bvm *vm);
 int be_type(bvm *vm, int index);
+const char* be_typename(bvm *vm, int index);
+const char* be_objecttype(bvm *vm, int index);
 void be_pop(bvm *vm, int n);
 
 int be_isnil(bvm *vm, int index);
+int be_isbool(bvm *vm, int index);
+int be_isint(bvm *vm, int index);
+int be_isreal(bvm *vm, int index);
+int be_isstring(bvm *vm, int index);
+int be_isclosure(bvm *vm, int index);
+int be_isntvfunc(bvm *vm, int index);
+int be_isfunction(bvm *vm, int index);
+int be_isproto(bvm *vm, int index);
+int be_isclass(bvm *vm, int index);
+int be_isinstance(bvm *vm, int index);
+int be_islist(bvm *vm, int index);
+int be_ismap(bvm *vm, int index);
+
 int be_toint(bvm *vm, int index);
 breal be_toreal(bvm *vm, int index);
 bbool be_tobool(bvm *vm, int index);
@@ -61,7 +76,6 @@ void be_pushvalue(bvm *vm, int index);
 void be_pushntvclosure(bvm *vm, bcfunction f, int argc, int nupvals);
 
 void be_getsuper(bvm *vm, int index);
-void be_getobjtype(bvm *vm, int index);
 
 void be_newlist(bvm *vm);
 void be_setfield(bvm *vm, int index, const char *k);
@@ -85,5 +99,10 @@ void be_abort(void);
 
 void be_regcfunc(bvm *vm, const char *name, bcfunction f, int argc);
 void be_regclass(bvm *vm, const char *name, const bfieldinfo *lib);
+
+bvm* be_newvm(int nstack);
+void be_dostring(bvm *vm, const char *src);
+
+void be_loadlibs(bvm *vm);
 
 #endif

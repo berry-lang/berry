@@ -4,11 +4,13 @@ CC	 = gcc
 
 INCPATH	 = src
 SRCPATH	 = src
+LIBS	 = -lreadline
 
 SRCS	 = $(foreach dir, $(SRCPATH), $(wildcard $(dir)/*.c))
 OBJS	 = $(patsubst %.c, %.o, $(SRCS))
 DEPS	 = $(patsubst %.c, %.d, $(SRCS))
 CFLAGS	+= $(foreach dir, $(INCPATH), -I"$(dir)")
+CFLAGS	+= $(LIBS)
 
 all: $(TARGET)
 

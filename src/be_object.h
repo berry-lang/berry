@@ -105,7 +105,10 @@ struct bntvfunc {
     bcfunction f;
 };
 
+#define cast(_T, _v)            ((_T)_v)
+
 #define var_type(_v)            ((_v)->type)
+#define var_basetype(_v)        ((_v)->type & 0x1F)
 #define var_istype(_v, _t)      (var_type(_v) == _t)
 #define var_settype(_v, _t)     ((_v)->type = (bbyte)_t)
 #define var_setobj(_v, _t, _o)  { (_v)->v.p = _o; var_settype(_v, _t); }
@@ -114,8 +117,16 @@ struct bntvfunc {
 #define var_isbool(_v)          var_istype(_v, BE_BOOL)
 #define var_isint(_v)           var_istype(_v, BE_INT)
 #define var_isreal(_v)          var_istype(_v, BE_REAL)
+#define var_isstring(_v)        var_istype(_v, BE_STRING)
+#define var_isclosure(_v)       var_istype(_v, BE_CLOSURE)
+#define var_isntvfunc(_v)       var_istype(_v, BE_NTVFUNC)
+#define var_isfunction(_v)      (var_basetype(_v) == BE_FUNCTION)
+#define var_isproto(_v)         var_istype(_v, BE_PROTO)
 #define var_isclass(_v)         var_istype(_v, BE_CLASS)
 #define var_isinstance(_v)      var_istype(_v, BE_INSTANCE)
+#define var_islist(_v)          var_istype(_v, BE_LIST)
+#define var_ismap(_v)           var_istype(_v, BE_MAP)
+#define var_isnumber(_v)        (var_isint(_v) || var_isreal(_v))
 
 #define var_setnil(_v)          var_settype(_v, BE_NIL)
 #define var_setval(_v, _s)      (*(_v) = *(_s))

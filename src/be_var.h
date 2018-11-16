@@ -3,12 +3,7 @@
 
 #include "be_object.h"
 
-#define type(v)             ((v)->type)
-#define basetype(v)         (type(v) & 0x1F)
-#define set_type(v, t)      var_settype(v, t)
-#define cast_bool(v)        ((v) ? btrue : bfalse)
-#define globalvar(vm, idx)  ((vm)->global + (idx))
-
+#define be_globalvar(vm, idx)   ((vm)->global + (idx))
 #define be_globalvar_count(vm)  ((vm)->gbldesc.nglobal)
 
 void be_globalvar_init(bvm *vm);

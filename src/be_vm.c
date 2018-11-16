@@ -18,23 +18,15 @@
 #define RKC(i)  ((isKC(i) ? vm->cf->s.uf.cl->proto->ktab \
                           : vm->cf->reg) + KR2idx(IGET_RKC(i)))
 
-#define isnil(val)      var_isnil(val)
-#define isbool(val)     var_isbool(val)
-#define isint(val)      (type(val) == BE_INT)
-#define isreal(val)     (type(val) == BE_REAL)
-#define isstr(val)      (type(val) == BE_STRING)
-#define isnumber(val)   (isint(val) || isreal(val))
-#define isinstance(val) (type(val) == BE_INSTANCE)
-#define toreal(val)     (isreal(val) ? (val)->v.r : (breal)(val)->v.i)
-#define setnil(val)     set_type((val), BE_NIL)
-#define setint(val, x)  { set_type((val), BE_INT); (val)->v.i = (x); }
-#define setreal(val, x) { set_type((val), BE_REAL); (val)->v.r = (x); }
-#define setbool(val, x) { set_type((val), BE_BOOL); (val)->v.b = cast_bool(x); }
+#define var2real(_v) \
+    (var_isreal(_v) ? (_v)->v.r : (breal)(_v)->v.i)
 
+#define cast_bool(v)        ((v) ? btrue : bfalse)
 #define ibinop(op, a, b)    ((a)->v.i op (b)->v.i)
 
 #define topreg(vm)      ((vm)->cf->reg + \
     (vm)->cf->s.uf.cl->proto->nlocal + MAX_TMPREG)
+
 
 #define define_function(name, block) \
     static void name(bvm *vm, binstruction ins) { \
@@ -43,12 +35,12 @@
 
 #define relop_block(op) \
     bvalue *dst = RA(ins), *a = RKB(ins), *b = RKC(ins); \
-    if (isint(a) && isint(b)) { \
-        setbool(dst, ibinop(op, a, b)); \
-    } else if (isnumber(a) && isnumber(b)) { \
-        breal x = toreal(a), y = toreal(b); \
-        setbool(dst, x op y); \
-    } else if (isinstance(a)) { \
+    if (var_isint(a) && var_isint(b)) { \
+        var_setbool(dst, ibinop(op, a, b)); \
+    } else if (var_isnumber(a) && var_isnumber(b)) { \
+        breal x = var2real(a), y = var2real(b); \
+        var_setbool(dst, x op y); \
+    } else if (var_isinstance(a)) { \
         object_binop(vm, #op, dst, a, b); \
     } else { \
         vm_error(vm, "a " #op " b param error."); \
@@ -56,17 +48,17 @@
 
 #define equal_block(op, opstr) \
     bvalue *dst = RA(ins), *a = RKB(ins), *b = RKC(ins); \
-    if (isint(a) && isint(b)) { \
-        setbool(dst, ibinop(op, a, b)); \
-    } else if (isnumber(a) && isnumber(b)) { \
-        breal x = toreal(a), y = toreal(b); \
-        setbool(dst, x op y); \
-    } else if (isnil(a) || isnil(b)) { \
-        bbool res = type(a) op type(b); \
-        setbool(dst, res); \
-    } else if (isstr(a) && isstr(b)) { \
-        setbool(dst, opstr be_eqstr(a->v.s, b->v.s)); \
-    } else if (isinstance(a)) { \
+    if (var_isint(a) && var_isint(b)) { \
+        var_setbool(dst, ibinop(op, a, b)); \
+    } else if (var_isnumber(a) && var_isnumber(b)) { \
+        breal x = var2real(a), y = var2real(b); \
+        var_setbool(dst, x op y); \
+    } else if (var_isnil(a) || var_isnil(b)) { \
+        bbool res = var_type(a) op var_type(b); \
+        var_setbool(dst, res); \
+    } else if (var_isstring(a) && var_isstring(b)) { \
+        var_setbool(dst, opstr be_eqstr(a->v.s, b->v.s)); \
+    } else if (var_isinstance(a)) { \
         object_binop(vm, #op, dst, a, b); \
     } else { \
         vm_error(vm, "a " #op " b param error."); \
@@ -84,13 +76,12 @@
     _vm->cf = _c; \
 }
 
-#define push_ntvfunc(_vm, _f, _reg, _argc) { \
+#define push_ntvfunc(_vm, _reg, _argc) { \
     bcallframe *_c; \
     be_stack_push(_vm->callstack, NULL); \
     _c = be_stack_top(_vm->callstack); \
     _c->reg = _reg + 1; \
     _c->s.ur.top = _c->reg + _argc; \
-    _c->s.uf.f = _f; \
     _c->status = PRIM_FUNC; \
     _vm->cf = _c; \
 }
@@ -121,7 +112,7 @@ void do_ntvfunc(bvm *vm, bvalue *reg, bntvfunc *f, int argc)
     if (argc != f->argc && f->argc != -1) {
         vm_error(vm, "function argc error");
     }
-    push_ntvfunc(vm, f, reg, argc);
+    push_ntvfunc(vm, reg, argc);
     f->f(vm); /* call C primitive function */
     ret_cfunction(vm);
 }
@@ -148,12 +139,12 @@ static bbool obj2bool(bvm *vm, bvalue *obj)
     be_instance_field(obj->v.p, be_newstr(vm, "tobool"), top);
     top[1] = *obj; /* move self to argv[0] */
     do_funcvar(vm, top, top, 1); /* call method 'item' */
-    return isbool(top) ? top->v.b : btrue;
+    return var_isbool(top) ? top->v.b : btrue;
 }
 
 static bbool var2bool(bvm *vm, bvalue *v)
 {
-    switch (basetype(v)) {
+    switch (var_basetype(v)) {
     case BE_BOOL:
         return v->v.b;
     case BE_INT:
@@ -192,13 +183,13 @@ static void object_unop(bvm *vm, const char *op,
 
 static void i_ldnil(bvm *vm, binstruction ins)
 {
-    setnil(RA(ins));
+    var_setnil(RA(ins));
 }
 
 static void i_ldbool(bvm *vm, binstruction ins)
 {
     bvalue *v = RA(ins);
-    setbool(v, IGET_RKB(ins));
+    var_setbool(v, IGET_RKB(ins));
     if (IGET_RKC(ins)) { /* skip next instruction */
         vm->cf->s.ur.ip++;
     }
@@ -207,9 +198,7 @@ static void i_ldbool(bvm *vm, binstruction ins)
 static void i_ldint(bvm *vm, binstruction ins)
 {
     bvalue *v = RA(ins);
-
-    set_type(v, BE_INT);
-    v->v.i = IGET_sBx(ins);
+    var_setint(v, IGET_sBx(ins));
 }
 
 static void i_getglobal(bvm *vm, binstruction ins)
@@ -255,12 +244,12 @@ static void i_move(bvm *vm, binstruction ins)
 static void i_add(bvm *vm, binstruction ins)
 {
     bvalue *dst = RA(ins), *a = RKB(ins), *b = RKC(ins);
-    if (isint(a) && isint(b)) {
-        setint(dst, ibinop(+, a, b));
-    } else if (isnumber(a) && isnumber(b)) {
-        breal x = toreal(a), y = toreal(b);
-        setreal(dst, x + y);
-    } else if (isinstance(a)) {
+    if (var_isint(a) && var_isint(b)) {
+        var_setint(dst, ibinop(+, a, b));
+    } else if (var_isnumber(a) && var_isnumber(b)) {
+        breal x = var2real(a), y = var2real(b);
+        var_setreal(dst, x + y);
+    } else if (var_isinstance(a)) {
         object_binop(vm, "+", dst, a, b);
     } else {
         vm_error(vm, "ADD param error.");
@@ -270,12 +259,12 @@ static void i_add(bvm *vm, binstruction ins)
 static void i_sub(bvm *vm, binstruction ins)
 {
     bvalue *dst = RA(ins), *a = RKB(ins), *b = RKC(ins);
-    if (isint(a) && isint(b)) {
-        setint(dst, ibinop(-, a, b));
-    } else if (isnumber(a) && isnumber(b)) {
-        breal x = toreal(a), y = toreal(b);
-        setreal(dst, x - y);
-    } else if (isinstance(a)) {
+    if (var_isint(a) && var_isint(b)) {
+        var_setint(dst, ibinop(-, a, b));
+    } else if (var_isnumber(a) && var_isnumber(b)) {
+        breal x = var2real(a), y = var2real(b);
+        var_setreal(dst, x - y);
+    } else if (var_isinstance(a)) {
         object_binop(vm, "-", dst, a, b);
     } else {
         vm_error(vm, "SUB param error.");
@@ -285,12 +274,12 @@ static void i_sub(bvm *vm, binstruction ins)
 static void i_mul(bvm *vm, binstruction ins)
 {
     bvalue *dst = RA(ins), *a = RKB(ins), *b = RKC(ins);
-    if (isint(a) && isint(b)) {
-        setint(dst, ibinop(*, a, b));
-    } else if (isnumber(a) && isnumber(b)) {
-        breal x = toreal(a), y = toreal(b);
-        setreal(dst, x * y);
-    } else if (isinstance(a)) {
+    if (var_isint(a) && var_isint(b)) {
+        var_setint(dst, ibinop(*, a, b));
+    } else if (var_isnumber(a) && var_isnumber(b)) {
+        breal x = var2real(a), y = var2real(b);
+        var_setreal(dst, x * y);
+    } else if (var_isinstance(a)) {
         object_binop(vm, "*", dst, a, b);
     } else {
         vm_error(vm, "MUL param error.");
@@ -300,12 +289,12 @@ static void i_mul(bvm *vm, binstruction ins)
 static void i_div(bvm *vm, binstruction ins)
 {
     bvalue *dst = RA(ins), *a = RKB(ins), *b = RKC(ins);
-    if (isint(a) && isint(b)) {
-        setint(dst, ibinop(/, a, b));
-    } else if (isnumber(a) && isnumber(b)) {
-        breal x = toreal(a), y = toreal(b);
-        setreal(dst, x / y);
-    } else if (isinstance(a)) {
+    if (var_isint(a) && var_isint(b)) {
+        var_setint(dst, ibinop(/, a, b));
+    } else if (var_isnumber(a) && var_isnumber(b)) {
+        breal x = var2real(a), y = var2real(b);
+        var_setreal(dst, x / y);
+    } else if (var_isinstance(a)) {
         object_binop(vm, "/", dst, a, b);
     } else {
         vm_error(vm, "DIV param error.");
@@ -315,9 +304,9 @@ static void i_div(bvm *vm, binstruction ins)
 static void i_mod(bvm *vm, binstruction ins)
 {
     bvalue *dst = RA(ins), *a = RKB(ins), *b = RKC(ins);
-    if (isint(a) && isint(b)) {
-        setint(dst, ibinop(%, a, b));
-    } else if (isinstance(a)) {
+    if (var_isint(a) && var_isint(b)) {
+        var_setint(dst, ibinop(%, a, b));
+    } else if (var_isinstance(a)) {
         object_binop(vm, "%", dst, a, b);
     } else {
         vm_error(vm, "MOD param error.");
@@ -327,11 +316,11 @@ static void i_mod(bvm *vm, binstruction ins)
 static void i_neg(bvm *vm, binstruction ins)
 {
     bvalue *dst = RA(ins), *a = RKB(ins);
-    if (isint(a)) {
-        setint(dst, -a->v.i);
-    } else if (isreal(a)) {
-        setreal(dst, -a->v.r);
-    } else if (isinstance(a)) {
+    if (var_isint(a)) {
+        var_setint(dst, -a->v.i);
+    } else if (var_isreal(a)) {
+        var_setreal(dst, -a->v.r);
+    } else if (var_isinstance(a)) {
         object_unop(vm, "-*", dst, a);
     } else {
         vm_error(vm, "NEG param error.");
@@ -376,7 +365,7 @@ static void i_return(bvm *vm, binstruction ins)
         *ret = *src;
         vm->cf = NULL; /* mainfunction return */
     } else {
-        ret[type(ret - 1) != BE_NOTMETHOD ? 0 : -1] = *src;
+        ret[var_type(ret - 1) != BE_NOTMETHOD ? 0 : -1] = *src;
         vm->cf = be_stack_top(vm->callstack);
     }
 }
@@ -387,7 +376,7 @@ static void i_call(bvm *vm, binstruction ins)
     int argc = IGET_RKB(ins);
 
     recall: /* goto: instantiation class and call constructor */
-    switch (type(var)) {
+    switch (var_type(var)) {
     case BE_NOTMETHOD:
         ++var; --argc;
         goto recall;
@@ -411,7 +400,7 @@ static void i_call(bvm *vm, binstruction ins)
         if (argc != f->argc && f->argc != -1) {
             vm_error(vm, "function argc error");
         }
-        push_ntvfunc(vm, f, var, argc);
+        push_ntvfunc(vm, var, argc);
         f->f(vm); /* call C primitive function */
         ret_cfunction(vm);
         ++vm->cf->s.ur.ip; /* to next instruction */
@@ -429,14 +418,13 @@ static void i_closure(bvm *vm, binstruction ins)
     bclosure *cl = be_newclosure(vm, p->nupvals);
     cl->proto = p;
     be_initupvals(vm, cl);
-    set_type(reg, BE_CLOSURE);
-    reg->v.p = cl;
+    var_setclosure(reg, cl);
 }
 
 static void i_getfield(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
-    if (type(b) == BE_INSTANCE && type(c) == BE_STRING) {
+    if (var_isinstance(b) && var_isstring(c)) {
         be_instance_field(b->v.p, c->v.s, a);
     } else {
         vm_error(vm, "get field: object error\n");
@@ -446,14 +434,14 @@ static void i_getfield(bvm *vm, binstruction ins)
 static void i_getmethod(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
-    if (type(b) == BE_INSTANCE && type(c) == BE_STRING) {
+    if (var_isinstance(b) && var_isstring(c)) {
         bvalue self = *b;
         bvalue *m = be_instance_field(b->v.p, c->v.s, a);
         if (m && m->type != MT_VARIABLE) {
             a[1] = self;
-        } else if (basetype(a) == BE_FUNCTION) {
+        } else if (var_basetype(a) == BE_FUNCTION) {
             a[1] = *a;
-            set_type(a, BE_NOTMETHOD);
+            var_settype(a, BE_NOTMETHOD);
         } else {
             vm_error(vm, "field is not function\n");
         }
@@ -465,7 +453,7 @@ static void i_getmethod(bvm *vm, binstruction ins)
 static void i_setfield(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
-    if (type(a) == BE_INSTANCE && type(b) == BE_STRING) {
+    if (var_isinstance(a) && var_isstring(b)) {
         be_instance_setfield(a->v.p, b->v.s, c);
     } else {
         vm_error(vm, "set field: object error\n");
@@ -475,7 +463,7 @@ static void i_setfield(bvm *vm, binstruction ins)
 static void i_getindex(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
-    if (type(b) == BE_INSTANCE) {
+    if (var_isinstance(b)) {
         bvalue *top = topreg(vm);
         /* get method 'item' */
         be_instance_field(b->v.p, be_newstr(vm, "item"), top);
@@ -491,7 +479,7 @@ static void i_getindex(bvm *vm, binstruction ins)
 static void i_setindex(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
-    if (type(a) == BE_INSTANCE) {
+    if (var_isinstance(a)) {
         bvalue *top = topreg(vm);
         /* get method 'item' */
         be_instance_field(a->v.p, be_newstr(vm, "setitem"), top);
@@ -507,7 +495,7 @@ static void i_setindex(bvm *vm, binstruction ins)
 static void i_setsuper(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins);
-    if (type(a) == BE_CLASS && type(b) == BE_CLASS) {
+    if (var_isclass(a) && var_isclass(b)) {
         be_class_setsuper((bclass*)a->v.p, b->v.p);
     } else {
         vm_error(vm, "set super: class error\n");
@@ -519,7 +507,7 @@ static void i_close(bvm *vm, binstruction ins)
     be_upvals_close(vm, RA(ins));
 }
 
-bvm* be_vm_new(int nstack)
+bvm* be_newvm(int nstack)
 {
     bvm *vm = be_malloc(sizeof(bvm));
     be_gc_init(vm);
@@ -529,7 +517,6 @@ bvm* be_vm_new(int nstack)
     vm->callstack = be_stack_new(sizeof(bcallframe));
     vm->cf = NULL;
     vm->upvalist = NULL;
-    vm->spos = 0;
     return vm;
 }
 
@@ -595,7 +582,7 @@ void be_exec(bvm *vm)
 void be_dofunc(bvm *vm, bclosure *cl, int argc)
 {
     bvalue *reg = vm->cf ? vm->cf->s.ur.top : vm->stack;
-    be_gc_setpause(vm, 0);
+    be_gc_setpause(vm, 1);
     do_closure(vm, reg, cl, argc);
     be_gc_collect(vm);
 }

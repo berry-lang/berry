@@ -33,14 +33,18 @@ static int l_super(bvm *vm)
 
 static int l_type(bvm *vm)
 {
-    switch(be_type(vm, 1)) {
-    case BE_NIL: be_pushstring(vm, "nil"); break;
-    case BE_BOOL: be_pushstring(vm, "bool"); break;
-    case BE_INT: be_pushstring(vm, "int"); break;
-    case BE_REAL: be_pushstring(vm, "real"); break;
-    case BE_CLASS: be_pushstring(vm, "class"); break;
-    case BE_INSTANCE: be_getobjtype(vm, 1); break;
-    default: be_pushnil(vm); break;
+    const char *t = be_typename(vm, 1);
+    be_pushstring(vm, t);
+    return be_returnvalue(vm);
+}
+
+static int l_otype(bvm *vm)
+{
+    const char *t = be_objecttype(vm, 1);
+    if (t) {
+        be_pushstring(vm, t);
+    } else {
+        be_pushnil(vm);
     }
     return be_returnvalue(vm);
 }
@@ -52,4 +56,5 @@ void be_loadbaselib(bvm *vm)
     be_regcfunc(vm, "super", l_super, 1);
     be_regcfunc(vm, "memcount", l_memcount, 0);
     be_regcfunc(vm, "type", l_type, 1);
+    be_regcfunc(vm, "otype", l_otype, 1);
 }
