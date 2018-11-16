@@ -1,51 +1,25 @@
 #include "be_listlib.h"
-#include "be_class.h"
-#include "be_api.h"
-#include "be_string.h"
-#include "be_debug.h"
-#include "be_mem.h"
-#include "be_list.h"
-#include "be_baselib.h"
-#include "be_func.h"
-#include "be_vm.h"
 
 #define m_data(vm)      be_newstr(vm, "__data__")
 
-static bvalue* list_getitem(bvm *vm, binstance *obj, int index)
-{
-    bvalue data;
-    blist *list;
-    be_instance_field(obj, m_data(vm), &data);
-    list = data.v.p;
-    if (index < be_list_count(list)) {
-        return be_list_at(list, index);
-    }
-    return NULL;
-}
-
 static int m_init(bvm *vm)
 {
-    bvalue data;
-    binstance *obj = be_getptr(vm, 0);
-    be_settype(&data, BE_LIST);
-    data.v.p = be_list_new(vm);
-    be_instance_setfield(obj, m_data(vm), &data);
+    be_newlist(vm);
+    be_setfield(vm, 1, "__data__");
     return 0;
 }
 
 static int m_print(bvm *vm)
 {
-    int count, i;
-    bvalue data;
-    blist *list;
-    binstance *obj = be_getptr(vm, 0);
-
-    be_instance_field(obj, m_data(vm), &data);
-    list = data.v.p;
-    count = be_list_count(list);
+    int i, count;
+    be_getfield(vm, 1, "__data__");
+    count = be_size(vm, -1);
     be_printf("[");
     for (i = 0; i < count; ++i) {
-        be_print_value(vm, be_list_at(list, i), 1);
+        be_pushint(vm, i);
+        be_getindex(vm, -2);
+        be_printvalue(vm, 1, -1);
+        be_pop(vm, 2);
         if (i < count - 1) {
             be_printf(", ");
         }
@@ -56,122 +30,82 @@ static int m_print(bvm *vm)
 
 static int m_append(bvm *vm)
 {
-    blist *list;
-    binstance *obj = be_getptr(vm, 0);
-    bvalue data, *value = be_getvalue(vm, 1);
-
-    be_instance_field(obj, m_data(vm), &data);
-    list = data.v.p;
-    be_list_append(list, value);
+    be_getfield(vm, 1, "__data__");
+    be_pushvalue(vm, 2);
+    be_append(vm, -2);
     return 0;
 }
 
 static int m_item(bvm *vm)
 {
-    int idx = be_getint(vm, 1);
-    binstance *obj = be_getptr(vm, 0);
-    be_retvalue(vm, list_getitem(vm, obj, idx));
-    return 0;
+    be_getfield(vm, 1, "__data__");
+    be_pushvalue(vm, 2);
+    be_getindex(vm, -2);
+    return be_returnvalue(vm);
 }
 
 static int m_setitem(bvm *vm)
 {
-    bvalue data;
-    blist *list;
-    int idx = be_getint(vm, 1);
-    binstance *obj = be_getptr(vm, 0);
-
-    be_instance_field(obj, m_data(vm), &data);
-    list = data.v.p;
-    if (idx < be_list_count(list)) {
-        bvalue *src = be_getvalue(vm, 2);
-        bvalue *dst = be_list_at(list, idx);
-        *dst = *src;
-    }
+    be_getfield(vm, 1, "__data__");
+    be_pushvalue(vm, 2);
+    be_pushvalue(vm, 3);
+    be_setindex(vm, -3);
     return 0;
 }
 
 static int m_size(bvm *vm)
 {
-    bvalue data;
-    blist *list;
-    binstance *obj = be_getptr(vm, 0);
-
-    be_instance_field(obj, m_data(vm), &data);
-    list = data.v.p;
-    be_retint(vm, be_list_count(list));
-    return 0;
+    be_getfield(vm, 1, "__data__");
+    be_getsize(vm, -1);
+    return be_returnvalue(vm);
 }
 
 static int m_resize(bvm *vm)
 {
-    blist *list;
-    bvalue data, *v, *end;
-    bvalue *fill = be_getvalue(vm, 2);
-    int lastsize, size = be_getint(vm, 1);
-    binstance *obj = be_getptr(vm, 0);
-
-    be_instance_field(obj, m_data(vm), &data);
-    list = data.v.p;
-    lastsize = be_list_count(list);
-    be_list_resize(list, size);
-    end = be_list_end(list);
-    for (v = be_list_at(list, lastsize); v < end; ++v) {
-        *v = *fill;
-    }
+    be_getfield(vm, 1, "__data__");
+    be_pushvalue(vm, 2);
+    be_resize(vm, -2);
     return 0;
 }
 
 static int m_it(bvm *vm)
 {
-    int idx;
-    bupval *uv;
-    binstance *obj;
-    bntvfunc *f = vm->cf->s.uf.f;
-
-    uv = be_ntvfunc_upval(f, 0);
-    obj = var_getobj(uv->value);
-    uv = be_ntvfunc_upval(f, 1);
-    idx = var_getint(uv->value);
-    var_setint(uv->value, idx + 1);
-    be_retvalue(vm, list_getitem(vm, obj, idx));
-    return 0;
+    be_getfunction(vm);
+    be_getupval(vm, -1, 0); /* list data */
+    be_getupval(vm, -2, 1); /* list data index */
+    be_getindex(vm, -2);
+    be_pushint(vm, be_toint(vm, -2) + 1);
+    be_setupval(vm, -5, 1);
+    be_pop(vm, 1);
+    return be_returnvalue(vm);
 }
 
 static int m_iter(bvm *vm)
 {
-    bvalue data;
-    bntvfunc *f;
-    bupval *uv;
-    binstance *obj = be_getptr(vm, 0);
-
-    be_instance_field(obj, m_data(vm), &data);
-    f = be_newprimclosure(vm, m_it, 0, 2);
-    uv = be_ntvfunc_upval(f, 0);
-    var_setinstance(uv->value, obj);
-    uv = be_ntvfunc_upval(f, 1);
-    var_setint(uv->value, 0);
-    be_retfunc(vm, f);
-    return 0;
+    be_pushntvclosure(vm, m_it, 0, 2);
+    be_getfield(vm, 1, "__data__"); /* list data */
+    be_setupval(vm, -2, 0);
+    be_pop(vm, 1);
+    be_pushint(vm, 0); /* list data index */
+    be_setupval(vm, -2, 1);
+    be_pop(vm, 1);
+    return be_returnvalue(vm);
 }
 
-static bclass* newlist(bvm *vm)
-{
-    bclass *c = be_newclass(vm, be_newstr(vm, "list"), NULL);
-    be_field_bind(c, m_data(vm));
-    be_prim_method_bind(vm, c, "init", m_init, 1);
-    be_prim_method_bind(vm, c, "print", m_print, 1);
-    be_prim_method_bind(vm, c, "append", m_append, 2);
-    be_prim_method_bind(vm, c, "item", m_item, 2);
-    be_prim_method_bind(vm, c, "setitem", m_setitem, 3);
-    be_prim_method_bind(vm, c, "size", m_size, 1);
-    be_prim_method_bind(vm, c, "resize", m_resize, 3);
-    be_prim_method_bind(vm, c, "iter", m_iter, 1);
-    return c;
-}
+const bfieldinfo l_field[] = {
+    { "__data__", NULL, 0 },
+    { "init", m_init, 1 },
+    { "print", m_print, 1 },
+    { "append", m_append, 2 },
+    { "item", m_item, 2 },
+    { "setitem", m_setitem, 3 },
+    { "size", m_size, 1 },
+    { "resize", m_resize, 2 },
+    { "iter", m_iter, 1 },
+    { NULL, NULL, 0 }
+};
 
 void be_list_init(bvm *vm)
 {
-    bclass *c = newlist(vm);
-    be_regclass(vm, "list", c);
+    be_regclass(vm, "list", l_field);
 }

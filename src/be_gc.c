@@ -100,7 +100,7 @@ void be_gc_removegray(bvm *vm, bgcobject *obj)
 
 static void mark_instance(bvm *vm, bgcobject *obj)
 {
-    binstance *o = cast_object(obj);
+    binstance *o = cast_instance(obj);
     while (o) {
         bvalue *var = be_instance_fields(o);
         int nvar = be_instance_member_count(o);

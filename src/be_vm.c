@@ -130,10 +130,10 @@ void do_funcvar(bvm *vm, bvalue *reg, bvalue *v, int argc)
 {
     switch (v->type) {
     case BE_CLOSURE:
-        do_closure(vm, reg, v->v.p, argc);
+        do_closure(vm, reg, var_toobj(v), argc);
         break;
     case BE_NTVFUNC: {
-        do_ntvfunc(vm, reg, v->v.p, argc);
+        do_ntvfunc(vm, reg, var_toobj(v), argc);
         break;
     }
     default:
@@ -392,7 +392,7 @@ static void i_call(bvm *vm, binstruction ins)
         ++var; --argc;
         goto recall;
     case BE_CLASS:
-        if (be_class_newobj(vm, var->v.p, var, ++argc)) {
+        if (be_class_newobj(vm, var_toobj(var), var, ++argc)) {
             ++var; /* to next register */
             goto recall; /* call constructor */
         }
@@ -439,7 +439,7 @@ static void i_getfield(bvm *vm, binstruction ins)
     if (type(b) == BE_INSTANCE && type(c) == BE_STRING) {
         be_instance_field(b->v.p, c->v.s, a);
     } else {
-        vm_error(vm, "object error\n");
+        vm_error(vm, "get field: object error\n");
     }
 }
 
@@ -458,7 +458,7 @@ static void i_getmethod(bvm *vm, binstruction ins)
             vm_error(vm, "field is not function\n");
         }
     } else {
-        vm_error(vm, "object error\n");
+        vm_error(vm, "get method: error\n");
     }
 }
 
@@ -468,7 +468,7 @@ static void i_setfield(bvm *vm, binstruction ins)
     if (type(a) == BE_INSTANCE && type(b) == BE_STRING) {
         be_instance_setfield(a->v.p, b->v.s, c);
     } else {
-        vm_error(vm, "object error\n");
+        vm_error(vm, "set field: object error\n");
     }
 }
 
@@ -484,7 +484,7 @@ static void i_getindex(bvm *vm, binstruction ins)
         do_funcvar(vm, top, top, 2); /* call method 'item' */
         *a = *top; /* copy result to R(A) */
     } else {
-        vm_error(vm, "object error\n");
+        vm_error(vm, "get index: object error\n");
     }
 }
 
@@ -500,7 +500,7 @@ static void i_setindex(bvm *vm, binstruction ins)
         top[3] = *c; /* move src to argv[2] */
         do_funcvar(vm, top, top, 3); /* call method 'setitem' */
     } else {
-        vm_error(vm, "object error\n");
+        vm_error(vm, "set index: object error\n");
     }
 }
 
@@ -595,7 +595,7 @@ void be_exec(bvm *vm)
 void be_dofunc(bvm *vm, bclosure *cl, int argc)
 {
     bvalue *reg = vm->cf ? vm->cf->s.ur.top : vm->stack;
-    be_gc_setpause(vm, 1);
+    be_gc_setpause(vm, 0);
     do_closure(vm, reg, cl, argc);
     be_gc_collect(vm);
 }

@@ -15,5 +15,6 @@ while (v != nil)
     lout.append(v)
     v = it()
 end
-print(lout)
-print(memcount(), type(1.25), type([]), type(list))
+lout.resize(10)
+print(lout, lout.size())
+print(memcount(), type(1.25), type([]), type(list), super([]))

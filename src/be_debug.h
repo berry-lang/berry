@@ -3,7 +3,6 @@
 
 #include "be_object.h"
 
-void be_print_value(bvm *vm, bvalue *v, int refstr);
 void be_dprintcode(bclosure *cl);
 
 #endif

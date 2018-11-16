@@ -22,49 +22,6 @@ void be_printf(const char *format, ...)
     va_end(arg_ptr);
 }
 
-static void print_instance(bvm *vm, binstance *obj)
-{
-    bvalue v, *top = be_api_topreg(vm);
-    be_instance_field(obj, be_newstr(vm, "print"), &v);
-    if (be_isnil(&v)) {
-        be_printf("print error: object without 'print' method.");
-    } else {
-        be_settype(top + 1, BE_INSTANCE);
-        top[1].v.p = obj;
-        be_dofuncvar(vm, &v, 1);
-    }
-}
-
-void be_print_value(bvm *vm, bvalue *v, int refstr)
-{
-    switch (v->type) {
-    case BE_NIL:
-        be_printf("nil");
-        break;
-    case BE_BOOL:
-        be_printf("%s", v->v.b == bfalse ? "false" : "true");
-        break;
-    case BE_INT:
-        be_printf("%d", v->v.i);
-        break;
-    case BE_REAL:
-        be_printf("%g", v->v.r);
-        break;
-    case BE_STRING:
-        be_printf(refstr ? "\"%s\"" : "%s", v->v.s->s);
-        break;
-    case BE_CLOSURE:
-        be_printf("%p", v->v.p);
-        break;
-    case BE_INSTANCE:
-        print_instance(vm, v->v.p);
-        break;
-    default:
-        be_printf("Unknow type: %d", v->type);
-        break;
-    }
-}
-
 static void print_inst(binstruction ins, int pc)
 {
     bopcode op = IGET_OP(ins);

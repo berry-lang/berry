@@ -27,8 +27,7 @@ static int l_memcount(bvm *vm)
 
 static int l_super(bvm *vm)
 {
-    be_pushvalue(vm, 1);
-    be_getsuper(vm, -1);
+    be_getsuper(vm, 1);
     return be_returnvalue(vm);
 }
 

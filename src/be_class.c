@@ -40,9 +40,9 @@ void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p)
     m->type = MT_METHOD;
 }
 
-void be_prim_method_bind(bvm *vm, bclass *c, const char *name, bcfunction f, int argc)
+void be_prim_method_bind(bvm *vm, bclass *c, bstring *name, bcfunction f, int argc)
 {
-    bvalue *m = be_map_insertstr(c->fields, be_newstr(vm, name), NULL);
+    bvalue *m = be_map_insertstr(c->fields, name, NULL);
     m->v.p = be_newntvfunc(vm, f, argc);
     m->type = MT_PRIMMETHOD;
 }
@@ -60,7 +60,7 @@ static binstance* newobject(bvm *vm, bclass *c)
     if (c) {
         size_t size = sizeof(binstance) + sizeof(bvalue) * (c->nvar - 1);
         bgcobject *gco = be_newgcobj(vm, BE_INSTANCE, size);
-        binstance *obj = cast_object(gco);
+        binstance *obj = cast_instance(gco);
         if (obj) {
             obj->class = c;
             obj->super = newobject(vm, c->super);

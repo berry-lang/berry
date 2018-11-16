@@ -107,8 +107,8 @@ struct bntvfunc {
 
 #define var_type(_v)            ((_v)->type)
 #define var_istype(_v, _t)      (var_type(_v) == _t)
-#define var_settype(_v, _T)     ((_v)->type = (bbyte)_T)
-#define var_setobj(_v, _T, _o)  { var_settype(_v, _T); (_v)->v.p = _o; }
+#define var_settype(_v, _t)     ((_v)->type = (bbyte)_t)
+#define var_setobj(_v, _t, _o)  { (_v)->v.p = _o; var_settype(_v, _t); }
 
 #define var_isnil(_v)           var_istype(_v, BE_NIL)
 #define var_isbool(_v)          var_istype(_v, BE_BOOL)
@@ -128,11 +128,11 @@ struct bntvfunc {
 #define var_setclosure(_v, _o)  var_setobj(_v, BE_CLOSURE, _o)
 #define var_setntvfunc(_v, _o)  var_setobj(_v, BE_NTVFUNC, _o)
 
-#define var_getbool(_v)         ((_v)->v.b)
-#define var_getint(_v)          ((_v)->v.i)
-#define var_getreal(_v)         ((_v)->v.r)
-#define var_getstr(_v)          ((_v)->v.s)
-#define var_getgc(_v)           ((_v)->v.gc)
-#define var_getobj(_v)          ((_v)->v.p)
+#define var_tobool(_v)          ((_v)->v.b)
+#define var_toint(_v)           ((_v)->v.i)
+#define var_toreal(_v)          ((_v)->v.r)
+#define var_tostr(_v)           ((_v)->v.s)
+#define var_togc(_v)            ((_v)->v.gc)
+#define var_toobj(_v)           ((_v)->v.p)
 
 #endif

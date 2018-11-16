@@ -33,7 +33,7 @@ struct binstance {
 bclass* be_newclass(bvm *vm, bstring *name, bclass *super);
 void be_field_bind(bclass *c, bstring *name);
 void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p);
-void be_prim_method_bind(bvm *vm, bclass *c, const char *name, bcfunction f, int argc);
+void be_prim_method_bind(bvm *vm, bclass *c, bstring *name, bcfunction f, int argc);
 bvalue* be_class_field(bclass *c, bstring *name);
 int be_class_newobj(bvm *vm, bclass *c, bvalue *argv, int argc);
 bvalue* be_instance_field(binstance *obj, bstring *name, bvalue *dst);

@@ -7,10 +7,10 @@
 #define gc_cast(o, t, T)    ((o)->type == (t) ? (T*)(o) : NULL)
 #define cast_proto(o)       gc_cast(o, BE_PROTO, bproto)
 #define cast_closure(o)     gc_cast(o, BE_CLOSURE, bclosure)
-#define cast_ntvfunc(o)    gc_cast(o, BE_NTVFUNC, bntvfunc)
+#define cast_ntvfunc(o)     gc_cast(o, BE_NTVFUNC, bntvfunc)
 #define cast_str(o)         gc_cast(o, BE_STRING, bstring)
 #define cast_class(o)       gc_cast(o, BE_CLASS, bclass)
-#define cast_object(o)      gc_cast(o, BE_INSTANCE, binstance)
+#define cast_instance(o)    gc_cast(o, BE_INSTANCE, binstance)
 #define cast_map(o)         gc_cast(o, BE_MAP, bmap)
 #define cast_list(o)        gc_cast(o, BE_LIST, blist)
 
