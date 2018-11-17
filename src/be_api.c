@@ -10,9 +10,10 @@
 #include "be_parser.h"
 #include "be_debug.h"
 
-#define getbase(vm)     ((vm)->cf->reg)
-#define gettop(vm)      ((vm)->cf->s.ur.top)
+#define getbase(vm)     ((vm)->reg)
+#define gettop(vm)      topreg(vm)
 #define pushtop(vm)     (gettop(vm)++)
+#define retreg(vm)      (vm->cf->func)
 
 static bvalue* index2value(bvm *vm, int idx)
 {
@@ -20,12 +21,6 @@ static bvalue* index2value(bvm *vm, int idx)
         return getbase(vm) + idx - 1;
     }
     return gettop(vm) + idx;
-}
-
-static bvalue* retreg(bvm *vm)
-{
-    int notmet = var_istype(vm->cf->reg - 2, BE_NOTMETHOD);
-    return vm->cf->reg - (notmet ? 2 : 1);
 }
 
 void be_regcfunc(bvm *vm, const char *name, bcfunction f, int argc)
@@ -488,5 +483,9 @@ void be_printvalue(bvm *vm, int quote, int index)
 void be_dostring(bvm *vm, const char *src)
 {
     bclosure *cl = be_parser_source(vm, "", src);
+#if 0
+    be_dprintcode(cl);
+    be_printf("VM Log:\n");
+#endif
     be_dofunc(vm, cl, 1);
 }

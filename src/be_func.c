@@ -11,8 +11,8 @@ void be_initupvals(bvm *vm, bclosure *cl)
 {
     int i, count = cl->proto->nupvals;
     bupvaldesc *desc = cl->proto->upvals;
-    bvalue *stack = vm->cf->reg;
-    bupval **superuv = vm->cf->s.uf.cl->upvals;
+    bvalue *stack = vm->reg;
+    bupval **superuv = curcl(vm)->upvals;
     for (i = 0; i < count; ++i) {
         bvalue *ref;
         if (desc->instack) {

@@ -3,6 +3,8 @@
 
 #include "be_object.h"
 
+#define BE_GCOBJECT         BE_STRING
+
 #define gc_object(o)        ((bgcobject*)o)
 #define gc_cast(o, t, T)    ((o)->type == (t) ? (T*)(o) : NULL)
 #define cast_proto(o)       gc_cast(o, BE_PROTO, bproto)
@@ -21,7 +23,7 @@
 #define gc_setgray(o)       ((o)->marked = GC_GRAY)
 #define gc_setdark(o)       ((o)->marked = GC_BLACK)
 
-#define be_isgctype(t)      (t >= BE_FUNCTION)
+#define be_isgctype(t)      (t >= BE_GCOBJECT)
 #define be_isgcobj(o)       be_isgctype(var_type(o))
 #define be_gcnew(v, t, s)   be_newgcobj((v), (t), sizeof(s))
 

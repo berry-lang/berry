@@ -10,6 +10,8 @@
 #include "be_map.h"
 #include "be_debug.h"
 
+#define nstack(vm)  ((vm)->top - (vm)->stack)
+
 struct bgc {
     bgcobject *list;
     bgcobject *gray;
@@ -332,18 +334,6 @@ static void clear_graylist(bvm *vm)
             gc_setgray(node);
         }
     }
-}
-
-static int nstack(bvm *vm)
-{
-    bcallframe *cf = vm->cf;
-    if (!cf) {
-        return 0;
-    }
-    if (cf->status & PRIM_FUNC) {
-        return cf->s.ur.top - vm->stack;
-    }
-    return cf->reg - vm->stack + cf->s.uf.cl->proto->nlocal;
 }
 
 void be_gc_auto(bvm *vm)

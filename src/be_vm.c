@@ -12,21 +12,19 @@
 
 #define MAX_TMPREG      10
 
-#define RA(i)   (vm->cf->reg + IGET_RA(i))
-#define RKB(i)  ((isKB(i) ? vm->cf->s.uf.cl->proto->ktab \
-                          : vm->cf->reg) + KR2idx(IGET_RKB(i)))
-#define RKC(i)  ((isKC(i) ? vm->cf->s.uf.cl->proto->ktab \
-                          : vm->cf->reg) + KR2idx(IGET_RKC(i)))
+#define NOT_METHOD      BE_NONE
+
+#define RA(i)   (vm->reg + IGET_RA(i))
+#define RKB(i)  ((isKB(i) ? curcl(vm)->proto->ktab \
+                          : vm->reg) + KR2idx(IGET_RKB(i)))
+#define RKC(i)  ((isKC(i) ? curcl(vm)->proto->ktab \
+                          : vm->reg) + KR2idx(IGET_RKC(i)))
 
 #define var2real(_v) \
     (var_isreal(_v) ? (_v)->v.r : (breal)(_v)->v.i)
 
 #define cast_bool(v)        ((v) ? btrue : bfalse)
 #define ibinop(op, a, b)    ((a)->v.i op (b)->v.i)
-
-#define topreg(vm)      ((vm)->cf->reg + \
-    (vm)->cf->s.uf.cl->proto->nlocal + MAX_TMPREG)
-
 
 #define define_function(name, block) \
     static void name(bvm *vm, binstruction ins) { \
@@ -65,30 +63,39 @@
     }
 
 /* script closure call */
-#define push_closure(_vm, _cl, _reg) { \
-    bcallframe *_c; \
+#define push_closure(_vm, _f, _argc, _t) { \
+    bcallframe *_cf; \
     be_stack_push(_vm->callstack, NULL); \
-    _c = be_stack_top(_vm->callstack); \
-    _c->reg = _reg + 1; \
-    _c->s.ur.ip = _cl->proto->code; \
-    _c->s.uf.cl = _cl; \
-    _c->status = NONE_FLAG; \
-    _vm->cf = _c; \
+    _cf = be_stack_top(_vm->callstack); \
+    _cf->func = _t ? _f - 1 : _f; \
+    _cf->top = _vm->top; \
+    _cf->reg = _vm->reg; \
+    _cf->ip = var2cl(_f)->proto->code; \
+    _cf->status = NONE_FLAG; \
+    _vm->reg = _f + 1; \
+    _vm->top = _f + 1 + _argc; \
+    _vm->cf = _cf; \
 }
 
-#define push_ntvfunc(_vm, _reg, _argc) { \
-    bcallframe *_c; \
+#define push_ntvfunc(_vm, _f, _argc, _t) { \
+    bcallframe *_cf; \
     be_stack_push(_vm->callstack, NULL); \
-    _c = be_stack_top(_vm->callstack); \
-    _c->reg = _reg + 1; \
-    _c->s.ur.top = _c->reg + _argc; \
-    _c->status = PRIM_FUNC; \
-    _vm->cf = _c; \
+    _cf = be_stack_top(_vm->callstack); \
+    _cf->func = _t ? _f - 1 : _f; \
+    _cf->top = _vm->top; \
+    _cf->reg = _vm->reg; \
+    _cf->status = PRIM_FUNC; \
+    _vm->reg = _f + 1; \
+    _vm->top = _f + 1 + _argc; \
+    _vm->cf = _cf; \
 }
 
 #define ret_cfunction(vm) { \
+    bcallframe *_cf = be_stack_top(vm->callstack); \
     be_stack_pop(vm->callstack); \
     vm->cf = be_stack_top(vm->callstack); \
+    vm->reg = _cf->reg; \
+    vm->top = _cf->top; \
 }
 
 static void vm_error(bvm *vm, const char *msg)
@@ -103,7 +110,8 @@ void do_closure(bvm *vm, bvalue *reg, bclosure *cl, int argc)
     if (argc != cl->proto->argc && cl->proto->argc != -1) {
         vm_error(vm, "function argc error");
     }
-    push_closure(vm, cl, reg);
+    var_setclosure(reg, cl);
+    push_closure(vm, reg, cl->proto->nlocal + MAX_TMPREG, 0);
     be_exec(vm);
 }
 
@@ -112,19 +120,20 @@ void do_ntvfunc(bvm *vm, bvalue *reg, bntvfunc *f, int argc)
     if (argc != f->argc && f->argc != -1) {
         vm_error(vm, "function argc error");
     }
-    push_ntvfunc(vm, reg, argc);
+    var_setntvfunc(reg, f);
+    push_ntvfunc(vm, reg, argc, 0);
     f->f(vm); /* call C primitive function */
     ret_cfunction(vm);
 }
 
-void do_funcvar(bvm *vm, bvalue *reg, bvalue *v, int argc)
+void do_funcvar(bvm *vm, bvalue *reg, int argc)
 {
-    switch (v->type) {
+    switch (var_type(reg)) {
     case BE_CLOSURE:
-        do_closure(vm, reg, var_toobj(v), argc);
+        do_closure(vm, reg, var_toobj(reg), argc);
         break;
     case BE_NTVFUNC: {
-        do_ntvfunc(vm, reg, var_toobj(v), argc);
+        do_ntvfunc(vm, reg, var_toobj(reg), argc);
         break;
     }
     default:
@@ -138,8 +147,8 @@ static bbool obj2bool(bvm *vm, bvalue *obj)
     /* get operator method */
     be_instance_field(obj->v.p, be_newstr(vm, "tobool"), top);
     top[1] = *obj; /* move self to argv[0] */
-    do_funcvar(vm, top, top, 1); /* call method 'item' */
-    return var_isbool(top) ? top->v.b : btrue;
+    do_funcvar(vm, top, 1); /* call method 'item' */
+    return var_isbool(top) ? var_tobool(top) : btrue;
 }
 
 static bbool var2bool(bvm *vm, bvalue *v)
@@ -166,7 +175,7 @@ static void object_binop(bvm *vm, const char *op,
     be_instance_field(a->v.p, be_newstr(vm, op), top);
     top[1] = *a; /* move self to argv[0] */
     top[2] = *b; /* move other to argv[1] */
-    do_funcvar(vm, top, top, 2); /* call method 'item' */
+    do_funcvar(vm, top, 2); /* call method 'item' */
     *dst = *top; /* copy result to dst */
 }
 
@@ -177,7 +186,7 @@ static void object_unop(bvm *vm, const char *op,
     /* get operator method */
     be_instance_field(src->v.p, be_newstr(vm, op), top);
     top[1] = *src; /* move self to argv[0] */
-    do_funcvar(vm, top, top, 1); /* call method 'item' */
+    do_funcvar(vm, top, 1); /* call method 'item' */
     *dst = *top; /* copy result to dst */
 }
 
@@ -191,7 +200,7 @@ static void i_ldbool(bvm *vm, binstruction ins)
     bvalue *v = RA(ins);
     var_setbool(v, IGET_RKB(ins));
     if (IGET_RKC(ins)) { /* skip next instruction */
-        vm->cf->s.ur.ip++;
+        vm->cf->ip++;
     }
 }
 
@@ -219,20 +228,20 @@ static void i_getupval(bvm *vm, binstruction ins)
 {
     bvalue *v = RA(ins);
     int idx = IGET_Bx(ins);
-    *v = *vm->cf->s.uf.cl->upvals[idx]->value;
+    *v = *curcl(vm)->upvals[idx]->value;
 }
 
 static void i_setupval(bvm *vm, binstruction ins)
 {
     bvalue *v = RA(ins);
     int idx = IGET_Bx(ins);
-    *vm->cf->s.uf.cl->upvals[idx]->value = *v;
+    *curcl(vm)->upvals[idx]->value = *v;
 }
 
 static void i_ldconst(bvm *vm, binstruction ins)
 {
     bvalue *dst = RA(ins);
-    *dst = vm->cf->s.uf.cl->proto->ktab[IGET_Bx(ins)];
+    *dst = curcl(vm)->proto->ktab[IGET_Bx(ins)];
 }
 
 static void i_move(bvm *vm, binstruction ins)
@@ -337,14 +346,14 @@ define_function(i_ge, relop_block(>=))
 static void i_jump(bvm *vm, binstruction ins)
 {
     bcallframe *cf = vm->cf;
-    cf->s.ur.ip += IGET_sBx(ins);
+    cf->ip += IGET_sBx(ins);
 }
 
 static void i_jumptrue(bvm *vm, binstruction ins)
 {
     bcallframe *cf = vm->cf;
     if (var2bool(vm, RA(ins))) {
-        cf->s.ur.ip += IGET_sBx(ins);
+        cf->ip += IGET_sBx(ins);
     }
 }
 
@@ -352,20 +361,22 @@ static void i_jumpfalse(bvm *vm, binstruction ins)
 {
     bcallframe *cf = vm->cf;
     if (!var2bool(vm, RA(ins))) {
-        cf->s.ur.ip += IGET_sBx(ins);
+        cf->ip += IGET_sBx(ins);
     }
 }
 
 static void i_return(bvm *vm, binstruction ins)
 {
-    bcallframe *cf = be_stack_top(vm->callstack);
-    bvalue *ret = cf->reg - 1, *src = RKB(ins);
+    bcallframe *cf = vm->cf;
+    bvalue *ret = vm->cf->func, *src = RKB(ins);
     be_stack_pop(vm->callstack); /* pop don't delete */
+    vm->reg = cf->reg;
+    vm->top = cf->top;
     if (cf->status & BASE_FRAME) { /* entrance function */
         *ret = *src;
         vm->cf = NULL; /* mainfunction return */
     } else {
-        ret[var_type(ret - 1) != BE_NOTMETHOD ? 0 : -1] = *src;
+        *ret = *src;
         vm->cf = be_stack_top(vm->callstack);
     }
 }
@@ -373,37 +384,37 @@ static void i_return(bvm *vm, binstruction ins)
 static void i_call(bvm *vm, binstruction ins)
 {
     bvalue *var = RA(ins);
-    int argc = IGET_RKB(ins);
+    int mode = 0, argc = IGET_RKB(ins);
 
     recall: /* goto: instantiation class and call constructor */
     switch (var_type(var)) {
-    case BE_NOTMETHOD:
-        ++var; --argc;
+    case NOT_METHOD:
+        ++var; --argc; mode = 1;
         goto recall;
     case BE_CLASS:
         if (be_class_newobj(vm, var_toobj(var), var, ++argc)) {
             ++var; /* to next register */
             goto recall; /* call constructor */
         }
-        ++vm->cf->s.ur.ip; /* to next instruction */
+        ++vm->cf->ip; /* to next instruction */
         break;
     case BE_CLOSURE: {
-        bclosure *cl = var->v.p;
+        bclosure *cl = var_toobj(var);
         if (argc != cl->proto->argc) {
             vm_error(vm, "function argc error");
         }
-        push_closure(vm, cl, var);
+        push_closure(vm, var, cl->proto->nlocal + MAX_TMPREG, mode);
         break;
     }
     case BE_NTVFUNC: {
-        bntvfunc *f = var->v.p;
+        bntvfunc *f = var_toobj(var);
         if (argc != f->argc && f->argc != -1) {
             vm_error(vm, "function argc error");
         }
-        push_ntvfunc(vm, var, argc);
+        push_ntvfunc(vm, var, argc, mode);
         f->f(vm); /* call C primitive function */
         ret_cfunction(vm);
-        ++vm->cf->s.ur.ip; /* to next instruction */
+        ++vm->cf->ip; /* to next instruction */
         break;
     }
     default:
@@ -414,18 +425,18 @@ static void i_call(bvm *vm, binstruction ins)
 static void i_closure(bvm *vm, binstruction ins)
 {
     bvalue *reg = RA(ins);
-    bproto *p = vm->cf->s.uf.cl->proto->ptab[IGET_Bx(ins)];
+    bproto *p = curcl(vm)->proto->ptab[IGET_Bx(ins)];
     bclosure *cl = be_newclosure(vm, p->nupvals);
     cl->proto = p;
-    be_initupvals(vm, cl);
     var_setclosure(reg, cl);
+    be_initupvals(vm, cl);
 }
 
 static void i_getfield(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
     if (var_isinstance(b) && var_isstring(c)) {
-        be_instance_field(b->v.p, c->v.s, a);
+        be_instance_field(var_toobj(b), var_tostr(c), a);
     } else {
         vm_error(vm, "get field: object error\n");
     }
@@ -436,12 +447,12 @@ static void i_getmethod(bvm *vm, binstruction ins)
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
     if (var_isinstance(b) && var_isstring(c)) {
         bvalue self = *b;
-        bvalue *m = be_instance_field(b->v.p, c->v.s, a);
+        bvalue *m = be_instance_field(var_toobj(b), var_tostr(c), a);
         if (m && m->type != MT_VARIABLE) {
             a[1] = self;
         } else if (var_basetype(a) == BE_FUNCTION) {
             a[1] = *a;
-            var_settype(a, BE_NOTMETHOD);
+            var_settype(a, NOT_METHOD);
         } else {
             vm_error(vm, "field is not function\n");
         }
@@ -454,7 +465,7 @@ static void i_setfield(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
     if (var_isinstance(a) && var_isstring(b)) {
-        be_instance_setfield(a->v.p, b->v.s, c);
+        be_instance_setfield(var_toobj(a), var_tostr(b), c);
     } else {
         vm_error(vm, "set field: object error\n");
     }
@@ -466,10 +477,10 @@ static void i_getindex(bvm *vm, binstruction ins)
     if (var_isinstance(b)) {
         bvalue *top = topreg(vm);
         /* get method 'item' */
-        be_instance_field(b->v.p, be_newstr(vm, "item"), top);
+        be_instance_field(var_toobj(b), be_newstr(vm, "item"), top);
         top[1] = *b; /* move object to argv[0] */
         top[2] = *c; /* move key to argv[1] */
-        do_funcvar(vm, top, top, 2); /* call method 'item' */
+        do_funcvar(vm, top, 2); /* call method 'item' */
         *a = *top; /* copy result to R(A) */
     } else {
         vm_error(vm, "get index: object error\n");
@@ -482,11 +493,11 @@ static void i_setindex(bvm *vm, binstruction ins)
     if (var_isinstance(a)) {
         bvalue *top = topreg(vm);
         /* get method 'item' */
-        be_instance_field(a->v.p, be_newstr(vm, "setitem"), top);
+        be_instance_field(var_toobj(a), be_newstr(vm, "setitem"), top);
         top[1] = *a; /* move object to argv[0] */
         top[2] = *b; /* move key to argv[1] */
         top[3] = *c; /* move src to argv[2] */
-        do_funcvar(vm, top, top, 3); /* call method 'setitem' */
+        do_funcvar(vm, top, 3); /* call method 'setitem' */
     } else {
         vm_error(vm, "set index: object error\n");
     }
@@ -496,7 +507,7 @@ static void i_setsuper(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins);
     if (var_isclass(a) && var_isclass(b)) {
-        be_class_setsuper((bclass*)a->v.p, b->v.p);
+        be_class_setsuper(cast(bclass*, var_toobj(a)), var_toobj(b));
     } else {
         vm_error(vm, "set super: class error\n");
     }
@@ -517,6 +528,8 @@ bvm* be_newvm(int nstack)
     vm->callstack = be_stack_new(sizeof(bcallframe));
     vm->cf = NULL;
     vm->upvalist = NULL;
+    vm->reg = vm->stack;
+    vm->top = vm->reg;
     return vm;
 }
 
@@ -528,7 +541,7 @@ void be_exec(bvm *vm)
     newframe:
     cf = vm->cf;
     for (;;) {
-        ins = *cf->s.ur.ip;
+        ins = *cf->ip;
         switch (IGET_OP(ins)) {
         case OP_LDNIL: i_ldnil(vm, ins); break;
         case OP_LDBOOL: i_ldbool(vm, ins); break;
@@ -575,26 +588,23 @@ void be_exec(bvm *vm)
             cf = vm->cf;
             break;
         }
-        ++cf->s.ur.ip;
+        ++cf->ip;
     }
 }
 
 void be_dofunc(bvm *vm, bclosure *cl, int argc)
 {
-    bvalue *reg = vm->cf ? vm->cf->s.ur.top : vm->stack;
-    be_gc_setpause(vm, 1);
-    do_closure(vm, reg, cl, argc);
+    be_gc_setpause(vm, 0);
+    do_closure(vm, vm->top, cl, argc);
     be_gc_collect(vm);
 }
 
 void be_dontvfunc(bvm *vm, bntvfunc *f, int argc)
 {
-    bvalue *reg = vm->cf ? vm->cf->s.ur.top : vm->stack;
-    do_ntvfunc(vm, reg, f, argc);
+    do_ntvfunc(vm, vm->top, f, argc);
 }
 
 void be_dofuncvar(bvm *vm, bvalue *v, int argc)
 {
-    bvalue *reg = vm->cf ? vm->cf->s.ur.top : vm->stack;
-    do_funcvar(vm, reg, v, argc);
+    do_funcvar(vm, v, argc);
 }

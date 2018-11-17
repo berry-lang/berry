@@ -17,21 +17,16 @@ typedef enum {
     btrue = 1
 } bbool;
 
-typedef enum {
-    BE_NIL = 0,
-    BE_INT,
-    BE_REAL,
-    BE_BOOL,
-    BE_NOTMETHOD,
-    /* gc objects */
-    BE_FUNCTION,
-    BE_PROTO,
-    BE_CLASS,
-    BE_INSTANCE,
-    BE_STRING,
-    BE_LIST,
-    BE_MAP
-} bvaluetype;
+/* basic types, do not change value */
+#define BE_NONE         (-1)
+#define BE_NIL          0
+#define BE_INT          1
+#define BE_REAL         2
+#define BE_BOOL         3
+#define BE_STRING       10
+#define BE_FUNCTION     11
+#define BE_CLASS        12
+#define BE_INSTANCE     13
 
 typedef struct bvm bvm;
 typedef int (*bcfunction)(bvm *vm);
