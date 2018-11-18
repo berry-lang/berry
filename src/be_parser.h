@@ -61,6 +61,7 @@ typedef struct bfuncinfo {
     int pc; /* program count */
     int jpc;  /* list of pending jumps to 'pc' */
     bbyte nlocal; /* local variable count */
+    bbyte nstack; /* stack usage */
     bbyte freereg; /* first free register */
 } bfuncinfo;
 

@@ -7,7 +7,6 @@
 #include "be_var.h"
 #include <stdio.h>
 
-#define max(a, b)               ((a) > (b) ? (a) : (b))
 #define min(a, b)               ((a) < (b) ? (a) : (b))
 #define exp2anyreg(f, e)        exp2reg(f, e, (f)->freereg)
 #define var2anyreg(f, e)        var2reg(f, e, (f)->freereg)
@@ -46,9 +45,18 @@ static void free_expreg(bfuncinfo *finfo, bexpdesc *e)
     }
 }
 
+static void allocstack(bfuncinfo *finfo, int count)
+{
+    int nstack = finfo->freereg + count;
+    if (nstack > finfo->nstack) {
+        finfo->nstack = nstack;
+    }
+}
+
 int be_code_allocregs(bfuncinfo *finfo, int count)
 {
     int base = finfo->freereg;
+    allocstack(finfo, count);
     finfo->freereg += (char)count;
     return base;
 }
@@ -535,7 +543,7 @@ void be_code_ret(bfuncinfo *finfo, bexpdesc *e)
     } else {
         int reg = exp2anyreg(finfo, e);
         be_code_close(finfo, 1);
-        codeABC(finfo, OP_RET, 0, reg, 0);
+        codeABC(finfo, OP_RET, e->type != ETVOID, reg, 0);
         free_expreg(finfo, e);
     }
 }

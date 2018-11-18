@@ -28,6 +28,8 @@ struct bvm {
     bcallframe *cf; /* function call frame */
     bvalue *reg;
     bvalue *top;
+    struct blongjmp *errjmp; /* error jump point */
+    int stacksize;
 };
 
 #define NONE_FLAG           0
@@ -38,9 +40,6 @@ struct bvm {
 #define var2cl(_v)          cast(bclosure*, var_toobj(_v))
 #define curcl(_vm)          var2cl((_vm)->cf->func)
 
-void be_exec(bvm *vm);
-void be_dofunc(bvm *vm, bclosure *cl, int argc);
-void be_dontvfunc(bvm *vm, bntvfunc *f, int argc);
-void be_dofuncvar(bvm *vm, bvalue *v, int argc);
+void be_dofunc(bvm *vm, bvalue *v, int argc);
 
 #endif

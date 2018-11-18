@@ -38,7 +38,7 @@ void be_gc_setsteprate(bvm *vm, int rate);
 void be_gc_setpause(bvm *vm, int pause);
 bgcobject* be_newgcobj(bvm *vm, int type, int size);
 void be_gc_fix(bvm *vm, bgcobject *obj);
-void be_gc_removegray(bvm *vm, bgcobject *obj);
+void be_gc_unfix(bvm *vm, bgcobject *obj);
 void be_gc_collect(bvm *vm);
 void be_gc_auto(bvm *vm);
 

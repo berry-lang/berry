@@ -62,6 +62,9 @@ static binstance* newobject(bvm *vm, bclass *c)
         bgcobject *gco = be_newgcobj(vm, BE_INSTANCE, size);
         binstance *obj = cast_instance(gco);
         if (obj) {
+            /* initialize fields */
+            bvalue *v = obj->fields, *end = v + c->nvar;
+            while (v < end) { var_setnil(v); ++v; }
             obj->class = c;
             obj->super = newobject(vm, c->super);
             return obj;

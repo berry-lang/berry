@@ -48,7 +48,7 @@ print("reload operator test: A(100) > A(20) =", A(100) > A(20))
 print("reload operator test: A(100) && A(0) =", A(100) && A(0))
 print("reload operator test: A(100) || A(0) =", A(100) || A(0))
 print("reload operator test: -A(100) =", -A(100))
-print("obj[30] =", obj[30])
+print("obj[30] =", obj[20])
 
 l2 = list()
 print("list test...");

@@ -8,9 +8,8 @@
 #include "be_mem.h"
 #include "be_var.h"
 #include "be_gc.h"
+#include "be_exec.h"
 #include "be_debug.h"
-
-#define MAX_TMPREG      10
 
 #define NOT_METHOD      BE_NONE
 
@@ -63,7 +62,7 @@
     }
 
 /* script closure call */
-#define push_closure(_vm, _f, _argc, _t) { \
+#define push_closure(_vm, _f, _ns, _t) { \
     bcallframe *_cf; \
     be_stack_push(_vm->callstack, NULL); \
     _cf = be_stack_top(_vm->callstack); \
@@ -73,11 +72,11 @@
     _cf->ip = var2cl(_f)->proto->code; \
     _cf->status = NONE_FLAG; \
     _vm->reg = _f + 1; \
-    _vm->top = _f + 1 + _argc; \
+    _vm->top = _f + 1 + _ns; \
     _vm->cf = _cf; \
 }
 
-#define push_ntvfunc(_vm, _f, _argc, _t) { \
+#define push_ntvfunc(_vm, _f, _ns, _t) { \
     bcallframe *_cf; \
     be_stack_push(_vm->callstack, NULL); \
     _cf = be_stack_top(_vm->callstack); \
@@ -86,59 +85,22 @@
     _cf->reg = _vm->reg; \
     _cf->status = PRIM_FUNC; \
     _vm->reg = _f + 1; \
-    _vm->top = _f + 1 + _argc; \
+    _vm->top = _f + 1 + _ns; \
     _vm->cf = _cf; \
 }
 
-#define ret_cfunction(vm) { \
-    bcallframe *_cf = be_stack_top(vm->callstack); \
-    be_stack_pop(vm->callstack); \
-    vm->cf = be_stack_top(vm->callstack); \
-    vm->reg = _cf->reg; \
-    vm->top = _cf->top; \
+#define ret_cfunction(_vm) { \
+    bcallframe *_cf = _vm->cf; \
+    be_stack_pop(_vm->callstack); \
+    _vm->cf = be_stack_top(_vm->callstack); \
+    _vm->reg = _cf->reg; \
+    _vm->top = _cf->top; \
 }
 
 static void vm_error(bvm *vm, const char *msg)
 {
-    (void)vm;
-    be_printf("%s\n", msg);
-    be_abort();
-}
-
-void do_closure(bvm *vm, bvalue *reg, bclosure *cl, int argc)
-{
-    if (argc != cl->proto->argc && cl->proto->argc != -1) {
-        vm_error(vm, "function argc error");
-    }
-    var_setclosure(reg, cl);
-    push_closure(vm, reg, cl->proto->nlocal + MAX_TMPREG, 0);
-    be_exec(vm);
-}
-
-void do_ntvfunc(bvm *vm, bvalue *reg, bntvfunc *f, int argc)
-{
-    if (argc != f->argc && f->argc != -1) {
-        vm_error(vm, "function argc error");
-    }
-    var_setntvfunc(reg, f);
-    push_ntvfunc(vm, reg, argc, 0);
-    f->f(vm); /* call C primitive function */
-    ret_cfunction(vm);
-}
-
-void do_funcvar(bvm *vm, bvalue *reg, int argc)
-{
-    switch (var_type(reg)) {
-    case BE_CLOSURE:
-        do_closure(vm, reg, var_toobj(reg), argc);
-        break;
-    case BE_NTVFUNC: {
-        do_ntvfunc(vm, reg, var_toobj(reg), argc);
-        break;
-    }
-    default:
-        break;
-    }
+    be_pushfstring(vm, "%s", msg);
+    be_throw(vm, 1);
 }
 
 static bbool obj2bool(bvm *vm, bvalue *obj)
@@ -147,7 +109,7 @@ static bbool obj2bool(bvm *vm, bvalue *obj)
     /* get operator method */
     be_instance_field(obj->v.p, be_newstr(vm, "tobool"), top);
     top[1] = *obj; /* move self to argv[0] */
-    do_funcvar(vm, top, 1); /* call method 'item' */
+    be_dofunc(vm, top, 1); /* call method 'item' */
     return var_isbool(top) ? var_tobool(top) : btrue;
 }
 
@@ -175,7 +137,7 @@ static void object_binop(bvm *vm, const char *op,
     be_instance_field(a->v.p, be_newstr(vm, op), top);
     top[1] = *a; /* move self to argv[0] */
     top[2] = *b; /* move other to argv[1] */
-    do_funcvar(vm, top, 2); /* call method 'item' */
+    be_dofunc(vm, top, 2); /* call method 'item' */
     *dst = *top; /* copy result to dst */
 }
 
@@ -186,7 +148,7 @@ static void object_unop(bvm *vm, const char *op,
     /* get operator method */
     be_instance_field(src->v.p, be_newstr(vm, op), top);
     top[1] = *src; /* move self to argv[0] */
-    do_funcvar(vm, top, 1); /* call method 'item' */
+    be_dofunc(vm, top, 1); /* call method 'item' */
     *dst = *top; /* copy result to dst */
 }
 
@@ -368,15 +330,19 @@ static void i_jumpfalse(bvm *vm, binstruction ins)
 static void i_return(bvm *vm, binstruction ins)
 {
     bcallframe *cf = vm->cf;
-    bvalue *ret = vm->cf->func, *src = RKB(ins);
+    bvalue *ret = vm->cf->func;
+    /* copy return value */
+    if (IGET_RA(ins)) {
+        *ret = *RKB(ins);
+    } else {
+        var_setnil(ret);
+    }
     be_stack_pop(vm->callstack); /* pop don't delete */
     vm->reg = cf->reg;
     vm->top = cf->top;
     if (cf->status & BASE_FRAME) { /* entrance function */
-        *ret = *src;
         vm->cf = NULL; /* mainfunction return */
     } else {
-        *ret = *src;
         vm->cf = be_stack_top(vm->callstack);
     }
 }
@@ -399,11 +365,11 @@ static void i_call(bvm *vm, binstruction ins)
         ++vm->cf->ip; /* to next instruction */
         break;
     case BE_CLOSURE: {
-        bclosure *cl = var_toobj(var);
-        if (argc != cl->proto->argc) {
+        bproto *proto = cast(bclosure*, var_toobj(var))->proto;
+        if (argc != proto->argc) {
             vm_error(vm, "function argc error");
         }
-        push_closure(vm, var, cl->proto->nlocal + MAX_TMPREG, mode);
+        push_closure(vm, var, proto->nstack, mode);
         break;
     }
     case BE_NTVFUNC: {
@@ -438,7 +404,7 @@ static void i_getfield(bvm *vm, binstruction ins)
     if (var_isinstance(b) && var_isstring(c)) {
         be_instance_field(var_toobj(b), var_tostr(c), a);
     } else {
-        vm_error(vm, "get field: object error\n");
+        vm_error(vm, "get field: object error");
     }
 }
 
@@ -454,10 +420,10 @@ static void i_getmethod(bvm *vm, binstruction ins)
             a[1] = *a;
             var_settype(a, NOT_METHOD);
         } else {
-            vm_error(vm, "field is not function\n");
+            vm_error(vm, "field is not function");
         }
     } else {
-        vm_error(vm, "get method: error\n");
+        vm_error(vm, "get method: error");
     }
 }
 
@@ -467,7 +433,7 @@ static void i_setfield(bvm *vm, binstruction ins)
     if (var_isinstance(a) && var_isstring(b)) {
         be_instance_setfield(var_toobj(a), var_tostr(b), c);
     } else {
-        vm_error(vm, "set field: object error\n");
+        vm_error(vm, "set field: object error");
     }
 }
 
@@ -480,10 +446,10 @@ static void i_getindex(bvm *vm, binstruction ins)
         be_instance_field(var_toobj(b), be_newstr(vm, "item"), top);
         top[1] = *b; /* move object to argv[0] */
         top[2] = *c; /* move key to argv[1] */
-        do_funcvar(vm, top, 2); /* call method 'item' */
+        be_dofunc(vm, top, 2); /* call method 'item' */
         *a = *top; /* copy result to R(A) */
     } else {
-        vm_error(vm, "get index: object error\n");
+        vm_error(vm, "get index: object error");
     }
 }
 
@@ -497,9 +463,9 @@ static void i_setindex(bvm *vm, binstruction ins)
         top[1] = *a; /* move object to argv[0] */
         top[2] = *b; /* move key to argv[1] */
         top[3] = *c; /* move src to argv[2] */
-        do_funcvar(vm, top, 3); /* call method 'setitem' */
+        be_dofunc(vm, top, 3); /* call method 'setitem' */
     } else {
-        vm_error(vm, "set index: object error\n");
+        vm_error(vm, "set index: object error");
     }
 }
 
@@ -509,7 +475,7 @@ static void i_setsuper(bvm *vm, binstruction ins)
     if (var_isclass(a) && var_isclass(b)) {
         be_class_setsuper(cast(bclass*, var_toobj(a)), var_toobj(b));
     } else {
-        vm_error(vm, "set super: class error\n");
+        vm_error(vm, "set super: class error");
     }
 }
 
@@ -526,14 +492,16 @@ bvm* be_newvm(int nstack)
     be_globalvar_init(vm);
     vm->stack = be_malloc(sizeof(bvalue) * nstack);
     vm->callstack = be_stack_new(sizeof(bcallframe));
+    vm->stacksize = nstack;
     vm->cf = NULL;
     vm->upvalist = NULL;
     vm->reg = vm->stack;
     vm->top = vm->reg;
+    vm->errjmp = NULL;
     return vm;
 }
 
-void be_exec(bvm *vm)
+static void vm_exec(bvm *vm)
 {
     bcallframe *cf;
     binstruction ins;
@@ -592,19 +560,42 @@ void be_exec(bvm *vm)
     }
 }
 
-void be_dofunc(bvm *vm, bclosure *cl, int argc)
+
+void do_closure(bvm *vm, bvalue *reg, int argc)
 {
-    be_gc_setpause(vm, 0);
-    do_closure(vm, vm->top, cl, argc);
+    bclosure *cl = var_toobj(reg);
+    if (argc != cl->proto->argc && cl->proto->argc != -1) {
+        vm_error(vm, "function argc error");
+    }
+    push_closure(vm, reg, cl->proto->nstack, 0);
+    vm_exec(vm);
+}
+
+void do_ntvfunc(bvm *vm, bvalue *reg, int argc)
+{
+    bntvfunc *f = var_toobj(reg);
+    if (argc != f->argc && f->argc != -1) {
+        vm_error(vm, "function argc error");
+    }
+    push_ntvfunc(vm, reg, argc, 0);
+    f->f(vm); /* call C primitive function */
+    ret_cfunction(vm);
+}
+
+
+void be_dofunc(bvm *vm, bvalue *v, int argc)
+{
+    be_gc_setpause(vm, 1);
+    switch (var_type(v)) {
+    case BE_CLOSURE:
+        do_closure(vm, v, argc);
+        break;
+    case BE_NTVFUNC:
+        do_ntvfunc(vm, v, argc);
+        break;
+    default:
+        break;
+    }
     be_gc_collect(vm);
-}
-
-void be_dontvfunc(bvm *vm, bntvfunc *f, int argc)
-{
-    do_ntvfunc(vm, vm->top, f, argc);
-}
-
-void be_dofuncvar(bvm *vm, bvalue *v, int argc)
-{
-    do_funcvar(vm, v, argc);
+    be_gc_setpause(vm, 0);
 }

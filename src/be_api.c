@@ -9,18 +9,21 @@
 #include "be_map.h"
 #include "be_parser.h"
 #include "be_debug.h"
+#include "be_exec.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
 
-#define getbase(vm)     ((vm)->reg)
-#define gettop(vm)      topreg(vm)
-#define pushtop(vm)     (gettop(vm)++)
-#define retreg(vm)      (vm->cf->func)
+#define basereg(vm)     ((vm)->reg)
+#define pushtop(vm)     (topreg(vm)++)
+#define retreg(vm)      ((vm)->cf->func)
 
 static bvalue* index2value(bvm *vm, int idx)
 {
     if (idx > 0) { /* argument */
-        return getbase(vm) + idx - 1;
+        return basereg(vm) + idx - 1;
     }
-    return gettop(vm) + idx;
+    return topreg(vm) + idx;
 }
 
 void be_regcfunc(bvm *vm, const char *name, bcfunction f, int argc)
@@ -57,7 +60,7 @@ void be_regclass(bvm *vm, const char *name, const bfieldinfo *lib)
 
 int be_top(bvm *vm)
 {
-    return gettop(vm) - getbase(vm);
+    return topreg(vm) - basereg(vm);
 }
 
 int be_type(bvm *vm, int index)
@@ -68,7 +71,15 @@ int be_type(bvm *vm, int index)
 
 void be_pop(bvm *vm, int n)
 {
-    gettop(vm) -= n;
+    topreg(vm) -= n;
+}
+
+int be_absindex(bvm *vm, int index)
+{
+    if (index > 0) {
+        return index;
+    }
+    return topreg(vm) + index - basereg(vm) + 1;
 }
 
 int be_isnil(bvm *vm, int index)
@@ -204,10 +215,22 @@ void be_pushstring(bvm *vm, const char *str)
     var_setstr(reg, s);
 }
 
+void be_pushfstring(bvm *vm, const char *format, ...)
+{
+    static char buf[1024];
+    va_list arg_ptr;
+    bvalue *reg = pushtop(vm);
+    va_start(arg_ptr, format);
+    vsprintf(buf, format, arg_ptr);
+    va_end(arg_ptr);
+    var_setstr(reg, be_newstr(vm, buf));
+}
+
 void be_pushvalue(bvm *vm, int index)
 {
-    bvalue *reg = pushtop(vm);
+    bvalue *reg = topreg(vm);
     var_setval(reg, index2value(vm, index));
+    pushtop(vm);
 }
 
 void be_pushntvclosure(bvm *vm, bcfunction f, int argc, int nupvals)
@@ -260,7 +283,7 @@ const char* be_typename(bvm *vm, int index)
     }
 }
 
-const char* be_objecttype(bvm *vm, int index)
+const char* be_classname(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     if (var_isclass(v)) {
@@ -293,10 +316,12 @@ void be_setfield(bvm *vm, int index, const char *k)
 void be_getfield(bvm *vm, int index, const char *k)
 {
     bvalue *o = index2value(vm, index);
+    bvalue *top = pushtop(vm);
     if (var_isinstance(o)) {
-        bvalue *top = pushtop(vm);
         binstance *obj = var_toobj(o);
         be_instance_field(obj, be_newstr(vm, k), top);
+    } else {
+        var_setnil(top);
     }
 }
 
@@ -422,23 +447,37 @@ void be_resize(bvm *vm, int index)
     }
 }
 
-int be_returnvalue(bvm *vm)
+int be_return(bvm *vm)
 {
-    bvalue *v = gettop(vm) - 1;
+    bvalue *v = topreg(vm) - 1;
     bvalue *ret = retreg(vm);
     *ret = *v;
     return 0;
 }
 
+int be_nonereturn(bvm *vm)
+{
+    bvalue *ret = retreg(vm);
+    var_setnil(ret);
+    return 0;
+}
+
 void be_call(bvm *vm, int argc)
 {
-    bvalue *f = gettop(vm) - argc - 1;
-    be_pop(vm, argc + 1);
-    be_dofuncvar(vm, f, argc);
+    bvalue *f = topreg(vm) - argc - 1;
+    be_dofunc(vm, f, argc);
+}
+
+int be_pcall(bvm *vm, int argc)
+{
+    bvalue *f = topreg(vm) - argc - 1;
+    int res = be_protectedcall(vm, f, argc);
+    return res;
 }
 
 static void print_instance(bvm *vm, int index)
 {
+    index = be_absindex(vm, index);
     be_getfield(vm, index, "print"); /* get method 'print' */
     if (be_isnil(vm, -1)) {
         be_pop(vm, 1);
@@ -446,13 +485,14 @@ static void print_instance(bvm *vm, int index)
     } else {
         be_pushvalue(vm, index);
         be_call(vm, 1);
+        be_pop(vm, 1);
     }
 }
 
 void be_printvalue(bvm *vm, int quote, int index)
 {
     bvalue *v = index2value(vm, index);
-    switch (v->type) {
+    switch (var_type(v)) {
     case BE_NIL:
         be_printf("nil");
         break;
@@ -480,12 +520,15 @@ void be_printvalue(bvm *vm, int quote, int index)
     }
 }
 
-void be_dostring(bvm *vm, const char *src)
+int be_loadstring(bvm *vm, const char *str)
 {
-    bclosure *cl = be_parser_source(vm, "", src);
+    int res = be_protectedparser(vm, "string", str);
 #if 0
-    be_dprintcode(cl);
-    be_printf("VM Log:\n");
+    if (res) {
+        be_printf("bytecode:\n");
+        be_dprintcode(cl);
+        be_printf("bytecode end.\n");
+    }
 #endif
-    be_dofunc(vm, cl, 1);
+    return res;
 }

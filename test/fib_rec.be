@@ -6,5 +6,5 @@ def fib(x)
 end
 
 c = clock()
-print("fib:", fib(38))
+print("fib:", fib(38)) # minimum stack size: 78!!
 print("time:", clock() - c, 's')

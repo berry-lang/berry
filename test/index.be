@@ -17,7 +17,7 @@ class mylist : list
     def item(idx) # int or range index
         if (type(idx) == "int")
             return super(self)[idx]
-        elif (type(idx) == "range")
+        elif (classname(idx) == "range")
             i = idx.lower()
             upper = idx.upper()
             l = mylist()
@@ -64,7 +64,10 @@ l = mylist()
 l.append(1)
 l.append(2)
 l.append(3)
-l.resize(6, 8)
+l.append(4)
+l.resize(5)
+l[4] = ['list index test', 0]
 it = l.iter()
 print(it(), it(), it())
-print(l[range(0, 5)])
+print('l:', l)
+print('l[range(0, 5)]:', l[range(0, 8)])

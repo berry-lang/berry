@@ -10,8 +10,6 @@
 #include "be_map.h"
 #include "be_debug.h"
 
-#define nstack(vm)  ((vm)->top - (vm)->stack)
-
 struct bgc {
     bgcobject *list;
     bgcobject *gray;
@@ -79,7 +77,7 @@ void be_gc_fix(bvm *vm, bgcobject *obj)
     gc_setgray(obj);
 }
 
-void be_gc_removegray(bvm *vm, bgcobject *obj)
+void be_gc_unfix(bvm *vm, bgcobject *obj)
 {
     bgc *gc = vm->gc;
     if (gc->fixed == obj) {
@@ -272,13 +270,33 @@ static void free_object(bvm *vm, bgcobject *obj)
     }
 }
 
-static void set_gray(bvalue *begin, int count)
+static void premark_global(bvm *vm)
 {
-    bvalue *end;
-    for (end = begin + count; begin < end; ++begin) {
-        if (be_isgcobj(begin)) {
-            gc_setgray(begin->v.gc);
+    bvalue *v = vm->global;
+    bvalue *end = v + vm->gbldesc.nglobal;
+    while (v < end) {
+        if (be_isgcobj(v)) {
+            gc_setgray(var_togc(v));
         }
+        ++v;
+    }
+}
+
+static void premark_stack(bvm *vm)
+{
+    bvalue *v = vm->stack, *end = vm->top;
+    /* mark live objects */
+    while (v < end) {
+        if (be_isgcobj(v)) {
+            gc_setgray(var_togc(v));
+        }
+        ++v;
+    }
+    /* set other values to nil */
+    end = vm->stack + vm->stacksize;
+    while (v < end) {
+        var_setnil(v);
+        ++v;
     }
 }
 
@@ -348,8 +366,8 @@ void be_gc_auto(bvm *vm)
 void be_gc_collect(bvm *vm)
 {
     /* step 1: set root-set reference object to unscanned */
-    set_gray(vm->global, vm->gbldesc.nglobal); /* global objects */
-    set_gray(vm->stack, nstack(vm)); /* stack objects */
+    premark_global(vm); /* global objects */
+    premark_stack(vm); /* stack objects */
     /* step 2: set unscanned object to black */
     mark_gray(vm);
     mark_unscanned(vm);

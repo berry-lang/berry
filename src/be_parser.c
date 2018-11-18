@@ -12,6 +12,7 @@
 #include "be_class.h"
 #include "be_opcode.h"
 #include "be_debug.h"
+#include "be_exec.h"
 #include "be_gc.h"
 
 #define OP_NOT_BINARY           TokenNone
@@ -50,37 +51,39 @@ static const int binary_op_prio_tab[] = {
 
 void parser_error(bparser *parser, const char *msg, const char *tk)
 {
+    bvm *vm = parser->vm;
     blexer *lexer = &parser->lexer;
-    be_printf("%s:%d: '%s' %s\n", lexer->fname, lexer->linepos, tk, msg);
-    be_abort();
+    be_pushfstring(vm, "%s:%d: '%s' %s", lexer->fname, lexer->linepos, tk, msg);
+    be_throw(parser->vm, 1);
 }
 
 void match_token(bparser *parser, btokentype type)
 {
     if (next_token(parser).type != type) {
+        bvm *vm = parser->vm;
         blexer *lexer = &parser->lexer;
         btoken *token = &next_token(parser);
         const char *s = be_token2str(type);
         switch (token->type) {
         case TokenString:
         case TokenId:
-            be_printf("%s:%d: error: expected '%s' before '%s'\n",
+            be_pushfstring(vm, "%s:%d: error: expected '%s' before '%s'",
                 lexer->fname, lexer->linepos, s, str(token->u.s));
             break;
         case TokenInteger:
-            be_printf("%s:%d: error: expected '%s' before '%d'\n",
+            be_pushfstring(vm, "%s:%d: error: expected '%s' before '%d'",
                 lexer->fname, lexer->linepos, s, token->u.i);
             break;
         case TokenReal:
-            be_printf("%s:%d: error: expected '%s' before '%g'\n",
+            be_pushfstring(vm, "%s:%d: error: expected '%s' before '%g'",
                 lexer->fname, lexer->linepos, s, token->u.r);
             break;
         default:
-            be_printf("%s:%d: error: expected '%s' before '%s'\n",
+            be_pushfstring(vm, "%s:%d: error: expected '%s' before '%s'",
                 lexer->fname, lexer->linepos, s, be_token2str(token->type));
             break;
         }
-        be_abort();
+        be_throw(parser->vm, 1);
     }
     scan_next_token(parser);
 }
@@ -88,11 +91,12 @@ void match_token(bparser *parser, btokentype type)
 void match_notoken(bparser *parser, btokentype type)
 {
     if (next_token(parser).type == type) {
+        bvm *vm = parser->vm;
         blexer *lexer = &parser->lexer;
-        be_printf("%s:%d: error: expected expression before '%s'\n",
+        be_pushfstring(vm, "%s:%d: error: expected expression before '%s'",
                 lexer->fname, lexer->linepos,
                 be_token2str(next_token(parser).type));
-        be_abort();
+        be_throw(parser->vm, 1);
     }
 }
 
@@ -152,6 +156,7 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     finfo->global = parser->global;
     finfo->freereg = 0;
     finfo->nlocal = 0;
+    finfo->nstack = 0;
     finfo->binfo = NULL;
     finfo->pc = 0;
     finfo->jpc = NO_JUMP;
@@ -197,14 +202,15 @@ static void end_func(bparser *parser)
     setupvals(finfo);
     proto->codesize = finfo->pc;
     proto->nlocal = finfo->nlocal;
+    proto->nstack = finfo->nstack;
     proto->nproto = be_vector_count(finfo->pvec);
     proto->nconst = be_vector_count(finfo->kvec);
     proto->code = be_vector_swap_delete(finfo->code);
     proto->ktab = be_vector_swap_delete(finfo->kvec);
     proto->ptab = be_vector_swap_delete(finfo->pvec);
     parser->finfo = parser->finfo->prev;
-    be_gc_removegray(vm, gc_object(finfo->local));
-    be_gc_removegray(vm, gc_object(finfo->upval));
+    be_gc_unfix(vm, gc_object(finfo->local));
+    be_gc_unfix(vm, gc_object(finfo->upval));
     be_gc_collect(vm);
 }
 
@@ -357,7 +363,6 @@ static void singlevar(bparser *parser, bexpdesc *var)
 {
     bstring *varname = next_token(parser).u.s;
     int type = singlevaraux(parser->vm, parser->finfo, varname, var);
-
     switch (type) {
     case ETVOID:
         init_exp(var, ETVOID, 0);
@@ -823,7 +828,7 @@ static void return_stmt(bparser *parser)
     bexpdesc e;
     /* 'return' expr */
     scan_next_token(parser); /* skip 'return' */
-    init_exp(&e, ETREG, 0);
+    init_exp(&e, ETVOID, 0);
     expr(parser, &e);
     be_code_ret(parser->finfo, &e);
 }
@@ -947,6 +952,7 @@ bclosure* be_parser_source(bvm *vm, const char *fname, const char *text)
 
     parser.vm = vm;
     parser.finfo = NULL;
+    be_gc_setpause(vm, 0); /* stop auto gc */
     be_gc_fix(vm, gc_object(cl)); /* add main closure to gray list */
     be_lexer_init(&parser.lexer, vm);
     be_lexer_set_source(&parser.lexer, fname, text);
@@ -954,7 +960,8 @@ bclosure* be_parser_source(bvm *vm, const char *fname, const char *text)
     mainfunc(&parser, &finfo);
     scan_next_token(&parser); /* clear lexer */
     cl->proto = finfo.proto;
-    cl->proto->argc = 1; /* args */
+    cl->proto->argc = 0; /* args */
     be_free(parser.lexer.data);
+    be_gc_unfix(vm, gc_object(cl));
     return cl;
 }

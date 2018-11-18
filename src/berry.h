@@ -40,8 +40,9 @@ typedef struct {
 int be_top(bvm *vm);
 int be_type(bvm *vm, int index);
 const char* be_typename(bvm *vm, int index);
-const char* be_objecttype(bvm *vm, int index);
+const char* be_classname(bvm *vm, int index);
 void be_pop(bvm *vm, int n);
+int be_absindex(bvm *vm, int index);
 
 int be_isnil(bvm *vm, int index);
 int be_isbool(bvm *vm, int index);
@@ -67,6 +68,7 @@ void be_pushbool(bvm *vm, int b);
 void be_pushint(bvm *vm, bint i);
 void be_pushreal(bvm *vm, breal r);
 void be_pushstring(bvm *vm, const char *str);
+void be_pushfstring(bvm *vm, const char *format, ...);
 void be_pushvalue(bvm *vm, int index);
 void be_pushntvclosure(bvm *vm, bcfunction f, int argc, int nupvals);
 
@@ -84,10 +86,11 @@ void be_getsize(bvm *vm, int index);
 int be_size(bvm *vm, int index);
 void be_append(bvm *vm, int index);
 void be_resize(bvm *vm, int index);
-
-int be_returnvalue(bvm *vm);
+int be_return(bvm *vm);
+int be_nonereturn(bvm *vm);
 
 void be_call(bvm *vm, int argc);
+int be_pcall(bvm *vm, int argc);
 void be_printf(const char *format, ...);
 void be_printvalue(bvm *vm, int quote, int index);
 void be_abort(void);
@@ -96,7 +99,8 @@ void be_regcfunc(bvm *vm, const char *name, bcfunction f, int argc);
 void be_regclass(bvm *vm, const char *name, const bfieldinfo *lib);
 
 bvm* be_newvm(int nstack);
-void be_dostring(bvm *vm, const char *src);
+
+int be_loadstring(bvm *vm, const char *str);
 
 void be_loadlibs(bvm *vm);
 

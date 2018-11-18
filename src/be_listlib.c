@@ -6,7 +6,7 @@ static int m_init(bvm *vm)
 {
     be_newlist(vm);
     be_setfield(vm, 1, "__data__");
-    return 0;
+    return be_nonereturn(vm);
 }
 
 static int m_print(bvm *vm)
@@ -25,7 +25,7 @@ static int m_print(bvm *vm)
         }
     }
     be_printf("]");
-    return 0;
+    return be_nonereturn(vm);
 }
 
 static int m_append(bvm *vm)
@@ -33,7 +33,7 @@ static int m_append(bvm *vm)
     be_getfield(vm, 1, "__data__");
     be_pushvalue(vm, 2);
     be_append(vm, -2);
-    return 0;
+    return be_nonereturn(vm);
 }
 
 static int m_item(bvm *vm)
@@ -41,7 +41,7 @@ static int m_item(bvm *vm)
     be_getfield(vm, 1, "__data__");
     be_pushvalue(vm, 2);
     be_getindex(vm, -2);
-    return be_returnvalue(vm);
+    return be_return(vm);
 }
 
 static int m_setitem(bvm *vm)
@@ -50,14 +50,14 @@ static int m_setitem(bvm *vm)
     be_pushvalue(vm, 2);
     be_pushvalue(vm, 3);
     be_setindex(vm, -3);
-    return 0;
+    return be_nonereturn(vm);
 }
 
 static int m_size(bvm *vm)
 {
     be_getfield(vm, 1, "__data__");
     be_getsize(vm, -1);
-    return be_returnvalue(vm);
+    return be_return(vm);
 }
 
 static int m_resize(bvm *vm)
@@ -65,7 +65,7 @@ static int m_resize(bvm *vm)
     be_getfield(vm, 1, "__data__");
     be_pushvalue(vm, 2);
     be_resize(vm, -2);
-    return 0;
+    return be_nonereturn(vm);
 }
 
 static int m_it(bvm *vm)
@@ -77,7 +77,7 @@ static int m_it(bvm *vm)
     be_pushint(vm, be_toint(vm, -2) + 1);
     be_setupval(vm, -5, 1);
     be_pop(vm, 1);
-    return be_returnvalue(vm);
+    return be_return(vm);
 }
 
 static int m_iter(bvm *vm)
@@ -89,7 +89,7 @@ static int m_iter(bvm *vm)
     be_pushint(vm, 0); /* list data index */
     be_setupval(vm, -2, 1);
     be_pop(vm, 1);
-    return be_returnvalue(vm);
+    return be_return(vm);
 }
 
 const bfieldinfo l_field[] = {

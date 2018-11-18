@@ -76,8 +76,8 @@ typedef enum {
     OP_JMP,       /*  sBx      |   pc <- pc + sBx */
     OP_JMPT,      /*  A, sBx   |   if(R(A)): pc <- pc + sBx  */
     OP_JMPF,      /*  A, sBx   |   if(not R(A)): pc <- pc + sBx  */
-    OP_CALL,      /*  A, B, C  |   CALL(R(A), B, C) */
-    OP_RET,       /*  A, B     |   R(-1) <- RK(B) */
+    OP_CALL,      /*  A        |   CALL(R(A), B) */
+    OP_RET,       /*  A, B     |   if (R(A)) R(-1) <- RK(B) */
     OP_CLOSURE,   /*  A, Bx    |   R(A) <- CLOSURE(proto_table[Bx])*/
     OP_GETMBR,    /*  A, B, C  |   R(A) <- RK(B).RK(C) */
     OP_GETMET,    /*  A, B, C  |   R(A) <- RK(B).RK(C) */

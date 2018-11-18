@@ -80,6 +80,9 @@ typedef struct bupval {
 
 typedef struct bproto {
     bcommon_header;
+    bbyte nlocal; /* local variable count */
+    bbyte nstack; /* number of stack size by this function */
+    bbyte nupvals; /* upvalue count */
     bupvaldesc *upvals;
     bvalue *ktab; /* constants table */
     struct bproto **ptab; /* proto table */
@@ -88,8 +91,6 @@ typedef struct bproto {
     int codesize; /* code size */
     int nconst; /* constants count */
     int nproto; /* proto count */
-    bbyte nlocal; /* local variable count */
-    bbyte nupvals; /* upvalue count */
     char argc; /* argument count */
 } bproto;
 
