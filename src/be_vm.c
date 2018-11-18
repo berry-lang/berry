@@ -446,7 +446,9 @@ static void i_getindex(bvm *vm, binstruction ins)
         be_instance_field(var_toobj(b), be_newstr(vm, "item"), top);
         top[1] = *b; /* move object to argv[0] */
         top[2] = *c; /* move key to argv[1] */
+        topreg(vm) += 3;
         be_dofunc(vm, top, 2); /* call method 'item' */
+        topreg(vm) -= 3;
         *a = *top; /* copy result to R(A) */
     } else {
         vm_error(vm, "get index: object error");

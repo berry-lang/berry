@@ -29,35 +29,41 @@ static const char* addreturn(const char *line)
     return buffer;
 }
 
+static int try_line(bvm *vm, const char *line)
+{
+    int res = be_loadstring(vm, addreturn(line));
+    if (res) {
+        be_pop(vm, 1);
+        res = be_loadstring(vm, line);
+    }
+    return res;
+}
+
 static void repl(bvm *vm)
 {
-    while (1) {
-        const char *line = readline("> ");
+    const char *line;
+    while ((line = readline("> ")) != NULL) {
         add_history(line);
-        if (be_loadstring(vm, addreturn(line))) {
+        if (try_line(vm, line)) {
+            printf("%s\n", be_tostring(vm, -1)); /* some error */
             be_pop(vm, 1);
-            if (be_loadstring(vm, line)) {
-                printf("%s\n", be_tostring(vm, -1));
-                be_pop(vm, 1);
-                continue; /* error */
-            }
-        }
-        if (be_pcall(vm, 0)) { /* run error */
+        } else if (be_pcall(vm, 0)) { /* vm run error */
             printf("%s\n", be_tostring(vm, -1));
             be_pop(vm, 2);
         } else {
-            be_pop(vm, 1);
-            if (!be_isnil(vm, 1)) {
-                be_printvalue(vm, 0, 1);
+            if (!be_isnil(vm, -1)) {
+                be_printvalue(vm, 0, -1);
                 printf("\n");
             }
+            be_pop(vm, 1);
         }
     }
+    printf("\n");
 }
 
 int main(int argc, char *argv[])
 {
-    bvm *vm = be_newvm(128);
+    bvm *vm = be_newvm(32);
     be_loadlibs(vm);
     if (argc >= 2) {
         dofile(vm, argv[1]);

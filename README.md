@@ -40,12 +40,19 @@ The implementation of Berry include a one pass compiler and register-based VM, a
 
 ## Build
 
-Build:
+1. install "libreadline"
+
+``` bash
+sudo apt install libreadline-dev # Ubuntu
+```
+
+2. Build:
+
 ```
 $ make
 ```
 
-Run:
+3. Run:
 
 ```
 $ ./berry test.be
@@ -96,4 +103,3 @@ This examples is a simple list iterator. Let's look at the output:
 ```
 [0, 1, 2, 3, 4, 5]
 ```
-

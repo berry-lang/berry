@@ -485,7 +485,7 @@ static void print_instance(bvm *vm, int index)
     } else {
         be_pushvalue(vm, index);
         be_call(vm, 1);
-        be_pop(vm, 1);
+        be_pop(vm, 2); /* use 2 resisters */
     }
 }
 
