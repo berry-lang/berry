@@ -104,14 +104,13 @@ static void init_upvals(bntvfunc *f)
     }
 }
 
-bntvfunc* be_newprimclosure(bvm *vm, bcfunction cf, int argc, int nupvals)
+bntvfunc* be_newprimclosure(bvm *vm, bcfunction cf, int nupvals)
 {
     int size = (int)(sizeof(bntvfunc) + sizeof(bupval*) * nupvals);
     bgcobject *gco = be_newgcobj(vm, BE_NTVFUNC, size);
     bntvfunc *f = cast_ntvfunc(gco);
     if (f) {
         f->f = cf;
-        f->argc = (char)argc;
         f->nupvals = nupvals;
         if (nupvals) {
             init_upvals(f);

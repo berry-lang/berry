@@ -25,7 +25,7 @@ static bvalue* index2value(bvm *vm, int idx)
     return vm->top + idx;
 }
 
-void be_regcfunc(bvm *vm, const char *name, bcfunction f, int argc)
+void be_regcfunc(bvm *vm, const char *name, bcfunction f)
 {
     bstring *s = be_newstr(vm, name);
     int idx = be_globalvar_find(vm, s);
@@ -34,24 +34,24 @@ void be_regcfunc(bvm *vm, const char *name, bcfunction f, int argc)
         bvalue *var;
         idx = be_globalvar_new(vm, s);
         var = be_globalvar(vm, idx);
-        func = be_newntvfunc(vm, f, argc);
+        func = be_newntvfunc(vm, f);
         var_setntvfunc(var, func);
     } /* else error */
 }
 
-void be_regclass(bvm *vm, const char *name, const bfieldinfo *lib)
+void be_regclass(bvm *vm, const char *name, const bmemberinfo *lib)
 {
     bstring *s = be_newstr(vm, name);
     bclass *c = be_newclass(vm, s, NULL);
     bvalue *var = be_globalvar(vm, be_globalvar_new(vm, s));
     var_setclass(var, c);
-    /* bind fields */
+    /* bind members */
     while (lib->name) {
         s = be_newstr(vm, lib->name);
         if (lib->function) { /* method */
-            be_prim_method_bind(vm, c, s, lib->function, lib->argc);
+            be_prim_method_bind(vm, c, s, lib->function);
         } else {
-            be_field_bind(c, s); /* member */
+            be_member_bind(c, s); /* member */
         }
         ++lib;
     }
@@ -232,10 +232,10 @@ void be_pushvalue(bvm *vm, int index)
     pushtop(vm);
 }
 
-void be_pushntvclosure(bvm *vm, bcfunction f, int argc, int nupvals)
+void be_pushntvclosure(bvm *vm, bcfunction f, int nupvals)
 {
     bvalue *top = pushtop(vm);
-    bntvfunc *nf = be_newprimclosure(vm, f, argc, nupvals);
+    bntvfunc *nf = be_newprimclosure(vm, f, nupvals);
     var_setntvfunc(top, nf);
 }
 
@@ -302,23 +302,29 @@ void be_newlist(bvm *vm)
     var_setobj(top, BE_LIST, be_list_new(vm));
 }
 
-void be_setfield(bvm *vm, int index, const char *k)
+void be_newmap(bvm *vm)
+{
+    bvalue *top = pushtop(vm);
+    var_setobj(top, BE_MAP, be_map_new(vm));
+}
+
+void be_setmember(bvm *vm, int index, const char *k)
 {
     bvalue *o = index2value(vm, index);
     if (var_isinstance(o)) {
         bvalue *v = index2value(vm, -1);
         binstance *obj = var_toobj(o);
-        be_instance_setfield(obj, be_newstr(vm, k), v);
+        be_instance_setmember(obj, be_newstr(vm, k), v);
     }
 }
 
-void be_getfield(bvm *vm, int index, const char *k)
+void be_getmember(bvm *vm, int index, const char *k)
 {
     bvalue *o = index2value(vm, index);
     bvalue *top = pushtop(vm);
     if (var_isinstance(o)) {
         binstance *obj = var_toobj(o);
-        be_instance_field(obj, be_newstr(vm, k), top);
+        be_instance_member(obj, be_newstr(vm, k), top);
     } else {
         var_setnil(top);
     }
@@ -332,10 +338,20 @@ void be_getindex(bvm *vm, int index)
     switch (var_type(o)) {
     case BE_LIST:
         if (var_isint(k)) {
-            blist *list = var_toobj(o);
+            blist *list = cast(blist*, var_toobj(o));
             int idx = var_toint(k);
             if (idx < be_list_count(list)) {
                 var_setval(dst, be_list_at(list, idx));
+                return;
+            }
+        }
+        break;
+    case BE_MAP:
+        if (!var_isnil(k)) {
+            bmap *map = cast(bmap*, var_toobj(o));
+            bvalue *src = be_map_find(map, k);
+            if (src) {
+                var_setval(dst, src);
                 return;
             }
         }
@@ -354,11 +370,20 @@ void be_setindex(bvm *vm, int index)
     switch (var_type(o)) {
     case BE_LIST:
         if (var_isint(k)) {
-            blist *list = var_toobj(o);
+            blist *list = cast(blist*, var_toobj(o));
             int idx = var_toint(k);
             if (idx < be_list_count(list)) {
                 bvalue *dst = be_list_at(list, idx);
-                *dst = *v;
+                var_setval(dst, v);
+            }
+        }
+        break;
+    case BE_MAP:
+        if (!var_isnil(k)) {
+            bmap *map = cast(bmap*, var_toobj(o));
+            bvalue *dst = be_map_find(map, k);
+            if (dst) {
+                var_setval(dst, v);
             }
         }
         break;
@@ -406,9 +431,12 @@ void be_getsize(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     bvalue *dst = pushtop(vm);
-    if (var_istype(v, BE_LIST)) {
-        blist *list = var_toobj(v);
+    if (var_islist(v)) {
+        blist *list = cast(blist*, var_toobj(v));
         var_setint(dst, be_list_count(list));
+    } else if (var_ismap(v)) {
+        bmap *map = cast(bmap*, var_toobj(v));
+        var_setint(dst, be_map_count(map));
     } else {
         var_setnil(dst);
     }
@@ -417,9 +445,12 @@ void be_getsize(bvm *vm, int index)
 int be_size(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
-    if (var_istype(v, BE_LIST)) {
+    if (var_islist(v)) {
         blist *list = var_toobj(v);
         return be_list_count(list);
+    } else if (var_ismap(v)) {
+        bmap *map = cast(bmap*, var_toobj(v));
+        return be_map_count(map);
     }
     return -1;
 }
@@ -428,9 +459,42 @@ void be_append(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     bvalue *v = index2value(vm, -1);
-    if (var_istype(o, BE_LIST)) {
+    if (var_islist(o)) {
         blist *list = var_toobj(o);
         be_list_append(list, v);
+    }
+}
+
+void be_insert(bvm *vm, int index)
+{
+    bvalue *o = index2value(vm, index);
+    bvalue *k = index2value(vm, -2);
+    bvalue *v = index2value(vm, -1);
+    switch (var_type(o)) {
+    case BE_MAP:
+        if (!var_isnil(k)) {
+            bmap *map = cast(bmap*, var_toobj(o));
+            be_map_insert(map, k, v);
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+void be_remove(bvm *vm, int index)
+{
+    bvalue *o = index2value(vm, index);
+    bvalue *k = index2value(vm, -1);
+    switch (var_type(o)) {
+    case BE_MAP:
+        if (!var_isnil(k)) {
+            bmap *map = cast(bmap*, var_toobj(o));
+            be_map_remove(map, k);
+        }
+        break;
+    default:
+        break;
     }
 }
 
@@ -438,12 +502,25 @@ void be_resize(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     bvalue *v = index2value(vm, -1);
-    if (var_istype(o, BE_LIST)) {
+    if (var_islist(o)) {
         blist *list = var_toobj(o);
         if (var_isint(v)) {
             be_list_resize(list, var_toint(v));
         }
     }
+}
+
+int be_next(bvm *vm, int index)
+{
+    bvalue *o = index2value(vm, index);
+    bvalue *it = index2value(vm, -1);
+    bvalue *dst = vm->top;
+    if (var_ismap(o)) {
+        int res = be_map_next(var_toobj(o), it, dst);
+        vm->top += res;
+        return res;
+    }
+    return 0;
 }
 
 int be_return(bvm *vm)
@@ -477,7 +554,7 @@ int be_pcall(bvm *vm, int argc)
 static void print_instance(bvm *vm, int index)
 {
     index = be_absindex(vm, index);
-    be_getfield(vm, index, "print"); /* get method 'print' */
+    be_getmember(vm, index, "print"); /* get method 'print' */
     if (be_isnil(vm, -1)) {
         be_pop(vm, 1);
         be_printf("print error: object without 'print' method.");
@@ -507,8 +584,12 @@ void be_printvalue(bvm *vm, int quote, int index)
     case BE_STRING:
         be_printf(quote ? "\"%s\"" : "%s", str(var_tostr(v)));
         break;
-    case BE_CLOSURE:
-        be_printf("%p", var_toobj(v));
+    case BE_CLOSURE: case BE_NTVFUNC:
+        be_printf("<function: %p>", var_toobj(v));
+        break;
+    case BE_CLASS:
+        be_printf("<class: %s>",
+            str(be_class_name(cast(bclass*, var_toobj(v)))));
         break;
     case BE_INSTANCE:
         print_instance(vm, index);

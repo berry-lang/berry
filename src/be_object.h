@@ -8,6 +8,7 @@
 #define BE_MAP          16
 #define BE_CLOSURE      ((0 << 5) | BE_FUNCTION)
 #define BE_NTVFUNC      ((1 << 5) | BE_FUNCTION)
+#define BE_ITERPTR      (-2)    /* iterator pointer */
 
 #define bcommon_header        \
     struct bgcobject *next;   \
@@ -104,7 +105,6 @@ struct bclosure {
 /* C native function or closure */
 struct bntvfunc {
     bcommon_header;
-    char argc; /* argument count */
     bbyte nupvals;
     bcfunction f;
 };
@@ -114,7 +114,7 @@ struct bntvfunc {
 #define var_type(_v)            ((_v)->type)
 #define var_basetype(_v)        ((_v)->type & 0x1F)
 #define var_istype(_v, _t)      (var_type(_v) == _t)
-#define var_settype(_v, _t)     ((_v)->type = (bbyte)_t)
+#define var_settype(_v, _t)     ((_v)->type = _t)
 #define var_setobj(_v, _t, _o)  { (_v)->v.p = _o; var_settype(_v, _t); }
 
 #define var_isnil(_v)           var_istype(_v, BE_NIL)

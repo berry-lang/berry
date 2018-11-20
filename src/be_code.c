@@ -456,10 +456,10 @@ int be_code_setvar(bfuncinfo *finfo, bexpdesc *e1, bexpdesc *e2)
     case ETUPVAL:
         setsupvar(finfo, OP_SETUPV, e1, e2);
         break;
-    case ETMEMBER: /* store to field R(A).RK(B) <- RK(C) */
+    case ETMEMBER: /* store to member R(A).RK(B) <- RK(C) */
         setsfxvar(finfo, OP_SETMBR, e1, e2);
         break;
-    case ETINDEX: /* store to field R(A)[RK(B)] <- RK(C) */
+    case ETINDEX: /* store to member R(A)[RK(B)] <- RK(C) */
         setsfxvar(finfo, OP_SETIDX, e1, e2);
         break;
     default:
@@ -548,7 +548,7 @@ void be_code_ret(bfuncinfo *finfo, bexpdesc *e)
     }
 }
 
-void be_code_field(bfuncinfo *finfo, bexpdesc *c, bexpdesc *k)
+void be_code_member(bfuncinfo *finfo, bexpdesc *c, bexpdesc *k)
 {
     c->v.ss.obj = (bbyte)exp2anyreg(finfo, c);
     c->v.ss.idx = (short)exp2anyreg(finfo, k);

@@ -13,19 +13,19 @@ bclass* be_newclass(bvm *vm, bstring *name, bclass *super)
     bclass *obj = cast_class(gco);
     if (obj) {
         obj->super = super;
-        obj->fields = be_map_new(vm);
+        obj->members = be_map_new(vm);
         obj->nvar = 0;
         obj->name = name;
-        be_gc_fix(vm, gc_object(obj->fields));
+        be_gc_fix(vm, gc_object(obj->members));
         be_gc_fix(vm, gc_object(obj->name));
         be_gc_fix(vm, gc_object(obj));
     }
     return obj;
 }
 
-void be_field_bind(bclass *c, bstring *name)
+void be_member_bind(bclass *c, bstring *name)
 {
-    bmap *map = c->fields;
+    bmap *map = c->members;
     bvalue *v = be_map_insertstr(map, name, NULL);
     v->v.i = c->nvar++;
     v->type = MT_VARIABLE;
@@ -33,24 +33,24 @@ void be_field_bind(bclass *c, bstring *name)
 
 void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p)
 {
-    bvalue *m = be_map_insertstr(c->fields, name, NULL);
+    bvalue *m = be_map_insertstr(c->members, name, NULL);
     bclosure *cl = be_newclosure(vm, 0);
     cl->proto = p;
     m->v.p = cl;
     m->type = MT_METHOD;
 }
 
-void be_prim_method_bind(bvm *vm, bclass *c, bstring *name, bcfunction f, int argc)
+void be_prim_method_bind(bvm *vm, bclass *c, bstring *name, bcfunction f)
 {
-    bvalue *m = be_map_insertstr(c->fields, name, NULL);
-    m->v.p = be_newntvfunc(vm, f, argc);
+    bvalue *m = be_map_insertstr(c->members, name, NULL);
+    m->v.p = be_newntvfunc(vm, f);
     m->type = MT_PRIMMETHOD;
 }
 
-bvalue* be_class_field(bclass *c, bstring *name)
+bvalue* be_class_member(bclass *c, bstring *name)
 {
     if (name) {
-        return be_map_findstr(c->fields, name);
+        return be_map_findstr(c->members, name);
     }
     return NULL;
 }
@@ -62,8 +62,8 @@ static binstance* newobject(bvm *vm, bclass *c)
         bgcobject *gco = be_newgcobj(vm, BE_INSTANCE, size);
         binstance *obj = cast_instance(gco);
         if (obj) {
-            /* initialize fields */
-            bvalue *v = obj->fields, *end = v + c->nvar;
+            /* initialize members */
+            bvalue *v = obj->members, *end = v + c->nvar;
             while (v < end) { var_setnil(v); ++v; }
             obj->class = c;
             obj->super = newobject(vm, c->super);
@@ -76,7 +76,7 @@ static binstance* newobject(bvm *vm, bclass *c)
 int be_class_newobj(bvm *vm, bclass *c, bvalue *argv, int argc)
 {
     binstance *obj = newobject(vm, c);
-    bmap *map = obj->class->fields;
+    bmap *map = obj->class->members;
     bvalue *init = be_map_findstr(map, be_newstr(vm, "init"));
 
     var_setinstance(argv, obj);
@@ -92,13 +92,13 @@ int be_class_newobj(bvm *vm, bclass *c, bvalue *argv, int argc)
     return 0;
 }
 
-bvalue* be_instance_field(binstance *obj, bstring *name, bvalue *dst)
+bvalue* be_instance_member(binstance *obj, bstring *name, bvalue *dst)
 {
     while (obj) {
-        bvalue *m = be_class_field(obj->class, name);
+        bvalue *m = be_class_member(obj->class, name);
         if (m) {
             if (m->type == MT_VARIABLE) {
-                *dst = obj->fields[m->v.i];
+                *dst = obj->members[m->v.i];
             } else { /* method */
                 *dst = *m;
             }
@@ -110,13 +110,13 @@ bvalue* be_instance_field(binstance *obj, bstring *name, bvalue *dst)
     return NULL;
 }
 
-int be_instance_setfield(binstance *obj, bstring *name, bvalue *src)
+int be_instance_setmember(binstance *obj, bstring *name, bvalue *src)
 {
     while (obj) {
-        bvalue *m = be_class_field(obj->class, name);
+        bvalue *m = be_class_member(obj->class, name);
         if (m) {
             if (m->type == MT_VARIABLE) {
-                obj->fields[m->v.i] = *src;
+                obj->members[m->v.i] = *src;
                 return 1;
             }
             return 0;

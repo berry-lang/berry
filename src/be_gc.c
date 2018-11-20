@@ -102,7 +102,7 @@ static void mark_instance(bvm *vm, bgcobject *obj)
 {
     binstance *o = cast_instance(obj);
     while (o) {
-        bvalue *var = be_instance_fields(o);
+        bvalue *var = be_instance_members(o);
         int nvar = be_instance_member_count(o);
         while (nvar--) {
             mark_object(vm, var->v.gc, var_type(var));

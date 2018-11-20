@@ -30,5 +30,6 @@ void be_map_remove(bmap *map, bvalue *key);
 bvalue* be_map_findstr(bmap *map, bstring *key);
 bvalue* be_map_insertstr(bmap *map, bstring *key, bvalue *value);
 void be_map_removestr(bmap *map, bstring *key);
+int be_map_next(bmap *map, bvalue *iter, bvalue *dst);
 
 #endif

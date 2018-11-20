@@ -255,3 +255,24 @@ void be_map_removestr(bmap *map, bstring *key)
     };
     be_map_remove(map, &v);
 }
+
+int be_map_next(bmap *map, bvalue *iter, bvalue *dst)
+{
+    bmapentry *slot;
+    bmapentry *end = map->slots + map->size;
+    if (!var_istype(iter, BE_ITERPTR)) { /* initialize iterator */
+        var_setobj(iter, BE_ITERPTR, map->slots);
+    }
+    slot = var_toobj(iter);
+    while (slot < end && isnil(slot)) {
+        ++slot;
+    }
+    if (slot < end) {
+        var_setobj(iter, BE_ITERPTR, slot + 1);
+        var_setval(dst, key(slot));
+        var_setval(dst + 1, value(slot));
+        return 2;
+    }
+    var_setobj(iter, BE_ITERPTR, slot);
+    return 0;
+}

@@ -5,19 +5,19 @@
 static int m_init(bvm *vm)
 {
     be_newlist(vm);
-    be_setfield(vm, 1, "__data__");
+    be_setmember(vm, 1, "__data__");
     return be_nonereturn(vm);
 }
 
 static int m_print(bvm *vm)
 {
     int i, count;
-    be_getfield(vm, 1, "__data__");
+    be_getmember(vm, 1, "__data__");
     count = be_size(vm, -1);
     be_printf("[");
     for (i = 0; i < count; ++i) {
         be_pushint(vm, i);
-        be_getindex(vm, -2);
+        be_getindex(vm, -2); /* self.__data__ */
         be_printvalue(vm, 1, -1);
         be_pop(vm, 2);
         if (i < count - 1) {
@@ -30,7 +30,7 @@ static int m_print(bvm *vm)
 
 static int m_append(bvm *vm)
 {
-    be_getfield(vm, 1, "__data__");
+    be_getmember(vm, 1, "__data__");
     be_pushvalue(vm, 2);
     be_append(vm, -2);
     return be_nonereturn(vm);
@@ -38,7 +38,7 @@ static int m_append(bvm *vm)
 
 static int m_item(bvm *vm)
 {
-    be_getfield(vm, 1, "__data__");
+    be_getmember(vm, 1, "__data__");
     be_pushvalue(vm, 2);
     be_getindex(vm, -2);
     return be_return(vm);
@@ -46,7 +46,7 @@ static int m_item(bvm *vm)
 
 static int m_setitem(bvm *vm)
 {
-    be_getfield(vm, 1, "__data__");
+    be_getmember(vm, 1, "__data__");
     be_pushvalue(vm, 2);
     be_pushvalue(vm, 3);
     be_setindex(vm, -3);
@@ -55,14 +55,14 @@ static int m_setitem(bvm *vm)
 
 static int m_size(bvm *vm)
 {
-    be_getfield(vm, 1, "__data__");
+    be_getmember(vm, 1, "__data__");
     be_getsize(vm, -1);
     return be_return(vm);
 }
 
 static int m_resize(bvm *vm)
 {
-    be_getfield(vm, 1, "__data__");
+    be_getmember(vm, 1, "__data__");
     be_pushvalue(vm, 2);
     be_resize(vm, -2);
     return be_nonereturn(vm);
@@ -82,8 +82,8 @@ static int m_it(bvm *vm)
 
 static int m_iter(bvm *vm)
 {
-    be_pushntvclosure(vm, m_it, 0, 2);
-    be_getfield(vm, 1, "__data__"); /* list data */
+    be_pushntvclosure(vm, m_it, 2);
+    be_getmember(vm, 1, "__data__"); /* list data */
     be_setupval(vm, -2, 0);
     be_pop(vm, 1);
     be_pushint(vm, 0); /* list data index */
@@ -92,20 +92,20 @@ static int m_iter(bvm *vm)
     return be_return(vm);
 }
 
-const bfieldinfo l_field[] = {
-    { "__data__", NULL, 0 },
-    { "init", m_init, 1 },
-    { "print", m_print, 1 },
-    { "append", m_append, 2 },
-    { "item", m_item, 2 },
-    { "setitem", m_setitem, 3 },
-    { "size", m_size, 1 },
-    { "resize", m_resize, 2 },
-    { "iter", m_iter, 1 },
-    { NULL, NULL, 0 }
+static const bmemberinfo l_member[] = {
+    { "__data__", NULL },
+    { "init", m_init },
+    { "print", m_print },
+    { "append", m_append },
+    { "item", m_item },
+    { "setitem", m_setitem },
+    { "size", m_size },
+    { "resize", m_resize },
+    { "iter", m_iter },
+    { NULL, NULL }
 };
 
 void be_list_init(bvm *vm)
 {
-    be_regclass(vm, "list", l_field);
+    be_regclass(vm, "list", l_member);
 }

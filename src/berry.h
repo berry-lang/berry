@@ -34,8 +34,7 @@ typedef int (*bcfunction)(bvm *vm);
 typedef struct {
     const char *name;
     bcfunction function;
-    bbyte argc;
-} bfieldinfo;
+} bmemberinfo;
 
 int be_top(bvm *vm);
 int be_type(bvm *vm, int index);
@@ -70,13 +69,14 @@ void be_pushreal(bvm *vm, breal r);
 void be_pushstring(bvm *vm, const char *str);
 void be_pushfstring(bvm *vm, const char *format, ...);
 void be_pushvalue(bvm *vm, int index);
-void be_pushntvclosure(bvm *vm, bcfunction f, int argc, int nupvals);
+void be_pushntvclosure(bvm *vm, bcfunction f, int nupvals);
 
 void be_getsuper(bvm *vm, int index);
 
 void be_newlist(bvm *vm);
-void be_setfield(bvm *vm, int index, const char *k);
-void be_getfield(bvm *vm, int index, const char *k);
+void be_newmap(bvm *vm);
+void be_setmember(bvm *vm, int index, const char *k);
+void be_getmember(bvm *vm, int index, const char *k);
 void be_getindex(bvm *vm, int index);
 void be_setindex(bvm *vm, int index);
 void be_getupval(bvm *vm, int index, int pos);
@@ -85,7 +85,10 @@ void be_getfunction(bvm *vm);
 void be_getsize(bvm *vm, int index);
 int be_size(bvm *vm, int index);
 void be_append(bvm *vm, int index);
+void be_insert(bvm *vm, int index);
+void be_remove(bvm *vm, int index);
 void be_resize(bvm *vm, int index);
+int be_next(bvm *vm, int index);
 int be_return(bvm *vm);
 int be_nonereturn(bvm *vm);
 
@@ -95,13 +98,12 @@ void be_printf(const char *format, ...);
 void be_printvalue(bvm *vm, int quote, int index);
 void be_abort(void);
 
-void be_regcfunc(bvm *vm, const char *name, bcfunction f, int argc);
-void be_regclass(bvm *vm, const char *name, const bfieldinfo *lib);
+void be_regcfunc(bvm *vm, const char *name, bcfunction f);
+void be_regclass(bvm *vm, const char *name, const bmemberinfo *lib);
 
 bvm* be_newvm(int nstack);
 
 int be_loadstring(bvm *vm, const char *str);
-
 void be_loadlibs(bvm *vm);
 
 #endif

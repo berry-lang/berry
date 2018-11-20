@@ -51,10 +51,10 @@ static int l_classname(bvm *vm)
 
 void be_loadbaselib(bvm *vm)
 {
-    be_regcfunc(vm, "print", l_print, -1);
-    be_regcfunc(vm, "clock", l_clock, 0);
-    be_regcfunc(vm, "super", l_super, 1);
-    be_regcfunc(vm, "memcount", l_memcount, 0);
-    be_regcfunc(vm, "type", l_type, 1);
-    be_regcfunc(vm, "classname", l_classname, 1);
+    be_regcfunc(vm, "print", l_print);
+    be_regcfunc(vm, "clock", l_clock);
+    be_regcfunc(vm, "super", l_super);
+    be_regcfunc(vm, "memcount", l_memcount);
+    be_regcfunc(vm, "type", l_type);
+    be_regcfunc(vm, "classname", l_classname);
 }

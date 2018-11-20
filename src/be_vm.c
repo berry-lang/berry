@@ -109,7 +109,7 @@ static bbool obj2bool(bvm *vm, bvalue *obj)
 {
     bvalue *top = vm->top;
     /* get operator method */
-    be_instance_field(obj->v.p, be_newstr(vm, "tobool"), top);
+    be_instance_member(obj->v.p, be_newstr(vm, "tobool"), top);
     top[1] = *obj; /* move self to argv[0] */
     be_dofunc(vm, top, 1); /* call method 'item' */
     return var_isbool(top) ? var_tobool(top) : btrue;
@@ -136,7 +136,7 @@ static void object_binop(bvm *vm, const char *op,
 {
     bvalue *top = vm->top;
     /* get operator method */
-    be_instance_field(a->v.p, be_newstr(vm, op), top);
+    be_instance_member(a->v.p, be_newstr(vm, op), top);
     top[1] = *a; /* move self to argv[0] */
     top[2] = *b; /* move other to argv[1] */
     vm->top += 1; /* prevent collection results */
@@ -149,7 +149,7 @@ static void object_unop(bvm *vm, const char *op,
 {
     bvalue *top = vm->top;
     /* get operator method */
-    be_instance_field(src->v.p, be_newstr(vm, op), top);
+    be_instance_member(src->v.p, be_newstr(vm, op), top);
     top[1] = *src; /* move self to argv[0] */
     be_dofunc(vm, top, 1); /* call method 'item' */
     *dst = *top; /* copy result to dst */
@@ -399,13 +399,13 @@ static void i_closure(bvm *vm, binstruction ins)
     be_initupvals(vm, cl);
 }
 
-static void i_getfield(bvm *vm, binstruction ins)
+static void i_getmember(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
     if (var_isinstance(b) && var_isstring(c)) {
-        be_instance_field(var_toobj(b), var_tostr(c), a);
+        be_instance_member(var_toobj(b), var_tostr(c), a);
     } else {
-        vm_error(vm, "get field: object error");
+        vm_error(vm, "get member: object error");
     }
 }
 
@@ -414,27 +414,27 @@ static void i_getmethod(bvm *vm, binstruction ins)
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
     if (var_isinstance(b) && var_isstring(c)) {
         bvalue self = *b;
-        bvalue *m = be_instance_field(var_toobj(b), var_tostr(c), a);
+        bvalue *m = be_instance_member(var_toobj(b), var_tostr(c), a);
         if (m && m->type != MT_VARIABLE) {
             a[1] = self;
         } else if (var_basetype(a) == BE_FUNCTION) {
             a[1] = *a;
             var_settype(a, NOT_METHOD);
         } else {
-            vm_error(vm, "field is not function");
+            vm_error(vm, "member is not function");
         }
     } else {
         vm_error(vm, "get method: error");
     }
 }
 
-static void i_setfield(bvm *vm, binstruction ins)
+static void i_setmember(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
     if (var_isinstance(a) && var_isstring(b)) {
-        be_instance_setfield(var_toobj(a), var_tostr(b), c);
+        be_instance_setmember(var_toobj(a), var_tostr(b), c);
     } else {
-        vm_error(vm, "set field: object error");
+        vm_error(vm, "set member: object error");
     }
 }
 
@@ -444,7 +444,7 @@ static void i_getindex(bvm *vm, binstruction ins)
     if (var_isinstance(b)) {
         bvalue *top = vm->top;
         /* get method 'item' */
-        be_instance_field(var_toobj(b), be_newstr(vm, "item"), top);
+        be_instance_member(var_toobj(b), be_newstr(vm, "item"), top);
         top[1] = *b; /* move object to argv[0] */
         top[2] = *c; /* move key to argv[1] */
         vm->top += 1; /* prevent collection results */
@@ -462,7 +462,7 @@ static void i_setindex(bvm *vm, binstruction ins)
     if (var_isinstance(a)) {
         bvalue *top = vm->top;
         /* get method 'item' */
-        be_instance_field(var_toobj(a), be_newstr(vm, "setitem"), top);
+        be_instance_member(var_toobj(a), be_newstr(vm, "setitem"), top);
         top[1] = *a; /* move object to argv[0] */
         top[2] = *b; /* move key to argv[1] */
         top[3] = *c; /* move src to argv[2] */
@@ -540,9 +540,9 @@ static void vm_exec(bvm *vm)
         case OP_JMPF: i_jumpfalse(vm, ins); break;
         case OP_CALL: i_call(vm, ins); goto newframe;
         case OP_CLOSURE: i_closure(vm, ins); break;
-        case OP_GETMBR: i_getfield(vm, ins); break;
+        case OP_GETMBR: i_getmember(vm, ins); break;
         case OP_GETMET: i_getmethod(vm, ins); break;
-        case OP_SETMBR: i_setfield(vm, ins); break;
+        case OP_SETMBR: i_setmember(vm, ins); break;
         case OP_GETIDX: i_getindex(vm, ins); break;
         case OP_SETIDX: i_setindex(vm, ins); break;
         case OP_SETSUPER: i_setsuper(vm, ins); break;
@@ -577,9 +577,6 @@ void do_closure(bvm *vm, bvalue *reg, int argc)
 void do_ntvfunc(bvm *vm, bvalue *reg, int argc)
 {
     bntvfunc *f = var_toobj(reg);
-    if (argc != f->argc && f->argc != -1) {
-        vm_error(vm, "function argc error");
-    }
     push_ntvfunc(vm, reg, argc, 0);
     f->f(vm); /* call C primitive function */
     ret_cfunction(vm);
