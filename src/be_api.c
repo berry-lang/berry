@@ -14,16 +14,15 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#define basereg(vm)     ((vm)->reg)
-#define pushtop(vm)     (topreg(vm)++)
+#define pushtop(vm)     ((vm)->top++)
 #define retreg(vm)      ((vm)->cf->func)
 
 static bvalue* index2value(bvm *vm, int idx)
 {
     if (idx > 0) { /* argument */
-        return basereg(vm) + idx - 1;
+        return vm->reg + idx - 1;
     }
-    return topreg(vm) + idx;
+    return vm->top + idx;
 }
 
 void be_regcfunc(bvm *vm, const char *name, bcfunction f, int argc)
@@ -60,7 +59,7 @@ void be_regclass(bvm *vm, const char *name, const bfieldinfo *lib)
 
 int be_top(bvm *vm)
 {
-    return topreg(vm) - basereg(vm);
+    return vm->top - vm->reg;
 }
 
 int be_type(bvm *vm, int index)
@@ -71,7 +70,7 @@ int be_type(bvm *vm, int index)
 
 void be_pop(bvm *vm, int n)
 {
-    topreg(vm) -= n;
+    vm->top -= n;
 }
 
 int be_absindex(bvm *vm, int index)
@@ -79,7 +78,7 @@ int be_absindex(bvm *vm, int index)
     if (index > 0) {
         return index;
     }
-    return topreg(vm) + index - basereg(vm) + 1;
+    return vm->top + index - vm->reg + 1;
 }
 
 int be_isnil(bvm *vm, int index)
@@ -228,7 +227,7 @@ void be_pushfstring(bvm *vm, const char *format, ...)
 
 void be_pushvalue(bvm *vm, int index)
 {
-    bvalue *reg = topreg(vm);
+    bvalue *reg = vm->top;
     var_setval(reg, index2value(vm, index));
     pushtop(vm);
 }
@@ -449,7 +448,7 @@ void be_resize(bvm *vm, int index)
 
 int be_return(bvm *vm)
 {
-    bvalue *v = topreg(vm) - 1;
+    bvalue *v = vm->top - 1;
     bvalue *ret = retreg(vm);
     *ret = *v;
     return 0;
@@ -464,13 +463,13 @@ int be_nonereturn(bvm *vm)
 
 void be_call(bvm *vm, int argc)
 {
-    bvalue *f = topreg(vm) - argc - 1;
+    bvalue *f = vm->top - argc - 1;
     be_dofunc(vm, f, argc);
 }
 
 int be_pcall(bvm *vm, int argc)
 {
-    bvalue *f = topreg(vm) - argc - 1;
+    bvalue *f = vm->top - argc - 1;
     int res = be_protectedcall(vm, f, argc);
     return res;
 }

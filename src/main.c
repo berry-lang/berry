@@ -63,7 +63,7 @@ static void repl(bvm *vm)
 
 int main(int argc, char *argv[])
 {
-    bvm *vm = be_newvm(32);
+    bvm *vm = be_newvm(100);
     be_loadlibs(vm);
     if (argc >= 2) {
         dofile(vm, argv[1]);

@@ -36,7 +36,6 @@ struct bvm {
 #define BASE_FRAME          (1 << 0)
 #define PRIM_FUNC           (1 << 1)
 
-#define topreg(_vm)         ((vm)->top)
 #define var2cl(_v)          cast(bclosure*, var_toobj(_v))
 #define curcl(_vm)          var2cl((_vm)->cf->func)
 

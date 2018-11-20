@@ -937,7 +937,6 @@ static void block(bparser *parser)
 static void mainfunc(bparser *parser, bfuncinfo *finfo)
 {
     bblockinfo binfo;
-
     begin_func(parser, finfo, &binfo);
     finfo->proto->name = be_newstr(parser->vm, "main");
     stmtlist(parser);

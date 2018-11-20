@@ -10,7 +10,7 @@
 #define min(a, b)               ((a) < (b) ? (a) : (b))
 #define exp2anyreg(f, e)        exp2reg(f, e, (f)->freereg)
 #define var2anyreg(f, e)        var2reg(f, e, (f)->freereg)
-#define hasjump(e)              ((e)->t != (e)->f)
+#define hasjump(e)              ((e)->t != (e)->f || (e)->not)
 #define code_bool(f, r, b, j)   codeABC(f, OP_LDBOOL, r, b, j)
 #define code_move(f, a, b)      codeABC(f, OP_MOVE, a, b, 0)
 #define code_call(f, a, b)      codeABC(f, OP_CALL, a, b, 0)
