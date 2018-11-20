@@ -604,9 +604,9 @@ int be_loadstring(bvm *vm, const char *str)
 {
     int res = be_protectedparser(vm, "string", str);
 #if 0
-    if (res) {
+    if (!res) {
         be_printf("bytecode:\n");
-        be_dprintcode(cl);
+        be_dprintcode(var_toobj(vm->top - 1));
         be_printf("bytecode end.\n");
     }
 #endif

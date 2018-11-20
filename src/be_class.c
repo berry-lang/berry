@@ -16,9 +16,6 @@ bclass* be_newclass(bvm *vm, bstring *name, bclass *super)
         obj->members = be_map_new(vm);
         obj->nvar = 0;
         obj->name = name;
-        be_gc_fix(vm, gc_object(obj->members));
-        be_gc_fix(vm, gc_object(obj->name));
-        be_gc_fix(vm, gc_object(obj));
     }
     return obj;
 }

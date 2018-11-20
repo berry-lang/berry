@@ -144,6 +144,24 @@ static void mark_list(bvm *vm, bgcobject *obj)
     }
 }
 
+static void mark_proto(bvm *vm, bgcobject *obj)
+{
+    bproto *p = cast_proto(obj);
+    if (p) {
+        int count;
+        bvalue *k = p->ktab;
+        bproto **ptab = p->ptab;
+        for (count = p->nconst; count--; ++k) {
+            mark_object(vm, k->v.gc, var_type(k));
+        }
+        for (count = p->nproto; count--; ++ptab) {
+            mark_object(vm, gc_object(*ptab), BE_PROTO);
+        }
+        gc_setdark(gc_object(p->name));
+        gc_setdark(obj);
+    }
+}
+
 static void mark_closure(bvm *vm, bgcobject *obj)
 {
     bclosure *cl = cast_closure(obj);
@@ -156,6 +174,7 @@ static void mark_closure(bvm *vm, bgcobject *obj)
                 mark_object(vm, v->v.gc, var_type(v));
             }
         }
+        mark_proto(vm, gc_object(cl->proto));
         gc_setdark(obj);
     }
 }
@@ -176,18 +195,14 @@ static void mark_ntvfunc(bvm *vm, bgcobject *obj)
     }
 }
 
-static void mark_proto(bvm *vm, bgcobject *obj)
+static void mark_class(bvm *vm, bgcobject *obj)
 {
-    bproto *p = cast_proto(obj);
-    if (p) {
-        int count = p->nconst;
-        bvalue *k = p->ktab;
-        mark_object(vm, gc_object(p->name), var_type(p->name));
-        for (; count--; ++k) {
-            mark_object(vm, k->v.gc, var_type(k));
-        }
+    bclass *c = cast_class(obj);
+    if (c) {
+        mark_map(vm, gc_object(be_class_members(c)));
+        gc_setdark(be_class_name(c));
+        gc_setdark(obj);
     }
-    gc_setdark(obj);
 }
 
 static void mark_object(bvm *vm, bgcobject *obj, int type)
@@ -195,7 +210,7 @@ static void mark_object(bvm *vm, bgcobject *obj, int type)
     if (be_isgctype(type)) {
         switch (type) {
         case BE_STRING: gc_setdark(obj); break;
-        case BE_CLASS: gc_setdark(obj); break;
+        case BE_CLASS: mark_class(vm, obj); break;
         case BE_PROTO: mark_proto(vm, obj); break;
         case BE_INSTANCE: mark_instance(vm, obj); break;
         case BE_MAP: mark_map(vm, obj); break;
@@ -223,6 +238,18 @@ static void free_list(bgcobject *obj)
         be_free(be_list_data(list));
     }
     be_free(obj);
+}
+
+static void free_proto(bgcobject *obj)
+{
+    bproto *proto = cast_proto(obj);
+    if (proto) {
+        be_free(proto->upvals);
+        be_free(proto->ktab);
+        be_free(proto->ptab);
+        be_free(proto->code);
+        be_free(proto);
+    }
 }
 
 static void free_closure(bgcobject *obj)
@@ -265,8 +292,8 @@ static void free_object(bvm *vm, bgcobject *obj)
     case BE_LIST: free_list(obj); break;
     case BE_CLOSURE: free_closure(obj); break;
     case BE_NTVFUNC: free_ntvfunc(obj); break;
-    default:
-        break;
+    case BE_PROTO: free_proto(obj); break;
+    default: break;
     }
 }
 

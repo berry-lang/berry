@@ -1,4 +1,4 @@
-a = !true & true
+a = !true && true
 print(a)
 
 a = -(3 + 1)

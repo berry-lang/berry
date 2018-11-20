@@ -38,6 +38,7 @@ typedef struct {
     bvm *vm;
     bvector *global;
     bfuncinfo *finfo;
+    bclosure *cl;
 } bparser;
 
 static void stmtlist(bparser *parser);
@@ -49,15 +50,33 @@ static const int binary_op_prio_tab[] = {
     5, 5, 5, 5, 5, 5, 4, 3 /* < <= == != > >= && || */
 };
 
-void parser_error(bparser *parser, const char *msg, const char *tk)
+static void parser_throw(bparser *parser)
+{
+    bvm *vm = parser->vm;
+    bfuncinfo *finfo = parser->finfo;
+    while (finfo) {
+        be_gc_unfix(vm, gc_object(finfo->local));
+        be_gc_unfix(vm, gc_object(finfo->upval));
+        be_gc_unfix(vm, gc_object(finfo->proto));
+        be_vector_delete(finfo->code);
+        be_vector_delete(finfo->kvec);
+        be_vector_delete(finfo->pvec);
+        finfo = finfo->prev;
+    }
+    be_free(parser->lexer.data);
+    be_gc_unfix(vm, gc_object(parser->cl));
+    be_throw(vm, 1);
+}
+
+static void parser_error(bparser *parser, const char *msg, const char *tk)
 {
     bvm *vm = parser->vm;
     blexer *lexer = &parser->lexer;
     be_pushfstring(vm, "%s:%d: '%s' %s", lexer->fname, lexer->linepos, tk, msg);
-    be_throw(parser->vm, 1);
+    parser_throw(parser);
 }
 
-void match_token(bparser *parser, btokentype type)
+static void match_token(bparser *parser, btokentype type)
 {
     if (next_token(parser).type != type) {
         bvm *vm = parser->vm;
@@ -83,12 +102,12 @@ void match_token(bparser *parser, btokentype type)
                 lexer->fname, lexer->linepos, s, be_token2str(token->type));
             break;
         }
-        be_throw(parser->vm, 1);
+        parser_throw(parser);
     }
     scan_next_token(parser);
 }
 
-void match_notoken(bparser *parser, btokentype type)
+static void match_notoken(bparser *parser, btokentype type)
 {
     if (next_token(parser).type == type) {
         bvm *vm = parser->vm;
@@ -96,7 +115,7 @@ void match_notoken(bparser *parser, btokentype type)
         be_pushfstring(vm, "%s:%d: error: expected expression before '%s'",
                 lexer->fname, lexer->linepos,
                 be_token2str(next_token(parser).type));
-        be_throw(parser->vm, 1);
+        parser_throw(parser);
     }
 }
 
@@ -144,8 +163,6 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
 {
     bvm *vm = parser->vm;
     bproto *proto = be_newproto(parser->vm);
-    proto->ktab = NULL;
-    proto->nconst = 0;
     finfo->prev = parser->finfo;
     finfo->code = be_vector_new(sizeof(binstruction));
     finfo->local = be_list_new(vm);
@@ -162,9 +179,9 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     finfo->jpc = NO_JUMP;
     parser->finfo = finfo;
     begin_block(finfo, binfo, 0);
-    be_gc_fix(vm, gc_object(proto));
     be_gc_fix(vm, gc_object(finfo->local));
     be_gc_fix(vm, gc_object(finfo->upval));
+    be_gc_fix(vm, gc_object(finfo->proto));
 }
 
 static void setupvals(bfuncinfo *finfo)
@@ -173,18 +190,23 @@ static void setupvals(bfuncinfo *finfo)
     int size = be_map_size(finfo->upval);
     int nupvals = be_map_count(finfo->upval);
     bmapentry *slots = be_map_slots(finfo->upval);
-    bupvaldesc *upvals = be_malloc(sizeof(bupvaldesc) * nupvals);
 
-    for (; size--; slots++) {
-        if (!var_isnil(&slots->key)) {
-            uint32_t v = (uint32_t)slots->value.v.i;
-            int idx = upval_index(v);
-            upvals[idx].idx = upval_target(v);
-            upvals[idx].instack = upval_instack(v);
+    if (nupvals) {
+        bupvaldesc *upvals = be_malloc(sizeof(bupvaldesc) * nupvals);
+        for (; size--; slots++) {
+            if (!var_isnil(&slots->key)) {
+                uint32_t v = (uint32_t)slots->value.v.i;
+                int idx = upval_index(v);
+                upvals[idx].idx = upval_target(v);
+                upvals[idx].instack = upval_instack(v);
+            }
         }
+        proto->upvals = upvals;
+        proto->nupvals = (bbyte)nupvals;
+    } else {
+        proto->upvals = NULL;
+        proto->nupvals = 0;
     }
-    proto->upvals = upvals;
-    proto->nupvals = (bbyte)nupvals;
 }
 
 static void end_func(bparser *parser)
@@ -212,6 +234,8 @@ static void end_func(bparser *parser)
     be_gc_unfix(vm, gc_object(finfo->local));
     be_gc_unfix(vm, gc_object(finfo->upval));
     be_gc_collect(vm);
+    /* proto still needs to be used. */
+    be_gc_unfix(vm, gc_object(finfo->proto));
 }
 
 static btokentype get_binop(bparser *parser)
@@ -982,11 +1006,14 @@ static void block(bparser *parser)
     end_block(parser);
 }
 
-static void mainfunc(bparser *parser, bfuncinfo *finfo)
+static void mainfunc(bparser *parser, bclosure *cl)
 {
     bblockinfo binfo;
-    begin_func(parser, finfo, &binfo);
-    finfo->proto->name = be_newstr(parser->vm, "main");
+    bfuncinfo finfo;
+    begin_func(parser, &finfo, &binfo);
+    finfo.proto->argc = 0; /* args */
+    finfo.proto->name = be_newstr(parser->vm, "main");
+    cl->proto = finfo.proto;
     stmtlist(parser);
     end_func(parser);
 }
@@ -994,21 +1021,19 @@ static void mainfunc(bparser *parser, bfuncinfo *finfo)
 bclosure* be_parser_source(bvm *vm, const char *fname, const char *text)
 {
     bparser parser;
-    bfuncinfo finfo;
     bclosure *cl = be_newclosure(vm, 0);
 
     parser.vm = vm;
     parser.finfo = NULL;
+    parser.cl = cl;
     be_gc_setpause(vm, 0); /* stop auto gc */
-    be_gc_fix(vm, gc_object(cl)); /* add main closure to gray list */
     be_lexer_init(&parser.lexer, vm);
     be_lexer_set_source(&parser.lexer, fname, text);
     scan_next_token(&parser); /* scan first token */
-    mainfunc(&parser, &finfo);
-    scan_next_token(&parser); /* clear lexer */
-    cl->proto = finfo.proto;
-    cl->proto->argc = 0; /* args */
-    be_free(parser.lexer.data);
+    be_gc_fix(vm, gc_object(cl));
+    mainfunc(&parser, cl);
     be_gc_unfix(vm, gc_object(cl));
+    scan_next_token(&parser); /* clear lexer */
+    be_free(parser.lexer.data);
     return cl;
 }

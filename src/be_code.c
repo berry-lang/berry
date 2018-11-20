@@ -513,6 +513,8 @@ void be_code_closure(bfuncinfo *finfo, bexpdesc *e, bproto *proto)
     int reg = e->type == ETGLOBAL ? finfo->freereg: e->v.idx;
     /* append proto to current function proto table */
     be_vector_append(finfo->pvec, &proto);
+    finfo->proto->ptab = be_vector_data(finfo->pvec);
+    finfo->proto->nproto = be_vector_count(finfo->pvec);
     codeABx(finfo, OP_CLOSURE, reg, idx); /* load closure to register */
     if (e->type == ETGLOBAL) { /* store to grobal R(A) -> G(Bx) */
         codeABx(finfo, OP_SETGBL, reg, e->v.idx);
