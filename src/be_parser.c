@@ -47,7 +47,7 @@ static void expr(bparser *parser, bexpdesc *e);
 
 static const int binary_op_prio_tab[] = {
     6, 6, 7, 7, 7, /* + - * / % */
-    5, 5, 5, 5, 5, 5, 4, 3 /* < <= == != > >= && || */
+    4, 4, 4, 4, 4, 4, 2, 2, 5 /* < <= == != > >= && || .. */
 };
 
 static void parser_throw(bparser *parser)
@@ -241,7 +241,7 @@ static void end_func(bparser *parser)
 static btokentype get_binop(bparser *parser)
 {
     btokentype op = next_token(parser).type;
-    if (op >= OptAdd && op <= OptOr) {
+    if (op >= OptAdd && op <= OptRange) {
         return op;
     }
     return OP_NOT_BINARY;
@@ -664,6 +664,24 @@ static void assign_expr(bparser *parser)
     }
 }
 
+
+static void range_expr(bparser *parser, bexpdesc *e1, bexpdesc *e2)
+{
+    int idx;
+    bvm *vm = parser->vm;
+    bfuncinfo *finfo = parser->finfo;
+    bexpdesc e;
+
+    idx = be_globalvar_find(vm, be_newstr(vm, "range"));
+    init_exp(&e, ETGLOBAL, idx);
+    idx = be_code_nextreg(finfo, &e);
+    be_code_nextreg(finfo, e1);
+    be_code_nextreg(finfo, e2);
+    be_code_call(finfo, idx, 2);
+    be_code_freeregs(finfo, 2);
+    *e1 = e;
+}
+
 /* binary operator: + - * / % && || < <= == != > >=
  * unary operator: + - ! 
  */
@@ -689,14 +707,16 @@ static void sub_expr(bparser *parser, bexpdesc *e, int prio)
         be_code_prebinop(finfo, op, e); /* and or */
         sub_expr(parser, &e2, binary_op_prio(op));
         check_vardefine(parser, &e2);
-        be_code_binop(finfo, op, e, &e2); /* encode binary op */
+        if (be_code_binop(finfo, op, e, &e2)) { /* encode binary op */
+            range_expr(parser, e, &e2);
+        }
         op = get_binop(parser);
     }
 }
 
 static void expr(bparser *parser, bexpdesc *e)
 {
-    sub_expr(parser, e, 2);
+    sub_expr(parser, e, 1);
 }
 
 static void expr_stmt(bparser *parser)
@@ -1034,6 +1054,6 @@ bclosure* be_parser_source(bvm *vm, const char *fname, const char *text)
     mainfunc(&parser, cl);
     be_gc_unfix(vm, gc_object(cl));
     scan_next_token(&parser); /* clear lexer */
-    be_free(parser.lexer.data);
+    be_lexer_deinit(&parser.lexer);
     return cl;
 }

@@ -26,13 +26,22 @@ static const char* kwords_tab[] = {
         "return", "true", "false", "nil", "var", "do"
 };
 
-void keyword_registe(bvm *vm)
+static void keyword_registe(bvm *vm)
 {
     int i, n = (int)(sizeof(kwords_tab) / sizeof(kwords_tab[0]));
     for (i = KeyIf; i < n; ++i) {
         bstring *s = be_newstr(vm, kwords_tab[i]);
         be_gc_fix(vm, gc_object(s));
         str_setextra(s, i);
+    }
+}
+
+static void keyword_unregiste(bvm *vm)
+{
+    int i, n = (int)(sizeof(kwords_tab) / sizeof(kwords_tab[0]));
+    for (i = KeyIf; i < n; ++i) {
+        bstring *s = be_newstr(vm, kwords_tab[i]);
+        be_gc_unfix(vm, gc_object(s));
     }
 }
 
@@ -221,7 +230,7 @@ static btokentype scan_dot_real(blexer *lexer)
     if (is_digit(lgetc(lexer))) {
         match(lexer, is_digit);
         scan_realexp(lexer);
-        setreal(lexer, atof(begin));
+        setreal(lexer, (breal)atof(begin));
         return TokenReal;
     }
     return OptDot;
@@ -370,6 +379,12 @@ void be_lexer_init(blexer *lexer, bvm *vm)
     lexer->data = NULL;
     lexer->size = 0;
     keyword_registe(vm);
+}
+
+void be_lexer_deinit(blexer *lexer)
+{
+    be_free(lexer->data);
+    keyword_unregiste(lexer->vm);
 }
 
 void be_lexer_set_source(blexer *lexer, const char *fname, const char *text)

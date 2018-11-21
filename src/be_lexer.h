@@ -27,6 +27,7 @@ typedef enum {
     OptGE,          /* operator, >= */
     OptAnd,         /* operator, & */
     OptOr,          /* operator, | */
+    OptRange,       /* operator, .. */
     /* unary operator */
     OptNot,        /* operator, ! */
     /* postfix operator or bracket */
@@ -41,7 +42,6 @@ typedef enum {
     OptComma,       /* operator, , */
     OptSemic,       /* operator, ; */
     OptColon,       /* operator, : */
-    OptRange,       /* operator, .. */
     /* keyword */
     KeyIf,          /* keyword if */
     KeyElif,        /* keyword elif */
@@ -81,6 +81,7 @@ typedef struct blexer {
 } blexer;
 
 void be_lexer_init(blexer *lexer, bvm *vm);
+void be_lexer_deinit(blexer *lexer);
 void be_lexer_set_source(blexer *lexer, const char *fname, const char *text);
 int be_lexer_scan_next(blexer *lexer);
 const char* be_token2str(btokentype type);

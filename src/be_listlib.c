@@ -1,7 +1,5 @@
 #include "be_listlib.h"
 
-#define m_data(vm)      be_newstr(vm, "__data__")
-
 static int m_init(bvm *vm)
 {
     be_newlist(vm);

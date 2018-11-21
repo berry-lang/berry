@@ -30,7 +30,7 @@ int be_globalvar_new(bvm *vm, bstring *name)
         bvalue *desc;
         idx = be_map_count(gd->idxtab);
         desc = be_map_insertstr(gd->idxtab, name, NULL);
-        desc->v.i = idx;
+        var_setint(desc, idx);
         be_vector_resize(gd->gvalist, idx + 1);
         vm->global = be_vector_data(gd->gvalist);
         gd->nglobal++;

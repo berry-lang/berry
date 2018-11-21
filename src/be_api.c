@@ -43,7 +43,8 @@ void be_regclass(bvm *vm, const char *name, const bmemberinfo *lib)
 {
     bstring *s = be_newstr(vm, name);
     bclass *c = be_newclass(vm, s, NULL);
-    bvalue *var = be_globalvar(vm, be_globalvar_new(vm, s));
+    int idx = be_globalvar_new(vm, s);   /* because relloc is possible, index must first figure out. */
+    bvalue *var = be_globalvar(vm, idx); /* attention evaluation order. */
     var_setclass(var, c);
     /* bind members */
     while (lib->name) {

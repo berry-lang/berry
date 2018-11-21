@@ -3,9 +3,6 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#include "be_vm.h"
-#include "be_vector.h"
-
 static void dofile(bvm *vm, const char *fname)
 {
     char buffer[4096];
