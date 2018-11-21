@@ -139,9 +139,9 @@ static void object_binop(bvm *vm, const char *op,
     be_instance_member(a->v.p, be_newstr(vm, op), top);
     top[1] = *a; /* move self to argv[0] */
     top[2] = *b; /* move other to argv[1] */
-    vm->top += 1; /* prevent collection results */
+    vm->top++;   /* prevent collection results */
     be_dofunc(vm, top, 2); /* call method 'item' */
-    vm->top -= 1;
+    vm->top--;
     *dst = *top; /* copy result to dst */
 }
 static void object_unop(bvm *vm, const char *op,
@@ -308,6 +308,21 @@ define_function(i_ne, equal_block(!=, !))
 define_function(i_gt, relop_block(>))
 define_function(i_ge, relop_block(>=))
 
+static void i_range(bvm *vm, binstruction ins)
+{
+    bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
+    bvalue *top = vm->top;
+    /* get method 'item' */
+    int idx = be_globalvar_find(vm, be_newstr(vm, "range"));
+    top[0] = vm->global[idx];
+    top[1] = *b; /* move lower to argv[0] */
+    top[2] = *c; /* move upper to argv[1] */
+    vm->top += 3; /* prevent collection results */
+    be_dofunc(vm, top, 2); /* call method 'item' */
+    vm->top -= 3;
+    *a = *top; /* copy result to R(A) */
+}
+
 static void i_jump(bvm *vm, binstruction ins)
 {
     bcallframe *cf = vm->cf;
@@ -447,10 +462,10 @@ static void i_getindex(bvm *vm, binstruction ins)
         be_instance_member(var_toobj(b), be_newstr(vm, "item"), top);
         top[1] = *b; /* move object to argv[0] */
         top[2] = *c; /* move key to argv[1] */
-        vm->top += 1; /* prevent collection results */
+        vm->top += 3;   /* prevent collection results */
         be_dofunc(vm, top, 2); /* call method 'item' */
-        vm->top -= 1;
-        *a = *top; /* copy result to R(A) */
+        vm->top -= 3;
+        *a = *top;   /* copy result to R(A) */
     } else {
         vm_error(vm, "get index: object error");
     }
@@ -466,7 +481,9 @@ static void i_setindex(bvm *vm, binstruction ins)
         top[1] = *a; /* move object to argv[0] */
         top[2] = *b; /* move key to argv[1] */
         top[3] = *c; /* move src to argv[2] */
+        vm->top += 4;
         be_dofunc(vm, top, 3); /* call method 'setitem' */
+        vm->top -= 4;
     } else {
         vm_error(vm, "set index: object error");
     }
@@ -534,6 +551,7 @@ static void vm_exec(bvm *vm)
         case OP_NE: i_ne(vm, ins); break;
         case OP_GT: i_gt(vm, ins); break;
         case OP_GE: i_ge(vm, ins); break;
+        case OP_RANGE: i_range(vm, ins); break;
         case OP_NEG: i_neg(vm, ins); break;
         case OP_JMP: i_jump(vm, ins); break;
         case OP_JMPT: i_jumptrue(vm, ins); break;
@@ -563,7 +581,7 @@ static void vm_exec(bvm *vm)
     }
 }
 
-void do_closure(bvm *vm, bvalue *reg, int argc)
+static void do_closure(bvm *vm, bvalue *reg, int argc)
 {
     bproto *proto = var2cl(reg)->proto;
     bvalue *v = reg + argc + 1, *end = reg + proto->argc + 1;
@@ -574,7 +592,7 @@ void do_closure(bvm *vm, bvalue *reg, int argc)
     vm_exec(vm);
 }
 
-void do_ntvfunc(bvm *vm, bvalue *reg, int argc)
+static void do_ntvfunc(bvm *vm, bvalue *reg, int argc)
 {
     bntvfunc *f = var_toobj(reg);
     push_ntvfunc(vm, reg, argc, 0);
@@ -582,19 +600,23 @@ void do_ntvfunc(bvm *vm, bvalue *reg, int argc)
     ret_cfunction(vm);
 }
 
+static void do_class(bvm *vm, bvalue *reg, int argc)
+{
+    if (be_class_newobj(vm, var_toobj(reg), reg, ++argc)) {
+        vm->top++;
+        be_dofunc(vm, reg + 1, argc);
+        vm->top--;
+    }
+}
+
 void be_dofunc(bvm *vm, bvalue *v, int argc)
 {
     be_gc_setpause(vm, 1);
     switch (var_type(v)) {
-    case BE_CLOSURE:
-        do_closure(vm, v, argc);
-        break;
-    case BE_NTVFUNC:
-        do_ntvfunc(vm, v, argc);
-        break;
-    default:
-        break;
+    case BE_CLASS: do_class(vm, v, argc); break;
+    case BE_CLOSURE: do_closure(vm, v, argc); break;
+    case BE_NTVFUNC: do_ntvfunc(vm, v, argc); break;
+    default: break;
     }
     be_gc_collect(vm);
-    be_gc_setpause(vm, 0);
 }

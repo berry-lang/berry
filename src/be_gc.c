@@ -98,21 +98,6 @@ void be_gc_unfix(bvm *vm, bgcobject *obj)
     gc_setwhite(obj);
 }
 
-static void mark_instance(bvm *vm, bgcobject *obj)
-{
-    binstance *o = cast_instance(obj);
-    while (o) {
-        bvalue *var = be_instance_members(o);
-        int nvar = be_instance_member_count(o);
-        while (nvar--) {
-            mark_object(vm, var->v.gc, var_type(var));
-            var++;
-        }
-        gc_setdark(o);
-        o = be_instance_super(o);
-    }
-}
-
 static void mark_map(bvm *vm, bgcobject *obj)
 {
     bmap *map = cast_map(obj);
@@ -202,6 +187,22 @@ static void mark_class(bvm *vm, bgcobject *obj)
         mark_map(vm, gc_object(be_class_members(c)));
         gc_setdark(be_class_name(c));
         gc_setdark(obj);
+    }
+}
+
+static void mark_instance(bvm *vm, bgcobject *obj)
+{
+    binstance *o = cast_instance(obj);
+    while (o) {
+        bvalue *var = be_instance_members(o);
+        int nvar = be_instance_member_count(o);
+        while (nvar--) {
+            mark_object(vm, var->v.gc, var_type(var));
+            var++;
+        }
+        mark_class(vm, gc_object(o->class));
+        gc_setdark(o);
+        o = be_instance_super(o);
     }
 }
 

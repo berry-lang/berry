@@ -25,6 +25,19 @@ static bvalue* index2value(bvm *vm, int idx)
     return vm->top + idx;
 }
 
+static void class_init(bvm *vm, bclass *c, const bmemberinfo *lib)
+{
+    while (lib->name) {
+        bstring *s = be_newstr(vm, lib->name);
+        if (lib->function) { /* method */
+            be_prim_method_bind(vm, c, s, lib->function);
+        } else {
+            be_member_bind(c, s); /* member */
+        }
+        ++lib;
+    }
+}
+
 void be_regcfunc(bvm *vm, const char *name, bcfunction f)
 {
     bstring *s = be_newstr(vm, name);
@@ -46,16 +59,7 @@ void be_regclass(bvm *vm, const char *name, const bmemberinfo *lib)
     int idx = be_globalvar_new(vm, s);   /* because relloc is possible, index must first figure out. */
     bvalue *var = be_globalvar(vm, idx); /* attention evaluation order. */
     var_setclass(var, c);
-    /* bind members */
-    while (lib->name) {
-        s = be_newstr(vm, lib->name);
-        if (lib->function) { /* method */
-            be_prim_method_bind(vm, c, s, lib->function);
-        } else {
-            be_member_bind(c, s); /* member */
-        }
-        ++lib;
-    }
+    class_init(vm, c, lib); /* bind members */
 }
 
 int be_top(bvm *vm)
@@ -184,6 +188,13 @@ const char* be_tostring(bvm *vm, int index)
     return str(var_tostr(v));
 }
 
+void be_moveto(bvm *vm, int index)
+{
+    bvalue *src = vm->top;
+    bvalue *dst = index2value(vm, index);
+    var_setval(dst, src);
+}
+
 void be_pushnil(bvm *vm)
 {
     bvalue *reg = pushtop(vm);
@@ -238,6 +249,15 @@ void be_pushntvclosure(bvm *vm, bcfunction f, int nupvals)
     bvalue *top = pushtop(vm);
     bntvfunc *nf = be_newprimclosure(vm, f, nupvals);
     var_setntvfunc(top, nf);
+}
+
+void be_pushclass(bvm *vm, const char *name, const bmemberinfo *lib)
+{
+    bvalue *dst = pushtop(vm);
+    bstring *s = be_newstr(vm, name);
+    bclass *c = be_newclass(vm, s, NULL);
+    var_setclass(dst, c);
+    class_init(vm, c, lib); /* bind members */
 }
 
 void be_getsuper(bvm *vm, int index)
@@ -532,7 +552,7 @@ int be_return(bvm *vm)
     return 0;
 }
 
-int be_nonereturn(bvm *vm)
+int be_noreturn(bvm *vm)
 {
     bvalue *ret = retreg(vm);
     var_setnil(ret);

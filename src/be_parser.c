@@ -142,6 +142,15 @@ static void begin_block(bfuncinfo *finfo, bblockinfo *binfo, int isloop)
     }
 }
 
+static void blobk_setloop(bfuncinfo *finfo)
+{
+    bblockinfo *binfo = finfo->binfo;
+    binfo->isloop = 1;
+    binfo->beginpc = finfo->pc;
+    binfo->breaklist = NO_JUMP;
+    binfo->continuelist = NO_JUMP;
+}
+
 static void end_block(bparser *parser)
 {
     bfuncinfo *finfo = parser->finfo;
@@ -149,6 +158,7 @@ static void end_block(bparser *parser)
     int nlocal = be_list_count(finfo->local);
 
     if (binfo->isloop) {
+        be_code_jumpto(finfo, binfo->beginpc);
         be_code_patchjump(finfo, binfo->breaklist);
         be_code_patchlist(finfo, binfo->continuelist, binfo->beginpc);
     }
@@ -241,7 +251,7 @@ static void end_func(bparser *parser)
 static btokentype get_binop(bparser *parser)
 {
     btokentype op = next_token(parser).type;
-    if (op >= OptAdd && op <= OptRange) {
+    if (op >= OptAdd && op <= OptOr) {
         return op;
     }
     return OP_NOT_BINARY;
@@ -664,24 +674,6 @@ static void assign_expr(bparser *parser)
     }
 }
 
-
-static void range_expr(bparser *parser, bexpdesc *e1, bexpdesc *e2)
-{
-    int idx;
-    bvm *vm = parser->vm;
-    bfuncinfo *finfo = parser->finfo;
-    bexpdesc e;
-
-    idx = be_globalvar_find(vm, be_newstr(vm, "range"));
-    init_exp(&e, ETGLOBAL, idx);
-    idx = be_code_nextreg(finfo, &e);
-    be_code_nextreg(finfo, e1);
-    be_code_nextreg(finfo, e2);
-    be_code_call(finfo, idx, 2);
-    be_code_freeregs(finfo, 2);
-    *e1 = e;
-}
-
 /* binary operator: + - * / % && || < <= == != > >=
  * unary operator: + - ! 
  */
@@ -707,9 +699,7 @@ static void sub_expr(bparser *parser, bexpdesc *e, int prio)
         be_code_prebinop(finfo, op, e); /* and or */
         sub_expr(parser, &e2, binary_op_prio(op));
         check_vardefine(parser, &e2);
-        if (be_code_binop(finfo, op, e, &e2)) { /* encode binary op */
-            range_expr(parser, e, &e2);
-        }
+        be_code_binop(finfo, op, e, &e2); /* encode binary op */
         op = get_binop(parser);
     }
 }
@@ -789,18 +779,101 @@ static void do_stmt(bparser *parser)
 
 static void while_stmt(bparser *parser)
 {
-    int end, begin;
+    int brk;
     bblockinfo binfo;
     bfuncinfo *finfo = parser->finfo;
     /* WHILE (expr) block END */
-    scan_next_token(parser); /* skip 'if' */
+    scan_next_token(parser); /* skip 'while' */
     begin_block(parser->finfo, &binfo, 1);
-    begin = finfo->pc;
-    end = cond_stmt(parser);
+    brk = cond_stmt(parser);
     stmtlist(parser);
-    be_code_jumpto(finfo, begin);
     end_block(parser);
-    be_code_patchjump(finfo, end);
+    be_code_patchjump(finfo, brk);
+    match_token(parser, KeyEnd); /* skip 'end' */
+}
+
+static void for_itvar(bparser *parser, bexpdesc *e)
+{
+    if (next_token(parser).type == TokenId) {
+        bstring *s = next_token(parser).u.s;
+        int idx = new_localvar(parser->finfo, s);
+        init_exp(e, ETLOCAL, idx);
+        scan_next_token(parser);
+    } else {
+        parser_error(parser, "for error", NULL);
+    }
+}
+
+static void for_init(bparser *parser, bexpdesc *v)
+{
+    bexpdesc e;
+    bstring *s;
+    bvm *vm = parser->vm;
+    bfuncinfo *finfo = parser->finfo;
+
+    /* $it = __iterator__(expr) */
+    s = be_newstr(vm, "__iterator__");
+    init_exp(&e, ETGLOBAL, be_globalvar_find(vm, s));
+    be_code_nextreg(finfo, &e); /* code function '__iterator__' */
+    expr(parser, v);
+    be_code_nextreg(finfo, v);
+    be_code_call(finfo, e.v.idx, 1); /* call __iterator__(expr) */
+    s = be_newstr(vm, "$it");
+    init_exp(v, ETLOCAL, new_localvar(finfo, s));
+    be_code_setvar(finfo, v, &e); /* code $it = __iterator__(expr) */
+    be_code_freeregs(finfo, 2); /* free registers */
+}
+
+/*
+ * while (__hasnext__($it))
+ *     var = __next__($it)
+ *     stmtlist
+ * end
+ */
+static void for_iter(bparser *parser, bexpdesc *v, bexpdesc *it)
+{
+    bexpdesc e;
+    bstring *s;
+    int brk;
+    bvm *vm = parser->vm;
+    bfuncinfo *finfo = parser->finfo;
+
+    blobk_setloop(finfo);
+    /* __hasnext__($it) */
+    s = be_newstr(vm, "__hasnext__");
+    init_exp(&e, ETGLOBAL, be_globalvar_find(vm, s));
+    be_code_nextreg(finfo, &e); /* code function '__hasnext__' */
+    be_code_nextreg(finfo, it); /* code argv[0]: '$it' */
+    be_code_call(finfo, e.v.idx, 1); /* call __hasnext__($it) */
+    be_code_freeregs(finfo, 1); /* free registers */
+    be_code_goiftrue(finfo, &e);
+    brk = e.f;
+    /* var = __next__($it) */
+    s = be_newstr(vm, "__next__");
+    init_exp(&e, ETGLOBAL, be_globalvar_find(vm, s));
+    be_code_nextreg(finfo, &e); /* code function '__next__' */
+    be_code_nextreg(finfo, it); /* code argv[0]: '$it' */
+    be_code_call(finfo, e.v.idx, 1); /* call __next__($it) */
+    be_code_setvar(finfo, v, &e); /* code var = __next__($it) */
+    be_code_freeregs(finfo, 2); /* free registers */
+    stmtlist(parser);
+    end_block(parser);
+    be_code_patchjump(finfo, brk);
+}
+
+static void for_stmt(bparser *parser)
+{
+    bblockinfo binfo;
+    bexpdesc var, iter;
+    /* FOR (ID : expr) block END */
+    scan_next_token(parser); /* skip 'for' */
+    match_token(parser, OptLBK); /* skip '(' */
+    begin_block(parser->finfo, &binfo, 0);
+    for_itvar(parser, &var);
+    match_token(parser, OptColon); /* skip ':' */
+    for_init(parser, &iter);
+    match_token(parser, OptRBK); /* skip ')' */
+    for_iter(parser, &var, &iter);
     match_token(parser, KeyEnd); /* skip 'end' */
 }
 
@@ -999,7 +1072,7 @@ static void statement(bparser *parser)
     switch (next_token(parser).type) {
     case KeyIf: if_stmt(parser); break;
     case KeyWhile: while_stmt(parser); break;
-    case KeyFor: break;
+    case KeyFor: for_stmt(parser); break;
     case KeyDo: do_stmt(parser); break;
     case KeyBreak: break_stmt(parser); break;
     case KeyContinue: continue_stmt(parser); break;

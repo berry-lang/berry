@@ -361,7 +361,7 @@ void be_code_prebinop(bfuncinfo *finfo, int op, bexpdesc *e)
     }
 }
 
-int be_code_binop(bfuncinfo *finfo, int op, bexpdesc *e1, bexpdesc *e2)
+void be_code_binop(bfuncinfo *finfo, int op, bexpdesc *e1, bexpdesc *e2)
 {
     switch (op) {
     case OptAnd:
@@ -376,14 +376,11 @@ int be_code_binop(bfuncinfo *finfo, int op, bexpdesc *e1, bexpdesc *e2)
         break;
     case OptAdd: case OptSub: case OptMul: case OptDiv:
     case OptMod: case OptLT: case OptLE: case OptEQ:
-    case OptNE: case OptGT: case OptGE:
+    case OptNE: case OptGT: case OptGE: case OptRange:
         binryexp(finfo, (bopcode)(op - OptAdd), e1, e2);
         break;
-    case OptRange:
-        return 1;
     default: break;
     }
-    return 0;
 }
 
 static int code_neg(bfuncinfo *finfo, bexpdesc *e)
@@ -489,11 +486,9 @@ int be_code_nextreg(bfuncinfo *finfo, bexpdesc *e)
 {
     int dst = finfo->freereg;
     int src = exp2anyreg(finfo, e); /* get variable register index */
-    if (src != dst) { /* move local and const to new register */
+    if (e->type != ETREG) { /* move local and const to new register */
         code_move(finfo, dst, src);
         be_code_allocregs(finfo, 1);
-        e->type = ETREG;
-        e->v.idx = dst;
     } else {
         dst = src;
     }

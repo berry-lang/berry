@@ -61,7 +61,7 @@ int be_toint(bvm *vm, int index);
 breal be_toreal(bvm *vm, int index);
 bbool be_tobool(bvm *vm, int index);
 const char* be_tostring(bvm *vm, int index);
-
+void be_moveto(bvm *vm, int index);
 void be_pushnil(bvm *vm);
 void be_pushbool(bvm *vm, int b);
 void be_pushint(bvm *vm, bint i);
@@ -70,7 +70,7 @@ void be_pushstring(bvm *vm, const char *str);
 void be_pushfstring(bvm *vm, const char *format, ...);
 void be_pushvalue(bvm *vm, int index);
 void be_pushntvclosure(bvm *vm, bcfunction f, int nupvals);
-
+void be_pushclass(bvm *vm, const char *name, const bmemberinfo *lib);
 void be_getsuper(bvm *vm, int index);
 
 void be_newlist(bvm *vm);
@@ -90,7 +90,7 @@ void be_remove(bvm *vm, int index);
 void be_resize(bvm *vm, int index);
 int be_next(bvm *vm, int index);
 int be_return(bvm *vm);
-int be_nonereturn(bvm *vm);
+int be_noreturn(bvm *vm);
 
 void be_call(bvm *vm, int argc);
 int be_pcall(bvm *vm, int argc);
