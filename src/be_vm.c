@@ -109,7 +109,7 @@ static bbool obj2bool(bvm *vm, bvalue *obj)
 {
     bvalue *top = vm->top;
     /* get operator method */
-    be_instance_member(obj->v.p, be_newstr(vm, "tobool"), top);
+    be_instance_member(obj->v.p, be_newconststr(vm, "tobool"), top);
     top[1] = *obj; /* move self to argv[0] */
     be_dofunc(vm, top, 1); /* call method 'item' */
     return var_isbool(top) ? var_tobool(top) : btrue;
@@ -136,7 +136,7 @@ static void object_binop(bvm *vm, const char *op,
 {
     bvalue *top = vm->top;
     /* get operator method */
-    be_instance_member(a->v.p, be_newstr(vm, op), top);
+    be_instance_member(a->v.p, be_newconststr(vm, op), top);
     top[1] = *a; /* move self to argv[0] */
     top[2] = *b; /* move other to argv[1] */
     vm->top++;   /* prevent collection results */
@@ -149,7 +149,7 @@ static void object_unop(bvm *vm, const char *op,
 {
     bvalue *top = vm->top;
     /* get operator method */
-    be_instance_member(src->v.p, be_newstr(vm, op), top);
+    be_instance_member(src->v.p, be_newconststr(vm, op), top);
     top[1] = *src; /* move self to argv[0] */
     be_dofunc(vm, top, 1); /* call method 'item' */
     *dst = *top; /* copy result to dst */
@@ -313,7 +313,7 @@ static void i_range(bvm *vm, binstruction ins)
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
     bvalue *top = vm->top;
     /* get method 'item' */
-    int idx = be_globalvar_find(vm, be_newstr(vm, "range"));
+    int idx = be_globalvar_find(vm, be_newconststr(vm, "range"));
     top[0] = vm->global[idx];
     top[1] = *b; /* move lower to argv[0] */
     top[2] = *c; /* move upper to argv[1] */
@@ -459,7 +459,7 @@ static void i_getindex(bvm *vm, binstruction ins)
     if (var_isinstance(b)) {
         bvalue *top = vm->top;
         /* get method 'item' */
-        be_instance_member(var_toobj(b), be_newstr(vm, "item"), top);
+        be_instance_member(var_toobj(b), be_newconststr(vm, "item"), top);
         top[1] = *b; /* move object to argv[0] */
         top[2] = *c; /* move key to argv[1] */
         vm->top += 3;   /* prevent collection results */
@@ -477,7 +477,7 @@ static void i_setindex(bvm *vm, binstruction ins)
     if (var_isinstance(a)) {
         bvalue *top = vm->top;
         /* get method 'item' */
-        be_instance_member(var_toobj(a), be_newstr(vm, "setitem"), top);
+        be_instance_member(var_toobj(a), be_newconststr(vm, "setitem"), top);
         top[1] = *a; /* move object to argv[0] */
         top[2] = *b; /* move key to argv[1] */
         top[3] = *c; /* move src to argv[2] */

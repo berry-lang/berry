@@ -39,7 +39,7 @@ typedef struct bstring {
         int llen; /* long string length */
         struct bstring *next;
     } u;
-    char s[1];
+    const char *s;
 } bstring;
 
 typedef struct bvalue {

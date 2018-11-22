@@ -12,6 +12,7 @@ void be_string_init(bvm *vm);
 int be_eqstr(bstring *s1, bstring *s2);
 bstring* be_newstr(bvm *vm, const char *str);
 bstring* be_newstrn(bvm *vm, const char *str, int len);
+bstring* be_newconststr(bvm *vm, const char *str);
 void be_deletestrgc(bvm *vm, bstring *str);
 
 #endif

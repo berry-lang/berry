@@ -1,4 +1,4 @@
-CFLAGS	 = -Wall -Wextra -std=c89 -O0 -g
+CFLAGS	 = -Wall -Wextra -std=c89 -O0 -g -m32
 TARGET	 = berry
 CC	 = gcc
 

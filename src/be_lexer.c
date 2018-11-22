@@ -30,7 +30,7 @@ static void keyword_registe(bvm *vm)
 {
     int i, n = (int)(sizeof(kwords_tab) / sizeof(kwords_tab[0]));
     for (i = KeyIf; i < n; ++i) {
-        bstring *s = be_newstr(vm, kwords_tab[i]);
+        bstring *s = be_newconststr(vm, kwords_tab[i]);
         be_gc_fix(vm, gc_object(s));
         str_setextra(s, i);
     }
@@ -40,7 +40,7 @@ static void keyword_unregiste(bvm *vm)
 {
     int i, n = (int)(sizeof(kwords_tab) / sizeof(kwords_tab[0]));
     for (i = KeyIf; i < n; ++i) {
-        bstring *s = be_newstr(vm, kwords_tab[i]);
+        bstring *s = be_newconststr(vm, kwords_tab[i]);
         be_gc_unfix(vm, gc_object(s));
     }
 }

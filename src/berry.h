@@ -9,7 +9,7 @@
 #define BERRY_VERSION   "0.0.1"
 
 typedef uint8_t         bbyte;
-typedef double          breal;
+typedef float           breal;
 typedef int             bint;
 
 typedef enum {

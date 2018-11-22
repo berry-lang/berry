@@ -73,20 +73,24 @@ void be_string_init(bvm *vm)
     strtab_resize(vm, 16);
 }
 
-bstring* createstrobj(bvm *vm, int len, uint32_t hash)
+bstring* createstrobj(bvm *vm, int len, uint32_t hash, int isk)
 {
-    int size = sizeof(bstring) + len;
+    int size = sizeof(bstring) + (isk ? 0 : len + 1);
     bgcobject *gco = be_newgcobj(vm, BE_STRING, size);
     bstring *s = cast_str(gco);
     if (s) {
         s->hash = hash;
-        s->s[len] = '\0';
+        if (!isk) {
+            char *str = (char *)(s + 1);
+            str[len] = '\0';
+            s->s = str;
+        }
         s->slen = len <= SHORT_STR_MAX_LEN ? (bbyte)len : 255;
     }
     return s;
 }
 
-static bstring* newshortstr(bvm *vm, const char *str, int len)
+static bstring* newshortstr(bvm *vm, const char *str, int len, int isk)
 {
     bstring *s;
     int size = vm->strtab->size;
@@ -98,8 +102,12 @@ static bstring* newshortstr(bvm *vm, const char *str, int len)
             return s;
         }
     }
-    s = createstrobj(vm, len, hash);
-    strncpy(s->s, str, len);
+    s = createstrobj(vm, len, hash, isk);
+    if (isk) {
+        s->s = str;
+    } else {
+        strncpy((char*)s->s, str, len);
+    }
     s->extra = 0;
     s->u.next = *list;
     *list = s;
@@ -119,11 +127,26 @@ bstring* be_newstrn(bvm *vm, const char *str, int len)
 {
     bstring *s;
     if (len <= SHORT_STR_MAX_LEN) {
-        return newshortstr(vm, str, len);
+        return newshortstr(vm, str, len, 0);
     }
     /* long string */
-    s = createstrobj(vm, len, len);
-    strncpy(s->s, str, len);
+    s = createstrobj(vm, len, len, 0);
+    strncpy((char*)s->s, str, len);
+    s->extra = 0;
+    s->u.llen = len;
+    return s;
+}
+
+bstring* be_newconststr(bvm *vm, const char *str)
+{
+    bstring *s;
+    int len = (int)strlen(str);
+    if (len <= SHORT_STR_MAX_LEN) {
+        return newshortstr(vm, str, len, 1);
+    }
+    /* long string */
+    s = createstrobj(vm, len, len, 1);
+    s->s = str;
     s->extra = 0;
     s->u.llen = len;
     return s;

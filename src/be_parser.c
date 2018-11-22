@@ -417,7 +417,7 @@ static void new_primtype(bparser *parser, const char *type, bexpdesc *e)
     bvm *vm = parser->vm;
     bfuncinfo *finfo = parser->finfo;
 
-    idx = be_globalvar_find(vm, be_newstr(vm, type));
+    idx = be_globalvar_find(vm, be_newconststr(vm, type));
     init_exp(e, ETGLOBAL, idx);
     idx = be_code_nextreg(finfo, e);
     be_code_call(finfo, idx, 0);
@@ -431,7 +431,7 @@ static void list_nextmember(bparser *parser, bexpdesc *l)
     int base, reg = finfo->freereg;
 
     init_exp(&key, ETSTRING, 0);
-    key.v.s = be_newstr(parser->vm, "append");
+    key.v.s = be_newconststr(parser->vm, "append");
     /* copy list object to next register */
     be_code_reg(finfo, &v, reg);
     be_code_member(finfo, &v, &key);
@@ -451,7 +451,7 @@ static void map_nextmember(bparser *parser, bexpdesc *l)
     int base, reg = finfo->freereg;
 
     init_exp(&key, ETSTRING, 0);
-    key.v.s = be_newstr(parser->vm, "insert");
+    key.v.s = be_newconststr(parser->vm, "insert");
     /* copy list object to next register */
     be_code_reg(finfo, &v, reg);
     be_code_member(finfo, &v, &key);
@@ -812,13 +812,13 @@ static void for_init(bparser *parser, bexpdesc *v)
     bfuncinfo *finfo = parser->finfo;
 
     /* $it = __iterator__(expr) */
-    s = be_newstr(vm, "__iterator__");
+    s = be_newconststr(vm, "__iterator__");
     init_exp(&e, ETGLOBAL, be_globalvar_find(vm, s));
     be_code_nextreg(finfo, &e); /* code function '__iterator__' */
     expr(parser, v);
     be_code_nextreg(finfo, v);
     be_code_call(finfo, e.v.idx, 1); /* call __iterator__(expr) */
-    s = be_newstr(vm, "$it");
+    s = be_newconststr(vm, "$it");
     init_exp(v, ETLOCAL, new_localvar(finfo, s));
     be_code_setvar(finfo, v, &e); /* code $it = __iterator__(expr) */
     be_code_freeregs(finfo, 2); /* free registers */
@@ -840,7 +840,7 @@ static void for_iter(bparser *parser, bexpdesc *v, bexpdesc *it)
 
     blobk_setloop(finfo);
     /* __hasnext__($it) */
-    s = be_newstr(vm, "__hasnext__");
+    s = be_newconststr(vm, "__hasnext__");
     init_exp(&e, ETGLOBAL, be_globalvar_find(vm, s));
     be_code_nextreg(finfo, &e); /* code function '__hasnext__' */
     be_code_nextreg(finfo, it); /* code argv[0]: '$it' */
@@ -849,7 +849,7 @@ static void for_iter(bparser *parser, bexpdesc *v, bexpdesc *it)
     be_code_goiftrue(finfo, &e);
     brk = e.f;
     /* var = __next__($it) */
-    s = be_newstr(vm, "__next__");
+    s = be_newconststr(vm, "__next__");
     init_exp(&e, ETGLOBAL, be_globalvar_find(vm, s));
     be_code_nextreg(finfo, &e); /* code function '__next__' */
     be_code_nextreg(finfo, it); /* code argv[0]: '$it' */
@@ -926,9 +926,9 @@ static bstring* func_name(bparser *parser, bexpdesc *e, int ismethod)
         /* '-*' neg method */
         if (type == OptSub && next_token(parser).type == OptMul) {
             scan_next_token(parser); /* skip '*' */
-            return be_newstr(parser->vm, "-*");
+            return be_newconststr(parser->vm, "-*");
         } else {
-            return be_newstr(parser->vm, be_token2str(type));
+            return be_newconststr(parser->vm, be_token2str(type));
         }
     }
     parser_error(parser, "token is not identifier.", NULL);
@@ -972,7 +972,7 @@ static bproto* funcbody(bparser *parser, bexpdesc *e, int ismethod)
     begin_func(parser, &finfo, &binfo);
     finfo.proto->name = name;
     if (ismethod) {
-        new_localvar(parser->finfo, be_newstr(parser->vm, "self"));
+        new_localvar(parser->finfo, be_newconststr(parser->vm, "self"));
     }
     func_varlist(parser);
     stmtlist(parser);
@@ -1105,7 +1105,7 @@ static void mainfunc(bparser *parser, bclosure *cl)
     bfuncinfo finfo;
     begin_func(parser, &finfo, &binfo);
     finfo.proto->argc = 0; /* args */
-    finfo.proto->name = be_newstr(parser->vm, "main");
+    finfo.proto->name = be_newconststr(parser->vm, "main");
     cl->proto = finfo.proto;
     stmtlist(parser);
     end_func(parser);

@@ -28,7 +28,7 @@ static bvalue* index2value(bvm *vm, int idx)
 static void class_init(bvm *vm, bclass *c, const bmemberinfo *lib)
 {
     while (lib->name) {
-        bstring *s = be_newstr(vm, lib->name);
+        bstring *s = be_newconststr(vm, lib->name);
         if (lib->function) { /* method */
             be_prim_method_bind(vm, c, s, lib->function);
         } else {
@@ -40,7 +40,7 @@ static void class_init(bvm *vm, bclass *c, const bmemberinfo *lib)
 
 void be_regcfunc(bvm *vm, const char *name, bcfunction f)
 {
-    bstring *s = be_newstr(vm, name);
+    bstring *s = be_newconststr(vm, name);
     int idx = be_globalvar_find(vm, s);
     if (idx == -1) { /* new function */
         bntvfunc *func;
@@ -54,7 +54,7 @@ void be_regcfunc(bvm *vm, const char *name, bcfunction f)
 
 void be_regclass(bvm *vm, const char *name, const bmemberinfo *lib)
 {
-    bstring *s = be_newstr(vm, name);
+    bstring *s = be_newconststr(vm, name);
     bclass *c = be_newclass(vm, s, NULL);
     int idx = be_globalvar_new(vm, s);   /* because relloc is possible, index must first figure out. */
     bvalue *var = be_globalvar(vm, idx); /* attention evaluation order. */
