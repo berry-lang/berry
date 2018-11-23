@@ -30,7 +30,7 @@ static void class_init(bvm *vm, bclass *c, const bmemberinfo *lib)
     while (lib->name) {
         bstring *s = be_newconststr(vm, lib->name);
         if (lib->function) { /* method */
-            be_prim_method_bind(vm, c, s, lib->function);
+            be_prim_method_bind(c, s, lib->function);
         } else {
             be_member_bind(c, s); /* member */
         }
@@ -43,12 +43,10 @@ void be_regcfunc(bvm *vm, const char *name, bcfunction f)
     bstring *s = be_newconststr(vm, name);
     int idx = be_globalvar_find(vm, s);
     if (idx == -1) { /* new function */
-        bntvfunc *func;
         bvalue *var;
         idx = be_globalvar_new(vm, s);
         var = be_globalvar(vm, idx);
-        func = be_newntvfunc(vm, f);
-        var_setntvfunc(var, func);
+        var_setntvfunc(var, f);
     } /* else error */
 }
 
@@ -122,10 +120,10 @@ int be_isclosure(bvm *vm, int index)
     return var_isclosure(v);
 }
 
-int be_isntvfunc(bvm *vm, int index)
+int be_isntvclos(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
-    return var_isntvfunc(v);
+    return var_isntvclos(v);
 }
 
 int be_isfunction(bvm *vm, int index)
@@ -247,8 +245,14 @@ void be_pushvalue(bvm *vm, int index)
 void be_pushntvclosure(bvm *vm, bcfunction f, int nupvals)
 {
     bvalue *top = pushtop(vm);
-    bntvfunc *nf = be_newprimclosure(vm, f, nupvals);
-    var_setntvfunc(top, nf);
+    bntvclos *cl = be_newprimclosure(vm, f, nupvals);
+    var_setntvclos(top, cl);
+}
+
+void be_pushntvfunction(bvm *vm, bcfunction f)
+{
+    bvalue *top = pushtop(vm);
+    var_setntvfunc(top, f);
 }
 
 void be_pushclass(bvm *vm, const char *name, const bmemberinfo *lib)
@@ -292,7 +296,7 @@ const char* be_typename(bvm *vm, int index)
     case BE_REAL: return "real";
     case BE_BOOL: return "bool";
     case BE_CLOSURE: return "closure";
-    case BE_NTVFUNC: return "ntvfunc";
+    case BE_NTVCLOS: return "ntvclos";
     case BE_PROTO: return "proto";
     case BE_CLASS: return "class";
     case BE_STRING: return "string";
@@ -417,9 +421,9 @@ void be_getupval(bvm *vm, int index, int pos)
 {
     bvalue *f = index2value(vm, index);
     bvalue *top = pushtop(vm);
-    if (var_istype(f, BE_NTVFUNC)) {
-        bntvfunc *nf = var_toobj(f);
-        bvalue *uv = be_ntvfunc_upval(nf, pos)->value;
+    if (var_istype(f, BE_NTVCLOS)) {
+        bntvclos *nf = var_toobj(f);
+        bvalue *uv = be_ntvclos_upval(nf, pos)->value;
         var_setval(top, uv);
     } else {
         var_setnil(top);
@@ -430,9 +434,9 @@ void be_setupval(bvm *vm, int index, int pos)
 {
     bvalue *f = index2value(vm, index);
     bvalue *v = index2value(vm, -1);
-    if (var_istype(f, BE_NTVFUNC)) {
-        bntvfunc *nf = var_toobj(f);
-        bvalue *uv = be_ntvfunc_upval(nf, pos)->value;
+    if (var_istype(f, BE_NTVCLOS)) {
+        bntvclos *nf = var_toobj(f);
+        bvalue *uv = be_ntvclos_upval(nf, pos)->value;
         var_setval(uv, v);
     }
 }
@@ -441,7 +445,7 @@ void be_getfunction(bvm *vm)
 {
     bvalue *v = retreg(vm);
     bvalue *top = pushtop(vm);
-    if (var_istype(v, BE_NTVFUNC)) {
+    if (var_istype(v, BE_NTVCLOS)) {
         var_setval(top, v);
     } else {
         var_setnil(top);
@@ -605,7 +609,7 @@ void be_printvalue(bvm *vm, int quote, int index)
     case BE_STRING:
         be_printf(quote ? "\"%s\"" : "%s", str(var_tostr(v)));
         break;
-    case BE_CLOSURE: case BE_NTVFUNC:
+    case BE_CLOSURE: case BE_NTVCLOS:
         be_printf("<function: %p>", var_toobj(v));
         break;
     case BE_CLASS:

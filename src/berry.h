@@ -23,8 +23,8 @@ typedef enum {
 #define BE_INT          1
 #define BE_REAL         2
 #define BE_BOOL         3
-#define BE_STRING       10
-#define BE_FUNCTION     11
+#define BE_FUNCTION     10
+#define BE_STRING       11
 #define BE_CLASS        12
 #define BE_INSTANCE     13
 
@@ -49,7 +49,7 @@ int be_isint(bvm *vm, int index);
 int be_isreal(bvm *vm, int index);
 int be_isstring(bvm *vm, int index);
 int be_isclosure(bvm *vm, int index);
-int be_isntvfunc(bvm *vm, int index);
+int be_isntvclos(bvm *vm, int index);
 int be_isfunction(bvm *vm, int index);
 int be_isproto(bvm *vm, int index);
 int be_isclass(bvm *vm, int index);
@@ -70,6 +70,7 @@ void be_pushstring(bvm *vm, const char *str);
 void be_pushfstring(bvm *vm, const char *format, ...);
 void be_pushvalue(bvm *vm, int index);
 void be_pushntvclosure(bvm *vm, bcfunction f, int nupvals);
+void be_pushntvfunction(bvm *vm, bcfunction f);
 void be_pushclass(bvm *vm, const char *name, const bmemberinfo *lib);
 void be_getsuper(bvm *vm, int index);
 

@@ -7,6 +7,8 @@
 
 #define SHORT_STR_MAX_LEN   64
 
+#define next(_s)    cast(void*, cast(bstring*, (_s)->next))
+
 struct bstringtable {
     bstring **table;
     int count; /* string count */
@@ -22,7 +24,7 @@ int be_eqstr(bstring *s1, bstring *s2)
     slen = s1->slen;
     /* long string */
     if (slen == 255 && slen == s2->slen) { 
-        return s1->hash == s2->hash && !strcmp(s1->s, s2->s);
+        return cast(blstring*, s1)->llen == cast(blstring*, s2)->llen && !strcmp(s1->s, s2->s);
     }
     return 0;
 }
@@ -41,9 +43,9 @@ static void strtab_resize(bvm *vm, int size)
         bstring *p = tab->table[i];
         tab->table[i] = NULL;
         while (p) { /* for each node in the list */
-            bstring *hnext = p->u.next;
-            uint32_t hash = p->hash & (size - 1);
-            p->u.next = tab->table[hash];
+            bstring *hnext = next(p);
+            uint32_t hash = str_hash(p) & (size - 1);
+            p->next = cast(void*, tab->table[hash]);
             tab->table[hash] = p;
             p = hnext;
         }
@@ -55,7 +57,7 @@ static void strtab_resize(bvm *vm, int size)
 }
 
 /* FNV-1a Hash */
-static uint32_t string_hash(const char *str, int len)
+uint32_t be_strhash(const char *str, int len)
 {
     uint32_t hash = 2166136261u;
     while (len--) {
@@ -73,19 +75,24 @@ void be_string_init(bvm *vm)
     strtab_resize(vm, 16);
 }
 
-bstring* createstrobj(bvm *vm, int len, uint32_t hash, int isk)
+bstring* createstrobj(bvm *vm, int len, int islong, int isk)
 {
-    int size = sizeof(bstring) + (isk ? 0 : len + 1);
-    bgcobject *gco = be_newgcobj(vm, BE_STRING, size);
+    int size = (islong ? sizeof(blstring)
+                : sizeof(bstring)) + (isk ? 0 : len + 1);
+    bgcobject *gco = be_gc_newstr(vm, size, islong);
     bstring *s = cast_str(gco);
     if (s) {
-        s->hash = hash;
         if (!isk) {
-            char *str = (char *)(s + 1);
+            char *str;
+            if (islong) {
+                str = cast(char*, (cast(blstring*, s) + 1));
+            } else {
+                str = cast(char*, (cast(bstring*, s) + 1));
+            }
             str[len] = '\0';
             s->s = str;
         }
-        s->slen = len <= SHORT_STR_MAX_LEN ? (bbyte)len : 255;
+        s->slen = islong ? 255 : (bbyte)len;
     }
     return s;
 }
@@ -94,26 +101,42 @@ static bstring* newshortstr(bvm *vm, const char *str, int len, int isk)
 {
     bstring *s;
     int size = vm->strtab->size;
-    uint32_t hash = string_hash(str, len);
+    uint32_t hash = be_strhash(str, len);
     bstring **list = vm->strtab->table + (hash & (size - 1));
 
-    for (s = *list; s != NULL; s = s->u.next) {
-        if (hash == s->hash && !strncmp(str, s->s, len)) {
+    for (s = *list; s != NULL; s = next(s)) {
+        if (len == s->slen && !strncmp(str, s->s, len)) {
             return s;
         }
     }
-    s = createstrobj(vm, len, hash, isk);
+    s = createstrobj(vm, len, 0, isk);
     if (isk) {
         s->s = str;
     } else {
         strncpy((char*)s->s, str, len);
     }
     s->extra = 0;
-    s->u.next = *list;
+    s->next = cast(void*, *list);
     *list = s;
     vm->strtab->count++;
     if (vm->strtab->count >= size) {
         strtab_resize(vm, size << 1);
+    }
+    return s;
+}
+
+static bstring* newlongstr(bvm *vm, const char *str, int len, int isk)
+{
+    bstring *s;
+    blstring *ls;
+    s = createstrobj(vm, len, 1, isk);
+    ls = cast(blstring*, s);
+    s->extra = 0;
+    ls->llen = len;
+    if (isk) {
+        s->s = str;
+    } else {
+        strncpy((char*)s->s, str, len);
     }
     return s;
 }
@@ -125,54 +148,45 @@ bstring* be_newstr(bvm *vm, const char *str)
 
 bstring* be_newstrn(bvm *vm, const char *str, int len)
 {
-    bstring *s;
     if (len <= SHORT_STR_MAX_LEN) {
         return newshortstr(vm, str, len, 0);
     }
-    /* long string */
-    s = createstrobj(vm, len, len, 0);
-    strncpy((char*)s->s, str, len);
-    s->extra = 0;
-    s->u.llen = len;
-    return s;
+    return newlongstr(vm, str, len, 0); /* long string */
 }
 
 bstring* be_newconststr(bvm *vm, const char *str)
 {
-    bstring *s;
     int len = (int)strlen(str);
     if (len <= SHORT_STR_MAX_LEN) {
         return newshortstr(vm, str, len, 1);
     }
-    /* long string */
-    s = createstrobj(vm, len, len, 1);
-    s->s = str;
-    s->extra = 0;
-    s->u.llen = len;
-    return s;
+    return newlongstr(vm, str, len, 1); /* long string */
 }
 
-void be_deletestrgc(bvm *vm, bstring *str)
+void be_gcstrtab(bvm *vm)
 {
-    if (str->slen < 255) { /* remove short string */
-        bstringtable *strtab = vm->strtab;
-        int size = strtab->size;
-        bstring **list = strtab->table + (str->hash & (size - 1));
-        strtab->count--;
-        if (*list == str) {
-            *list = str->u.next;
-        } else {
-            bstring *prev = *list;
-            while (prev && prev->u.next != str) {
-                prev = prev->u.next;
+    bstringtable *strtab = vm->strtab;
+    int size = strtab->size, i;
+    for (i = 0; i < size; ++i) {
+        bstring **list = strtab->table + i;
+        bstring *prev = NULL, *node, *next;
+        for (node = *list; node; node = next) {
+            next = next(node);
+            if (gc_iswhite(node)) {
+                be_free(node);
+                strtab->count--;
+                if (prev) { /* link list */
+                    prev->next = cast(void*, next);
+                } else {
+                    *list = next;
+                }
+            } else {
+                prev = node;
+                gc_setwhite(node);
             }
-            if (prev) { /* find */
-                prev->u.next = str->u.next;
-            }
-        }
-        if ((strtab->count << 1) < size && size > 16) {
-            strtab_resize(vm, size >> 1);
         }
     }
-    be_free(str);
+    if ((strtab->count << 1) < size && size > 16) {
+        strtab_resize(vm, size >> 1);
+    }
 }

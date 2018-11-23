@@ -56,46 +56,28 @@ bgcobject* be_newgcobj(bvm *vm, int type, int size)
     return obj;
 }
 
+bgcobject* be_gc_newstr(bvm *vm, int size, int islong)
+{
+    bgcobject *obj;
+    if (islong) {
+        return be_newgcobj(vm, BE_STRING, size);
+    }
+    obj = be_malloc(size);
+    var_settype(obj, BE_STRING);
+    gc_setdark(obj);
+    return obj;
+}
+
 void be_gc_fix(bvm *vm, bgcobject *obj)
 {
-    bgc *gc = vm->gc;
-    if (gc->list == obj) { /* first node */
-        gc->list = obj->next;
-    } else {
-        bgcobject *prev = gc->list;
-        /* find node */
-        while (prev && prev->next != obj) {
-            prev = prev->next;
-        }
-        if (!prev) {
-            return;
-        }
-        prev->next = obj->next;
-    }
-    obj->next = gc->fixed;
-    gc->fixed = obj;
-    gc_setgray(obj);
+    (void)vm;
+    gc_setfixed(obj);
 }
 
 void be_gc_unfix(bvm *vm, bgcobject *obj)
 {
-    bgc *gc = vm->gc;
-    if (gc->fixed == obj) {
-        gc->fixed = obj->next;
-    } else {
-        bgcobject *prev = gc->fixed;
-        /* find node */
-        while (prev && prev->next != obj) {
-            prev = prev->next;
-        }
-        if (!prev) {
-            return;
-        }
-        prev->next = obj->next;
-    }
-    obj->next = gc->list;
-    gc->list = obj;
-    gc_setwhite(obj);
+    (void)vm;
+    gc_clearfixed(obj);
 }
 
 static void mark_map(bvm *vm, bgcobject *obj)
@@ -164,12 +146,12 @@ static void mark_closure(bvm *vm, bgcobject *obj)
     }
 }
 
-static void mark_ntvfunc(bvm *vm, bgcobject *obj)
+static void mark_ntvclos(bvm *vm, bgcobject *obj)
 {
-    bntvfunc *f = cast_ntvfunc(obj);
+    bntvclos *f = cast_ntvclos(obj);
     if (f) {
         int count = f->nupvals;
-        bupval **uv = &be_ntvfunc_upval(f, 0);
+        bupval **uv = &be_ntvclos_upval(f, 0);
         for (; count--; ++uv) {
             if ((*uv)->refcnt) {
                 bvalue *v = (*uv)->value;
@@ -217,7 +199,7 @@ static void mark_object(bvm *vm, bgcobject *obj, int type)
         case BE_MAP: mark_map(vm, obj); break;
         case BE_LIST: mark_list(vm, obj); break;
         case BE_CLOSURE: mark_closure(vm, obj); break;
-        case BE_NTVFUNC: mark_ntvfunc(vm, obj); break;
+        case BE_NTVCLOS: mark_ntvclos(vm, obj); break;
         default: break;
         }
     }
@@ -272,12 +254,12 @@ static void free_closure(bgcobject *obj)
     be_free(obj);
 }
 
-static void free_ntvfunc(bgcobject *obj)
+static void free_ntvclos(bgcobject *obj)
 {
-    bntvfunc *f = cast_ntvfunc(obj);
+    bntvclos *f = cast_ntvclos(obj);
     if (f) {
         int count = f->nupvals;
-        bupval **uv = &be_ntvfunc_upval(f, 0);
+        bupval **uv = &be_ntvclos_upval(f, 0);
         while (count--) {
             be_free(*uv++);
         }
@@ -286,13 +268,14 @@ static void free_ntvfunc(bgcobject *obj)
 
 static void free_object(bvm *vm, bgcobject *obj)
 {
+    (void)vm;
     switch (obj->type) {
-    case BE_STRING: be_deletestrgc(vm, cast_str(obj)); break;
+    case BE_STRING:
     case BE_INSTANCE: be_free(obj); break;
     case BE_MAP: free_map(obj); break;
     case BE_LIST: free_list(obj); break;
     case BE_CLOSURE: free_closure(obj); break;
-    case BE_NTVFUNC: free_ntvfunc(obj); break;
+    case BE_NTVCLOS: free_ntvclos(obj); break;
     case BE_PROTO: free_proto(obj); break;
     default: break;
     }
@@ -328,22 +311,21 @@ static void premark_stack(bvm *vm)
     }
 }
 
+static void premark_fixed(bvm *vm)
+{
+    bgcobject *node = vm->gc->list;
+    for (; node; node = node->next) {
+        if (gc_isfixed(node) && gc_iswhite(node)) {
+            gc_setgray(node);
+        }
+    }
+}
+
 static void mark_unscanned(bvm *vm)
 {
     bgc *gc = vm->gc;
     bgcobject *node;
     for (node = gc->list; node; node = node->next) {
-        if (gc_isgray(node)) {
-            mark_object(vm, node, var_type(node));
-        }
-    }
-}
-
-static void mark_gray(bvm *vm)
-{
-    bgc *gc = vm->gc;
-    bgcobject *node;
-    for (node = gc->fixed; node; node = node->next) {
         if (gc_isgray(node)) {
             mark_object(vm, node, var_type(node));
         }
@@ -396,10 +378,11 @@ void be_gc_collect(bvm *vm)
     /* step 1: set root-set reference object to unscanned */
     premark_global(vm); /* global objects */
     premark_stack(vm); /* stack objects */
+    premark_fixed(vm);
     /* step 2: set unscanned object to black */
-    mark_gray(vm);
     mark_unscanned(vm);
     /* step 3: delete unreachable object */
     delete_white(vm);
     clear_graylist(vm);
+    be_gcstrtab(vm);
 }

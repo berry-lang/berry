@@ -53,5 +53,6 @@ Mkfile.old
 dkms.conf
 
 # other
+*.out.*
 *.user
 .vscode

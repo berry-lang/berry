@@ -32,7 +32,7 @@ static uint32_t hashcode(bvalue *key)
     case BE_REAL:
         return (uint32_t)key->v.i; /* test */
     case BE_STRING:
-        return key->v.s->hash;
+        return str_hash(key->v.s);
     default:
         return hashptr(key);
     }

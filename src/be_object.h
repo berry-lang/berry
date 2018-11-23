@@ -6,8 +6,9 @@
 #define BE_PROTO        14
 #define BE_LIST         15
 #define BE_MAP          16
-#define BE_CLOSURE      ((0 << 5) | BE_FUNCTION)
-#define BE_NTVFUNC      ((1 << 5) | BE_FUNCTION)
+#define BE_NTVFUNC      ((0 << 5) | BE_FUNCTION)
+#define BE_CLOSURE      ((1 << 5) | BE_FUNCTION)
+#define BE_NTVCLOS      ((2 << 5) | BE_FUNCTION)
 #define BE_ITERPTR      (-2)    /* iterator pointer */
 
 #define bcommon_header        \
@@ -22,7 +23,7 @@ typedef struct bgcobject {
 typedef struct bgc bgc;
 typedef struct bstringtable bstringtable;
 typedef struct bclosure bclosure;
-typedef struct bntvfunc bntvfunc;
+typedef struct bntvclos bntvclos;
 typedef struct bclass bclass;
 typedef struct binstance binstance;
 typedef struct blist blist;
@@ -34,12 +35,16 @@ typedef struct bstring {
     bcommon_header;
     bbyte extra;
     bbyte slen; /* short string length */
-    uint32_t hash;
-    union {
-        int llen; /* long string length */
-        struct bstring *next;
-    } u;
     const char *s;
+    /*
+    union {
+        char sstr[]; // short string data
+        struct {
+            int llen; // long string length
+            char ls[]; // long string data
+        } lstr;
+    } data;
+    */
 } bstring;
 
 typedef struct bvalue {
@@ -103,7 +108,7 @@ struct bclosure {
 };
 
 /* C native function or closure */
-struct bntvfunc {
+struct bntvclos {
     bcommon_header;
     bbyte nupvals;
     bcfunction f;
@@ -123,6 +128,7 @@ struct bntvfunc {
 #define var_isreal(_v)          var_istype(_v, BE_REAL)
 #define var_isstring(_v)        var_istype(_v, BE_STRING)
 #define var_isclosure(_v)       var_istype(_v, BE_CLOSURE)
+#define var_isntvclos(_v)       var_istype(_v, BE_NTVCLOS)
 #define var_isntvfunc(_v)       var_istype(_v, BE_NTVFUNC)
 #define var_isfunction(_v)      (var_basetype(_v) == BE_FUNCTION)
 #define var_isproto(_v)         var_istype(_v, BE_PROTO)
@@ -141,6 +147,7 @@ struct bntvfunc {
 #define var_setinstance(_v, _o) var_setobj(_v, BE_INSTANCE, _o)
 #define var_setclass(_v, _o)    var_setobj(_v, BE_CLASS, _o)
 #define var_setclosure(_v, _o)  var_setobj(_v, BE_CLOSURE, _o)
+#define var_setntvclos(_v, _o)  var_setobj(_v, BE_NTVCLOS, _o)
 #define var_setntvfunc(_v, _o)  var_setobj(_v, BE_NTVFUNC, _o)
 
 #define var_tobool(_v)          ((_v)->v.b)

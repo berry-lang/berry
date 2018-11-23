@@ -17,7 +17,7 @@
 #define IBx_BITS                (IRKC_BITS + IRKB_BITS)
 
 #define INS_MASK(pos, bits)     (((1 << (bits)) - 1) << pos)
-#define INS_GETx(i, mask, pos)  (((binstruction)(i) & (mask)) >> (pos))
+#define INS_GETx(i, mask, pos)  ((int)(((binstruction)(i) & (mask)) >> (pos)))
 #define INS_SETx(v, mask, pos)  (((binstruction)(v) << (pos)) & (mask))
 
 #define isK(v)                  (((v) & (1 << (IRKB_BITS - 1))) != 0)
@@ -40,7 +40,7 @@
 #define IGET_RKB(i)             INS_GETx(i, IRKB_MASK, IRKB_POS)
 #define IGET_RKC(i)             INS_GETx(i, IRKC_MASK, IRKC_POS)
 #define IGET_Bx(i)              INS_GETx(i, IBx_MASK, 0)
-#define IGET_sBx(i)             ((int)IGET_Bx(i) - IsBx_MAX)
+#define IGET_sBx(i)             (IGET_Bx(i) - IsBx_MAX)
 
 #define ISET_OP(i)              INS_SETx(i, IOP_MASK, IOP_POS)
 #define ISET_RA(i)              INS_SETx(i, IRA_MASK, IRA_POS)

@@ -37,10 +37,10 @@ void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p)
     m->type = MT_METHOD;
 }
 
-void be_prim_method_bind(bvm *vm, bclass *c, bstring *name, bcfunction f)
+void be_prim_method_bind(bclass *c, bstring *name, bcfunction f)
 {
     bvalue *m = be_map_insertstr(c->members, name, NULL);
-    m->v.p = be_newntvfunc(vm, f);
+    m->v.p = f;
     m->type = MT_PRIMMETHOD;
 }
 

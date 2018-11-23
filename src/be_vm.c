@@ -78,7 +78,7 @@
     _vm->cf = _cf; \
 }
 
-#define push_ntvfunc(_vm, _f, _ns, _t) { \
+#define push_native(_vm, _f, _ns, _t) { \
     bcallframe *_cf; \
     be_stack_push(_vm->callstack, NULL); \
     _cf = be_stack_top(_vm->callstack); \
@@ -91,7 +91,7 @@
     _vm->cf = _cf; \
 }
 
-#define ret_cfunction(_vm) { \
+#define ret_native(_vm) { \
     bcallframe *_cf = _vm->cf; \
     be_stack_pop(_vm->callstack); \
     _vm->cf = be_stack_top(_vm->callstack); \
@@ -391,11 +391,19 @@ static void i_call(bvm *vm, binstruction ins)
         }
         break;
     }
-    case BE_NTVFUNC: {
-        bntvfunc *f = var_toobj(var);
-        push_ntvfunc(vm, var, argc, mode);
+    case BE_NTVCLOS: {
+        bntvclos *f = var_toobj(var);
+        push_native(vm, var, argc, mode);
         f->f(vm); /* call C primitive function */
-        ret_cfunction(vm);
+        ret_native(vm);
+        ++vm->cf->ip; /* to next instruction */
+        break;
+    }
+    case BE_NTVFUNC: {
+        bcfunction f = cast(bcfunction, var_toobj(var));
+        push_native(vm, var, argc, mode);
+        f(vm); /* call C primitive function */
+        ret_native(vm);
         ++vm->cf->ip; /* to next instruction */
         break;
     }
@@ -592,12 +600,20 @@ static void do_closure(bvm *vm, bvalue *reg, int argc)
     vm_exec(vm);
 }
 
+static void do_ntvclos(bvm *vm, bvalue *reg, int argc)
+{
+    bntvclos *f = var_toobj(reg);
+    push_native(vm, reg, argc, 0);
+    f->f(vm); /* call C primitive function */
+    ret_native(vm);
+}
+
 static void do_ntvfunc(bvm *vm, bvalue *reg, int argc)
 {
-    bntvfunc *f = var_toobj(reg);
-    push_ntvfunc(vm, reg, argc, 0);
-    f->f(vm); /* call C primitive function */
-    ret_cfunction(vm);
+    bcfunction f = var_toobj(reg);
+    push_native(vm, reg, argc, 0);
+    f(vm); /* call C primitive function */
+    ret_native(vm);
 }
 
 static void do_class(bvm *vm, bvalue *reg, int argc)
@@ -615,6 +631,7 @@ void be_dofunc(bvm *vm, bvalue *v, int argc)
     switch (var_type(v)) {
     case BE_CLASS: do_class(vm, v, argc); break;
     case BE_CLOSURE: do_closure(vm, v, argc); break;
+    case BE_NTVCLOS: do_ntvclos(vm, v, argc); break;
     case BE_NTVFUNC: do_ntvfunc(vm, v, argc); break;
     default: break;
     }
