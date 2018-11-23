@@ -42,10 +42,17 @@ void be_list_resize(blist *list, int count)
 {
     if (count != list->count) {
         int newcap = be_nextpow(count);
+        int oldcount = list->count;
         list->count = count;
         if (newcap > list->capacity) {
+            bvalue *v, *end;
             list->capacity = newcap;
             list->data = be_realloc(list->data, newcap * sizeof(bvalue));
+            v = list->data + oldcount;
+            end = list->data + list->count;
+            while (v < end) {
+                var_setnil(v++);
+            }
         }
     }
 }

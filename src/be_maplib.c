@@ -12,10 +12,10 @@ static int m_print(bvm *vm)
     int res, idx = 0, count;
     be_getmember(vm, 1, "__data__");
     count = be_size(vm, -1);
-    be_pushnil(vm);
+    be_pushmapiter(vm); /* 2 item */
     be_printf("{");
     do {
-        res = be_next(vm, -2);  /* self.__data__ */
+        res = be_next(vm, -3);  /* self.__data__ */
         if (res == 2) { /* key and value */
             be_printvalue(vm, 1, -2);
             be_printf(": ");

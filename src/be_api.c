@@ -535,15 +535,35 @@ void be_resize(bvm *vm, int index)
     }
 }
 
+void be_pushmapiter(bvm *vm)
+{
+    bvalue *idx = pushtop(vm);
+    bvalue *node = pushtop(vm);
+    var_setint(idx, -1);
+    var_setobj(node, BE_ITERPTR, NULL);
+}
+
 int be_next(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
-    bvalue *it = index2value(vm, -1);
-    bvalue *dst = vm->top;
     if (var_ismap(o)) {
-        int res = be_map_next(var_toobj(o), it, dst);
-        vm->top += res;
-        return res;
+        bmapiter iter;
+        bmapentry *entry;
+        bvalue *dst = vm->top;
+        bvalue *idx = index2value(vm, -2);
+        bvalue *node = index2value(vm, -1);
+
+        iter.slotidx = var_toint(idx);
+        iter.node = var_toobj(node);
+        entry = be_map_next(var_toobj(o), &iter);
+        var_setint(idx, iter.slotidx);
+        var_setobj(node, BE_ITERPTR, iter.node);
+        if (entry) {
+            var_setval(dst, &entry->key);
+            var_setval(dst + 1, &entry->value);
+            vm->top += 2;
+            return 2;
+        }
     }
     return 0;
 }

@@ -197,19 +197,19 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
 static void setupvals(bfuncinfo *finfo)
 {
     bproto *proto = finfo->proto;
-    int size = be_map_size(finfo->upval);
     int nupvals = be_map_count(finfo->upval);
-    bmapentry *slots = be_map_slots(finfo->upval);
 
     if (nupvals) {
+        bmapentry *node;
+        bmap *map = finfo->upval;
+        bmapiter iter = be_map_iter();
         bupvaldesc *upvals = be_malloc(sizeof(bupvaldesc) * nupvals);
-        for (; size--; slots++) {
-            if (!var_isnil(&slots->key)) {
-                uint32_t v = (uint32_t)slots->value.v.i;
-                int idx = upval_index(v);
-                upvals[idx].idx = upval_target(v);
-                upvals[idx].instack = upval_instack(v);
-            }
+
+        while ((node = be_map_next(map, &iter)) != NULL) {
+            uint32_t v = (uint32_t)node->value.v.i;
+            int idx = upval_index(v);
+            upvals[idx].idx = upval_target(v);
+            upvals[idx].instack = upval_instack(v);
         }
         proto->upvals = upvals;
         proto->nupvals = (bbyte)nupvals;

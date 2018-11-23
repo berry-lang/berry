@@ -6,21 +6,23 @@
 typedef struct bmapentry {
     bvalue key;
     bvalue value;
-    struct bmapentry *prev;
     struct bmapentry *next;
 } bmapentry;
 
 struct bmap {
     bcommon_header;
-    bmapentry *freelist;
-    bmapentry *slots;
+    bmapentry **slots;
     int size;
     int count;
 };
 
+typedef struct {
+    int slotidx;
+    bmapentry *node;
+} bmapiter;
+
 #define be_map_count(map)   ((map)->count)
 #define be_map_size(map)    (map->size)
-#define be_map_slots(map)   (map->slots)
 
 bmap* be_map_new(bvm *vm);
 void be_map_delete(bmap *map);
@@ -30,6 +32,7 @@ void be_map_remove(bmap *map, bvalue *key);
 bvalue* be_map_findstr(bmap *map, bstring *key);
 bvalue* be_map_insertstr(bmap *map, bstring *key, bvalue *value);
 void be_map_removestr(bmap *map, bstring *key);
-int be_map_next(bmap *map, bvalue *iter, bvalue *dst);
+bmapiter be_map_iter(void);
+bmapentry* be_map_next(bmap *map, bmapiter *iter);
 
 #endif

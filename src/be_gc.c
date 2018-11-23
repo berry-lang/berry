@@ -84,12 +84,12 @@ static void mark_map(bvm *vm, bgcobject *obj)
 {
     bmap *map = cast_map(obj);
     if (map) {
-        bmapentry *slot = be_map_slots(map);
-        int nslots = be_map_size(map);
-        for (; nslots--; slot++) {
-            bvalue *key = &slot->key;
+        bmapentry *node;
+        bmapiter iter = be_map_iter();
+        while ((node = be_map_next(map, &iter)) != NULL) {
+            bvalue *key = &node->key;
             if (!var_isnil(key)) {
-                bvalue *val = &slot->value;
+                bvalue *val = &node->value;
                 mark_object(vm, key->v.gc, var_type(key));
                 mark_object(vm, val->v.gc, var_type(val));
             }
@@ -205,15 +205,6 @@ static void mark_object(bvm *vm, bgcobject *obj, int type)
     }
 }
 
-static void free_map(bgcobject *obj)
-{
-    bmap *map = cast_map(obj);
-    if (map) {
-        be_free(be_map_slots(map));
-    }
-    be_free(obj);
-}
-
 static void free_list(bgcobject *obj)
 {
     blist *list = cast_list(obj);
@@ -272,7 +263,7 @@ static void free_object(bvm *vm, bgcobject *obj)
     switch (obj->type) {
     case BE_STRING:
     case BE_INSTANCE: be_free(obj); break;
-    case BE_MAP: free_map(obj); break;
+    case BE_MAP: be_map_delete(cast_map(obj)); break;
     case BE_LIST: free_list(obj); break;
     case BE_CLOSURE: free_closure(obj); break;
     case BE_NTVCLOS: free_ntvclos(obj); break;

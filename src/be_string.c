@@ -1,6 +1,5 @@
 #include "be_string.h"
 #include "be_vm.h"
-#include "be_vector.h"
 #include "be_mem.h"
 #include "be_gc.h"
 #include <string.h>
@@ -29,7 +28,7 @@ int be_eqstr(bstring *s1, bstring *s2)
     return 0;
 }
 
-static void strtab_resize(bvm *vm, int size)
+static void resize(bvm *vm, int size)
 {
     int i;
     bstringtable *tab = vm->strtab;
@@ -72,7 +71,7 @@ void be_string_init(bvm *vm)
     vm->strtab->size = 0;
     vm->strtab->count = 0;
     vm->strtab->table = NULL;
-    strtab_resize(vm, 16);
+    resize(vm, 8);
 }
 
 bstring* createstrobj(bvm *vm, int len, int islong, int isk)
@@ -119,8 +118,8 @@ static bstring* newshortstr(bvm *vm, const char *str, int len, int isk)
     s->next = cast(void*, *list);
     *list = s;
     vm->strtab->count++;
-    if (vm->strtab->count >= size) {
-        strtab_resize(vm, size << 1);
+    if (vm->strtab->count > size << 1) {
+        resize(vm, size << 1);
     }
     return s;
 }
@@ -172,7 +171,7 @@ void be_gcstrtab(bvm *vm)
         bstring *prev = NULL, *node, *next;
         for (node = *list; node; node = next) {
             next = next(node);
-            if (gc_iswhite(node)) {
+            if (!gc_isfixed(node) && gc_iswhite(node)) {
                 be_free(node);
                 strtab->count--;
                 if (prev) { /* link list */
@@ -186,7 +185,7 @@ void be_gcstrtab(bvm *vm)
             }
         }
     }
-    if ((strtab->count << 1) < size && size > 16) {
-        strtab_resize(vm, size >> 1);
+    if (strtab->count < size && size > 8) {
+        resize(vm, size >> 2);
     }
 }
