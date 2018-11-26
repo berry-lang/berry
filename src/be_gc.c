@@ -88,11 +88,9 @@ static void mark_map(bvm *vm, bgcobject *obj)
         bmapiter iter = be_map_iter();
         while ((node = be_map_next(map, &iter)) != NULL) {
             bvalue *key = &node->key;
-            if (!var_isnil(key)) {
-                bvalue *val = &node->value;
-                mark_object(vm, key->v.gc, var_type(key));
-                mark_object(vm, val->v.gc, var_type(val));
-            }
+            bvalue *val = &node->value;
+            mark_object(vm, key->v.gc, var_type(key));
+            mark_object(vm, val->v.gc, var_type(val));
         }
         gc_setdark(obj);
     }

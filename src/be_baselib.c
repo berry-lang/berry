@@ -1,6 +1,8 @@
 #include "be_baselib.h"
 #include "be_mem.h"
 #include <time.h>
+#include <stdlib.h>
+#include <string.h>
 
 static int l_print(bvm *vm)
 {
@@ -49,6 +51,28 @@ static int l_classname(bvm *vm)
     return be_return(vm);
 }
 
+static int l_number(bvm *vm)
+{
+    if (be_isstring(vm, 1)) {
+        const char *str = be_tostring(vm, 1);
+        if (strchr(str, '.')) {
+            be_pushreal(vm, atof(str));
+        } else {
+            be_pushint(vm, atoi(str));
+        }
+        return be_return(vm);
+    } else if (be_isnumber(vm, -1)) {
+        return be_return(vm);
+    }
+    return be_noreturn(vm);
+}
+
+static int l_random(bvm *vm)
+{
+    be_pushint(vm, rand());
+    return be_return(vm);
+}
+
 static int l_iterator(bvm *vm)
 {
     if (be_isinstance(vm, 1)) {
@@ -94,6 +118,8 @@ void be_loadbaselib(bvm *vm)
     be_regcfunc(vm, "memcount", l_memcount);
     be_regcfunc(vm, "type", l_type);
     be_regcfunc(vm, "classname", l_classname);
+    be_regcfunc(vm, "number", l_number);
+    be_regcfunc(vm, "random", l_random);
     be_regcfunc(vm, "__iterator__", l_iterator);
     be_regcfunc(vm, "__hasnext__", l_hasnext);
     be_regcfunc(vm, "__next__", l_next);

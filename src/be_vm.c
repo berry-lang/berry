@@ -1,6 +1,7 @@
 #include "be_vm.h"
 #include "be_opcode.h"
 #include "be_string.h"
+#include "be_strlib.h"
 #include "be_class.h"
 #include "be_func.h"
 #include "be_vector.h"
@@ -55,7 +56,7 @@
     } else if (var_isnil(a) || var_isnil(b)) { \
         bbool res = var_type(a) op var_type(b); \
         var_setbool(dst, res); \
-    } else if (var_isstring(a) && var_isstring(b)) { \
+    } else if (var_isstr(a) && var_isstr(b)) { \
         var_setbool(dst, opstr be_eqstr(a->v.s, b->v.s)); \
     } else if (var_isinstance(a)) { \
         object_binop(vm, #op, dst, a, b); \
@@ -223,6 +224,9 @@ static void i_add(bvm *vm, binstruction ins)
     } else if (var_isnumber(a) && var_isnumber(b)) {
         breal x = var2real(a), y = var2real(b);
         var_setreal(dst, x + y);
+    } else if (var_isstr(a) && var_isstr(b)) { /* strcat */
+        bstring *s = be_strcat(vm, var_tostr(a), var_tostr(b));
+        var_setstr(dst, s);
     } else if (var_isinstance(a)) {
         object_binop(vm, "+", dst, a, b);
     } else {
@@ -425,7 +429,7 @@ static void i_closure(bvm *vm, binstruction ins)
 static void i_getmember(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
-    if (var_isinstance(b) && var_isstring(c)) {
+    if (var_isinstance(b) && var_isstr(c)) {
         be_instance_member(var_toobj(b), var_tostr(c), a);
     } else {
         vm_error(vm, "get member: object error");
@@ -435,7 +439,7 @@ static void i_getmember(bvm *vm, binstruction ins)
 static void i_getmethod(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
-    if (var_isinstance(b) && var_isstring(c)) {
+    if (var_isinstance(b) && var_isstr(c)) {
         bvalue self = *b;
         bvalue *m = be_instance_member(var_toobj(b), var_tostr(c), a);
         if (m && m->type != MT_VARIABLE) {
@@ -454,7 +458,7 @@ static void i_getmethod(bvm *vm, binstruction ins)
 static void i_setmember(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
-    if (var_isinstance(a) && var_isstring(b)) {
+    if (var_isinstance(a) && var_isstr(b)) {
         be_instance_setmember(var_toobj(a), var_tostr(b), c);
     } else {
         vm_error(vm, "set member: object error");

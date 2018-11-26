@@ -47,6 +47,7 @@ int be_isnil(bvm *vm, int index);
 int be_isbool(bvm *vm, int index);
 int be_isint(bvm *vm, int index);
 int be_isreal(bvm *vm, int index);
+int be_isnumber(bvm *vm, int index);
 int be_isstring(bvm *vm, int index);
 int be_isclosure(bvm *vm, int index);
 int be_isntvclos(bvm *vm, int index);

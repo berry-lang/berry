@@ -1,5 +1,6 @@
 #include "berry.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -63,8 +64,9 @@ static void repl(bvm *vm)
 
 int main(int argc, char *argv[])
 {
-    bvm *vm = be_newvm(16);
+    bvm *vm = be_newvm(32);
     be_loadlibs(vm);
+    srand((unsigned)time(NULL));
     if (argc >= 2) {
         dofile(vm, argv[1]);
     } else {

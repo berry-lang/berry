@@ -1,7 +1,7 @@
-a = false & true
+a = false && true
 print(a)
 
-if (4 & false)
+if (4 && false)
     print(true)
 else
     print(false)

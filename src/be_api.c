@@ -52,9 +52,9 @@ void be_regcfunc(bvm *vm, const char *name, bcfunction f)
 
 void be_regclass(bvm *vm, const char *name, const bmemberinfo *lib)
 {
-    bstring *s = be_newconststr(vm, name);
-    bclass *c = be_newclass(vm, s, NULL);
+    bstring *s = be_newconststr(vm, name); /* immediate reference must be made, prevent GC. */
     int idx = be_globalvar_new(vm, s);   /* because relloc is possible, index must first figure out. */
+    bclass *c = be_newclass(vm, s, NULL);
     bvalue *var = be_globalvar(vm, idx); /* attention evaluation order. */
     var_setclass(var, c);
     class_init(vm, c, lib); /* bind members */
@@ -108,10 +108,16 @@ int be_isreal(bvm *vm, int index)
     return var_isreal(v);
 }
 
+int be_isnumber(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    return var_isnumber(v);
+}
+
 int be_isstring(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
-    return var_isstring(v);
+    return var_isstr(v);
 }
 
 int be_isclosure(bvm *vm, int index)
@@ -257,9 +263,12 @@ void be_pushntvfunction(bvm *vm, bcfunction f)
 
 void be_pushclass(bvm *vm, const char *name, const bmemberinfo *lib)
 {
+    bstring *s;
+    bclass *c;
     bvalue *dst = pushtop(vm);
-    bstring *s = be_newstr(vm, name);
-    bclass *c = be_newclass(vm, s, NULL);
+    s = be_newstr(vm, name);
+    var_setstr(dst, s);
+    c = be_newclass(vm, s, NULL);
     var_setclass(dst, c);
     class_init(vm, c, lib); /* bind members */
 }
@@ -540,7 +549,7 @@ void be_pushmapiter(bvm *vm)
     bvalue *idx = pushtop(vm);
     bvalue *node = pushtop(vm);
     var_setint(idx, -1);
-    var_setobj(node, BE_ITERPTR, NULL);
+    var_setobj(node, BE_COMPTR, NULL);
 }
 
 int be_next(bvm *vm, int index)
@@ -557,7 +566,7 @@ int be_next(bvm *vm, int index)
         iter.node = var_toobj(node);
         entry = be_map_next(var_toobj(o), &iter);
         var_setint(idx, iter.slotidx);
-        var_setobj(node, BE_ITERPTR, iter.node);
+        var_setobj(node, BE_COMPTR, iter.node);
         if (entry) {
             var_setval(dst, &entry->key);
             var_setval(dst + 1, &entry->value);

@@ -66,7 +66,7 @@ static bmapentry* insert(bmap *map, bvalue *key, uint32_t hash)
     bmapentry *node = be_malloc(sizeof(bmapentry));
     node->next = *slot; /* insert to head */
     *slot = node;
-    (*slot)->key = *key;
+    node->key = *key;
     return node;
 }
 

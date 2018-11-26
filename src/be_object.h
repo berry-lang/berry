@@ -9,7 +9,7 @@
 #define BE_NTVFUNC      ((0 << 5) | BE_FUNCTION)
 #define BE_CLOSURE      ((1 << 5) | BE_FUNCTION)
 #define BE_NTVCLOS      ((2 << 5) | BE_FUNCTION)
-#define BE_ITERPTR      (-2)    /* iterator pointer */
+#define BE_COMPTR       (-2)    /* common pointer */
 
 #define bcommon_header        \
     struct bgcobject *next;   \
@@ -126,7 +126,7 @@ struct bntvclos {
 #define var_isbool(_v)          var_istype(_v, BE_BOOL)
 #define var_isint(_v)           var_istype(_v, BE_INT)
 #define var_isreal(_v)          var_istype(_v, BE_REAL)
-#define var_isstring(_v)        var_istype(_v, BE_STRING)
+#define var_isstr(_v)           var_istype(_v, BE_STRING)
 #define var_isclosure(_v)       var_istype(_v, BE_CLOSURE)
 #define var_isntvclos(_v)       var_istype(_v, BE_NTVCLOS)
 #define var_isntvfunc(_v)       var_istype(_v, BE_NTVFUNC)
