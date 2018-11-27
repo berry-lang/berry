@@ -9,16 +9,14 @@ static int m_init(bvm *vm)
 
 static int m_print(bvm *vm)
 {
-    int i, count;
     be_getmember(vm, 1, "__data__");
-    count = be_size(vm, -1);
+    be_pushiter(vm, -1);
     be_printf("[");
-    for (i = 0; i < count; ++i) {
-        be_pushint(vm, i);
-        be_getindex(vm, -2); /* self.__data__ */
+    while (be_hasnext(vm, -2)) {
+        be_next(vm, -2);
         be_printvalue(vm, 1, -1);
-        be_pop(vm, 2);
-        if (i < count - 1) {
+        be_pop(vm, 1);
+        if (be_hasnext(vm, -2)) {
             be_printf(", ");
         }
     }
@@ -66,44 +64,68 @@ static int m_resize(bvm *vm)
     return be_returnnil(vm);
 }
 
-static int m_it(bvm *vm)
+static int i_init(bvm *vm)
 {
-    be_getfunction(vm);
-    be_getupval(vm, -1, 0); /* list data */
-    be_getupval(vm, -2, 1); /* list data index */
-    be_getindex(vm, -2);
-    be_pushint(vm, be_toint(vm, -2) + 1);
-    be_setupval(vm, -5, 1);
+    be_pushvalue(vm, 2);
+    be_setmember(vm, 1, "__obj__");
+    be_pop(vm, 1);
+    be_getmember(vm, 2, "__data__");
+    be_pushiter(vm, -1);
+    be_setmember(vm, 1, "__iter__");
+    return be_returnnil(vm);
+}
+
+static int i_hashnext(bvm *vm)
+{
+    be_getmember(vm, 1, "__obj__");
+    be_getmember(vm, -1, "__data__");
+    be_getmember(vm, 1, "__iter__");
+    be_pushbool(vm, be_hasnext(vm, -2));
+    return be_return(vm);
+}
+
+static int i_next(bvm *vm)
+{
+    be_getmember(vm, 1, "__obj__");
+    be_getmember(vm, -1, "__data__");
+    be_getmember(vm, 1, "__iter__");
+    be_next(vm, -2); /* list next value */
+    be_pushvalue(vm, -2); /* push __iter__ to top */
+    be_setmember(vm, 1, "__iter__");
     be_pop(vm, 1);
     return be_return(vm);
 }
 
 static int m_iter(bvm *vm)
 {
-    be_pushntvclosure(vm, m_it, 2);
-    be_getmember(vm, 1, "__data__"); /* list data */
-    be_setupval(vm, -2, 0);
-    be_pop(vm, 1);
-    be_pushint(vm, 0); /* list data index */
-    be_setupval(vm, -2, 1);
+    static const bmemberinfo members[] = {
+        { "__obj__", NULL },
+        { "__iter__", NULL },
+        { "init", i_init },
+        { "hasnext", i_hashnext },
+        { "next", i_next },
+        { NULL, NULL }
+    };
+    be_pushclass(vm, "iterator", members);
+    be_pushvalue(vm, 1);
+    be_call(vm, 1);
     be_pop(vm, 1);
     return be_return(vm);
 }
 
-static const bmemberinfo l_member[] = {
-    { "__data__", NULL },
-    { "init", m_init },
-    { "print", m_print },
-    { "append", m_append },
-    { "item", m_item },
-    { "setitem", m_setitem },
-    { "size", m_size },
-    { "resize", m_resize },
-    { "iter", m_iter },
-    { NULL, NULL }
-};
-
 void be_list_init(bvm *vm)
 {
-    be_regclass(vm, "list", l_member);
+    static const bmemberinfo members[] = {
+        { "__data__", NULL },
+        { "init", m_init },
+        { "print", m_print },
+        { "append", m_append },
+        { "item", m_item },
+        { "setitem", m_setitem },
+        { "size", m_size },
+        { "resize", m_resize },
+        { "iter", m_iter },
+        { NULL, NULL }
+    };
+    be_regclass(vm, "list", members);
 }

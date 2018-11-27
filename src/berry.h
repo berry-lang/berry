@@ -90,8 +90,9 @@ void be_append(bvm *vm, int index);
 void be_insert(bvm *vm, int index);
 void be_remove(bvm *vm, int index);
 void be_resize(bvm *vm, int index);
-void be_pushmapiter(bvm *vm);
+int be_pushiter(bvm *vm, int index);
 int be_next(bvm *vm, int index);
+int be_hasnext(bvm *vm, int index);
 int be_return(bvm *vm);
 int be_returnnil(bvm *vm);
 

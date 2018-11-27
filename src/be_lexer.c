@@ -262,9 +262,9 @@ static btokentype scan_numeral(blexer *lexer)
 {
     const char *begin = lexer->cursor;
     btokentype type = TokenInteger;
-    int c = *next(lexer);
-
-    if (c == 'x' || c == 'X') { /* hex 0[xX][0-9a-fA-F]+ */
+    int c0 = lgetc(lexer), c1 = *next(lexer);
+    /* hex: 0[xX][0-9a-fA-F]+ */
+    if (c0 == '0' && (c1 == 'x' || c1 == 'X')) {
         next(lexer);
         setint(lexer, scan_hex(lexer));
     } else {

@@ -544,44 +544,101 @@ void be_resize(bvm *vm, int index)
     }
 }
 
-void be_pushmapiter(bvm *vm)
+int be_pushiter(bvm *vm, int index)
 {
-    bvalue *idx = pushtop(vm);
-    bvalue *node = pushtop(vm);
-    var_setint(idx, -1);
-    var_setobj(node, BE_COMPTR, NULL);
+    bvalue *v = index2value(vm, index);
+    if (var_ismap(v)) {
+        bvalue *idx = pushtop(vm);
+        bvalue *node = pushtop(vm);
+        var_setint(idx, -1);
+        var_setobj(node, BE_COMPTR, NULL);
+        return 2;
+    } else if (var_islist(v)) {
+        blist *list = var_toobj(v);
+        bvalue *iter = pushtop(vm);
+        var_setobj(iter, BE_COMPTR, be_list_data(list) - 1);
+        return 1;
+    }
+    return 0;
+}
+
+static int list_next(bvm *vm)
+{
+    bvalue *iter = index2value(vm, -1);
+    bvalue *next, *dst = pushtop(vm);
+    next = cast(bvalue*, var_toobj(iter)) + 1;
+    var_setobj(iter, BE_COMPTR, next);
+    var_setval(dst, next);
+    return 1;
+}
+
+static int list_hasnext(bvm *vm, bvalue *v)
+{
+    bvalue *next;
+    bvalue *iter = index2value(vm, -1);
+    blist *obj = var_toobj(v);
+    next = cast(bvalue*, var_toobj(iter)) + 1;
+    return next >= be_list_data(obj) && next < be_list_end(obj);
+}
+
+static int map_next(bvm *vm, bvalue *v)
+{
+    bmapiter iter;
+    bmapentry *entry;
+    bvalue *dst = vm->top;
+    bvalue *idx = index2value(vm, -2);
+    bvalue *node = index2value(vm, -1);
+    iter.slotidx = var_toint(idx);
+    iter.node = var_toobj(node);
+    entry = be_map_next(var_toobj(v), &iter);
+    var_setint(idx, iter.slotidx);
+    var_setobj(node, BE_COMPTR, iter.node);
+    if (entry) {
+        var_setval(dst, &entry->key);
+        var_setval(dst + 1, &entry->value);
+        vm->top += 2;
+        return 2;
+    }
+    return 0;
+}
+
+static int map_hasnext(bvm *vm, bvalue *v)
+{
+    bmapiter iter;
+    bvalue *idx = index2value(vm, -2);
+    bvalue *node = index2value(vm, -1);
+    iter.slotidx = var_toint(idx);
+    iter.node = var_toobj(node);
+    return be_map_next(var_toobj(v), &iter) != NULL;
 }
 
 int be_next(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
-    if (var_ismap(o)) {
-        bmapiter iter;
-        bmapentry *entry;
-        bvalue *dst = vm->top;
-        bvalue *idx = index2value(vm, -2);
-        bvalue *node = index2value(vm, -1);
+    if (var_islist(o)) {
+        return list_next(vm);
+    } else if (var_ismap(o)) {
+        return map_next(vm, o);
+    }
+    return 0;
+}
 
-        iter.slotidx = var_toint(idx);
-        iter.node = var_toobj(node);
-        entry = be_map_next(var_toobj(o), &iter);
-        var_setint(idx, iter.slotidx);
-        var_setobj(node, BE_COMPTR, iter.node);
-        if (entry) {
-            var_setval(dst, &entry->key);
-            var_setval(dst + 1, &entry->value);
-            vm->top += 2;
-            return 2;
-        }
+int be_hasnext(bvm *vm, int index)
+{
+    bvalue *o = index2value(vm, index);
+    if (var_islist(o)) {
+        return list_hasnext(vm, o);
+    } else if (var_ismap(o)) {
+        return map_hasnext(vm, o);
     }
     return 0;
 }
 
 int be_return(bvm *vm)
 {
-    bvalue *v = vm->top - 1;
+    bvalue *src = vm->top - 1;
     bvalue *ret = retreg(vm);
-    *ret = *v;
+    var_setval(ret, src);
     return 0;
 }
 
