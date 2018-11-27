@@ -4,7 +4,7 @@ static int m_init(bvm *vm)
 {
     be_newmap(vm);
     be_setmember(vm, 1, "__data__");
-    return be_noreturn(vm);
+    return be_returnnil(vm);
 }
 
 static int m_print(bvm *vm)
@@ -27,7 +27,7 @@ static int m_print(bvm *vm)
         }
     } while (res);
     be_printf("}");
-    return be_noreturn(vm);
+    return be_returnnil(vm);
 }
 
 static int m_insert(bvm *vm)
@@ -36,7 +36,7 @@ static int m_insert(bvm *vm)
     be_pushvalue(vm, 2);
     be_pushvalue(vm, 3);
     be_insert(vm, -3);
-    return be_noreturn(vm);
+    return be_returnnil(vm);
 }
 
 static int m_remove(bvm *vm)
@@ -44,7 +44,7 @@ static int m_remove(bvm *vm)
     be_getmember(vm, 1, "__data__");
     be_pushvalue(vm, 2);
     be_remove(vm, -2);
-    return be_noreturn(vm);
+    return be_returnnil(vm);
 }
 
 static int m_item(bvm *vm)
@@ -61,7 +61,7 @@ static int m_setitem(bvm *vm)
     be_pushvalue(vm, 2);
     be_pushvalue(vm, 3);
     be_setindex(vm, -3);
-    return be_noreturn(vm);
+    return be_returnnil(vm);
 }
 
 static int m_size(bvm *vm)

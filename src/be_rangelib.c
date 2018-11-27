@@ -7,7 +7,7 @@ static int m_init(bvm *vm)
     be_pop(vm, 1);
     be_pushvalue(vm, 3);
     be_setmember(vm, 1, "__upper__");
-    return be_noreturn(vm);
+    return be_returnnil(vm);
 }
 
 static int m_print(bvm *vm)
@@ -20,7 +20,7 @@ static int m_print(bvm *vm)
     be_getmember(vm, 1, "__upper__");
     be_printvalue(vm, 0, -1);
     be_printf(")");
-    return be_noreturn(vm);
+    return be_returnnil(vm);
 }
 
 static int m_upper(bvm *vm)
@@ -42,14 +42,14 @@ static int m_setrange(bvm *vm)
     be_pop(vm, 1);
     be_pushvalue(vm, 3);
     be_setmember(vm, 1, "__upper__");
-    return be_noreturn(vm);
+    return be_returnnil(vm);
 }
 
 static int i_init(bvm *vm)
 {
     be_pushvalue(vm, 2);
     be_setmember(vm, 1, "__obj__");
-    return be_noreturn(vm);
+    return be_returnnil(vm);
 }
 
 static int i_hashnext(bvm *vm)

@@ -94,15 +94,22 @@ static char* lexer_resize_data(blexer *lexer, int len)
     return lexer->data;
 }
 
-static int char2hex(blexer *lexer, char c)
+static int char2hex(int c)
 {
     if (c >= '0' && c <= '9') {
-        c -= '0';
+        return c - '0';
     } else if (c >= 'a' && c <= 'f') {
-        c -= 'a';
-    } else if (c >= 'A' && c <= 'F') {
-        c -= 'A';
-    } else {
+        return c - 'a' + 0x0A;
+    } else if (c > 'A' && c <= 'F') {
+        return c - 'A' + 0x0A;
+    }
+    return -1;
+}
+
+static int check2hex(blexer *lexer, int c)
+{
+    c = char2hex(c);
+    if (c < 0) {
         lexer_error(lexer, "hexadecimal digit expected.");
     }
     return c;
@@ -110,9 +117,9 @@ static int char2hex(blexer *lexer, char c)
 
 static int read_hex(blexer *lexer, const char *src)
 {
-    int c = char2hex(lexer, *src++);
+    int c = check2hex(lexer, *src++);
 
-    return (c << 4) + char2hex(lexer, *src);
+    return (c << 4) + check2hex(lexer, *src);
 }
 
 static int read_oct(blexer *lexer, const char *src)
@@ -236,27 +243,48 @@ static btokentype scan_dot_real(blexer *lexer)
     return OptDot;
 }
 
+static int scan_hex(blexer *lexer)
+{
+    int dig, res = 0, cnt = 0;
+
+    while ((dig = char2hex(lgetc(lexer))) >= 0) {
+        res = (res << 4) + dig;
+        next(lexer);
+        ++cnt;
+    }
+    if (cnt == 0 || cnt > 8) {
+        lexer_error(lexer, "hexadecimal number error.");
+    }
+    return res;
+}
+
 static btokentype scan_numeral(blexer *lexer)
 {
     const char *begin = lexer->cursor;
     btokentype type = TokenInteger;
+    int c = *next(lexer);
 
-    match(lexer, is_digit);
-    if (lgetc(lexer) == '.') { /* '..' or real */
-        if (*next(lexer) == '.') { /* '..' */
-            prev(lexer);
-        } else { /* real */
-            match(lexer, is_digit);
+    if (c == 'x' || c == 'X') { /* hex 0[xX][0-9a-fA-F]+ */
+        next(lexer);
+        setint(lexer, scan_hex(lexer));
+    } else {
+        match(lexer, is_digit);
+        if (lgetc(lexer) == '.') { /* '..' or real */
+            if (*next(lexer) == '.') { /* '..' */
+                prev(lexer);
+            } else { /* real */
+                match(lexer, is_digit);
+                type = TokenReal;
+            }
+        }
+        if (scan_realexp(lexer)) {
             type = TokenReal;
         }
-    }
-    if (scan_realexp(lexer)) {
-        type = TokenReal;
-    }
-    if (type == TokenReal) {
-        setreal(lexer, atof(begin));
-    } else {
-        setint(lexer, atoi(begin));
+        if (type == TokenReal) {
+            setreal(lexer, atof(begin));
+        } else {
+            setint(lexer, atoi(begin));
+        }
     }
     return type;
 }

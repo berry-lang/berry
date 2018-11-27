@@ -585,7 +585,7 @@ int be_return(bvm *vm)
     return 0;
 }
 
-int be_noreturn(bvm *vm)
+int be_returnnil(bvm *vm)
 {
     bvalue *ret = retreg(vm);
     var_setnil(ret);

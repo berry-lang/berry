@@ -12,7 +12,7 @@ static int l_print(bvm *vm)
         be_printf(" ");
     }
     be_printf("\n");
-    return be_noreturn(vm);
+    return be_returnnil(vm);
 }
 
 static int l_clock(bvm *vm)
@@ -64,7 +64,7 @@ static int l_number(bvm *vm)
     } else if (be_isnumber(vm, -1)) {
         return be_return(vm);
     }
-    return be_noreturn(vm);
+    return be_returnnil(vm);
 }
 
 static int l_random(bvm *vm)
@@ -82,7 +82,7 @@ static int l_iterator(bvm *vm)
         be_pop(vm, 1);
         return be_return(vm);
     }
-    return be_noreturn(vm);
+    return be_returnnil(vm);
 }
 
 static int l_hasnext(bvm *vm)
@@ -107,7 +107,7 @@ static int l_next(bvm *vm)
         be_pop(vm, 1);
         return be_return(vm);
     }
-    return be_noreturn(vm);
+    return be_returnnil(vm);
 }
 
 void be_loadbaselib(bvm *vm)
