@@ -4,7 +4,10 @@ CC	 = gcc
 
 INCPATH	 = src
 SRCPATH	 = src
+
+ifeq ($(shell uname), Linux)
 LIBS	 = -lreadline
+endif
 
 SRCS	 = $(foreach dir, $(SRCPATH), $(wildcard $(dir)/*.c))
 OBJS	 = $(patsubst %.c, %.o, $(SRCS))

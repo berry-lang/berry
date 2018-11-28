@@ -10,6 +10,7 @@
 #include "be_parser.h"
 #include "be_debug.h"
 #include "be_exec.h"
+#include "be_strlib.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -46,7 +47,7 @@ void be_regcfunc(bvm *vm, const char *name, bcfunction f)
         bvalue *var;
         idx = be_globalvar_new(vm, s);
         var = be_globalvar(vm, idx);
-        var_setntvfunc(var, f);
+        var_setntvfunc(var, (void*)f);
     } /* else error */
 }
 
@@ -258,7 +259,7 @@ void be_pushntvclosure(bvm *vm, bcfunction f, int nupvals)
 void be_pushntvfunction(bvm *vm, bcfunction f)
 {
     bvalue *top = pushtop(vm);
-    var_setntvfunc(top, f);
+    var_setntvfunc(top, (void*)f);
 }
 
 void be_pushclass(bvm *vm, const char *name, const bmemberinfo *lib)
@@ -271,6 +272,68 @@ void be_pushclass(bvm *vm, const char *name, const bmemberinfo *lib)
     c = be_newclass(vm, s, NULL);
     var_setclass(dst, c);
     class_init(vm, c, lib); /* bind members */
+}
+
+static void ins2str(bvm *vm, int index)
+{
+    index = be_absindex(vm, index);
+    be_getmember(vm, index, "tostring"); /* get method 'tostring' */
+    if (be_isnil(vm, -1)) {
+        be_pop(vm, 1);
+        be_printf("tostring error: object without 'tostring' method.");
+    } else {
+        be_pushvalue(vm, index);
+        be_call(vm, 1);
+        be_pop(vm, 1);
+    }
+}
+
+void be_value2string(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    switch (var_type(v)) {
+    case BE_NIL:
+        be_pushstring(vm, "nil");
+        break;
+    case BE_BOOL:
+        be_pushstring(vm, var_tobool(v) ? "true" : "false");
+        break;
+    case BE_INT:
+        be_pushfstring(vm, "%d", var_toint(v));
+        break;
+    case BE_REAL:
+        be_pushfstring(vm, "%f", var_toreal(v));
+        break;
+    case BE_STRING:
+        be_pushvalue(vm, index);
+        break;
+    case BE_CLOSURE: case BE_NTVCLOS: case BE_NTVFUNC:
+        be_pushfstring(vm, "<function: %p>", var_toobj(v));
+        break;
+    case BE_CLASS:
+        be_pushfstring(vm, "<class: %s>",
+            str(be_class_name(cast(bclass*, var_toobj(v)))));
+        break;
+    case BE_INSTANCE:
+        ins2str(vm, index);
+        break;
+    default:
+        be_pushstring(vm, "unknow value");
+        break;
+    }
+}
+
+void be_strconcat(bvm *vm, int index)
+{
+    bvalue *dst = index2value(vm, index);
+    bvalue *src = index2value(vm, -1);
+    if (var_isstr(src) && var_isstr(dst)) {
+        bstring *s = be_strcat(vm, var_tostr(dst), var_tostr(src));
+        var_setstr(dst, s);
+    } else {
+        var_setnil(dst);
+        be_printf("strconcat error: object not string.\n");
+    }
 }
 
 void be_getsuper(bvm *vm, int index)
@@ -693,9 +756,9 @@ void be_printvalue(bvm *vm, int quote, int index)
         be_printf("%g", var_toreal(v));
         break;
     case BE_STRING:
-        be_printf(quote ? "\"%s\"" : "%s", str(var_tostr(v)));
+        be_printf(quote ? "'%s'" : "%s", str(var_tostr(v)));
         break;
-    case BE_CLOSURE: case BE_NTVCLOS:
+    case BE_CLOSURE: case BE_NTVCLOS: case BE_NTVFUNC:
         be_printf("<function: %p>", var_toobj(v));
         break;
     case BE_CLASS:

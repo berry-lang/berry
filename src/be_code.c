@@ -49,7 +49,7 @@ static void allocstack(bfuncinfo *finfo, int count)
 {
     int nstack = finfo->freereg + count;
     if (nstack > finfo->nstack) {
-        finfo->nstack = nstack;
+        finfo->nstack = (bbyte)nstack;
     }
 }
 

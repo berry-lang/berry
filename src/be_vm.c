@@ -614,7 +614,7 @@ static void do_ntvclos(bvm *vm, bvalue *reg, int argc)
 
 static void do_ntvfunc(bvm *vm, bvalue *reg, int argc)
 {
-    bcfunction f = var_toobj(reg);
+    bcfunction f = cast(bcfunction, var_toobj(reg));
     push_native(vm, reg, argc, 0);
     f(vm); /* call C primitive function */
     ret_native(vm);

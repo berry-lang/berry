@@ -24,6 +24,33 @@ static int m_print(bvm *vm)
     return be_returnnil(vm);
 }
 
+static int m_tostring(bvm *vm)
+{
+    be_getmember(vm, 1, "__data__");
+    be_pushstring(vm, "[");
+    be_pushiter(vm, -2);
+    while (be_hasnext(vm, -3)) {
+        be_next(vm, -3);
+        if (be_isstring(vm, -1)) { /* Add '"' to strings */
+            be_pushfstring(vm, "'%s'", be_tostring(vm, -1));
+        } else {
+            be_value2string(vm, -1);
+        }
+        be_strconcat(vm, -4);
+        be_pop(vm, 2);
+        if (be_hasnext(vm, -3)) {
+            be_pushstring(vm, ", ");
+            be_strconcat(vm, -3);
+            be_pop(vm, 1);
+        }
+    }
+    be_pop(vm, 1); /* pop iterator */
+    be_pushstring(vm, "]");
+    be_strconcat(vm, -2);
+    be_pop(vm, 1);
+    return be_return(vm);
+}
+
 static int m_append(bvm *vm)
 {
     be_getmember(vm, 1, "__data__");
@@ -119,6 +146,7 @@ void be_list_init(bvm *vm)
         { "__data__", NULL },
         { "init", m_init },
         { "print", m_print },
+        { "tostring", m_tostring },
         { "append", m_append },
         { "item", m_item },
         { "setitem", m_setitem },

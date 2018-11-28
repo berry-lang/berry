@@ -1,6 +1,7 @@
 #include "be_strlib.h"
 #include "be_string.h"
 #include <string.h>
+#include <stdlib.h>
 
 bstring* be_strcat(bvm *vm, bstring *s1, bstring *s2)
 {

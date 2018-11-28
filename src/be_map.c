@@ -182,28 +182,22 @@ void be_map_remove(bmap *map, bvalue *key)
 
 bvalue* be_map_findstr(bmap *map, bstring *key)
 {
-    bvalue v = {
-        .v.s = key,
-        .type = BE_STRING
-    };
+    bvalue v;
+    var_setstr(&v, key);
     return be_map_find(map, &v);
 }
 
 bvalue* be_map_insertstr(bmap *map, bstring *key, bvalue *value)
 {
-    bvalue v = {
-        .v.s = key,
-        .type = BE_STRING
-    };
+    bvalue v;
+    var_setstr(&v, key);
     return be_map_insert(map, &v, value);
 }
 
 void be_map_removestr(bmap *map, bstring *key)
 {
-    bvalue v = {
-        .v.s = key,
-        .type = BE_STRING
-    };
+    bvalue v;
+    var_setstr(&v, key);
     be_map_remove(map, &v);
 }
 

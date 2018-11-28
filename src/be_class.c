@@ -40,7 +40,7 @@ void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p)
 void be_prim_method_bind(bclass *c, bstring *name, bcfunction f)
 {
     bvalue *m = be_map_insertstr(c->members, name, NULL);
-    m->v.p = f;
+    m->v.p = (void*)f;
     m->type = MT_PRIMMETHOD;
 }
 

@@ -44,7 +44,7 @@ The implementation of Berry include a one pass compiler and register-based VM, a
 
 ## Build
 
-1. install "libreadline"
+1. install "libreadline" (Only linux)
 
 ``` bash
 sudo apt install libreadline-dev # Ubuntu

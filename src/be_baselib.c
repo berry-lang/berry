@@ -110,6 +110,12 @@ static int l_next(bvm *vm)
     return be_returnnil(vm);
 }
 
+static int l_string(bvm *vm)
+{
+    be_value2string(vm, 1);
+    return be_return(vm);
+}
+
 void be_loadbaselib(bvm *vm)
 {
     be_regcfunc(vm, "print", l_print);
@@ -123,4 +129,5 @@ void be_loadbaselib(bvm *vm)
     be_regcfunc(vm, "__iterator__", l_iterator);
     be_regcfunc(vm, "__hasnext__", l_hasnext);
     be_regcfunc(vm, "__next__", l_next);
+    be_regcfunc(vm, "str", l_string);
 }

@@ -116,7 +116,7 @@ bntvclos* be_newprimclosure(bvm *vm, bcfunction cf, int nupvals)
     bntvclos *f = cast_ntvclos(gco);
     if (f) {
         f->f = cf;
-        f->nupvals = nupvals;
+        f->nupvals = (bbyte)nupvals;
         if (nupvals) {
             init_upvals(f);
         }

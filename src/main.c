@@ -1,8 +1,12 @@
 #include "berry.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+
+#if defined(__linux) || defined(__unix)
 #include <readline/readline.h>
 #include <readline/history.h>
+#endif
 
 static void dofile(bvm *vm, const char *fname)
 {
@@ -40,11 +44,26 @@ static int try_line(bvm *vm, const char *line)
     return res;
 }
 
+static const char* getl(void)
+{
+#if defined(__linux) || defined(__unix)
+    const char *line = readline("> ");
+    add_history(line);
+    return line;
+#else
+    static char buffer[1024];
+    printf("> ");
+    if (fgets(buffer, sizeof(buffer), stdin)) {
+        return buffer;
+    }
+    return NULL;
+#endif
+}
+
 static void repl(bvm *vm)
 {
     const char *line;
-    while ((line = readline("> ")) != NULL) {
-        add_history(line);
+    while ((line = getl()) != NULL) {
         if (try_line(vm, line)) {
             printf("%s\n", be_tostring(vm, -1)); /* some error */
             be_pop(vm, 1);

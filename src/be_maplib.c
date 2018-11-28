@@ -28,6 +28,45 @@ static int m_print(bvm *vm)
     return be_returnnil(vm);
 }
 
+static int m_tostring(bvm *vm)
+{
+    be_getmember(vm, 1, "__data__");
+    be_pushstring(vm, "{");
+    be_pushiter(vm, -2); /* map iterator use 2 registers */
+    while (be_hasnext(vm, -4)) {
+        be_next(vm, -4);
+        /* key.tostring() */
+        if (be_isstring(vm, -2)) { /* add ''' to strings */
+            be_pushfstring(vm, "'%s'", be_tostring(vm, -2));
+        } else {
+            be_value2string(vm, -2);
+        }
+        be_strconcat(vm, -6);
+        be_pop(vm, 1);
+        be_pushstring(vm, ": "); /* add ': ' */
+        be_strconcat(vm, -6);
+        be_pop(vm, 1);
+        /* value.tostring() */
+        if (be_isstring(vm, -1)) { /* add ''' to strings */
+            be_pushfstring(vm, "'%s'", be_tostring(vm, -1));
+        } else {
+            be_value2string(vm, -1);
+        }
+        be_strconcat(vm, -6);
+        be_pop(vm, 3);
+        if (be_hasnext(vm, -4)) {
+            be_pushstring(vm, ", ");
+            be_strconcat(vm, -4);
+            be_pop(vm, 1);
+        }
+    }
+    be_pop(vm, 2); /* pop iterator */
+    be_pushstring(vm, "}");
+    be_strconcat(vm, -2);
+    be_pop(vm, 1);
+    return be_return(vm);
+}
+
 static int m_insert(bvm *vm)
 {
     be_getmember(vm, 1, "__data__");
@@ -132,6 +171,7 @@ void be_map_init(bvm *vm)
         { "__data__", NULL },
         { "init", m_init },
         { "print", m_print },
+        { "tostring", m_tostring },
         { "insert", m_insert },
         { "remove", m_remove },
         { "item", m_item },

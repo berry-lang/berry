@@ -48,7 +48,7 @@ bgcobject* be_newgcobj(bvm *vm, int type, int size)
     bgc *gc = vm->gc;
     bgcobject *obj = be_malloc(size);
 
-    var_settype(obj, type);
+    var_settype(obj, (bbyte)type);
     gc_setdark(obj);
     be_gc_auto(vm);
     obj->next = gc->list; /* insert to head */
