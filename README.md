@@ -60,7 +60,12 @@ $ make
 
 ```
 $ ./berry test.be
+
 ```
+
+## Editor pulgins
+
+[Visual Studio Code](https://code.visualstudio.com/) pulgin are in this directory: [./tools/pulgins/vscode](./tools/pulgins/vscode).
 
 # Examples
 

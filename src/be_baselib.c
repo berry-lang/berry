@@ -129,5 +129,5 @@ void be_loadbaselib(bvm *vm)
     be_regcfunc(vm, "__iterator__", l_iterator);
     be_regcfunc(vm, "__hasnext__", l_hasnext);
     be_regcfunc(vm, "__next__", l_next);
-    be_regcfunc(vm, "str", l_string);
+    be_regcfunc(vm, "string", l_string);
 }

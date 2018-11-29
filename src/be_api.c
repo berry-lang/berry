@@ -302,7 +302,7 @@ void be_value2string(bvm *vm, int index)
         be_pushfstring(vm, "%d", var_toint(v));
         break;
     case BE_REAL:
-        be_pushfstring(vm, "%f", var_toreal(v));
+        be_pushfstring(vm, "%g", var_toreal(v));
         break;
     case BE_STRING:
         be_pushvalue(vm, index);
