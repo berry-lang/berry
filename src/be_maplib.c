@@ -7,27 +7,6 @@ static int m_init(bvm *vm)
     return be_returnnil(vm);
 }
 
-static int m_print(bvm *vm)
-{
-    be_getmember(vm, 1, "__data__");
-    be_pushiter(vm, -1); /* 2 item */
-    be_printf("{");
-    while (be_hasnext(vm, -3)) {
-        int res = be_next(vm, -3);  /* self.__data__ */
-        if (res == 2) { /* key and value */
-            be_printvalue(vm, 1, -2);
-            be_printf(": ");
-            be_printvalue(vm, 1, -1);
-            be_pop(vm, res);
-        }
-        if (be_hasnext(vm, -3)) {
-            be_printf(", ");
-        }
-    }
-    be_printf("}");
-    return be_returnnil(vm);
-}
-
 static int m_tostring(bvm *vm)
 {
     be_getmember(vm, 1, "__data__");
@@ -39,8 +18,9 @@ static int m_tostring(bvm *vm)
         if (be_isstring(vm, -2)) { /* add ''' to strings */
             be_pushfstring(vm, "'%s'", be_tostring(vm, -2));
         } else {
-            be_value2string(vm, -2);
+            be_tostring(vm, -2);
         }
+        be_pushvalue(vm, -2); /* push to top */
         be_strconcat(vm, -6);
         be_pop(vm, 1);
         be_pushstring(vm, ": "); /* add ': ' */
@@ -50,10 +30,10 @@ static int m_tostring(bvm *vm)
         if (be_isstring(vm, -1)) { /* add ''' to strings */
             be_pushfstring(vm, "'%s'", be_tostring(vm, -1));
         } else {
-            be_value2string(vm, -1);
+            be_tostring(vm, -1);
         }
-        be_strconcat(vm, -6);
-        be_pop(vm, 3);
+        be_strconcat(vm, -5);
+        be_pop(vm, 2);
         if (be_hasnext(vm, -4)) {
             be_pushstring(vm, ", ");
             be_strconcat(vm, -4);
@@ -170,7 +150,6 @@ void be_map_init(bvm *vm)
     static const bmemberinfo members[] = {
         { "__data__", NULL },
         { "init", m_init },
-        { "print", m_print },
         { "tostring", m_tostring },
         { "insert", m_insert },
         { "remove", m_remove },

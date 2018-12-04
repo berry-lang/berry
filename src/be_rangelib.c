@@ -10,31 +10,18 @@ static int m_init(bvm *vm)
     return be_returnnil(vm);
 }
 
-static int m_print(bvm *vm)
-{
-    be_printf("(");
-    be_getmember(vm, 1, "__lower__");
-    be_printvalue(vm, 0, -1);
-    be_printf("..");
-    be_pop(vm, 1);
-    be_getmember(vm, 1, "__upper__");
-    be_printvalue(vm, 0, -1);
-    be_printf(")");
-    return be_returnnil(vm);
-}
-
 static int m_tostring(bvm *vm)
 {
     be_pushstring(vm, "(");
     be_getmember(vm, 1, "__lower__");
-    be_value2string(vm, -1);
+    be_tostring(vm, -1);
     be_strconcat(vm, -3);
     be_pop(vm, 2);
     be_pushstring(vm, "..");
     be_strconcat(vm, -2);
     be_pop(vm, 1);
     be_getmember(vm, 1, "__upper__");
-    be_value2string(vm, -1);
+    be_tostring(vm, -1);
     be_strconcat(vm, -3);
     be_pop(vm, 2);
     be_pushstring(vm, ")");
@@ -123,7 +110,6 @@ void be_range_init(bvm *vm)
         { "__lower__", NULL },
         { "__upper__", NULL },
         { "init", m_init },
-        { "print", m_print },
         { "tostring", m_tostring },
         { "upper", m_upper },
         { "lower", m_lower },

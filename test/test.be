@@ -14,10 +14,11 @@ class A : Base
     def method(a, b)
         return self.test * a + b * self.b
     end
-    def print()
-        print("test:", self.test)
-        print("super.b:", super(self).b)
-        print("method:", self.method)
+    def tostring()
+		l1 = "test: " + string(self.test) + "\n"
+		l2 = "super.b: " + string(super(self).b) + "\n"
+		l3 = "method: " + string(self.method)
+		return l1 + l2 + l3
     end
 	def +(other)
 		return self.test + other.test
@@ -42,7 +43,8 @@ end
 obj = A(100)
 # print and class test
 print(obj.test, obj.method(5, 2))
-print('print object:', obj)
+print('print object:')
+print(obj)
 print("reload operator test: A(100) + A(20) =", A(100) + A(20))
 print("reload operator test: A(100) > A(20) =", A(100) > A(20))
 print("reload operator test: A(100) && A(0) =", A(100) && A(0))

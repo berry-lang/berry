@@ -72,8 +72,7 @@ static void repl(bvm *vm)
             be_pop(vm, 2);
         } else {
             if (!be_isnil(vm, -1)) {
-                be_printvalue(vm, 0, -1);
-                printf("\n");
+                printf("%s\n", be_tostring(vm, -1));
             }
             be_pop(vm, 1);
         }

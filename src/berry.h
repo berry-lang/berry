@@ -73,7 +73,6 @@ void be_pushvalue(bvm *vm, int index);
 void be_pushntvclosure(bvm *vm, bcfunction f, int nupvals);
 void be_pushntvfunction(bvm *vm, bcfunction f);
 void be_pushclass(bvm *vm, const char *name, const bmemberinfo *lib);
-void be_value2string(bvm *vm, int index);
 void be_strconcat(bvm *vm, int index);
 void be_getsuper(bvm *vm, int index);
 
@@ -101,7 +100,6 @@ int be_returnnil(bvm *vm);
 void be_call(bvm *vm, int argc);
 int be_pcall(bvm *vm, int argc);
 void be_printf(const char *format, ...);
-void be_printvalue(bvm *vm, int quote, int index);
 void be_abort(void);
 
 void be_regcfunc(bvm *vm, const char *name, bcfunction f);

@@ -184,12 +184,15 @@ breal be_toreal(bvm *vm, int index)
 bbool be_tobool(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
-    return var_tobool(v);
+    return var_tobool(v) != bfalse;
 }
 
 const char* be_tostring(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
+    if (!var_isstr(v)) {
+        be_val2str(vm, v);
+    }
     return str(var_tostr(v));
 }
 
@@ -269,55 +272,6 @@ void be_pushclass(bvm *vm, const char *name, const bmemberinfo *lib)
     c = be_newclass(vm, s, NULL);
     var_setclass(dst, c);
     class_init(vm, c, lib); /* bind members */
-}
-
-static void ins2str(bvm *vm, int index)
-{
-    index = be_absindex(vm, index);
-    be_getmember(vm, index, "tostring"); /* get method 'tostring' */
-    if (be_isnil(vm, -1)) {
-        be_pop(vm, 1);
-        be_printf("tostring error: object without 'tostring' method.");
-    } else {
-        be_pushvalue(vm, index);
-        be_call(vm, 1);
-        be_pop(vm, 1);
-    }
-}
-
-void be_value2string(bvm *vm, int index)
-{
-    bvalue *v = index2value(vm, index);
-    switch (var_type(v)) {
-    case BE_NIL:
-        be_pushstring(vm, "nil");
-        break;
-    case BE_BOOL:
-        be_pushstring(vm, var_tobool(v) ? "true" : "false");
-        break;
-    case BE_INT:
-        be_pushfstring(vm, "%d", var_toint(v));
-        break;
-    case BE_REAL:
-        be_pushfstring(vm, "%g", var_toreal(v));
-        break;
-    case BE_STRING:
-        be_pushvalue(vm, index);
-        break;
-    case BE_CLOSURE: case BE_NTVCLOS: case BE_NTVFUNC:
-        be_pushfstring(vm, "<function: %p>", var_toobj(v));
-        break;
-    case BE_CLASS:
-        be_pushfstring(vm, "<class: %s>",
-            str(be_class_name(cast(bclass*, var_toobj(v)))));
-        break;
-    case BE_INSTANCE:
-        ins2str(vm, index);
-        break;
-    default:
-        be_pushstring(vm, "unknow value");
-        break;
-    }
 }
 
 void be_strconcat(bvm *vm, int index)
@@ -720,55 +674,6 @@ int be_pcall(bvm *vm, int argc)
     bvalue *f = vm->top - argc - 1;
     int res = be_protectedcall(vm, f, argc);
     return res;
-}
-
-static void print_instance(bvm *vm, int index)
-{
-    index = be_absindex(vm, index);
-    be_getmember(vm, index, "print"); /* get method 'print' */
-    if (be_isnil(vm, -1)) {
-        be_pop(vm, 1);
-        be_printf("print error: object without 'print' method.");
-    } else {
-        be_pushvalue(vm, index);
-        be_call(vm, 1);
-        be_pop(vm, 2); /* use 2 resisters */
-    }
-}
-
-void be_printvalue(bvm *vm, int quote, int index)
-{
-    bvalue *v = index2value(vm, index);
-    switch (var_type(v)) {
-    case BE_NIL:
-        be_printf("nil");
-        break;
-    case BE_BOOL:
-        be_printf("%s", var_tobool(v) ? "true" : "false");
-        break;
-    case BE_INT:
-        be_printf("%d", var_toint(v));
-        break;
-    case BE_REAL:
-        be_printf("%g", var_toreal(v));
-        break;
-    case BE_STRING:
-        be_printf(quote ? "'%s'" : "%s", str(var_tostr(v)));
-        break;
-    case BE_CLOSURE: case BE_NTVCLOS: case BE_NTVFUNC:
-        be_printf("<function: %p>", var_toobj(v));
-        break;
-    case BE_CLASS:
-        be_printf("<class: %s>",
-            str(be_class_name(cast(bclass*, var_toobj(v)))));
-        break;
-    case BE_INSTANCE:
-        print_instance(vm, index);
-        break;
-    default:
-        be_printf("Unknow type: %d", var_type(v));
-        break;
-    }
 }
 
 int be_loadstring(bvm *vm, const char *str)

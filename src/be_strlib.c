@@ -1,6 +1,7 @@
 #include "be_strlib.h"
 #include "be_string.h"
 #include "be_vm.h"
+#include "be_class.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -24,6 +25,67 @@ bstring* be_num2str(bvm *vm, bvalue *v)
         sprintf(buf, "(nan)");
     }
     return be_newstr(vm, buf);
+}
+
+static void sim2str(bvm *vm, bvalue *v)
+{
+    char sbuf[32];
+    switch (var_type(v)) {
+    case BE_NIL:
+        strcpy(sbuf, "nil");
+        break;
+    case BE_BOOL:
+        strcpy(sbuf, var_tobool(v) ? "true" : "false");
+        break;
+    case BE_INT:
+        sprintf(sbuf, "%d", var_toint(v));
+        break;
+    case BE_REAL:
+        sprintf(sbuf, "%g", var_toreal(v));
+        break;
+    case BE_STRING:
+        return;
+    case BE_CLOSURE: case BE_NTVCLOS: case BE_NTVFUNC:
+        sprintf(sbuf, "<function: %p>", var_toobj(v));
+        break;
+    case BE_CLASS:
+        sprintf(sbuf, "<class: %s>",
+            str(be_class_name(cast(bclass*, var_toobj(v)))));
+        break;
+    default:
+        strcpy(sbuf, "(unknow value)");
+        break;
+    }
+    var_setstr(v, be_newstr(vm, sbuf));
+}
+
+static void ins2str(bvm *vm, bvalue *v)
+{
+    bvalue *top = vm->top++;
+    binstance *obj = var_toobj(v);
+    /* get method 'tostring' */
+    be_instance_member(obj, be_newstr(vm, "tostring"), top);
+    if (var_isnil(top)) {
+        char sbuf[2 * sizeof(void*) + 16];
+        sprintf(sbuf, "<instance: %p>", var_toobj(v));
+        --vm->top;
+        var_setstr(v, be_newstr(vm, sbuf));
+    } else {
+        bvalue *ins = vm->top++;
+        var_setval(ins, v);
+        be_call(vm, 1);
+        var_setval(v, top);
+        vm->top -= 2;
+    }
+}
+
+void be_val2str(bvm *vm, bvalue *v)
+{
+    if (var_isinstance(v)) {
+        ins2str(vm, v);
+    } else {
+        sim2str(vm, v);
+    }
 }
 
 static void pushstr(bvm *vm, const char *s, int len)
@@ -79,7 +141,14 @@ void be_pushvfstr(bvm *vm, const char *format, va_list arg)
             pushstr(vm, "%", 1);
             break;
         }
+        case 'p': {
+            char buf[2 * sizeof(void*) + 4];
+            sprintf(buf, "%p", va_arg(arg, void*));
+            pushstr(vm, buf, strlen(buf));
+            break;
+        }
         default:
+            pushstr(vm, "(unknow)", 8);
             break;
         }
         concat2(vm);

@@ -8,8 +8,9 @@ static int l_print(bvm *vm)
 {
     int i, n = be_top(vm);
     for (i = 1; i <= n; ++i) {
-        be_printvalue(vm, 0, i);
-        be_printf(" ");
+        be_pushvalue(vm, i);
+        be_printf("%s ", be_tostring(vm, -1));
+        be_pop(vm, 1);
     }
     be_printf("\n");
     return be_returnnil(vm);
@@ -112,7 +113,7 @@ static int l_next(bvm *vm)
 
 static int l_string(bvm *vm)
 {
-    be_value2string(vm, 1);
+    be_tostring(vm, 1);
     return be_return(vm);
 }
 
@@ -126,8 +127,8 @@ void be_loadbaselib(bvm *vm)
     be_regcfunc(vm, "classname", l_classname);
     be_regcfunc(vm, "number", l_number);
     be_regcfunc(vm, "random", l_random);
+    be_regcfunc(vm, "string", l_string);
     be_regcfunc(vm, "__iterator__", l_iterator);
     be_regcfunc(vm, "__hasnext__", l_hasnext);
     be_regcfunc(vm, "__next__", l_next);
-    be_regcfunc(vm, "string", l_string);
 }

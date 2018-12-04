@@ -2,25 +2,14 @@
 
 static int m_init(bvm *vm)
 {
+    int i, argc = be_top(vm);
     be_newlist(vm);
     be_setmember(vm, 1, "__data__");
-    return be_returnnil(vm);
-}
-
-static int m_print(bvm *vm)
-{
-    be_getmember(vm, 1, "__data__");
-    be_pushiter(vm, -1);
-    be_printf("[");
-    while (be_hasnext(vm, -2)) {
-        be_next(vm, -2);
-        be_printvalue(vm, 1, -1);
-        be_pop(vm, 1);
-        if (be_hasnext(vm, -2)) {
-            be_printf(", ");
-        }
+    for (i = 2; i <= argc; ++i) {
+        be_getmember(vm, 1, "__data__");
+        be_pushvalue(vm, i);
+        be_append(vm, -2);
     }
-    be_printf("]");
     return be_returnnil(vm);
 }
 
@@ -33,11 +22,13 @@ static int m_tostring(bvm *vm)
         be_next(vm, -3);
         if (be_isstring(vm, -1)) { /* Add '"' to strings */
             be_pushfstring(vm, "'%s'", be_tostring(vm, -1));
+            be_moveto(vm, -2);
+            be_pop(vm, 1);
         } else {
-            be_value2string(vm, -1);
+            be_tostring(vm, -1);
         }
-        be_strconcat(vm, -4);
-        be_pop(vm, 2);
+        be_strconcat(vm, -3);
+        be_pop(vm, 1);
         if (be_hasnext(vm, -3)) {
             be_pushstring(vm, ", ");
             be_strconcat(vm, -3);
@@ -145,7 +136,6 @@ void be_list_init(bvm *vm)
     static const bmemberinfo members[] = {
         { "__data__", NULL },
         { "init", m_init },
-        { "print", m_print },
         { "tostring", m_tostring },
         { "append", m_append },
         { "item", m_item },
