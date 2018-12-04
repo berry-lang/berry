@@ -46,8 +46,8 @@ static void block(bparser *parser);
 static void expr(bparser *parser, bexpdesc *e);
 
 static const int binary_op_prio_tab[] = {
-    6, 6, 7, 7, 7, /* + - * / % */
-    4, 4, 4, 4, 4, 4, 2, 2, 5 /* < <= == != > >= && || .. */
+    7, 7, 8, 8, 8, /* + - * / % */
+    5, 5, 5, 5, 5, 5, 6, 4, 3 /* < <= == != > >= .. && || */
 };
 
 static void parser_throw(bparser *parser)
@@ -706,7 +706,7 @@ static void sub_expr(bparser *parser, bexpdesc *e, int prio)
 
 static void expr(bparser *parser, bexpdesc *e)
 {
-    sub_expr(parser, e, 1);
+    sub_expr(parser, e, 2);
 }
 
 static void expr_stmt(bparser *parser)

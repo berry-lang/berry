@@ -109,16 +109,21 @@ static void vm_error(bvm *vm, const char *msg)
 static bbool obj2bool(bvm *vm, bvalue *obj)
 {
     bvalue *top = vm->top;
+    bstring *tobool = be_newconststr(vm, "tobool");
     /* get operator method */
-    be_instance_member(obj->v.p, be_newconststr(vm, "tobool"), top);
-    top[1] = *obj; /* move self to argv[0] */
-    be_dofunc(vm, top, 1); /* call method 'item' */
-    return var_isbool(top) ? var_tobool(top) : btrue;
+    if (be_instance_member(obj->v.p, tobool, top)) {
+        top[1] = *obj; /* move self to argv[0] */
+        be_dofunc(vm, top, 1); /* call method 'tobool' */
+        return var_isbool(top) ? var_tobool(top) : btrue;
+    }
+    return btrue;
 }
 
 static bbool var2bool(bvm *vm, bvalue *v)
 {
     switch (var_basetype(v)) {
+    case BE_NIL:
+        return bfalse;
     case BE_BOOL:
         return v->v.b;
     case BE_INT:

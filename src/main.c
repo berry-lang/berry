@@ -51,7 +51,7 @@ static const char* getl(void)
     add_history(line);
     return line;
 #else
-    static char buffer[1024];
+    static char buffer[1000];
     printf("> ");
     if (fgets(buffer, sizeof(buffer), stdin)) {
         return buffer;

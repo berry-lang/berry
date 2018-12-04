@@ -233,13 +233,10 @@ void be_pushstring(bvm *vm, const char *str)
 
 void be_pushfstring(bvm *vm, const char *format, ...)
 {
-    static char buf[1024];
     va_list arg_ptr;
-    bvalue *reg = pushtop(vm);
     va_start(arg_ptr, format);
-    vsprintf(buf, format, arg_ptr);
+    be_pushvfstr(vm, format, arg_ptr);
     va_end(arg_ptr);
-    var_setstr(reg, be_newstr(vm, buf));
 }
 
 void be_pushvalue(bvm *vm, int index)
@@ -367,8 +364,8 @@ const char* be_typename(bvm *vm, int index)
     case BE_INT: return "int";
     case BE_REAL: return "real";
     case BE_BOOL: return "bool";
-    case BE_CLOSURE: return "closure";
-    case BE_NTVCLOS: return "ntvclos";
+    case BE_CLOSURE: case BE_NTVCLOS:
+    case BE_NTVFUNC: return "function";
     case BE_PROTO: return "proto";
     case BE_CLASS: return "class";
     case BE_STRING: return "string";
