@@ -119,7 +119,7 @@ static void match_notoken(bparser *parser, btokentype type)
     }
 }
 
-static void check_vardefine(bparser *parser, bexpdesc *e)
+static void check_var(bparser *parser, bexpdesc *e)
 {
     if (e->type == ETVOID) {
         bstring *s = e->v.s;
@@ -439,6 +439,7 @@ static void list_nextmember(bparser *parser, bexpdesc *l)
     be_code_getmethod(finfo);
     /* copy source value to next register */
     expr(parser, &e);
+    check_var(parser, &e);
     be_code_nextreg(finfo, &e);
     be_code_call(finfo, base, 2);
     be_code_freeregs(finfo, finfo->freereg - reg);
@@ -459,9 +460,11 @@ static void map_nextmember(bparser *parser, bexpdesc *l)
     be_code_getmethod(finfo);
     /* copy source value to next register */
     expr(parser, &e); /* key */
+    check_var(parser, &e);
     be_code_nextreg(finfo, &e);
     match_token(parser, OptColon); /* ':' */
     expr(parser, &e); /* value */
+    check_var(parser, &e);
     be_code_nextreg(finfo, &e);
     be_code_call(finfo, base, 3);
     be_code_freeregs(finfo, finfo->freereg - reg);
@@ -515,12 +518,12 @@ static int exprlist(bparser *parser, bexpdesc *e)
     int n = 1, reg = finfo->freereg;
     /* expr { ',' expr } */
     expr(parser, e);
-    check_vardefine(parser, e);
+    check_var(parser, e);
     be_code_reg(finfo, e, reg++);
     while (next_token(parser).type == OptComma) {
         scan_next_token(parser); /* skip ',' */
         expr(parser, e);
-        check_vardefine(parser, e);
+        check_var(parser, e);
         be_code_reg(finfo, e, reg++);
         ++n;
     }
@@ -535,7 +538,7 @@ static void call_expr(bparser *parser, bexpdesc *e)
     int ismember = e->type == ETMEMBER;
 
     /* '(' [exprlist] ')' */
-    check_vardefine(parser, e);
+    check_var(parser, e);
     /* code function index to next register */
     base = be_code_nextreg(finfo, e);
     if (ismember) {
@@ -558,7 +561,7 @@ static void call_expr(bparser *parser, bexpdesc *e)
 static void member_expr(bparser *parser, bexpdesc *e)
 {
     /* . ID */
-    check_vardefine(parser, e);
+    check_var(parser, e);
     scan_next_token(parser); /* skip '.' */
     if (next_token(parser).type == TokenId) {
         bexpdesc key;
@@ -573,7 +576,7 @@ static void index_expr(bparser *parser, bexpdesc *e)
 {
     bexpdesc e1;
     /* [expr] */
-    check_vardefine(parser, e);
+    check_var(parser, e);
     scan_next_token(parser); /* skip '[' */
     expr(parser, &e1);
     be_code_index(parser->finfo, e, &e1);
@@ -663,6 +666,7 @@ static void assign_expr(bparser *parser)
         bexpdesc e1;
         scan_next_token(parser);
         expr(parser, &e1);
+        check_var(parser, &e1);
         if (e.type == ETVOID) { /* new variable */
             new_var(parser, e.v.s, &e);
         }
@@ -671,6 +675,8 @@ static void assign_expr(bparser *parser)
             parser_error(parser,
                 "try to assign constant expressions.", NULL);
         }
+    } else { /* not assign expression */
+        check_var(parser, &e);
     }
 }
 
@@ -684,7 +690,7 @@ static void sub_expr(bparser *parser, bexpdesc *e, int prio)
     if (op != OP_NOT_UNARY) {
         scan_next_token(parser);
         sub_expr(parser, e, UNARY_OP_PRIO);
-        check_vardefine(parser, e);
+        check_var(parser, e);
         if (be_code_unop(finfo, op, e)) { /* encode unary op */
             parser_error(parser, "neg error", NULL);
         }
@@ -695,10 +701,10 @@ static void sub_expr(bparser *parser, bexpdesc *e, int prio)
     while (op != OP_NOT_BINARY && binary_op_prio(op) > prio) {
         bexpdesc e2;
         scan_next_token(parser);
-        check_vardefine(parser, e);
+        check_var(parser, e);
         be_code_prebinop(finfo, op, e); /* and or */
         sub_expr(parser, &e2, binary_op_prio(op));
-        check_vardefine(parser, &e2);
+        check_var(parser, &e2);
         be_code_binop(finfo, op, e, &e2); /* encode binary op */
         op = get_binop(parser);
     }
@@ -995,6 +1001,7 @@ static void return_stmt(bparser *parser)
     scan_next_token(parser); /* skip 'return' */
     init_exp(&e, ETVOID, 0);
     expr(parser, &e);
+    check_var(parser, &e);
     be_code_ret(parser->finfo, &e);
 }
 

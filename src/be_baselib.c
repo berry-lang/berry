@@ -8,9 +8,7 @@ static int l_print(bvm *vm)
 {
     int i, n = be_top(vm);
     for (i = 1; i <= n; ++i) {
-        be_pushvalue(vm, i);
-        be_printf("%s ", be_tostring(vm, -1));
-        be_pop(vm, 1);
+        be_printf("%s ", be_tostring(vm, i));
     }
     be_printf("\n");
     return be_returnnil(vm);
@@ -24,7 +22,12 @@ static int l_clock(bvm *vm)
 
 static int l_memcount(bvm *vm)
 {
-    be_pushreal(vm, (breal)be_mcount());
+    size_t count = be_mcount();
+    if (count < 0x80000000) {
+        be_pushint(vm, (bint)count);
+    } else {
+        be_pushreal(vm, (breal)count);
+    }
     return be_return(vm);
 }
 

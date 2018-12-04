@@ -38,6 +38,10 @@
     } else if (var_isnumber(a) && var_isnumber(b)) { \
         breal x = var2real(a), y = var2real(b); \
         var_setbool(dst, x op y); \
+    } else if (var_isstr(a) && var_isstr(b)) { \
+        bstring *s1 = var_tostr(a), *s2 = var_tostr(b); \
+        int res = be_strcmp(s1, s2); \
+        var_setbool(dst, res op 0); \
     } else if (var_isinstance(a)) { \
         object_binop(vm, #op, dst, a, b); \
     } else { \
@@ -644,5 +648,4 @@ void be_dofunc(bvm *vm, bvalue *v, int argc)
     case BE_NTVFUNC: do_ntvfunc(vm, v, argc); break;
     default: break;
     }
-    be_gc_collect(vm);
 }

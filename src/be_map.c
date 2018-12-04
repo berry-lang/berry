@@ -121,8 +121,8 @@ bmap* be_map_new(bvm *vm)
 
 void be_map_delete(bmap *map)
 {
-    int i, size = map->size;
-    for (i = 0; i < size; ++i) {
+    int i, n = map->size;
+    for (i = 0; i < n; ++i) {
         bmapentry *node, *next;
         for (node = map->slots[i]; node; node = next) {
             next = node->next;

@@ -259,14 +259,13 @@ static void free_object(bvm *vm, bgcobject *obj)
 {
     (void)vm;
     switch (obj->type) {
-    case BE_STRING:
     case BE_INSTANCE: be_free(obj); break;
     case BE_MAP: be_map_delete(cast_map(obj)); break;
     case BE_LIST: free_list(obj); break;
     case BE_CLOSURE: free_closure(obj); break;
     case BE_NTVCLOS: free_ntvclos(obj); break;
     case BE_PROTO: free_proto(obj); break;
-    default: break;
+    default: break; /* case BE_STRING: break; */
     }
 }
 
@@ -374,4 +373,5 @@ void be_gc_collect(bvm *vm)
     delete_white(vm);
     clear_graylist(vm);
     be_gcstrtab(vm);
+    vm->gc->mcount = be_mcount();
 }

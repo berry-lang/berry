@@ -198,7 +198,7 @@ const char* be_tostring(bvm *vm, int index)
 
 void be_moveto(bvm *vm, int index)
 {
-    bvalue *src = vm->top;
+    bvalue *src = vm->top - 1;
     bvalue *dst = index2value(vm, index);
     var_setval(dst, src);
 }

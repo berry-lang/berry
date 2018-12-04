@@ -14,6 +14,14 @@ bstring* be_strcat(bvm *vm, bstring *s1, bstring *s2)
     return s;
 }
 
+int be_strcmp(bstring *s1, bstring *s2)
+{
+    if (be_eqstr(s1, s2)) {
+        return 0;
+    }
+    return strcmp(str(s1), str(s2));
+}
+
 bstring* be_num2str(bvm *vm, bvalue *v)
 {
     char buf[25];
