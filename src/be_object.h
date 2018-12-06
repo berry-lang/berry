@@ -36,7 +36,7 @@ typedef struct bstring {
     bbyte extra;
     bbyte slen; /* short string length */
     const char *s;
-    /*
+    /* implicit fields:
     union {
         char sstr[]; // short string data
         struct {
@@ -47,15 +47,17 @@ typedef struct bstring {
     */
 } bstring;
 
+union bvaldata {
+    bbool b;        /* boolean */
+    breal r;        /* real number */
+    bint i;         /* integer number */
+    void *p;        /* object pointer */
+    bstring *s;     /* string pointer */
+    bgcobject *gc;  /* GC object */
+};
+
 typedef struct bvalue {
-    union {
-        bbool b; /* boolean */
-        breal r; /* real number */
-        bint i; /* integer number */
-        void *p; /* object pointer */
-        bstring *s; /* string pointer */
-        bgcobject *gc; /* GC object */
-    } v;
+    union bvaldata v;
     int type;
 } bvalue;
 

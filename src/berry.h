@@ -23,10 +23,10 @@ typedef enum {
 #define BE_INT          1
 #define BE_REAL         2
 #define BE_BOOL         3
-#define BE_FUNCTION     10
-#define BE_STRING       11
-#define BE_CLASS        12
-#define BE_INSTANCE     13
+#define BE_FUNCTION     4
+#define BE_STRING       5
+#define BE_CLASS        6
+#define BE_INSTANCE     7
 
 typedef struct bvm bvm;
 typedef int (*bcfunction)(bvm *vm);

@@ -3,22 +3,29 @@
 
 #include "be_object.h"
 
-typedef struct bmapentry {
-    bvalue key;
+typedef struct bmapkey {
+    union bvaldata v;
+    bbyte type;
+    bbyte extra;
+    uint16_t next;
+} bmapkey;
+
+typedef struct bmapnode {
+    bmapkey key;
     bvalue value;
-    struct bmapentry *next;
-} bmapentry;
+} bmapnode;
 
 struct bmap {
     bcommon_header;
-    bmapentry **slots;
+    bmapnode *slots;
+    bmapnode *freelist;
     int size;
     int count;
 };
 
 typedef struct {
     int slotidx;
-    bmapentry *node;
+    bmapnode *node;
 } bmapiter;
 
 #define be_map_count(map)   ((map)->count)
@@ -33,6 +40,6 @@ bvalue* be_map_findstr(bmap *map, bstring *key);
 bvalue* be_map_insertstr(bmap *map, bstring *key, bvalue *value);
 void be_map_removestr(bmap *map, bstring *key);
 bmapiter be_map_iter(void);
-bmapentry* be_map_next(bmap *map, bmapiter *iter);
+bmapnode* be_map_next(bmap *map, bmapiter *iter);
 
 #endif
