@@ -11,6 +11,8 @@
 #define BE_NTVCLOS      ((2 << 5) | BE_FUNCTION)
 #define BE_COMPTR       (-2)    /* common pointer */
 
+#define array_count(a)   (sizeof(a) / sizeof((a)[0]))
+
 #define bcommon_header        \
     struct bgcobject *next;   \
     bbyte type;               \

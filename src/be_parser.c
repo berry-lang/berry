@@ -24,7 +24,6 @@
 
 #define scan_next_token(parser) (be_lexer_scan_next(&(parser)->lexer))
 #define next_token(parser)      ((parser)->lexer.token)
-#define array_count(a)          ((int)(sizeof(a) / sizeof((a)[0])))
 #define max(a, b)               ((a) > (b) ? (a) : (b))
 
 #define upval_index(v)          ((v) & 0xFF)

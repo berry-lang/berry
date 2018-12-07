@@ -608,7 +608,7 @@ static int map_next(bvm *vm, bvalue *v)
     var_setint(idx, iter.slotidx);
     var_setobj(node, BE_COMPTR, iter.node);
     if (entry) {
-        bvalue vk = be_map_node2key(entry);
+        bvalue vk = be_map_key2value(entry);
         var_setval(dst, &vk);
         var_setval(dst + 1, &entry->value);
         vm->top += 2;

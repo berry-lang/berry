@@ -3,8 +3,6 @@
 #include "be_mem.h"
 #include "be_gc.h"
 
-#define MAP_DEF_SIZE        4
-
 #define key(node)           (&(node)->key)
 #define value(node)         (&(node)->value)
 #define isnil(node)         var_isnil(key(node))
@@ -19,6 +17,24 @@
                               (node)->key.v = (_v)->v; }
 
 #define LASTNODE            65535
+
+static const uint16_t hashtab_size[] = {
+    0, 2, 4, 6, 8, 10, 12, /* + 2 */
+    16, 20, 25, 32, 39, 48, 61, 76, /* * 1.25 */
+    96, 128, 170, 226, 300, 400, 531, 707, 940, 1250, /* * 1.33 */
+    1875, 2812, 4218, 6328, 9492, 14238, 21357, 32036, 48054 /* * 1.5 */
+};
+
+static int get_nextsize(int size)
+{
+    size_t i;
+    for (i = 0; i < array_count(hashtab_size); ++i) {
+        if (hashtab_size[i] > size) {
+            return hashtab_size[i];
+        }
+    }
+    return LASTNODE;
+}
 
 uint32_t hashptr(void *p)
 {
@@ -156,9 +172,11 @@ static void resize(bmap *map, int size)
         bmapnode *node = oldslots + i;
         if (!isnil(node)) {
             bvalue v;
+            bmapnode *newslot;
             v.type = node->key.type;
             v.v = node->key.v;
-            insert(map, &v, hashcode(&v));
+            newslot = insert(map, &v, hashcode(&v));
+            newslot->value = node->value;
         }
     }
     be_free(oldslots);
@@ -172,7 +190,7 @@ bmap* be_map_new(bvm *vm)
         map->size = 0;
         map->count = 0;
         map->slots = NULL;
-        resize(map, MAP_DEF_SIZE);
+        resize(map, 2);
     }
     return map;
 }
@@ -195,7 +213,7 @@ bvalue* be_map_insert(bmap *map, bvalue *key, bvalue *value)
     bmapnode *entry = find(map, key, hash);
     if (!entry) { /* new entry */
         if (map->count >= map->size) {
-            resize(map, map->size << 1);
+            resize(map, get_nextsize(map->size));
         }
         entry = insert(map, key, hash);
         ++map->count;
@@ -282,7 +300,7 @@ bmapnode* be_map_next(bmap *map, bmapiter *iter)
     return iter->node;
 }
 
-bvalue be_map_node2key(bmapnode *node)
+bvalue be_map_key2value(bmapnode *node)
 {
     bvalue v;
     v.type = node->key.type;

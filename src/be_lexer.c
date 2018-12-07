@@ -28,7 +28,7 @@ static const char* kwords_tab[] = {
 
 static void keyword_registe(bvm *vm)
 {
-    int i, n = (int)(sizeof(kwords_tab) / sizeof(kwords_tab[0]));
+    size_t i, n = array_count(kwords_tab);
     for (i = KeyIf; i < n; ++i) {
         bstring *s = be_newconststr(vm, kwords_tab[i]);
         be_gc_fix(vm, gc_object(s));
@@ -38,7 +38,7 @@ static void keyword_registe(bvm *vm)
 
 static void keyword_unregiste(bvm *vm)
 {
-    int i, n = (int)(sizeof(kwords_tab) / sizeof(kwords_tab[0]));
+    size_t i, n = array_count(kwords_tab);
     for (i = KeyIf; i < n; ++i) {
         bstring *s = be_newconststr(vm, kwords_tab[i]);
         be_gc_unfix(vm, gc_object(s));

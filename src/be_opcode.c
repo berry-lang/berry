@@ -1,4 +1,5 @@
 #include "be_opcode.h"
+#include "be_object.h"
 
 const char *be_opcode2str(bopcode op)
 {
@@ -12,5 +13,5 @@ const char *be_opcode2str(bopcode op)
         "GETMBR", "GETMET", "SETMBR", "GETIDX",
         "SETIDX", "SETSUPER", "CLOSE"
     };
-    return op < sizeof(opcode_tab) / sizeof(opcode_tab[0]) ? opcode_tab[op] : "ERROP";
+    return op < array_count(opcode_tab) ? opcode_tab[op] : "ERROP";
 }
