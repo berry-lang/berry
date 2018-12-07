@@ -564,7 +564,7 @@ int be_pushiter(bvm *vm, int index)
     if (var_ismap(v)) {
         bvalue *iter = pushtop(vm);
         var_setobj(iter, BE_COMPTR, NULL);
-        return 2;
+        return 1;
     } else if (var_islist(v)) {
         blist *list = var_toobj(v);
         bvalue *iter = pushtop(vm);
@@ -614,9 +614,8 @@ static int map_next(bvm *vm, bvalue *v)
 
 static int map_hasnext(bvm *vm, bvalue *v)
 {
-    bmapiter iter;
     bvalue *node = index2value(vm, -1);
-    iter = var_toobj(node);
+    bmapiter iter = var_toobj(node);
     return be_map_next(var_toobj(v), &iter) != NULL;
 }
 
