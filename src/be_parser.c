@@ -62,7 +62,7 @@ static void parser_throw(bparser *parser)
         be_vector_delete(finfo->pvec);
         finfo = finfo->prev;
     }
-    be_free(parser->lexer.data);
+    be_lexer_deinit(&parser->lexer);
     be_gc_unfix(vm, gc_object(parser->cl));
     be_throw(vm, 1);
 }

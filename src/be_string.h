@@ -4,6 +4,8 @@
 #include "be_object.h"
 #include "string.h"
 
+#define SHORT_STR_MAX_LEN   64
+
 typedef struct {
     bstring str;
     int llen;

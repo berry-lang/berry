@@ -9,9 +9,16 @@
 bstring* be_strcat(bvm *vm, bstring *s1, bstring *s2)
 {
     int len = str_len(s1) + str_len(s2);
-    bstring *s = be_newstrn(vm, str(s1), len);
-    strncat((char*)str(s), str(s2), len);
-    return s;
+    if (len <= SHORT_STR_MAX_LEN) {
+        char buf[SHORT_STR_MAX_LEN];
+        strcpy(buf, str(s1));
+        strncat(buf, str(s2), len);
+        return be_newstrn(vm, buf, len);
+    } else { /* long string */
+        bstring *s = be_newstrn(vm, str(s1), len);
+        strncat((char*)str(s), str(s2), len);
+        return s;
+    }
 }
 
 int be_strcmp(bstring *s1, bstring *s2)

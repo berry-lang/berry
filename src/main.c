@@ -82,7 +82,7 @@ static void repl(bvm *vm)
 
 int main(int argc, char *argv[])
 {
-    bvm *vm = be_newvm(32);
+    bvm *vm = be_newvm(16);
     be_loadlibs(vm);
     srand((unsigned)time(NULL));
     if (argc >= 2) {

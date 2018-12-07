@@ -3,9 +3,9 @@
 
 #include "berry.h"
 
-#define BE_PROTO        14
-#define BE_LIST         15
-#define BE_MAP          16
+#define BE_PROTO        10
+#define BE_LIST         11
+#define BE_MAP          12
 #define BE_NTVFUNC      ((0 << 5) | BE_FUNCTION)
 #define BE_CLOSURE      ((1 << 5) | BE_FUNCTION)
 #define BE_NTVCLOS      ((2 << 5) | BE_FUNCTION)

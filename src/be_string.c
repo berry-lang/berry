@@ -4,8 +4,6 @@
 #include "be_gc.h"
 #include <string.h>
 
-#define SHORT_STR_MAX_LEN   64
-
 #define next(_s)    cast(void*, cast(bstring*, (_s)->next))
 
 struct bstringtable {
@@ -118,7 +116,7 @@ static bstring* newshortstr(bvm *vm, const char *str, int len, int isk)
     s->next = cast(void*, *list);
     *list = s;
     vm->strtab->count++;
-    if (vm->strtab->count > size << 1) {
+    if (vm->strtab->count > size << 2) {
         resize(vm, size << 1);
     }
     return s;
@@ -185,7 +183,7 @@ void be_gcstrtab(bvm *vm)
             }
         }
     }
-    if (strtab->count < size && size > 8) {
-        resize(vm, size >> 2);
+    if (strtab->count < size >> 2 && size > 8) {
+        resize(vm, size >> 1);
     }
 }

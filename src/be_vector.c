@@ -102,6 +102,6 @@ void* be_vector_swap_delete(bvector *vector)
 int be_nextpow(int v)
 {
     int i;
-    for (i = 4; i < v; i <<= 1);
+    for (i = 4; i < v; i = i * 4 / 3); /* * 1.25 */
     return i;
 }
