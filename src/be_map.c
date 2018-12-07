@@ -60,7 +60,7 @@ static uint32_t _hashcode_(int type, union bvaldata v)
     }
 }
 
-static int eq_entry(bmapnode *node, bvalue *key, uint32_t hash)
+static int eqnode(bmapnode *node, bvalue *key, uint32_t hash)
 {
     bmapkey *k = key(node);
     if (hashcode(key(node)) == hash && k->type == key->type) {
@@ -141,7 +141,7 @@ static bmapnode* find(bmap *map, bvalue *key, uint32_t hash)
     if (isnil(slot)) {
         return NULL;
     }
-    while (!eq_entry(slot, key, hash)) {
+    while (!eqnode(slot, key, hash)) {
         int n = next(slot);
         if (n == LASTNODE) {
             return NULL;
@@ -229,24 +229,27 @@ void be_map_remove(bmap *map, bvalue *key)
     uint32_t hash = hashcode(key);
     bmapnode *slot = hash2slot(map, hash); /* main slot */
 
-    if (eq_entry(slot, key, hash)) { /* first node */
-        int n = next(slot);
-        if (n != LASTNODE) { /* has next ? */
-            bmapnode *next = pos2slot(map, n);
-            *slot = *next;
+    if (eqnode(slot, key, hash)) { /* first node */
+        bmapnode *next = pos2slot(map, next(slot));
+        if (next) { /* has next */
+            *slot = *next; /* first: copy the second node to the slot */
+            slot = next; /* second: set the second node to nil (empty) */
         }
-    } else {
-        for (;;) {
-            int n = next(slot);
-            bmapnode *next = pos2slot(map, n);
-            if (next == NULL) {
+    } else { /* the node will be remove is not first-node */
+        bmapnode *prev = slot;
+        for (;;) { /* find the previous node */
+            int n = next(prev);
+            slot = pos2slot(map, n);
+            if (slot == NULL) { /* node not found */
                 return;
             }
-            if (eq_entry(slot, key, hash)) {
+            if (eqnode(slot, key, hash)) {
                 break;
             }
-            slot = next;
+            prev = slot;
         }
+        /* link the list */
+        next(prev) = next(slot);
     }
     /* set to nil */
     setnil(slot);
