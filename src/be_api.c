@@ -562,10 +562,8 @@ int be_pushiter(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     if (var_ismap(v)) {
-        bvalue *idx = pushtop(vm);
-        bvalue *node = pushtop(vm);
-        var_setint(idx, -1);
-        var_setobj(node, BE_COMPTR, NULL);
+        bvalue *iter = pushtop(vm);
+        var_setobj(iter, BE_COMPTR, NULL);
         return 2;
     } else if (var_islist(v)) {
         blist *list = var_toobj(v);
@@ -600,13 +598,10 @@ static int map_next(bvm *vm, bvalue *v)
     bmapiter iter;
     bmapnode *entry;
     bvalue *dst = vm->top;
-    bvalue *idx = index2value(vm, -2);
-    bvalue *node = index2value(vm, -1);
-    iter.slotidx = var_toint(idx);
-    iter.node = var_toobj(node);
+    bvalue *itvar = index2value(vm, -1);
+    iter = var_toobj(itvar);
     entry = be_map_next(var_toobj(v), &iter);
-    var_setint(idx, iter.slotidx);
-    var_setobj(node, BE_COMPTR, iter.node);
+    var_setobj(itvar, BE_COMPTR, iter);
     if (entry) {
         bvalue vk = be_map_key2value(entry);
         var_setval(dst, &vk);
@@ -620,10 +615,8 @@ static int map_next(bvm *vm, bvalue *v)
 static int map_hasnext(bvm *vm, bvalue *v)
 {
     bmapiter iter;
-    bvalue *idx = index2value(vm, -2);
     bvalue *node = index2value(vm, -1);
-    iter.slotidx = var_toint(idx);
-    iter.node = var_toobj(node);
+    iter = var_toobj(node);
     return be_map_next(var_toobj(v), &iter) != NULL;
 }
 

@@ -278,26 +278,14 @@ void be_map_removestr(bmap *map, bstring *key)
     be_map_remove(map, &v);
 }
 
-bmapiter be_map_iter(void)
-{
-    bmapiter iter;
-    iter.slotidx = -1;
-    iter.node = NULL;
-    return iter;
-}
-
 bmapnode* be_map_next(bmap *map, bmapiter *iter)
 {
     bmapnode *end = map->slots + map->size;
-
-    iter->node = iter->node ? iter->node + 1 : map->slots;
-    while (isnil(iter->node)) {
-        ++iter->node;
-        if (iter->node >= end) {
-            return NULL;
-        }
+    *iter = *iter ? *iter + 1 : map->slots;
+    while (*iter < end && isnil(*iter)) {
+        ++(*iter);
     }
-    return iter->node;
+    return *iter < end ? *iter : NULL;
 }
 
 bvalue be_map_key2value(bmapnode *node)

@@ -33,6 +33,7 @@ int be_globalvar_new(bvm *vm, bstring *name)
         var_setint(desc, idx);
         be_vector_resize(gd->gvalist, idx + 1);
         vm->global = be_vector_data(gd->gvalist);
+        var_setnil(vm->global + gd->nglobal); /* set the new variable to nil */
         gd->nglobal++;
     }
     return idx;
