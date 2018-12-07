@@ -13,6 +13,7 @@
 #define hashcode(_v)        _hashcode_((_v)->type, (_v)->v)
 
 #define next(node)          ((node)->key.next)
+#define pos2slot(map, n)    ((n) != LASTNODE ? ((map)->slots + (n)) : NULL)
 #define pos(map, node)      ((node) - (map)->slots)
 #define setkey(node, _v)    { (node)->key.type = (_v)->type; \
                               (node)->key.v = (_v)->v; }
@@ -65,27 +66,54 @@ static int eq_entry(bmapnode *node, bvalue *key, uint32_t hash)
     return 0;
 }
 
+static bmapnode* findprev(bmap *map, bmapnode *list, bmapnode *slot)
+{
+    int n, pos = pos(map, slot);
+    bmapnode *prev = list;
+    for (;;) {
+        n = next(prev);
+        if (n == pos || n == LASTNODE) {
+            break;
+        }
+        prev = map->slots + n;
+    }
+    return n == pos ? prev : NULL;
+}
+
+bmapnode* nextfree(bmap *map)
+{
+    bmapnode *base = map->slots;
+    while (map->lastfree >= base) {
+        if (isnil(map->lastfree)) {
+            return map->lastfree;
+        }
+        --map->lastfree;
+    }
+    return NULL;
+}
+
 static bmapnode* insert(bmap *map, bvalue *key, uint32_t hash)
 {
     bmapnode *slot = hash2slot(map, hash);
     if (isnil(slot)) { /* empty slot */
-        setslot:
         setkey(slot, key);
         next(slot) = LASTNODE;
     } else {
-        uint32_t hash = hashcode(key(slot));
-        bmapnode *new = map->freelist; /* get a next slot */
-        int n = next(new);
-        map->freelist = n != LASTNODE ? (map->slots + n) : NULL;
-        if (hash2slot(map, hash) == slot) { /* old is main slot */
+        uint32_t hash = hashcode(key(slot)); /* get the hashcode of the exist node */
+        bmapnode *mainslot = hash2slot(map, hash); /* get the main-slot */
+        bmapnode *new = nextfree(map); /* get a free slot */
+        if (mainslot == slot) { /* old is main slot */
             /* insert in first */
             setkey(new, key);
             next(new) = next(slot);
-            next(slot) = new - map->slots;
+            next(slot) = pos(map, new);;
             slot = new;
         } else {
+            bmapnode *prev = findprev(map, mainslot, slot);
+            next(prev) = pos(map, new); /* link the previous node */
             *new = *slot; /* copy to new slot */
-            goto setslot;
+            setkey(slot, key);
+            next(slot) = LASTNODE;
         }
     }
     return slot;
@@ -109,25 +137,23 @@ static bmapnode* find(bmap *map, bvalue *key, uint32_t hash)
 
 static void resize(bmap *map, int size)
 {
-    int i;
-    bmapnode *slots;
+    int i, oldsize;
+    bmapnode *slots, *oldslots;
     if (size < map->count) {
         return;
     }
+    oldsize = map->size;
+    oldslots = map->slots;
     slots = be_malloc(sizeof(bmapnode) * size);
     for (i = 0; i < size; ++i) {
-        next(slots + i) = i + 1;
+        setnil(slots + i);
     }
-    next(slots + size - 1) = LASTNODE;
-    i = map->size;
     map->size = size;
-    map->freelist = slots;
-    slots = map->slots;
-    map->slots = map->freelist;
-    size = i;
+    map->slots = slots;
+    map->lastfree = slots + size - 1;
     /* rehash */
-    for (i = 0; i < size; ++i) {
-        bmapnode *node = map->slots + i;
+    for (i = 0; i < oldsize; ++i) {
+        bmapnode *node = oldslots + i;
         if (!isnil(node)) {
             bvalue v;
             v.type = node->key.type;
@@ -135,7 +161,7 @@ static void resize(bmap *map, int size)
             insert(map, &v, hashcode(&v));
         }
     }
-    be_free(slots);
+    be_free(oldslots);
 }
 
 bmap* be_map_new(bvm *vm)
@@ -168,7 +194,7 @@ bvalue* be_map_insert(bmap *map, bvalue *key, bvalue *value)
     uint32_t hash = hashcode(key);
     bmapnode *entry = find(map, key, hash);
     if (!entry) { /* new entry */
-        if (map->count > map->size) {
+        if (map->count >= map->size) {
             resize(map, map->size << 1);
         }
         entry = insert(map, key, hash);
@@ -188,17 +214,29 @@ void be_map_remove(bmap *map, bvalue *key)
     if (eq_entry(slot, key, hash)) { /* first node */
         int n = next(slot);
         if (n != LASTNODE) { /* has next ? */
-            bmapnode *next = map->slots + n;
-            *slot = map->slots[n];
+            bmapnode *next = pos2slot(map, n);
+            *slot = *next;
         }
-        /* add to free list */
-        next(slot) = map->freelist ? pos(map, map->freelist) : LASTNODE;
-        map->freelist = slot;
+    } else {
+        for (;;) {
+            int n = next(slot);
+            bmapnode *next = pos2slot(map, n);
+            if (next == NULL) {
+                return;
+            }
+            if (eq_entry(slot, key, hash)) {
+                break;
+            }
+            slot = next;
+        }
+    }
+    /* set to nil */
+    setnil(slot);
+    /* add to lastfree */
+    if (map->lastfree < slot) {
+        map->lastfree = slot;
     }
     --map->count;
-    if (map->count >> 1 < map->size && map->size > MAP_DEF_SIZE) {
-        resize(map, map->size >> 1);
-    }
 }
 
 bvalue* be_map_findstr(bmap *map, bstring *key)
@@ -232,19 +270,22 @@ bmapiter be_map_iter(void)
 
 bmapnode* be_map_next(bmap *map, bmapiter *iter)
 {
-    if (iter->node) {
-        iter->node = iter->node->next;
-        if (iter->node == NULL) {
-            goto nextslot;
+    bmapnode *end = map->slots + map->size;
+
+    iter->node = iter->node ? iter->node + 1 : map->slots;
+    while (isnil(iter->node)) {
+        ++iter->node;
+        if (iter->node >= end) {
+            return NULL;
         }
-    } else {
-        nextslot:
-        do {
-            if (++iter->slotidx >= map->size) {
-                return NULL;
-            }
-            iter->node = map->slots[iter->slotidx];
-        } while (iter->node == NULL);
     }
     return iter->node;
+}
+
+bvalue be_map_node2key(bmapnode *node)
+{
+    bvalue v;
+    v.type = node->key.type;
+    v.v = node->key.v;
+    return v;
 }

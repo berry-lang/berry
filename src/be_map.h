@@ -18,7 +18,7 @@ typedef struct bmapnode {
 struct bmap {
     bcommon_header;
     bmapnode *slots;
-    bmapnode *freelist;
+    bmapnode *lastfree;
     int size;
     int count;
 };
@@ -41,5 +41,6 @@ bvalue* be_map_insertstr(bmap *map, bstring *key, bvalue *value);
 void be_map_removestr(bmap *map, bstring *key);
 bmapiter be_map_iter(void);
 bmapnode* be_map_next(bmap *map, bmapiter *iter);
+bvalue be_map_node2key(bmapnode *node);
 
 #endif

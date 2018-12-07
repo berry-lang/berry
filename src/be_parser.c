@@ -200,7 +200,7 @@ static void setupvals(bfuncinfo *finfo)
     int nupvals = be_map_count(finfo->upval);
 
     if (nupvals) {
-        bmapentry *node;
+        bmapnode *node;
         bmap *map = finfo->upval;
         bmapiter iter = be_map_iter();
         bupvaldesc *upvals = be_malloc(sizeof(bupvaldesc) * nupvals);

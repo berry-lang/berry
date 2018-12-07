@@ -598,7 +598,7 @@ static int list_hasnext(bvm *vm, bvalue *v)
 static int map_next(bvm *vm, bvalue *v)
 {
     bmapiter iter;
-    bmapentry *entry;
+    bmapnode *entry;
     bvalue *dst = vm->top;
     bvalue *idx = index2value(vm, -2);
     bvalue *node = index2value(vm, -1);
@@ -608,7 +608,8 @@ static int map_next(bvm *vm, bvalue *v)
     var_setint(idx, iter.slotidx);
     var_setobj(node, BE_COMPTR, iter.node);
     if (entry) {
-        var_setval(dst, &entry->key);
+        bvalue vk = be_map_node2key(entry);
+        var_setval(dst, &vk);
         var_setval(dst + 1, &entry->value);
         vm->top += 2;
         return 2;
