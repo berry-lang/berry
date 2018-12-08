@@ -25,12 +25,15 @@
 #define scan_next_token(parser) (be_lexer_scan_next(&(parser)->lexer))
 #define next_token(parser)      ((parser)->lexer.token)
 #define max(a, b)               ((a) > (b) ? (a) : (b))
+#define token2str(parser)       be_token2str((parser)->vm, &next_token(parser))
 
 #define upval_index(v)          ((v) & 0xFF)
 #define upval_target(v)         ((bbyte)(((v) >> 8) & 0xFF))
 #define upval_instack(v)        ((bbyte)(((v) >> 16) != 0))
 #define upval_desc(i, t, s)     (((i) & 0xFF) | (((t) & 0xFF) << 8) \
                                 | (((s) != 0) << 16))
+
+#define parser_error(p, msg)    be_lexerror(&(p)->lexer, msg)
 
 typedef struct {
     blexer lexer;
@@ -49,59 +52,15 @@ static const int binary_op_prio_tab[] = {
     5, 5, 5, 5, 5, 5, 6, 4, 3 /* < <= == != > >= .. && || */
 };
 
-static void parser_throw(bparser *parser)
-{
-    bvm *vm = parser->vm;
-    bfuncinfo *finfo = parser->finfo;
-    while (finfo) {
-        be_gc_unfix(vm, gc_object(finfo->local));
-        be_gc_unfix(vm, gc_object(finfo->upval));
-        be_gc_unfix(vm, gc_object(finfo->proto));
-        be_vector_delete(finfo->code);
-        be_vector_delete(finfo->kvec);
-        be_vector_delete(finfo->pvec);
-        finfo = finfo->prev;
-    }
-    be_lexer_deinit(&parser->lexer);
-    be_gc_unfix(vm, gc_object(parser->cl));
-    be_throw(vm, 1);
-}
-
-static void parser_error(bparser *parser, const char *msg, const char *tk)
-{
-    bvm *vm = parser->vm;
-    blexer *lexer = &parser->lexer;
-    be_pushfstring(vm, "%s:%d: '%s' %s", lexer->fname, lexer->linepos, tk, msg);
-    parser_throw(parser);
-}
-
 static void match_token(bparser *parser, btokentype type)
 {
     if (next_token(parser).type != type) {
         bvm *vm = parser->vm;
-        blexer *lexer = &parser->lexer;
         btoken *token = &next_token(parser);
-        const char *s = be_token2str(type);
-        switch (token->type) {
-        case TokenString:
-        case TokenId:
-            be_pushfstring(vm, "%s:%d: error: expected '%s' before '%s'",
-                lexer->fname, lexer->linepos, s, str(token->u.s));
-            break;
-        case TokenInteger:
-            be_pushfstring(vm, "%s:%d: error: expected '%s' before '%d'",
-                lexer->fname, lexer->linepos, s, token->u.i);
-            break;
-        case TokenReal:
-            be_pushfstring(vm, "%s:%d: error: expected '%s' before '%g'",
-                lexer->fname, lexer->linepos, s, token->u.r);
-            break;
-        default:
-            be_pushfstring(vm, "%s:%d: error: expected '%s' before '%s'",
-                lexer->fname, lexer->linepos, s, be_token2str(token->type));
-            break;
-        }
-        parser_throw(parser);
+        const char *s1 = be_token2str(vm, token);
+        const char *s2 = be_tokentype2str(type);
+        parser_error(parser, be_pushfstring(vm,
+            "expected '%s' before '%s'", s1, s2));
     }
     scan_next_token(parser);
 }
@@ -109,12 +68,8 @@ static void match_token(bparser *parser, btokentype type)
 static void match_notoken(bparser *parser, btokentype type)
 {
     if (next_token(parser).type == type) {
-        bvm *vm = parser->vm;
-        blexer *lexer = &parser->lexer;
-        be_pushfstring(vm, "%s:%d: error: expected expression before '%s'",
-                lexer->fname, lexer->linepos,
-                be_token2str(next_token(parser).type));
-        parser_throw(parser);
+        parser_error(parser, be_pushfstring(parser->vm,
+            "expected expression before '%s'", token2str(parser)));
     }
 }
 
@@ -122,8 +77,9 @@ static void check_var(bparser *parser, bexpdesc *e)
 {
     if (e->type == ETVOID) {
         bstring *s = e->v.s;
-        parser_error(parser,
-            "undeclared (first use in this function)", str(s));
+        const char *str = s ? str(s) : "";
+        parser_error(parser, be_pushfstring(parser->vm,
+            "'%s' undeclared (first use in this function)", str));
     }
 }
 
@@ -172,12 +128,12 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
 {
     bvm *vm = parser->vm;
     bproto *proto = be_newproto(parser->vm);
+    be_vector_init(&finfo->code, sizeof(binstruction));
+    be_vector_init(&finfo->kvec, sizeof(bvalue));
+    be_vector_init(&finfo->pvec, sizeof(bproto*));
     finfo->prev = parser->finfo;
-    finfo->code = be_vector_new(sizeof(binstruction));
     finfo->local = be_list_new(vm);
     finfo->upval = be_map_new(vm);
-    finfo->kvec = be_vector_new(sizeof(bvalue));
-    finfo->pvec = be_vector_new(sizeof(bproto*));
     finfo->proto = proto;
     finfo->global = parser->global;
     finfo->freereg = 0;
@@ -187,10 +143,16 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     finfo->pc = 0;
     finfo->jpc = NO_JUMP;
     parser->finfo = finfo;
+    proto->code = be_vector_data(&finfo->code);
+    proto->ktab = be_vector_data(&finfo->kvec);
+    proto->ptab = be_vector_data(&finfo->pvec);
     begin_block(finfo, binfo, 0);
-    be_gc_fix(vm, gc_object(finfo->local));
-    be_gc_fix(vm, gc_object(finfo->upval));
-    be_gc_fix(vm, gc_object(finfo->proto));
+    var_setproto(vm->top, finfo->proto);
+    be_stackpush(vm);
+    var_setlist(vm->top, finfo->local);
+    be_stackpush(vm);
+    var_setmap(vm->top, finfo->upval);
+    be_stackpush(vm);
 }
 
 static void setupvals(bfuncinfo *finfo)
@@ -223,7 +185,7 @@ static void end_func(bparser *parser)
     bvm *vm = parser->vm;
     bfuncinfo *finfo = parser->finfo;
     bproto *proto = finfo->proto;
-    binstruction *ins = be_vector_end(finfo->code);
+    binstruction *ins = be_vector_end(&finfo->code);
 
     /* append a return to last code */
     if (!finfo->pc || IGET_OP(*ins) != OP_RET) {
@@ -234,17 +196,16 @@ static void end_func(bparser *parser)
     proto->codesize = finfo->pc;
     proto->nlocal = finfo->nlocal;
     proto->nstack = finfo->nstack;
-    proto->nproto = be_vector_count(finfo->pvec);
-    proto->nconst = be_vector_count(finfo->kvec);
-    proto->code = be_vector_swap_delete(finfo->code);
-    proto->ktab = be_vector_swap_delete(finfo->kvec);
-    proto->ptab = be_vector_swap_delete(finfo->pvec);
+    proto->nproto = be_vector_count(&finfo->pvec);
+    proto->nconst = be_vector_count(&finfo->kvec);
+    proto->code = be_vector_release(&finfo->code);
+    proto->ktab = be_vector_release(&finfo->kvec);
+    proto->ptab = be_vector_release(&finfo->pvec);
     parser->finfo = parser->finfo->prev;
-    be_gc_unfix(vm, gc_object(finfo->local));
-    be_gc_unfix(vm, gc_object(finfo->upval));
+    be_pop(vm, 2); /* pop upval and local */
     be_gc_collect(vm);
     /* proto still needs to be used. */
-    be_gc_unfix(vm, gc_object(finfo->proto));
+    be_pop(vm, 1); /* pop proto */
 }
 
 static btokentype get_binop(bparser *parser)
@@ -272,6 +233,7 @@ static void init_exp(bexpdesc *e, exptype_t type, int i)
     e->t = NO_JUMP;
     e->f = NO_JUMP;
     e->not = 0;
+    e->v.s = NULL;
     e->v.i = i;
 }
 
@@ -588,7 +550,7 @@ static void primary_expr(bparser *parser, bexpdesc *e)
     case OptLBK: /* '(' expr ')' */
         scan_next_token(parser); /* skip '(' */
         expr(parser, e);
-        match_token(parser, OptRBK); /* skip '(' */
+        match_token(parser, OptRBK); /* skip ')' */
         break;
     case TokenId:
         singlevar(parser, e);
@@ -659,6 +621,7 @@ static void assign_expr(bparser *parser)
 {
     int line;
     bexpdesc e;
+    init_exp(&e, ETVOID, 0);
     expr(parser, &e);
     line = parser->lexer.linepos;
     if (next_token(parser).type == OptAssign) { /* '=' */
@@ -672,7 +635,7 @@ static void assign_expr(bparser *parser)
         if (be_code_setvar(parser->finfo, &e, &e1)) {
             parser->lexer.linepos = line;
             parser_error(parser,
-                "try to assign constant expressions.", NULL);
+                "try to assign constant expressions.");
         }
     } else { /* not assign expression */
         check_var(parser, &e);
@@ -691,7 +654,7 @@ static void sub_expr(bparser *parser, bexpdesc *e, int prio)
         sub_expr(parser, e, UNARY_OP_PRIO);
         check_var(parser, e);
         if (be_code_unop(finfo, op, e)) { /* encode unary op */
-            parser_error(parser, "neg error", NULL);
+            parser_error(parser, "neg error");
         }
     } else {
         simple_expr(parser, e);
@@ -699,6 +662,7 @@ static void sub_expr(bparser *parser, bexpdesc *e, int prio)
     op = get_binop(parser);
     while (op != OP_NOT_BINARY && binary_op_prio(op) > prio) {
         bexpdesc e2;
+        init_exp(&e2, ETVOID, 0);
         scan_next_token(parser);
         check_var(parser, e);
         be_code_prebinop(finfo, op, e); /* and or */
@@ -805,7 +769,7 @@ static void for_itvar(bparser *parser, bexpdesc *e)
         init_exp(e, ETLOCAL, idx);
         scan_next_token(parser);
     } else {
-        parser_error(parser, "for error", NULL);
+        parser_error(parser, "for error");
     }
 }
 
@@ -901,7 +865,7 @@ static void break_stmt(bparser *parser)
     if (b != NULL) { /* connect jump */
         be_code_conjump(f, &b->breaklist, be_code_jump(f));
     } else {
-        parser_error(parser, "break not loop", NULL);
+        parser_error(parser, "break not loop");
     }
 }
 
@@ -912,7 +876,7 @@ static void continue_stmt(bparser *parser)
     if (b != NULL) { /* connect jump */
         be_code_conjump(f, &b->continuelist, be_code_jump(f));
     } else {
-        parser_error(parser, "continue not loop", NULL);
+        parser_error(parser, "continue not loop");
     }
 }
 
@@ -933,10 +897,11 @@ static bstring* func_name(bparser *parser, bexpdesc *e, int ismethod)
             scan_next_token(parser); /* skip '*' */
             return be_newconststr(parser->vm, "-*");
         } else {
-            return be_newconststr(parser->vm, be_token2str(type));
+            return be_newconststr(parser->vm, token2str(parser));
         }
     }
-    parser_error(parser, "token is not identifier.", NULL);
+    parser_error(parser, be_pushfstring(parser->vm,
+        "the token '%s' is not a valid function name.", token2str(parser)));
     return NULL;
 }
 
@@ -956,7 +921,8 @@ static void func_varlist(bparser *parser)
             if (find_localvar(parser->finfo, str) == -1) {
                 new_var(parser, str, &v);
             } else {
-                parser_error(parser, "var-mult-define", NULL);
+                parser_error(parser, be_pushfstring(parser->vm,
+                    "redefinition of '%s'", token2str(parser)));
             }
             scan_next_token(parser); /* skip ID */
         }
@@ -1017,11 +983,11 @@ static void classvar_stmt(bparser *parser, bclass *c)
                 be_member_bind(c, next_token(parser).u.s);
                 scan_next_token(parser);
             } else {
-                parser_error(parser, "class var error", NULL);
+                parser_error(parser, "class var error");
             }
         }
     } else {
-        parser_error(parser, "class var error", NULL);
+        parser_error(parser, "class var error");
     }
 }
 
@@ -1050,7 +1016,7 @@ static void class_block(bparser *parser, bclass *c)
         case KeyVar: classvar_stmt(parser, c); break;
         case KeyDef: classdef_stmt(parser, c); break;
         case OptSemic: scan_next_token(parser); break;
-        default: parser_error(parser, "class error", NULL);
+        default: parser_error(parser, "class error");
         }
     }
 }
@@ -1069,7 +1035,7 @@ static void class_stmt(bparser *parser)
         class_block(parser, c);
         match_token(parser, KeyEnd); /* skip 'end' */
     } else {
-        parser_error(parser, "class name error", NULL);
+        parser_error(parser, "class name error");
     }
 }
 
@@ -1125,13 +1091,14 @@ bclosure* be_parser_source(bvm *vm, const char *fname, const char *text)
     parser.vm = vm;
     parser.finfo = NULL;
     parser.cl = cl;
+    var_setclosure(vm->top, cl);
+    be_stackpush(vm);
     be_gc_setpause(vm, 0); /* stop auto gc */
     be_lexer_init(&parser.lexer, vm);
     be_lexer_set_source(&parser.lexer, fname, text);
     scan_next_token(&parser); /* scan first token */
-    be_gc_fix(vm, gc_object(cl));
     mainfunc(&parser, cl);
-    be_gc_unfix(vm, gc_object(cl));
+    be_pop(vm, 1);
     scan_next_token(&parser); /* clear lexer */
     be_lexer_deinit(&parser.lexer);
     return cl;

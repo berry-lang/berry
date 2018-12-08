@@ -74,18 +74,23 @@ int be_protectedcall(bvm *vm, bvalue *v, int argc)
 {
     int res;
     struct pcall s;
-    int calldepth = be_vector_count(vm->callstack);
+    int calldepth = be_vector_count(&vm->callstack);
     bvalue *reg = vm->reg, *top = vm->top;
     s.v = v;
     s.argc = argc;
     res = be_execprotected(vm, m_pcall, &s);
     if (res) { /* recovery call stack */
         int idx = vm->top - reg;
-        be_vector_resize(vm->callstack, calldepth);
+        be_vector_resize(&vm->callstack, calldepth);
         vm->reg = reg;
         vm->top = top;
-        vm->cf = be_stack_top(vm->callstack);
+        vm->cf = be_stack_top(&vm->callstack);
         be_pushvalue(vm, idx); /* copy error infomation */
     }
     return res;
+}
+
+void be_stackpush(bvm *vm)
+{
+    vm->top++;
 }

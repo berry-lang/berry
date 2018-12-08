@@ -82,8 +82,10 @@ typedef struct blexer {
 
 void be_lexer_init(blexer *lexer, bvm *vm);
 void be_lexer_deinit(blexer *lexer);
+void be_lexerror(blexer *lexer, const char *msg);
 void be_lexer_set_source(blexer *lexer, const char *fname, const char *text);
 int be_lexer_scan_next(blexer *lexer);
-const char* be_token2str(btokentype type);
+const char* be_token2str(bvm *vm, btoken *token);
+const char* be_tokentype2str(btokentype type);
 
 #endif

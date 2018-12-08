@@ -52,12 +52,12 @@ typedef struct bfuncinfo {
     bproto *proto;
     struct bfuncinfo *prev;
     bblockinfo *binfo; /* block infomation */
-    struct bvector *code;
+    bvector code;
     blist *local; /* local variable */
     bmap *upval; /* upvalue variable */
-    struct bvector *global; /* global variable */
-    struct bvector *kvec; /* constants table */
-    struct bvector *pvec; /* proto table */
+    bvector *global; /* global variable */
+    bvector kvec; /* constants table */
+    bvector pvec; /* proto table */
     int pc; /* program count */
     int jpc;  /* list of pending jumps to 'pc' */
     bbyte nlocal; /* local variable count */

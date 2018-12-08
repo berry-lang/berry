@@ -5,7 +5,7 @@
 
 typedef struct bglobaldesc {
     bmap *idxtab; /* global variable index table */
-    struct bvector *gvalist; /* global variable list */
+    bvector gvalist; /* global variable list */
     int nglobal; /* global variable count */
 } bglobaldesc;
 
@@ -23,7 +23,7 @@ struct bvm {
     bvalue *global; /* global variable vector */
     bvalue *stack; /* stack space */
     bupval *upvalist; /* open upvalue list */
-    struct bvector *callstack; /* function call stack */
+    bstack callstack; /* function call stack */
     bglobaldesc gbldesc; /* global description */
     bcallframe *cf; /* function call frame */
     bvalue *reg;

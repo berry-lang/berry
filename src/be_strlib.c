@@ -110,7 +110,7 @@ static void pushstr(bvm *vm, const char *s, int len)
     var_setstr(reg, str);
 }
 
-static void concat2(bvm *vm)
+static const char* concat2(bvm *vm)
 {
     bvalue *dst = vm->top - 2;
     bstring *s1 = var_tostr(dst);
@@ -118,9 +118,10 @@ static void concat2(bvm *vm)
     bstring *s = be_strcat(vm, s1, s2);
     var_setstr(dst, s);
     --vm->top;
+    return str(s);
 }
 
-void be_pushvfstr(bvm *vm, const char *format, va_list arg)
+const char*  be_pushvfstr(bvm *vm, const char *format, va_list arg)
 {
     pushstr(vm, "", 0);
     for (;;) {
@@ -170,5 +171,5 @@ void be_pushvfstr(bvm *vm, const char *format, va_list arg)
         format = p + 2;
     }
     pushstr(vm, format, strlen(format));
-    concat2(vm);
+    return concat2(vm);
 }

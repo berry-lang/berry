@@ -234,12 +234,14 @@ void be_pushstring(bvm *vm, const char *str)
     var_setstr(reg, s);
 }
 
-void be_pushfstring(bvm *vm, const char *format, ...)
+const char* be_pushfstring(bvm *vm, const char *format, ...)
 {
+    const char* s;
     va_list arg_ptr;
     va_start(arg_ptr, format);
-    be_pushvfstr(vm, format, arg_ptr);
+    s = be_pushvfstr(vm, format, arg_ptr);
     va_end(arg_ptr);
+    return s;
 }
 
 void be_pushvalue(bvm *vm, int index)

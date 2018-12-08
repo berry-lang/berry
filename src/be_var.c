@@ -8,8 +8,8 @@
 void be_globalvar_init(bvm *vm)
 {
     vm->gbldesc.idxtab = be_map_new(vm);
-    vm->gbldesc.gvalist = be_vector_new(sizeof(bvalue));
     vm->gbldesc.nglobal = 0;
+    be_vector_init(&vm->gbldesc.gvalist, sizeof(bvalue));
     be_gc_fix(vm, gc_object(vm->gbldesc.idxtab));
 }
 
@@ -31,8 +31,8 @@ int be_globalvar_new(bvm *vm, bstring *name)
         idx = be_map_count(gd->idxtab);
         desc = be_map_insertstr(gd->idxtab, name, NULL);
         var_setint(desc, idx);
-        be_vector_resize(gd->gvalist, idx + 1);
-        vm->global = be_vector_data(gd->gvalist);
+        be_vector_resize(&gd->gvalist, idx + 1);
+        vm->global = be_vector_data(&gd->gvalist);
         var_setnil(vm->global + gd->nglobal); /* set the new variable to nil */
         gd->nglobal++;
     }

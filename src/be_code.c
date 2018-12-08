@@ -22,7 +22,8 @@ static int var2reg(bfuncinfo *finfo, bexpdesc *e, int dst);
 static int codeinst(bfuncinfo *finfo, binstruction ins)
 {
     /* put new instruction in code array */
-    be_vector_append(finfo->code, &ins);
+    be_vector_append(&finfo->code, &ins);
+    finfo->proto->code = be_vector_data(&finfo->code);
     return finfo->pc++;
 }
 
@@ -63,7 +64,7 @@ int be_code_allocregs(bfuncinfo *finfo, int count)
 
 static void setjump(bfuncinfo *finfo, int pc, int dst)
 {
-    binstruction *p = be_vector_at(finfo->code, pc);
+    binstruction *p = be_vector_at(&finfo->code, pc);
     int offset = dst - (pc + 1);
     /* instruction edit jump destination */
     *p = (*p & ~IBx_MASK) | ISET_sBx(offset);
@@ -71,7 +72,7 @@ static void setjump(bfuncinfo *finfo, int pc, int dst)
 
 static int isjumpbool(bfuncinfo *finfo, int pc)
 {
-    binstruction *p = be_vector_at(finfo->code, pc);
+    binstruction *p = be_vector_at(&finfo->code, pc);
     bopcode op = IGET_OP(*p);
 
     if (op == OP_JMPT || op == OP_JMPF) {
@@ -82,7 +83,7 @@ static int isjumpbool(bfuncinfo *finfo, int pc)
 
 static int get_jump(bfuncinfo *finfo, int pc)
 {
-    binstruction *i = be_vector_at(finfo->code, (pc));
+    binstruction *i = be_vector_at(&finfo->code, (pc));
     int offset = IGET_sBx(*i);
     return offset == NO_JUMP ? NO_JUMP : pc + 1 + offset;
 }
@@ -168,38 +169,24 @@ void be_code_patchjump(bfuncinfo *finfo, int jmp)
     dischargejpc(finfo);  /* 'pc' will change */
 }
 
-static int newconst(bfuncinfo *finfo, bexpdesc *e)
+static int newconst(bfuncinfo *finfo, bvalue *k)
 {
-    bvalue k;
-    int idx = be_vector_count(finfo->kvec);
-    switch (e->type) {
-    case ETINT:
-        k.type = BE_INT;
-        k.v.i = e->v.i;
-        break;
-    case ETREAL:
-        k.type = BE_REAL;
-        k.v.r = e->v.r;
-        break;
-    case ETSTRING:
-        k.type = BE_STRING;
-        k.v.s = e->v.s;
-        break;
-    default:
-        break;
+    int idx = be_vector_count(&finfo->kvec);
+    be_vector_append(&finfo->kvec, k);
+    finfo->proto->ktab = be_vector_data(&finfo->kvec);
+    finfo->proto->nconst = be_vector_count(&finfo->kvec);
+    if (k == NULL) {
+        var_setnil(&finfo->proto->ktab[idx]);
     }
-    be_vector_append(finfo->kvec, &k);
-    finfo->proto->ktab = be_vector_data(finfo->kvec);
-    finfo->proto->nconst = be_vector_count(finfo->kvec);
     return idx;
 }
 
 static int findconst(bfuncinfo *finfo, bexpdesc *e)
 {
-    int i, count = be_vector_count(finfo->kvec);
+    int i, count = be_vector_count(&finfo->kvec);
 
     for (i = 0; i < count; ++i) {
-        bvalue *k = be_vector_at(finfo->kvec, i);
+        bvalue *k = be_vector_at(&finfo->kvec, i);
         switch (e->type) {
         case ETINT:
             if (k->type == BE_INT && k->v.i == e->v.i) {
@@ -226,9 +213,25 @@ static int findconst(bfuncinfo *finfo, bexpdesc *e)
 static int exp2const(bfuncinfo *finfo, bexpdesc *e)
 {
     int idx = findconst(finfo, e);
-
     if (idx == -1) {
-        idx = newconst(finfo, e);
+        bvalue k;
+        switch (e->type) {
+        case ETINT:
+            k.type = BE_INT;
+            k.v.i = e->v.i;
+            break;
+        case ETREAL:
+            k.type = BE_REAL;
+            k.v.r = e->v.r;
+            break;
+        case ETSTRING:
+            k.type = BE_STRING;
+            k.v.s = e->v.s;
+            break;
+        default:
+            break;
+        }
+        idx = newconst(finfo, &k);
     }
     e->type = ETCONST;
     e->v.idx = setK(idx);
@@ -497,7 +500,7 @@ int be_code_nextreg(bfuncinfo *finfo, bexpdesc *e)
 
 void be_code_getmethod(bfuncinfo *finfo)
 {
-    binstruction *p = be_vector_end(finfo->code);
+    binstruction *p = be_vector_end(&finfo->code);
     *p = (*p & IAx_MASK) | ISET_OP(OP_GETMET);
     be_code_allocregs(finfo, 1);
 }
@@ -509,12 +512,12 @@ void be_code_call(bfuncinfo *finfo, int base, int argc)
 
 void be_code_closure(bfuncinfo *finfo, bexpdesc *e, bproto *proto)
 {
-    int idx = be_vector_count(finfo->pvec);
+    int idx = be_vector_count(&finfo->pvec);
     int reg = e->type == ETGLOBAL ? finfo->freereg: e->v.idx;
     /* append proto to current function proto table */
-    be_vector_append(finfo->pvec, &proto);
-    finfo->proto->ptab = be_vector_data(finfo->pvec);
-    finfo->proto->nproto = be_vector_count(finfo->pvec);
+    be_vector_append(&finfo->pvec, &proto);
+    finfo->proto->ptab = be_vector_data(&finfo->pvec);
+    finfo->proto->nproto = be_vector_count(&finfo->pvec);
     codeABx(finfo, OP_CLOSURE, reg, idx); /* load closure to register */
     if (e->type == ETGLOBAL) { /* store to grobal R(A) -> G(Bx) */
         codeABx(finfo, OP_SETGBL, reg, e->v.idx);
@@ -568,10 +571,9 @@ void be_code_index(bfuncinfo *finfo, bexpdesc *c, bexpdesc *k)
 
 bvalue* be_code_localobject(bfuncinfo *finfo, int dst)
 {
-    int src = be_vector_count(finfo->kvec);
-    be_vector_append(finfo->kvec, NULL);
+    int src = newconst(finfo, NULL);
     code_move(finfo, dst, setK(src));
-    return be_vector_end(finfo->kvec);
+    return be_vector_end(&finfo->kvec);
 }
 
 void be_code_setsuper(bfuncinfo *finfo, bexpdesc *c, bexpdesc *s)

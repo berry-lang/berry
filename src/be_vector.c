@@ -9,22 +9,18 @@
 #define addr_region(a, s)       (addr_pos((a), sizeof(s)))
 #define addr_base(a, s)         (addr_pos((a), -(int)sizeof(s)))
 
-bvector* be_vector_new(int size)
+void be_vector_init(bvector *vector, int size)
 {
-    bvector *vector = be_malloc(sizeof(bvector));
     vector->capacity = VECTOR_DEFAULT_SIZE;
     vector->count = 0;
     vector->size = size;
     vector->data = be_malloc((size_t)vector->capacity * size);
     vector->end = (char*)vector->data - size;
-    return vector;
 }
 
 void be_vector_delete(bvector *vector)
 {
-    bvector *obj = vector;
-    be_free(obj->data);
-    be_free(obj);
+    be_free(vector->data);
 }
 
 void* be_vector_at(bvector *vector, int index)
@@ -78,7 +74,7 @@ void be_vector_clear(bvector *vector)
 }
 
 /* free not used */
-void be_vector_release(bvector *vector)
+void* be_vector_release(bvector *vector)
 {
     if (vector->count < vector->capacity) {
         size_t size = vector->size;
@@ -87,16 +83,7 @@ void be_vector_release(bvector *vector)
         vector->data = be_realloc(vector->data, vector->capacity * size);
         vector->end = (char*)vector->data + (vector->count - 1) * size;
     }
-}
-
-/* delete vector but exclude data */
-void* be_vector_swap_delete(bvector *vector)
-{
-    void *data;
-    be_vector_release(vector);
-    data = vector->data;
-    be_free(vector);
-    return data;
+    return vector->data;
 }
 
 int be_nextpow(int v)

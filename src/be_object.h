@@ -49,6 +49,11 @@ typedef struct bstring {
     */
 } bstring;
 
+typedef struct bvector {
+    int count, capacity, size;
+    void *data, *end;
+} bvector, bstack;
+
 union bvaldata {
     bbool b;        /* boolean */
     breal r;        /* real number */
@@ -153,6 +158,9 @@ struct bntvclos {
 #define var_setclosure(_v, _o)  var_setobj(_v, BE_CLOSURE, _o)
 #define var_setntvclos(_v, _o)  var_setobj(_v, BE_NTVCLOS, _o)
 #define var_setntvfunc(_v, _o)  var_setobj(_v, BE_NTVFUNC, _o)
+#define var_setlist(_v, _o)     var_setobj(_v, BE_LIST, _o)
+#define var_setmap(_v, _o)      var_setobj(_v, BE_MAP, _o)
+#define var_setproto(_v, _o)    var_setobj(_v, BE_PROTO, _o)
 
 #define var_tobool(_v)          ((_v)->v.b)
 #define var_toint(_v)           ((_v)->v.i)

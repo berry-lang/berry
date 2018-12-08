@@ -71,8 +71,8 @@
 /* script closure call */
 #define push_closure(_vm, _f, _ns, _t) { \
     bcallframe *_cf; \
-    be_stack_push(_vm->callstack, NULL); \
-    _cf = be_stack_top(_vm->callstack); \
+    be_stack_push(&_vm->callstack, NULL); \
+    _cf = be_stack_top(&_vm->callstack); \
     _cf->func = _t ? _f - 1 : _f; \
     _cf->top = _vm->top; \
     _cf->reg = _vm->reg; \
@@ -85,8 +85,8 @@
 
 #define push_native(_vm, _f, _ns, _t) { \
     bcallframe *_cf; \
-    be_stack_push(_vm->callstack, NULL); \
-    _cf = be_stack_top(_vm->callstack); \
+    be_stack_push(&_vm->callstack, NULL); \
+    _cf = be_stack_top(&_vm->callstack); \
     _cf->func = _t ? _f - 1 : _f; \
     _cf->top = _vm->top; \
     _cf->reg = _vm->reg; \
@@ -98,8 +98,8 @@
 
 #define ret_native(_vm) { \
     bcallframe *_cf = _vm->cf; \
-    be_stack_pop(_vm->callstack); \
-    _vm->cf = be_stack_top(_vm->callstack); \
+    be_stack_pop(&_vm->callstack); \
+    _vm->cf = be_stack_top(&_vm->callstack); \
     _vm->reg = _cf->reg; \
     _vm->top = _cf->top; \
 }
@@ -368,13 +368,13 @@ static void i_return(bvm *vm, binstruction ins)
     } else {
         var_setnil(ret);
     }
-    be_stack_pop(vm->callstack); /* pop don't delete */
+    be_stack_pop(&vm->callstack); /* pop don't delete */
     vm->reg = cf->reg;
     vm->top = cf->top;
     if (cf->status & BASE_FRAME) { /* entrance function */
         vm->cf = NULL; /* mainfunction return */
     } else {
-        vm->cf = be_stack_top(vm->callstack);
+        vm->cf = be_stack_top(&vm->callstack);
     }
 }
 
@@ -531,8 +531,8 @@ bvm* be_newvm(int nstack)
     be_gc_init(vm);
     be_string_init(vm);
     be_globalvar_init(vm);
+    be_stack_init(&vm->callstack, sizeof(bcallframe));
     vm->stack = be_malloc(sizeof(bvalue) * nstack);
-    vm->callstack = be_stack_new(sizeof(bcallframe));
     vm->stacksize = nstack;
     vm->cf = NULL;
     vm->upvalist = NULL;
@@ -589,7 +589,7 @@ static void vm_exec(bvm *vm)
         case OP_RET: i_return(vm, ins); goto retpoint;
         default: retpoint:
             if (vm->cf == NULL) {
-                bstack *cs = vm->callstack;
+                bstack *cs = &vm->callstack;
                 if (!be_stack_isempty(cs)) {
                     vm->cf = be_stack_top(cs);
                 }

@@ -2,7 +2,7 @@
 #include "be_string.h"
 #include "be_mem.h"
 #include "be_gc.h"
-#include "be_debug.h"
+#include "be_exec.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -25,6 +25,15 @@ static const char* kwords_tab[] = {
         "def", "end", "class", "break", "continue",
         "return", "true", "false", "nil", "var", "do"
 };
+
+void be_lexerror(blexer *lexer, const char *msg)
+{
+    bvm *vm = lexer->vm;
+    be_pushfstring(vm, "%s:%d: error: %s",
+                   lexer->fname, lexer->linepos, msg);
+    be_lexer_deinit(lexer);
+    be_throw(vm, 1);
+}
 
 static void keyword_registe(bvm *vm)
 {
@@ -74,12 +83,6 @@ static int check_next(blexer *lexer, int c)
     return 0;
 }
 
-static void lexer_error(blexer *lexer, const char *err)
-{
-    be_printf("%s:%d: %s\n", lexer->fname, lexer->linepos, err);
-    be_abort();
-}
-
 static char* lexer_resize_data(blexer *lexer, int len)
 {
     int size = len > SHORT_STR_LEN ? len : SHORT_STR_LEN;
@@ -110,7 +113,7 @@ static int check2hex(blexer *lexer, int c)
 {
     c = char2hex(c);
     if (c < 0) {
-        lexer_error(lexer, "hexadecimal digit expected.");
+        be_lexerror(lexer, "hexadecimal digit expected.");
     }
     return c;
 }
@@ -130,7 +133,7 @@ static int read_oct(blexer *lexer, const char *src)
         c = 8 * c + *src++ - '0';
     }
     if (i < 3 && !(c == '\0' && i == 1)) {
-        lexer_error(lexer, "octal escape too few.");
+        be_lexerror(lexer, "octal escape too few.");
     }
     return c;
 }
@@ -143,7 +146,7 @@ static void tr_string(blexer *lexer, const char *src, const char *end)
         int c = *src++;
         switch (c) {
         case '\n': case '\r':
-            lexer_error(lexer, "unfinished string.");
+            be_lexerror(lexer, "unfinished string.");
             break;
         case '\\':
             switch (*src) {
@@ -219,7 +222,7 @@ static int scan_realexp(blexer *lexer)
             c = *next(lexer);
         }
         if (!is_digit(c)) {
-            lexer_error(lexer, "number error.");
+            be_lexerror(lexer, "number error.");
         }
         match(lexer, is_digit);
         return 1;
@@ -253,7 +256,7 @@ static int scan_hex(blexer *lexer)
         ++cnt;
     }
     if (cnt == 0 || cnt > 8) {
-        lexer_error(lexer, "hexadecimal number error.");
+        be_lexerror(lexer, "hexadecimal number error.");
     }
     return res;
 }
@@ -327,7 +330,7 @@ static btokentype opt_and(blexer *lexer)
 {
     next(lexer);
     if (!check_next(lexer, '&')) {
-        lexer_error(lexer, "operator '&&' spelling mistakes");
+        be_lexerror(lexer, "operator '&&' spelling mistakes");
     }
     return OptAnd;
 }
@@ -336,7 +339,7 @@ static btokentype opt_or(blexer *lexer)
 {
     next(lexer);
     if (!check_next(lexer, '|')) {
-        lexer_error(lexer, "operator '||' spelling mistakes");
+        be_lexerror(lexer, "operator '||' spelling mistakes");
     }
     return OptOr;
 }
@@ -428,7 +431,6 @@ int be_lexer_scan_next(blexer *lexer)
     btokentype type;
 
     if (lgetc(lexer) == '\0') { /* clear lexer */
-        lexer->cursor = lexer->line;
         be_free(lexer->data);
         lexer->data = NULL;
         lexer->size = 0;
@@ -445,7 +447,22 @@ int be_lexer_scan_next(blexer *lexer)
     return 1;
 }
 
-const char* be_token2str(btokentype type)
+const char* be_token2str(bvm *vm, btoken *token)
+{
+    switch (token->type) {
+    case TokenString:
+    case TokenId:
+        return str(token->u.s);
+    case TokenInteger:
+        return be_pushfstring(vm, "%d", token->u.i);
+    case TokenReal:
+        return be_pushfstring(vm, "%g", token->u.r);
+    default:
+        return kwords_tab[token->type];
+    }
+}
+
+const char* be_tokentype2str(btokentype type)
 {
     return kwords_tab[type];
 }
