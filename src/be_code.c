@@ -184,7 +184,6 @@ static int newconst(bfuncinfo *finfo, bvalue *k)
 static int findconst(bfuncinfo *finfo, bexpdesc *e)
 {
     int i, count = be_vector_count(&finfo->kvec);
-
     for (i = 0; i < count; ++i) {
         bvalue *k = be_vector_at(&finfo->kvec, i);
         switch (e->type) {

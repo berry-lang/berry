@@ -159,13 +159,11 @@ static void setupvals(bfuncinfo *finfo)
 {
     bproto *proto = finfo->proto;
     int nupvals = be_map_count(finfo->upval);
-
     if (nupvals) {
         bmapnode *node;
         bmap *map = finfo->upval;
         bmapiter iter = be_map_iter();
         bupvaldesc *upvals = be_malloc(sizeof(bupvaldesc) * nupvals);
-
         while ((node = be_map_next(map, &iter)) != NULL) {
             uint32_t v = (uint32_t)node->value.v.i;
             int idx = upval_index(v);

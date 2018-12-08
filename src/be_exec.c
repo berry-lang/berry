@@ -58,10 +58,18 @@ static void m_parser(bvm *vm, void *data)
 
 int be_protectedparser(bvm *vm, const char *fname, const char *text)
 {
+    int res;
     struct pparser s;
+    bvalue *top = vm->top;
     s.fname = fname;
     s.source = text;
-    return be_execprotected(vm, m_parser, &s);
+    res = be_execprotected(vm, m_parser, &s);
+    if (res) { /* recovery call stack */
+        int idx = vm->top - vm->reg;
+        vm->top = top;
+        be_pushvalue(vm, idx); /* copy error infomation */
+    }
+    return res;
 }
 
 static void m_pcall(bvm *vm, void *data)
