@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define MAX_INDENT      30
+#define MAX_INDENT      12
 #define INDENT_WIDTH    4
 
 static const char* parser_value(bvm *vm, const char *json);
@@ -106,9 +106,10 @@ static const char* parser_field(bvm *vm, const char *json)
                     return json;
                 }
             }
+            be_pop(vm, 1); /* pop key */
         }
     }
-    return json;
+    return NULL;
 }
 
 static const char* parser_object(bvm *vm, const char *json)
@@ -130,12 +131,12 @@ static const char* parser_object(bvm *vm, const char *json)
             }
         }
     }
-    if (match_char(json, '}') == NULL) {
+    if ((json = match_char(json, '}')) == NULL) {
         be_pop(vm, 1); /* pop map */
         return NULL;
     }
     json2berry(vm, "map");
-    return json + 1;
+    return json;
 }
 
 static const char* parser_array(bvm *vm, const char *json)
@@ -161,12 +162,12 @@ static const char* parser_array(bvm *vm, const char *json)
             be_pop(vm, 1); /* pop value */
         }
     }
-    if (match_char(json, ']') == NULL) {
+    if ((json = match_char(json, ']')) == NULL) {
         be_pop(vm, 1); /* pop map */
         return NULL;
     }
     json2berry(vm, "list");
-    return json + 1;
+    return json;
 }
 
 static const char* parser_number(bvm *vm, const char *json)
@@ -222,16 +223,16 @@ static int m_json_load(bvm *vm)
 
 static void make_indent(bvm *vm, int stridx, int indent)
 {
-    int i, idx = be_absindex(vm, stridx);
-    char buf[MAX_INDENT * INDENT_WIDTH + 1];
-    indent = (indent < MAX_INDENT ? indent : MAX_INDENT) * INDENT_WIDTH;
-    for (i = 0; i < indent; ++i) {
-        buf[i] = ' ';
+    if (indent) {
+        char buf[MAX_INDENT * INDENT_WIDTH + 1];
+        indent = (indent < MAX_INDENT ? indent : MAX_INDENT) * INDENT_WIDTH;
+        memset(buf, ' ', indent);
+        buf[indent] = '\0';
+        stridx = be_absindex(vm, stridx);
+        be_pushstring(vm, buf);
+        be_strconcat(vm, stridx);
+        be_pop(vm, 1);
     }
-    buf[indent] = '\0';
-    be_pushstring(vm, buf);
-    be_strconcat(vm, idx);
-    be_pop(vm, 1);
 }
 
 static void object_tostr(bvm *vm, int *indent, int idx, int fmt)
@@ -241,7 +242,7 @@ static void object_tostr(bvm *vm, int *indent, int idx, int fmt)
     be_pushiter(vm, -2); /* map iterator use 1 register */
     *indent += fmt;
     while (be_hasnext(vm, -3)) {
-        make_indent(vm, -2, *indent);
+        make_indent(vm, -2, fmt ? *indent : 0);
         be_next(vm, -3);
         /* key.tostring() */
         json2str(vm, indent, -2, fmt);
@@ -266,7 +267,7 @@ static void object_tostr(bvm *vm, int *indent, int idx, int fmt)
     }
     *indent -= fmt;
     be_pop(vm, 1); /* pop iterator */
-    make_indent(vm, -1, *indent);
+    make_indent(vm, -1,  fmt ? *indent : 0);
     be_pushstring(vm, "}");
     be_strconcat(vm, -2);
     be_moveto(vm, -2, -3);
@@ -280,7 +281,7 @@ static void array_tostr(bvm *vm, int *indent, int idx, int fmt)
     be_pushiter(vm, -2);
     *indent += fmt;
     while (be_hasnext(vm, -3)) {
-        make_indent(vm, -2, *indent);
+        make_indent(vm, -2,  fmt ? *indent : 0);
         be_next(vm, -3);
         json2str(vm, indent, -1, fmt);
         be_strconcat(vm, -4);
@@ -297,7 +298,7 @@ static void array_tostr(bvm *vm, int *indent, int idx, int fmt)
     }
     *indent -= fmt;
     be_pop(vm, 1); /* pop iterator */
-    make_indent(vm, -1, *indent);
+    make_indent(vm, -1,  fmt ? *indent : 0);
     be_pushstring(vm, "]");
     be_strconcat(vm, -2);
     be_moveto(vm, -2, -3);

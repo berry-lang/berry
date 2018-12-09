@@ -2,11 +2,11 @@
 
 static int m_init(bvm *vm)
 {
-    if (be_islist(vm, 2)) {
+    int i, argc = be_top(vm);
+    if (argc > 1 && be_islist(vm, 2)) {
         be_pushvalue(vm, 2);
         be_setmember(vm, 1, "__data__");
     } else {
-        int i, argc = be_top(vm);
         be_newlist(vm);
         be_setmember(vm, 1, "__data__");
         for (i = 2; i <= argc; ++i) {

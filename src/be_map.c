@@ -12,8 +12,8 @@
 
 #define next(node)          ((node)->key.next)
 #define pos2slot(map, n)    ((n) != LASTNODE ? ((map)->slots + (n)) : NULL)
-#define pos(map, node)      ((node) - (map)->slots)
-#define setkey(node, _v)    { (node)->key.type = (_v)->type; \
+#define pos(map, node)      ((uint16_t)((node) - (map)->slots))
+#define setkey(node, _v)    { (node)->key.type = (bbyte)(_v)->type; \
                               (node)->key.v = (_v)->v; }
 
 #define LASTNODE            65535
@@ -115,8 +115,8 @@ static bmapnode* insert(bmap *map, bvalue *key, uint32_t hash)
         setkey(slot, key);
         next(slot) = LASTNODE;
     } else {
-        uint32_t hash = hashcode(key(slot)); /* get the hashcode of the exist node */
-        bmapnode *mainslot = hash2slot(map, hash); /* get the main-slot */
+        uint32_t h = hashcode(key(slot)); /* get the hashcode of the exist node */
+        bmapnode *mainslot = hash2slot(map, h); /* get the main-slot */
         bmapnode *new = nextfree(map); /* get a free slot */
         if (mainslot == slot) { /* old is main slot */
             /* insert in first */

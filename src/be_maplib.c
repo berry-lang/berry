@@ -2,7 +2,7 @@
 
 static int m_init(bvm *vm)
 {
-    if (be_ismap(vm, 2)) {
+    if (be_top(vm) > 1 && be_ismap(vm, 2)) {
         be_pushvalue(vm, 2);
         be_setmember(vm, 1, "__data__");
     } else {

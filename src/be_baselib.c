@@ -60,7 +60,7 @@ static int l_number(bvm *vm)
     if (be_isstring(vm, 1)) {
         const char *str = be_tostring(vm, 1);
         if (strchr(str, '.')) {
-            be_pushreal(vm, atof(str));
+            be_pushreal(vm, (breal)atof(str));
         } else {
             be_pushint(vm, atoi(str));
         }

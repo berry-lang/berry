@@ -284,7 +284,7 @@ static btokentype scan_numeral(blexer *lexer)
             type = TokenReal;
         }
         if (type == TokenReal) {
-            setreal(lexer, atof(begin));
+            setreal(lexer, (breal)atof(begin));
         } else {
             setint(lexer, atoi(begin));
         }

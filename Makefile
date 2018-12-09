@@ -1,11 +1,11 @@
-CFLAGS	 = -Wall -Wextra -std=c89 -O0 -g
+CFLAGS	 = -Wall -Wextra -std=c89 -O2
 TARGET	 = berry
 CC	 = gcc
 
 INCPATH	 = src
 SRCPATH	 = src
 
-ifeq ($(shell uname), Linux)
+ifeq ($(@shell uname), Linux)
 LIBS	 = -lreadline
 endif
 
