@@ -234,6 +234,13 @@ void be_pushstring(bvm *vm, const char *str)
     var_setstr(reg, s);
 }
 
+void be_pushnstring(bvm *vm, const char *str, int n)
+{
+    bvalue *reg = pushtop(vm);
+    bstring *s = be_newstrn(vm, str, n);
+    var_setstr(reg, s);
+}
+
 const char* be_pushfstring(bvm *vm, const char *format, ...)
 {
     const char* s;

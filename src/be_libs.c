@@ -4,6 +4,7 @@
 #include "be_maplib.h"
 #include "be_rangelib.h"
 #include "be_iolib.h"
+#include "be_jsonlib.h"
 
 void be_loadlibs(bvm *vm)
 {
@@ -12,4 +13,5 @@ void be_loadlibs(bvm *vm)
     be_list_init(vm);
     be_map_init(vm);
     be_range_init(vm);
+    be_json_init(vm);
 }

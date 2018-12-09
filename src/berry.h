@@ -68,6 +68,7 @@ void be_pushbool(bvm *vm, int b);
 void be_pushint(bvm *vm, bint i);
 void be_pushreal(bvm *vm, breal r);
 void be_pushstring(bvm *vm, const char *str);
+void be_pushnstring(bvm *vm, const char *str, int n);
 const char*  be_pushfstring(bvm *vm, const char *format, ...);
 void be_pushvalue(bvm *vm, int index);
 void be_pushntvclosure(bvm *vm, bcfunction f, int nupvals);
