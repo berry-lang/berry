@@ -196,10 +196,10 @@ const char* be_tostring(bvm *vm, int index)
     return str(var_tostr(v));
 }
 
-void be_moveto(bvm *vm, int index)
+void be_moveto(bvm *vm, int from, int to)
 {
-    bvalue *src = vm->top - 1;
-    bvalue *dst = index2value(vm, index);
+    bvalue *src = index2value(vm, from);
+    bvalue *dst = index2value(vm, to);
     var_setval(dst, src);
 }
 
@@ -363,6 +363,14 @@ void be_newmap(bvm *vm)
 {
     bvalue *top = pushtop(vm);
     var_setobj(top, BE_MAP, be_map_new(vm));
+}
+
+void be_getglobal(bvm *vm, const char *name)
+{
+    bvalue *top = pushtop(vm);
+    int idx = be_globalvar_find(vm, be_newstr(vm, name));
+    bvalue *gbl = be_globalvar(vm, idx);
+    *top = *gbl;
 }
 
 void be_setmember(bvm *vm, int index, const char *k)

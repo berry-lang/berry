@@ -2,8 +2,13 @@
 
 static int m_init(bvm *vm)
 {
-    be_newmap(vm);
-    be_setmember(vm, 1, "__data__");
+    if (be_ismap(vm, 2)) {
+        be_pushvalue(vm, 2);
+        be_setmember(vm, 1, "__data__");
+    } else {
+        be_newmap(vm);
+        be_setmember(vm, 1, "__data__");
+    }
     return be_returnnil(vm);
 }
 
