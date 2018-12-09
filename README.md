@@ -17,7 +17,7 @@ The implementation of Berry include a one pass compiler and register-based VM, a
   * Boolean: `true` and `false`
   * String: Single quotation-mark string and double quotation-mark string
   * List: Continuous memory list, like `[1, 2, 3]`
-  * Map: Hash Map, like `{ 'a' = 1, 2 = 3 }`
+  * Map: Hash Map, like `{ 'a': 1, 2: 3, 'map': {} }`
   * Range: include a lower and a upper integer value, like `0..5`
 * Operator and Expression
   * Assign operator: `=`
