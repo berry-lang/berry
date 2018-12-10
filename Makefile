@@ -5,7 +5,7 @@ CC	 = gcc
 INCPATH	 = src
 SRCPATH	 = src
 
-ifeq ($(@shell uname), Linux)
+ifeq ($(findstring $(@shell uname), Linux Darwin), )
 LIBS	 = -lreadline
 endif
 
@@ -13,13 +13,12 @@ SRCS	 = $(foreach dir, $(SRCPATH), $(wildcard $(dir)/*.c))
 OBJS	 = $(patsubst %.c, %.o, $(SRCS))
 DEPS	 = $(patsubst %.c, %.d, $(SRCS))
 CFLAGS	+= $(foreach dir, $(INCPATH), -I"$(dir)")
-CFLAGS	+= $(LIBS)
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	@ echo [Linking...]
-	@ $(CC) $(OBJS) $(CFLAGS) -o $@
+	@ $(CC) $(OBJS) $(CFLAGS) $(LIBS) -o $@
 	@ echo done
 
 $(OBJS): %.o: %.c

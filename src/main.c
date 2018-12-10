@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#if defined(__linux) || defined(__unix)
+#if defined(__linux) || defined(__unix) || defined(__APPLE__)
 #include <readline/readline.h>
 #include <readline/history.h>
 #endif
@@ -46,7 +46,7 @@ static int try_line(bvm *vm, const char *line)
 
 static const char* getl(void)
 {
-#if defined(__linux) || defined(__unix)
+#if defined(__linux) || defined(__unix) || defined(__APPLE__)
     const char *line = readline("> ");
     add_history(line);
     return line;
