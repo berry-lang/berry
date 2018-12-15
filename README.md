@@ -44,10 +44,11 @@ The implementation of Berry include a one pass compiler and register-based VM, a
 
 ## Build
 
-1. install "libreadline" (Only linux)
+1. install the readline library (Linux or MacOS)
 
 ``` bash
 sudo apt install libreadline-dev # Ubuntu
+brew install readline # MacOS
 ```
 
 2. Build:
@@ -59,8 +60,7 @@ $ make
 3. Run:
 
 ```
-$ ./berry test.be
-
+$ ./berry
 ```
 
 ## Editor pulgins

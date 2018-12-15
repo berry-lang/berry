@@ -67,7 +67,7 @@
 		"number": {
 			"patterns": [{
 				"name": "constant.numeric.berry",
-				"match": "\\b([+-]?(0x)?[0-9]+)\\b"
+				"match": "\\b((0x)?[0-9]+)\\b"
 			}]
 		},
 		"member": {

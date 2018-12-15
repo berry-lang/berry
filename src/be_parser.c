@@ -894,9 +894,8 @@ static bstring* func_name(bparser *parser, bexpdesc *e, int ismethod)
         if (type == OptSub && next_token(parser).type == OptMul) {
             scan_next_token(parser); /* skip '*' */
             return be_newconststr(parser->vm, "-*");
-        } else {
-            return be_newconststr(parser->vm, token2str(parser));
         }
+        return be_newconststr(parser->vm, be_tokentype2str(type));
     }
     parser_error(parser, be_pushfstring(parser->vm,
         "the token '%s' is not a valid function name.", token2str(parser)));
