@@ -5,8 +5,13 @@ CC	 = gcc
 INCPATH	 = src
 SRCPATH	 = src
 
-ifeq ($(findstring $(@shell uname), Linux Darwin), )
-LIBS	 = -lreadline
+ifneq ($(OS), Windows_NT)
+  ifeq ($(shell uname), Linux)
+    LIBS = -lreadline
+  else
+  ifeq  ($(shell uname), Darwin)
+    LIBS = -lreadline
+  endif
 endif
 
 SRCS	 = $(foreach dir, $(SRCPATH), $(wildcard $(dir)/*.c))

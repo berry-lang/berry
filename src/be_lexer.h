@@ -26,8 +26,8 @@ typedef enum {
     OptGT,          /* operator, > */
     OptGE,          /* operator, >= */
     OptRange,       /* operator, .. */
-    OptAnd,         /* operator, & */
-    OptOr,          /* operator, | */
+    OptAnd,         /* operator, && */
+    OptOr,          /* operator, || */
     /* unary operator */
     OptNot,        /* operator, ! */
     /* postfix operator or bracket */
