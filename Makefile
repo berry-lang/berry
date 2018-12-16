@@ -6,10 +6,9 @@ INCPATH	 = src
 SRCPATH	 = src
 
 ifneq ($(OS), Windows_NT)
-  ifeq ($(shell uname), Linux)
+  ifeq ($(shell uname), Linux) # Linux
     LIBS = -lreadline
-  else
-  ifeq  ($(shell uname), Darwin)
+  else ifeq  ($(shell uname), Darwin) # MacOS
     LIBS = -lreadline
   endif
 endif
