@@ -36,6 +36,9 @@ typedef struct {
     bcfunction function;
 } bmemberinfo;
 
+bint be_str2int(const char *str, const char **endstr);
+breal be_str2real(const char *str, const char **endstr);
+
 int be_top(bvm *vm);
 int be_type(bvm *vm, int index);
 const char* be_typename(bvm *vm, int index);

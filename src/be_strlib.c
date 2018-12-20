@@ -6,6 +6,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#define is_space(c)     ((c) == ' ' || (c) == '\t' || (c) == '\r' || (c) == '\n')
+#define is_digit(c)     ((c) >= '0' && (c) <= '9')
+#define skip_space(s)   while (is_space(*(s))) { ++(s); }
+
 bstring* be_strcat(bvm *vm, bstring *s1, bstring *s2)
 {
     int len = (int)str_len(s1) + (int)str_len(s2);
@@ -122,7 +126,7 @@ static const char* concat2(bvm *vm)
     return str(s);
 }
 
-const char*  be_pushvfstr(bvm *vm, const char *format, va_list arg)
+const char* be_pushvfstr(bvm *vm, const char *format, va_list arg)
 {
     pushstr(vm, "", 0);
     for (;;) {
@@ -173,4 +177,82 @@ const char*  be_pushvfstr(bvm *vm, const char *format, va_list arg)
     }
     pushstr(vm, format, strlen(format));
     return concat2(vm);
+}
+
+/*******************************************************************
+ * the function be_str2int():
+ * >>-+------------+--+-----+----digits----><
+ *    '-whitespace-'  +- + -+
+ *                    '- – -'
+ *******************************************************************/
+bint be_str2int(const char *str, const char **endstr)
+{
+    int c, sign;
+    unsigned int sum = 0;
+    skip_space(str);
+    sign = c = *str++;
+    if (c == '+' || c == '-') {
+        c = *str++;
+    }
+    while (is_digit(c)) {
+        sum = sum * 10 + c - '0';
+        c = *str++;
+    }
+    if (endstr) {
+        *endstr = str - 1;
+    }
+    return sign == '-' ? -sum : sum;
+}
+
+/*******************************************************************
+ * the function be_str2real():
+ * >>-+------------+--+-----+--+-digits--+---+--+--------+-+------->
+ *    '-whitespace-'  +- + -+  |         '-.-'  '-digits-' |   
+ *                    '- – -'  '-.--digits-----------------'   
+ * 
+ * >--+------------------------+----------------------------------><
+ *    '-+-e-+--+-----+--digits-'   
+ *      '-E-'  +- + -+             
+ *             '- – -'  
+ *******************************************************************/
+breal be_str2real(const char *str, const char **endstr)
+{
+    int c, sign;
+    breal sum = 0, deci = 0, point = (breal)0.1;
+    skip_space(str);
+    sign = c = *str++;
+    if (c == '+' || c == '-') {
+        c = *str++;
+    }
+    while (is_digit(c)) {
+        sum = sum * 10 + c - '0';
+        c = *str++;
+    }
+    if (c == '.') {
+        c = *str++;
+        while (is_digit(c)) {
+            deci = deci + (c - '0') * point;
+            point *= (breal)0.1;
+            c = *str++;
+        }
+    }
+    sum = sum + deci;
+    if (c == 'e' || c == 'E') {
+        int e = 0;
+        breal ratio = (c = *str++) == '-' ? (breal)0.1 : 10;
+        if (c == '+' || c == '-') {
+            c = *str++;
+        }
+        while (is_digit(c)) {
+            e = e * 10 + c - '0';
+            c = *str++;
+        }
+        while (e--) {
+            sum *= ratio;
+        }
+    }
+    if (endstr) {
+        *endstr = str - 1;
+    }
+    return sign == '-' ? -sum : sum;
 }

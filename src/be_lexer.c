@@ -240,7 +240,7 @@ static btokentype scan_dot_real(blexer *lexer)
     if (is_digit(lgetc(lexer))) {
         match(lexer, is_digit);
         scan_realexp(lexer);
-        setreal(lexer, (breal)atof(begin));
+        setreal(lexer, be_str2real(begin, NULL));
         return TokenReal;
     }
     return OptDot;
@@ -274,7 +274,7 @@ static btokentype scan_numeral(blexer *lexer)
         match(lexer, is_digit);
         if (lgetc(lexer) == '.') { /* '..' or real */
             if (*next(lexer) == '.') { /* '..' */
-                prev(lexer);
+                prev(lexer); /* the token '..' will be left for the next scan */
             } else { /* real */
                 match(lexer, is_digit);
                 type = TokenReal;
@@ -284,9 +284,9 @@ static btokentype scan_numeral(blexer *lexer)
             type = TokenReal;
         }
         if (type == TokenReal) {
-            setreal(lexer, (breal)atof(begin));
+            setreal(lexer, be_str2real(begin, NULL));
         } else {
-            setint(lexer, atoi(begin));
+            setint(lexer, be_str2int(begin, NULL));
         }
     }
     return type;

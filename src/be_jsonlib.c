@@ -1,6 +1,5 @@
 #include "be_jsonlib.h"
 #include <string.h>
-#include <stdlib.h>
 
 #define MAX_INDENT      12
 #define INDENT_WIDTH    4
@@ -181,7 +180,7 @@ static const char* parser_number(bvm *vm, const char *json)
     len = end - json;
     strncpy(buffer, json, len);
     buffer[len] = '\0';
-    be_pushint(vm, atoi(buffer));
+    be_pushint(vm, be_str2int(buffer, NULL));
     return end;
 }
 
