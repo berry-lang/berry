@@ -38,6 +38,7 @@ typedef struct {
 
 bint be_str2int(const char *str, const char **endstr);
 breal be_str2real(const char *str, const char **endstr);
+const char* be_str2num(bvm *vm, const char *str);
 
 int be_top(bvm *vm);
 int be_type(bvm *vm, int index);

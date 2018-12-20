@@ -169,21 +169,6 @@ static const char* parser_array(bvm *vm, const char *json)
     return json;
 }
 
-static const char* parser_number(bvm *vm, const char *json)
-{
-    int len;
-    char buffer[24];
-    const char *end = json;
-    while (is_digit(*end)) {
-        ++end;
-    }
-    len = end - json;
-    strncpy(buffer, json, len);
-    buffer[len] = '\0';
-    be_pushint(vm, be_str2int(buffer, NULL));
-    return end;
-}
-
 /* parser json value */
 static const char* parser_value(bvm *vm, const char *json)
 {
@@ -203,7 +188,7 @@ static const char* parser_value(bvm *vm, const char *json)
         return parser_null(vm, json);
     default:
         if (is_digit(*json)) { /* number */
-            return parser_number(vm, json);
+            return be_str2num(vm, json);
         }
     }
     return NULL;

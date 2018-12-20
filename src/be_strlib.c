@@ -256,3 +256,20 @@ breal be_str2real(const char *str, const char **endstr)
     }
     return sign == '-' ? -sum : sum;
 }
+
+/* convert a string to a number (integer or real).
+ * 1. skip \s*[\+\-]?\d*
+ * 2. matched [.eE]? yes: real, no: integer.
+ **/
+const char* be_str2num(bvm *vm, const char *str)
+{
+    const char *sout; 
+    int c, vint = be_str2int(str, &sout);
+    c = *sout;
+    if (c == '.' || c == 'e' || c == 'E') {
+        be_pushreal(vm, be_str2real(str, &sout));
+    } else {
+        be_pushint(vm, vint);
+    }
+    return sout;
+}
