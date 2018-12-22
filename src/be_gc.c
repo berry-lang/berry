@@ -49,7 +49,7 @@ bgcobject* be_newgcobj(bvm *vm, int type, int size)
     bgcobject *obj = be_malloc(size);
 
     var_settype(obj, (bbyte)type);
-    gc_setdark(obj);
+    obj->marked = GC_BLACK; /* default gc object type is black */
     be_gc_auto(vm);
     obj->next = gc->list; /* insert to head */
     gc->list = obj;
@@ -64,7 +64,7 @@ bgcobject* be_gc_newstr(bvm *vm, int size, int islong)
     }
     obj = be_malloc(size);
     var_settype(obj, BE_STRING);
-    gc_setdark(obj);
+    obj->marked = GC_BLACK; /* default gc object type is black */
     return obj;
 }
 
@@ -203,15 +203,6 @@ static void mark_object(bvm *vm, bgcobject *obj, int type)
     }
 }
 
-static void free_list(bgcobject *obj)
-{
-    blist *list = cast_list(obj);
-    if (list) {
-        be_free(be_list_data(list));
-    }
-    be_free(obj);
-}
-
 static void free_proto(bgcobject *obj)
 {
     bproto *proto = cast_proto(obj);
@@ -261,7 +252,7 @@ static void free_object(bvm *vm, bgcobject *obj)
     switch (obj->type) {
     case BE_INSTANCE: be_free(obj); break;
     case BE_MAP: be_map_delete(cast_map(obj)); break;
-    case BE_LIST: free_list(obj); break;
+    case BE_LIST: be_list_delete(cast_list(obj)); break;
     case BE_CLOSURE: free_closure(obj); break;
     case BE_NTVCLOS: free_ntvclos(obj); break;
     case BE_PROTO: free_proto(obj); break;

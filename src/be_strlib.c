@@ -183,12 +183,12 @@ const char* be_pushvfstr(bvm *vm, const char *format, va_list arg)
  * the function be_str2int():
  * >>-+------------+--+-----+----digits----><
  *    '-whitespace-'  +- + -+
- *                    '- – -'
+ *                    '- - -'
  *******************************************************************/
 bint be_str2int(const char *str, const char **endstr)
 {
     int c, sign;
-    unsigned int sum = 0;
+    int sum = 0;
     skip_space(str);
     sign = c = *str++;
     if (c == '+' || c == '-') {
@@ -208,12 +208,12 @@ bint be_str2int(const char *str, const char **endstr)
  * the function be_str2real():
  * >>-+------------+--+-----+--+-digits--+---+--+--------+-+------->
  *    '-whitespace-'  +- + -+  |         '-.-'  '-digits-' |   
- *                    '- – -'  '-.--digits-----------------'   
+ *                    '- - -'  '-.--digits-----------------'   
  * 
  * >--+------------------------+----------------------------------><
  *    '-+-e-+--+-----+--digits-'   
  *      '-E-'  +- + -+             
- *             '- – -'  
+ *             '- - -'  
  *******************************************************************/
 breal be_str2real(const char *str, const char **endstr)
 {
