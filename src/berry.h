@@ -36,6 +36,9 @@ typedef struct {
     bcfunction function;
 } bmemberinfo;
 
+#define be_dostring(vm, s) \
+    (be_loadstring((vm), (s)) || be_pcall((vm), 0))
+
 bint be_str2int(const char *str, const char **endstr);
 breal be_str2real(const char *str, const char **endstr);
 const char* be_str2num(bvm *vm, const char *str);

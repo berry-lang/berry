@@ -178,7 +178,13 @@ int be_toint(bvm *vm, int index)
 breal be_toreal(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
-    return var_toreal(v);
+    if (var_isreal(v)) {
+        return var_toreal(v);
+    }
+    if (var_isint(v)) {
+        return (breal)var_toint(v);
+    }
+    return (breal)0.0;
 }
 
 bbool be_tobool(bvm *vm, int index)
