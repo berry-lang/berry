@@ -33,7 +33,7 @@ bmap* be_map_new(bvm *vm);
 void be_map_delete(bmap *map);
 bvalue* be_map_find(bmap *map, bvalue *key);
 bvalue* be_map_insert(bmap *map, bvalue *key, bvalue *value);
-void be_map_remove(bmap *map, bvalue *key);
+int be_map_remove(bmap *map, bvalue *key);
 bvalue* be_map_findstr(bmap *map, bstring *key);
 bvalue* be_map_insertstr(bmap *map, bstring *key, bvalue *value);
 void be_map_removestr(bmap *map, bstring *key);

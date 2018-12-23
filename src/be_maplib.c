@@ -58,16 +58,16 @@ static int m_insert(bvm *vm)
     be_getmember(vm, 1, "__data__");
     be_pushvalue(vm, 2);
     be_pushvalue(vm, 3);
-    be_insert(vm, -3);
-    return be_returnnil(vm);
+    be_pushbool(vm, be_insert(vm, -3));
+    return be_return(vm);
 }
 
 static int m_remove(bvm *vm)
 {
     be_getmember(vm, 1, "__data__");
     be_pushvalue(vm, 2);
-    be_remove(vm, -2);
-    return be_returnnil(vm);
+    be_pushbool(vm, be_remove(vm, -2));
+    return be_return(vm);
 }
 
 static int m_item(bvm *vm)

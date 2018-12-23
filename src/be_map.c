@@ -224,7 +224,7 @@ bvalue* be_map_insert(bmap *map, bvalue *key, bvalue *value)
     return value(entry);
 }
 
-void be_map_remove(bmap *map, bvalue *key)
+int be_map_remove(bmap *map, bvalue *key)
 {
     uint32_t hash = hashcode(key);
     bmapnode *slot = hash2slot(map, hash); /* main slot */
@@ -241,7 +241,7 @@ void be_map_remove(bmap *map, bvalue *key)
             int n = next(prev);
             slot = pos2slot(map, n);
             if (slot == NULL) { /* node not found */
-                return;
+                return bfalse;
             }
             if (eqnode(slot, key, hash)) {
                 break;
@@ -258,6 +258,7 @@ void be_map_remove(bmap *map, bvalue *key)
         map->lastfree = slot;
     }
     --map->count;
+    return btrue;
 }
 
 bvalue* be_map_findstr(bmap *map, bstring *key)

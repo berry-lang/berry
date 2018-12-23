@@ -411,8 +411,9 @@ void be_getindex(bvm *vm, int index)
         if (var_isint(k)) {
             blist *list = cast(blist*, var_toobj(o));
             int idx = var_toint(k);
-            if (idx < be_list_count(list)) {
-                var_setval(dst, be_list_at(list, idx));
+            bvalue *src = be_list_index(list, idx);
+            if (src) {
+                var_setval(dst, src);
                 return;
             }
         }
@@ -536,7 +537,7 @@ void be_append(bvm *vm, int index)
     }
 }
 
-void be_insert(bvm *vm, int index)
+int be_insert(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     bvalue *k = index2value(vm, -2);
@@ -545,15 +546,22 @@ void be_insert(bvm *vm, int index)
     case BE_MAP:
         if (!var_isnil(k)) {
             bmap *map = cast(bmap*, var_toobj(o));
-            be_map_insert(map, k, v);
+            return be_map_insert(map, k, v) != NULL;
+        }
+        break;
+    case BE_LIST:
+        if (var_isint(k)) {
+            blist *list = cast(blist*, var_toobj(o));
+            return be_list_insert(list, var_toint(k), v) != NULL;
         }
         break;
     default:
         break;
     }
+    return bfalse;
 }
 
-void be_remove(bvm *vm, int index)
+int be_remove(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     bvalue *k = index2value(vm, -1);
@@ -561,12 +569,19 @@ void be_remove(bvm *vm, int index)
     case BE_MAP:
         if (!var_isnil(k)) {
             bmap *map = cast(bmap*, var_toobj(o));
-            be_map_remove(map, k);
+            return be_map_remove(map, k);
+        }
+        break;
+    case BE_LIST:
+        if (!var_isint(k)) {
+            blist *list = cast(blist*, var_toobj(o));
+            return be_list_remove(list, var_toint(k));
         }
         break;
     default:
         break;
     }
+    return bfalse;
 }
 
 void be_resize(bvm *vm, int index)

@@ -147,13 +147,12 @@ static const char* parser_string(bvm *vm, const char *json)
                     case 'r': *dst++ = '\r'; break;
                     case 't': *dst++ = '\t'; break;
                     case 'u': { /* load unicode */
-                        char* res = load_unicode(dst, json);
-                        if (res == NULL) {
+                        dst = load_unicode(dst, json);
+                        if (dst == NULL) {
                             be_free(buf);
                             return NULL;
                         }
                         json += 4;
-                        dst = res;
                         break;
                     }
                     default: be_free(buf); return NULL; /* error */
