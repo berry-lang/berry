@@ -4,7 +4,8 @@ obj =
         0,
         1,
         {
-            'str': "test hahah balabala"
+            'str': "test hahah balabala",
+            'json': json
         },
         {
             'map': { "json": 58 },
@@ -14,7 +15,7 @@ obj =
 
 print("json parser:")
 print(json)
-print("json dumps (compress):")
-print(json_dumps(obj))
-print("json dumps (format):")
-print(json_dumps(obj, "format"))
+print("json dump (compress):")
+print(json_dump(obj))
+print("json dump (format):")
+print(json_dump(obj, "format"))

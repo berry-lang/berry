@@ -161,9 +161,12 @@ static const char* parser_string(bvm *vm, const char *json)
                     *dst++ = ch;
                 }
             }
-            be_pushnstring(vm, buf, dst - buf);
+            if (ch == '"') {
+                be_pushnstring(vm, buf, dst - buf);
+                be_free(buf);
+                return json + 1; /* skip '"' */
+            }
             be_free(buf);
-            return json;
         }
     }
     return NULL;
@@ -307,7 +310,7 @@ static void object_tostr(bvm *vm, int *indent, int idx, int fmt)
         make_indent(vm, -2, fmt ? *indent : 0);
         be_next(vm, -3);
         /* key.tostring() */
-        json2str(vm, indent, -2, fmt);
+        be_pushfstring(vm, "\"%s\"", be_tostring(vm, -2));
         be_strconcat(vm, -5);
         be_pop(vm, 1);
         be_pushstring(vm, fmt ? ": " : ":"); /* add ': ' */
@@ -383,7 +386,7 @@ static void json2str(bvm *vm, int *indent, int idx, int fmt)
     }
 }
 
-static int m_json_dumps(bvm *vm)
+static int m_json_dump(bvm *vm)
 {
     int indent = 0, argc = be_top(vm);
     int fmt = 0;
@@ -397,5 +400,5 @@ static int m_json_dumps(bvm *vm)
 void be_json_init(bvm *vm)
 {
     be_regcfunc(vm, "json_load", m_json_load);
-    be_regcfunc(vm, "json_dumps", m_json_dumps);
+    be_regcfunc(vm, "json_dump", m_json_dump);
 }
