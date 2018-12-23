@@ -18,5 +18,3 @@ end
 lout.resize(10)
 print(lout, lout.size())
 print(memcount(), type(1.25), type([]), type(list), super([]))
-
-   +456456

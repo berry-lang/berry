@@ -250,6 +250,7 @@ static void free_object(bvm *vm, bgcobject *obj)
 {
     (void)vm;
     switch (obj->type) {
+    case BE_STRING: be_free(obj); break; /* long string */
     case BE_INSTANCE: be_free(obj); break;
     case BE_MAP: be_map_delete(cast_map(obj)); break;
     case BE_LIST: be_list_delete(cast_list(obj)); break;
