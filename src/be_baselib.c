@@ -8,7 +8,10 @@ static int l_print(bvm *vm)
 {
     int i, n = be_top(vm);
     for (i = 1; i <= n; ++i) {
-        be_printf("%s ", be_tostring(vm, i));
+        be_printf("%s", be_tostring(vm, i));
+        if (i < n) {
+            be_printf(" ");
+        }
     }
     be_printf("\n");
     return be_returnnil(vm);

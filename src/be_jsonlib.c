@@ -1,4 +1,5 @@
 #include "be_jsonlib.h"
+#include "be_mem.h"
 #include <string.h>
 
 #define MAX_INDENT      12
@@ -40,6 +41,23 @@ static int is_object(bvm *vm, const char *class, int idx)
     return  0;
 }
 
+static int json_strlen(const char *json)
+{
+    int ch;
+    const char *s = json + 1; /* skip '"' */
+    /* get string length "(\\.|[^"])*" */
+    while ((ch = *s) != '\0' && ch != '"') {
+        ++s;
+        if (ch == '\\') {
+            ch = *s++;
+            if (ch == '\0') {
+                return -1;
+            }
+        }
+    }
+    return ch ?  s - json - 1 : -1;
+}
+
 static void json2berry(bvm *vm, const char *class)
 {
     be_getglobal(vm, class);
@@ -76,16 +94,77 @@ static const char* parser_null(bvm *vm, const char *json)
     return NULL;
 }
 
+static char* load_unicode(char *dst, const char *json)
+{
+    int ucode = 0, i = 4;
+    while (i--) {
+        int ch = *json++;
+        if (ch >= '0' && ch <= '9') {
+            ucode = (ucode << 4) | (ch - '0');
+        } else if (ch >= 'A' && ch <= 'F') {
+            ucode = (ucode << 4) | (ch - 'A' + 0x0A);
+        } else if (ch >= 'a' && ch <= 'f') {
+            ucode = (ucode << 4) | (ch - 'a' + 0x0A);
+        } else {
+            return NULL;
+        }
+    }
+    /* convert unicode to utf8 */
+    if (ucode < 0x007F) {
+        /* unicode: 0000 - 007F -> utf8: 0xxxxxxx */
+        *dst++ = (char)(ucode & 0x7F);
+    } else if (ucode < 0x7FF) {
+        /* unicode: 0080 - 07FF -> utf8: 110xxxxx 10xxxxxx */
+        *dst++ = (char)(((ucode >> 6) & 0x1F) | 0xC0);
+        *dst++ = (char)((ucode & 0x3F) | 0x80);
+    } else {
+        /* unicode: 0800 - FFFF -> utf8: 1110xxxx 10xxxxxx 10xxxxxx */
+        *dst++ = (char)(((ucode >> 12) & 0x0F) | 0xE0);
+        *dst++ = (char)(((ucode >> 6) & 0x03F) | 0x80);
+        *dst++ = (char)((ucode & 0x3F) | 0x80);
+    }
+    return dst;
+}
+
 static const char* parser_string(bvm *vm, const char *json)
 {
     if (*json == '"') {
-        const char *end = ++json;
-        while (*end && *end != '"') {
-            ++end;
-        }
-        if (*end) {
-            be_pushnstring(vm, json, end - json);
-            return end + 1;
+        int len = json_strlen(json++);
+        if (len > -1) {
+            int ch;
+            char *buf, *dst = buf = be_malloc(len);
+            while ((ch = *json) != '\0' && ch != '"') {
+                ++json;
+                if (ch == '\\') {
+                    ch = *json++; /* skip '\' */
+                    switch (ch) {
+                    case '"': *dst++ = '"'; break;
+                    case '\\': *dst++ = '\\'; break;
+                    case '/': *dst++ = '/'; break;
+                    case 'b': *dst++ = '\b'; break;
+                    case 'f': *dst++ = '\f'; break;
+                    case 'n': *dst++ = '\n'; break;
+                    case 'r': *dst++ = '\r'; break;
+                    case 't': *dst++ = '\t'; break;
+                    case 'u': { /* load unicode */
+                        char* res = load_unicode(dst, json);
+                        if (res == NULL) {
+                            be_free(buf);
+                            return NULL;
+                        }
+                        json += 4;
+                        dst = res;
+                        break;
+                    }
+                    default: be_free(buf); return NULL; /* error */
+                    }
+                } else {
+                    *dst++ = ch;
+                }
+            }
+            be_pushnstring(vm, buf, dst - buf);
+            be_free(buf);
+            return json;
         }
     }
     return NULL;
