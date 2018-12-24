@@ -107,7 +107,7 @@
 static void vm_error(bvm *vm, const char *msg)
 {
     be_pushfstring(vm, "%s", msg);
-    be_throw(vm, 1);
+    be_throw(vm, BE_EXEC_ERROR);
 }
 
 static bbool obj2bool(bvm *vm, bvalue *obj)

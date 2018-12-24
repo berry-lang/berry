@@ -717,9 +717,10 @@ int be_pcall(bvm *vm, int argc)
     return res;
 }
 
-int be_loadstring(bvm *vm, const char *str)
+int be_loadbuffer(bvm *vm,
+    const char *name, const char *buffer, size_t length)
 {
-    int res = be_protectedparser(vm, "string", str);
+    int res = be_protectedparser(vm, name, buffer, length);
 #if 0
     if (!res) {
         be_printf("bytecode:\n");

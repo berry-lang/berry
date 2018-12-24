@@ -5,21 +5,48 @@
 #include <time.h>
 
 #if defined(__linux) || defined(__unix) || defined(__APPLE__)
-#include <readline/readline.h>
-#include <readline/history.h>
+    #include <readline/readline.h>
+    #include <readline/history.h>
+#endif
+
+#if defined(__linux)
+    #define OS_NAME   "Linux"
+#elif defined(__unix)
+    #define OS_NAME   "Unix"
+#elif defined(__APPLE__)
+    #define OS_NAME   "macOS"
+#elif defined(WINVER)
+    #define OS_NAME   "Windows"
+#else
+    #define OS_NAME   "Unknown OS"
+#endif
+
+#if defined(__GNUC__)
+    #define COMPILER  "GCC " __VERSION__
+#elif defined(__clang__)
+    #define COMPILER  "clange" __clang_version__
+#elif defined(_MSC_VER)
+    #define COMPILER  "MSVC"
+#else
+    #define COMPILER  "Unknown Compiler"
 #endif
 
 static void dofile(bvm *vm, const char *fname)
 {
-    char buffer[4096];
     FILE *fp = fopen(fname, "r");
     if (fp) {
         int res;
-        size_t len = fread(buffer, 1, sizeof(buffer), fp);
-        
-        buffer[len] = '\0';
+        size_t len;
+        char *buffer;
+
+        fseek(fp,0L,SEEK_END);
+        len = ftell(fp);
+        buffer = malloc(len);
+        fseek(fp, 0L, SEEK_SET);
+        len = fread(buffer, 1, len, fp);
         fclose(fp);
-        res = be_loadstring(vm, buffer) || be_pcall(vm, 0);
+        res = be_loadbuffer(vm, fname, buffer, len) || be_pcall(vm, 0);
+        free(buffer);
         if (res) {
             printf("%s\n", be_tostring(vm, -1));
         }
@@ -36,7 +63,7 @@ static const char* get_line(const char *prompt)
     return line;
 #else
     static char buffer[1000];
-    printf("> ");
+    printf(prompt);
     if (fgets(buffer, sizeof(buffer), stdin)) {
         return buffer;
     }
@@ -52,6 +79,8 @@ int main(int argc, char *argv[])
     if (argc >= 2) {
         dofile(vm, argv[1]);
     } else {
+        be_printf("Berry " BERRY_VERSION " (build in " __DATE__ ", " __TIME__ ")\n");
+        be_printf("[" COMPILER "] on " OS_NAME " (default)\n");
         be_repl(vm, get_line);
     }
     return 0;

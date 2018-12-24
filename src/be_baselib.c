@@ -23,6 +23,16 @@ static int l_clock(bvm *vm)
     return be_return(vm);
 }
 
+static int l_exit(bvm *vm)
+{
+    int status = 0;
+    if (be_isint(vm, -1)) {
+        status = be_toint(vm, -1);
+    }
+    exit(status);
+    return be_return(vm);
+}
+
 static int l_memcount(bvm *vm)
 {
     size_t count = be_mcount();
@@ -127,6 +137,7 @@ void be_loadbaselib(bvm *vm)
 {
     be_regcfunc(vm, "print", l_print);
     be_regcfunc(vm, "clock", l_clock);
+    be_regcfunc(vm, "exit", l_exit);
     be_regcfunc(vm, "super", l_super);
     be_regcfunc(vm, "memcount", l_memcount);
     be_regcfunc(vm, "type", l_type);

@@ -48,19 +48,20 @@ The implementation of Berry include a one pass compiler and register-based VM, a
 
 ``` bash
 sudo apt install libreadline-dev # Ubuntu
-brew install readline # MacOS
+brew install readline            # MacOS
 ```
 
 2. Build:
 
 ```
-$ make
+make
 ```
 
 3. Run:
 
-```
-$ ./berry
+``` bash
+./berry # Bash
+berry   # Windows CMD or PowerShell
 ```
 
 ## Editor pulgins
@@ -69,21 +70,26 @@ $ ./berry
 
 # Examples
 
-Berry does not support REPL (Read Eval Print Loop) yet. You can only run the code in the source file. If no command line parameters are specified, Berry will run "./test.be" by default.
+After compiling successfully, use the `berry` command with no parameters to enter the REPL environment:
+```
+Berry 0.0.1 (build in Dec 24 2018, 18:12:49)
+[GCC 8.2.0] on Linux (default)
+>
+```
 
-Type:
+Now enter this code:
 
 ``` lua
 print("Hello world!")
 ```
 
-Output:
+You will see this output:
 
 ```
 Hello world!
 ```
 
-Type:
+You can copy this code to the REPL:
 
 ```ruby
 def list_iter(list)
@@ -104,7 +110,6 @@ while (v != nil)
     v = it()
 end
 print(lout)
-
 ```
 
 This examples is a simple list iterator. Let's look at the output:
@@ -112,3 +117,11 @@ This examples is a simple list iterator. Let's look at the output:
 ```
 [0, 1, 2, 3, 4, 5]
 ```
+
+You can save the above code to a file (eg test.c) and run:
+
+``` bash
+./berry test.be
+```
+
+This will also get the correct output.

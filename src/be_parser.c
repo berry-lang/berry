@@ -1086,7 +1086,8 @@ static void mainfunc(bparser *parser, bclosure *cl)
     end_func(parser);
 }
 
-bclosure* be_parser_source(bvm *vm, const char *fname, const char *text)
+bclosure* be_parser_source(bvm *vm,
+    const char *fname, const char *text, size_t length)
 {
     bparser parser;
     bclosure *cl = be_newclosure(vm, 0);
@@ -1098,7 +1099,7 @@ bclosure* be_parser_source(bvm *vm, const char *fname, const char *text)
     be_stackpush(vm);
     be_gc_setpause(vm, 0); /* stop auto gc */
     be_lexer_init(&parser.lexer, vm);
-    be_lexer_set_source(&parser.lexer, fname, text);
+    be_lexer_set_source(&parser.lexer, fname, text, length);
     scan_next_token(&parser); /* scan first token */
     mainfunc(&parser, cl);
     be_pop(vm, 1);

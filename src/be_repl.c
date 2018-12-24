@@ -14,12 +14,14 @@ static int try_return(bvm *vm, const char *line)
 static int compile(bvm *vm, const char *line, breadline getl)
 {
     int res = try_return(vm, line);
-    if (res) {
+    if (res == BE_SYNTAX_ERROR) {
         be_pop(vm, 1); /* pop error message */
         be_pushstring(vm, line);
         for (;;) {
-            res = be_loadstring(vm, be_tostring(vm, -1)); /* compile line */
-            if (!res || !strstr(be_tostring(vm, -1), "EOS")) {
+            const char *src = be_tostring(vm, -1);
+            /* compile source line */
+            res = be_loadbuffer(vm, "stdin", src, strlen(src));
+            if (!res || !strstr(be_tostring(vm, -1), "'EOS'")) {
                 be_removeone(vm, -2);
                 return res;
             }

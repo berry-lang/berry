@@ -7,10 +7,12 @@
 #include <stdlib.h>
 
 #define SHORT_STR_LEN       32
+#define EOS                 '\0' /* end of source */
 
+#define isvalid(lex)        ((lex)->cursor < (lex)->endbuf)
 #define next(lex)           (++(lex)->cursor)
 #define prev(lex)           (--(lex)->cursor)
-#define lgetc(lex)          (*(lex)->cursor)
+#define lgetc(lex)          (isvalid(lex) ? *(lex)->cursor : EOS)
 #define match(lex, pattern) while (pattern(lgetc(lex))) { next(lex); }
 #define setstr(lex, v)      ((lex)->token.u.s = (v))
 #define setint(lex, v)      ((lex)->token.u.i = (v))
@@ -32,7 +34,7 @@ void be_lexerror(blexer *lexer, const char *msg)
     be_pushfstring(vm, "%s:%d: error: %s",
                    lexer->fname, lexer->linepos, msg);
     be_lexer_deinit(lexer);
-    be_throw(vm, 1);
+    be_throw(vm, BE_SYNTAX_ERROR);
 }
 
 static void keyword_registe(bvm *vm)
@@ -132,7 +134,7 @@ static int read_oct(blexer *lexer, const char *src)
     for (i = 0; i < 3 && is_digit(*src); ++i) {
         c = 8 * c + *src++ - '0';
     }
-    if (i < 3 && !(c == '\0' && i == 1)) {
+    if (i < 3 && !(c == EOS && i == 1)) {
         be_lexerror(lexer, "octal escape too few.");
     }
     return c;
@@ -164,7 +166,7 @@ static void tr_string(blexer *lexer, const char *src, const char *end)
             case 'x': c = read_hex(lexer, ++src); ++src; break;
             default:
                 c = read_oct(lexer, src);
-                if (c != '\0') {
+                if (c != EOS) {
                     src += 2;
                 }
                 break;
@@ -203,7 +205,7 @@ static void skip_comment(blexer *lexer)
                 continue;
             }
             c = *next(lexer);
-        } while (!(mark && c == '#') && c != '\0');
+        } while (!(mark && c == '#') && c != EOS);
         next(lexer); /* skip '#' */
     } else { /* line comment */
         while (!is_newline(lgetc(lexer)) && lgetc(lexer)) {
@@ -314,7 +316,7 @@ static btokentype scan_string(blexer *lexer)
     const char *begin = lexer->cursor + 1;
 
     next(lexer);
-    while ((c = lgetc(lexer)) != '\0' && (c != end)) {
+    while ((c = lgetc(lexer)) != EOS && (c != end)) {
         next(lexer);
         if (c == '\\') {
             next(lexer); /* skip '\\.' */
@@ -407,6 +409,7 @@ void be_lexer_init(blexer *lexer, bvm *vm)
     lexer->vm = vm;
     lexer->line = NULL;
     lexer->cursor = NULL;
+    lexer->endbuf = NULL;
     lexer->data = NULL;
     lexer->size = 0;
     keyword_registe(vm);
@@ -418,11 +421,13 @@ void be_lexer_deinit(blexer *lexer)
     keyword_unregiste(lexer->vm);
 }
 
-void be_lexer_set_source(blexer *lexer, const char *fname, const char *text)
+void be_lexer_set_source(blexer *lexer,
+    const char *fname, const char *text, size_t length)
 {
     lexer->fname = fname;
     lexer->line = text;
     lexer->cursor = text;
+    lexer->endbuf = text + length;
     lexer->linepos = 1;
 }
 
@@ -430,7 +435,7 @@ int be_lexer_scan_next(blexer *lexer)
 {
     btokentype type;
 
-    if (lgetc(lexer) == '\0') { /* clear lexer */
+    if (lgetc(lexer) == EOS) { /* clear lexer */
         be_free(lexer->data);
         lexer->data = NULL;
         lexer->size = 0;

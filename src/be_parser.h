@@ -65,6 +65,7 @@ typedef struct bfuncinfo {
     bbyte freereg; /* first free register */
 } bfuncinfo;
 
-bclosure* be_parser_source(bvm *vm, const char *fname, const char *text);
+bclosure* be_parser_source(bvm *vm,
+    const char *fname, const char *text, size_t length);
 
 #endif

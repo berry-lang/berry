@@ -19,6 +19,7 @@ struct blongjmp {
 struct pparser {
     const char *fname;
     const char *source;
+    size_t length;
 };
 
 struct pcall {
@@ -51,18 +52,20 @@ int be_execprotected(bvm *vm, bpfunc f, void *data)
 static void m_parser(bvm *vm, void *data)
 {
     struct pparser *p = cast(struct pparser*, data);
-    bclosure *cl = be_parser_source(vm, p->fname, p->source);
+    bclosure *cl = be_parser_source(vm, p->fname, p->source, p->length);
     var_setclosure(vm->top, cl);
     vm->top++;
 }
 
-int be_protectedparser(bvm *vm, const char *fname, const char *text)
+int be_protectedparser(bvm *vm,
+    const char *fname, const char *source, size_t length)
 {
     int res;
     struct pparser s;
     bvalue *top = vm->top;
     s.fname = fname;
-    s.source = text;
+    s.source = source;
+    s.length = length;
     res = be_execprotected(vm, m_parser, &s);
     if (res) { /* recovery call stack */
         int idx = vm->top - vm->reg;

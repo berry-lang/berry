@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 #define BERRY_DEBUG     0
 
@@ -28,6 +29,12 @@ typedef enum {
 #define BE_CLASS        6
 #define BE_INSTANCE     7
 
+enum {
+    BE_OK = 0,
+    BE_SYNTAX_ERROR,
+    BE_EXEC_ERROR
+};
+
 typedef struct bvm bvm;
 typedef int (*bcfunction)(bvm *vm);
 
@@ -36,8 +43,11 @@ typedef struct {
     bcfunction function;
 } bmemberinfo;
 
+#define be_loadstring(vm, str) \
+    be_loadbuffer((vm), "string", (str), strlen(str))
+
 #define be_dostring(vm, s) \
-    (be_loadstring((vm), (s)) || be_pcall((vm), 0))
+    be_loadstring((vm), (s)) || be_pcall((vm), 0)
 
 bint be_str2int(const char *str, const char **endstr);
 breal be_str2real(const char *str, const char **endstr);
@@ -117,7 +127,8 @@ void be_regclass(bvm *vm, const char *name, const bmemberinfo *lib);
 
 bvm* be_newvm(int nstack);
 
-int be_loadstring(bvm *vm, const char *str);
+int be_loadbuffer(bvm *vm,
+    const char *name, const char *buffer, size_t length);
 void be_loadlibs(bvm *vm);
 
 #endif
