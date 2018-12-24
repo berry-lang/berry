@@ -77,9 +77,13 @@ static void check_var(bparser *parser, bexpdesc *e)
 {
     if (e->type == ETVOID) {
         bstring *s = e->v.s;
-        const char *str = s ? str(s) : "";
-        parser_error(parser, be_pushfstring(parser->vm,
-            "'%s' undeclared (first use in this function)", str));
+        if (s) {
+            parser_error(parser, be_pushfstring(parser->vm,
+                "'%s' undeclared (first use in this function)", str(s)));
+        } else {
+            parser_error(parser, be_pushfstring(parser->vm,
+                "unexpected symbol near '%s'", token2str(parser)));
+        }
     }
 }
 
@@ -503,6 +507,7 @@ static void call_expr(bparser *parser, bexpdesc *e)
     if (ismember) {
         be_code_getmethod(finfo);
     }
+    init_exp(&args, ETVOID, 0);
     scan_next_token(parser); /* skip '(' */
     if (next_token(parser).type != OptRBK) {
         argc = exprlist(parser, &args);
@@ -624,6 +629,7 @@ static void assign_expr(bparser *parser)
     line = parser->lexer.linepos;
     if (next_token(parser).type == OptAssign) { /* '=' */
         bexpdesc e1;
+        init_exp(&e1, ETVOID, 0);
         scan_next_token(parser);
         expr(parser, &e1);
         check_var(parser, &e1);

@@ -1,4 +1,5 @@
 #include "berry.h"
+#include "be_repl.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -27,27 +28,10 @@ static void dofile(bvm *vm, const char *fname)
     }
 }
 
-static const char* addreturn(const char *line)
-{
-    static char buffer[1024];
-    sprintf(buffer, "return (%s)", line);
-    return buffer;
-}
-
-static int try_line(bvm *vm, const char *line)
-{
-    int res = be_loadstring(vm, addreturn(line));
-    if (res) {
-        be_pop(vm, 1);
-        res = be_loadstring(vm, line);
-    }
-    return res;
-}
-
-static const char* getl(void)
+static const char* get_line(const char *prompt)
 {
 #if defined(__linux) || defined(__unix) || defined(__APPLE__)
-    const char *line = readline("> ");
+    const char *line = readline(prompt);
     add_history(line);
     return line;
 #else
@@ -60,26 +44,6 @@ static const char* getl(void)
 #endif
 }
 
-static void repl(bvm *vm)
-{
-    const char *line;
-    while ((line = getl()) != NULL) {
-        if (try_line(vm, line)) {
-            printf("%s\n", be_tostring(vm, -1)); /* some error */
-            be_pop(vm, 1);
-        } else if (be_pcall(vm, 0)) { /* vm run error */
-            printf("%s\n", be_tostring(vm, -1));
-            be_pop(vm, 2);
-        } else {
-            if (!be_isnil(vm, -1)) {
-                printf("%s\n", be_tostring(vm, -1));
-            }
-            be_pop(vm, 1);
-        }
-    }
-    printf("\n");
-}
-
 int main(int argc, char *argv[])
 {
     bvm *vm = be_newvm(32);
@@ -88,7 +52,7 @@ int main(int argc, char *argv[])
     if (argc >= 2) {
         dofile(vm, argv[1]);
     } else {
-        repl(vm);
+        be_repl(vm, get_line);
     }
     return 0;
 }

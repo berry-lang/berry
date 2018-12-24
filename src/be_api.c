@@ -289,6 +289,16 @@ void be_pushclass(bvm *vm, const char *name, const bmemberinfo *lib)
     class_init(vm, c, lib); /* bind members */
 }
 
+void be_removeone(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    bvalue *top = --vm->top;
+    while (v < top) {
+        *v = v[1];
+        ++v;
+    }
+}
+
 void be_strconcat(bvm *vm, int index)
 {
     bvalue *dst = index2value(vm, index);

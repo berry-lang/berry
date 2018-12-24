@@ -81,6 +81,7 @@ void be_pushvalue(bvm *vm, int index);
 void be_pushntvclosure(bvm *vm, bcfunction f, int nupvals);
 void be_pushntvfunction(bvm *vm, bcfunction f);
 void be_pushclass(bvm *vm, const char *name, const bmemberinfo *lib);
+void be_removeone(bvm *vm, int index);
 void be_strconcat(bvm *vm, int index);
 void be_getsuper(bvm *vm, int index);
 
