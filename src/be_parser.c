@@ -1005,8 +1005,10 @@ static void class_inherit(bparser *parser, bexpdesc *e)
 {
     if (next_token(parser).type == OptColon) { /* ':' */
         bexpdesc e1;
+        init_exp(&e1, ETVOID, 0);
         scan_next_token(parser); /* skip ':' */
         expr(parser, &e1);
+        check_var(parser, &e1);
         be_code_setsuper(parser->finfo, e, &e1);
     }
 }
@@ -1019,7 +1021,8 @@ static void class_block(bparser *parser, bclass *c)
         case KeyVar: classvar_stmt(parser, c); break;
         case KeyDef: classdef_stmt(parser, c); break;
         case OptSemic: scan_next_token(parser); break;
-        default: parser_error(parser, "class error");
+        default: parser_error(parser, be_pushfstring(parser->vm,
+                    "unexpected token '%s'", token2str(parser)));
         }
     }
 }
