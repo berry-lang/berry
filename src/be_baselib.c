@@ -72,11 +72,7 @@ static int l_number(bvm *vm)
 {
     if (be_isstring(vm, 1)) {
         const char *str = be_tostring(vm, 1);
-        if (strchr(str, '.')) {
-            be_pushreal(vm, be_str2real(str, NULL));
-        } else {
-            be_pushint(vm, be_str2int(str, NULL));
-        }
+        be_str2num(vm, str);
         return be_return(vm);
     } else if (be_isnumber(vm, -1)) {
         return be_return(vm);

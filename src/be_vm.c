@@ -450,8 +450,8 @@ static void i_getmethod(bvm *vm, binstruction ins)
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
     if (var_isinstance(b) && var_isstr(c)) {
         bvalue self = *b;
-        bvalue *m = be_instance_member(var_toobj(b), var_tostr(c), a);
-        if (m && m->type != MT_VARIABLE) {
+        int mtype = be_instance_member(var_toobj(b), var_tostr(c), a);
+        if (mtype == MT_METHOD || mtype == MT_PRIMMETHOD) {
             a[1] = self;
         } else if (var_basetype(a) == BE_FUNCTION) {
             a[1] = *a;

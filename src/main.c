@@ -79,7 +79,8 @@ int main(int argc, char *argv[])
     if (argc >= 2) {
         dofile(vm, argv[1]);
     } else {
-        be_printf("Berry " BERRY_VERSION " (build in " __DATE__ ", " __TIME__ ")\n");
+        be_printf("Berry " BERRY_VERSION
+                  " (build in " __DATE__ ", " __TIME__ ")\n");
         be_printf("[" COMPILER "] on " OS_NAME " (default)\n");
         be_repl(vm, get_line);
     }

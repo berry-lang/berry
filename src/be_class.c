@@ -44,11 +44,17 @@ void be_prim_method_bind(bclass *c, bstring *name, bcfunction f)
     m->type = MT_PRIMMETHOD;
 }
 
-bvalue* be_class_member(bclass *c, bstring *name)
+binstance* instance_member(binstance *obj, bstring *name, bvalue *dst)
 {
-    if (name) {
-        return be_map_findstr(c->members, name);
+    while (obj) {
+        bvalue *v = be_map_findstr(obj->class->members, name);
+        if (v) {
+            *dst = *v;
+            return obj;
+        }
+        obj = obj->super;
     }
+    var_setnil(dst);
     return NULL;
 }
 
@@ -72,53 +78,43 @@ static binstance* newobject(bvm *vm, bclass *c)
 
 int be_class_newobj(bvm *vm, bclass *c, bvalue *argv, int argc)
 {
+    bvalue init;
     binstance *obj = newobject(vm, c);
-    bmap *map = obj->class->members;
-    bvalue *init = be_map_findstr(map, be_newstr(vm, "init"));
 
     var_setinstance(argv, obj);
-    if (init && init->type != MT_VARIABLE) { /* user constructor */
+    /* find constructor */
+    obj = instance_member(obj, be_newstr(vm, "init"), &init);
+    if (obj && var_type(&init) != MT_VARIABLE) {
+        /* user constructor */
         bvalue *reg = argv + 1;
         /* copy argv */
         for (; argc > 0; --argc) {
             reg[argc] = argv[argc - 1];
         }
-        *reg = *init; /* set constructor */
+        *reg = init; /* set constructor */
         return 1;
     }
     return 0;
 }
 
-bvalue* be_instance_member(binstance *obj, bstring *name, bvalue *dst)
+int be_instance_member(binstance *obj, bstring *name, bvalue *dst)
 {
-    while (obj) {
-        bvalue *m = be_class_member(obj->class, name);
-        if (m) {
-            if (m->type == MT_VARIABLE) {
-                *dst = obj->members[m->v.i];
-            } else { /* method */
-                *dst = *m;
-            }
-            return m;
-        }
-        obj = obj->super;
+    int type;
+    obj = instance_member(obj, name, dst);
+    type = var_type(dst);
+    if (obj && type == MT_VARIABLE) {
+        *dst = obj->members[dst->v.i];
     }
-    var_setnil(dst);
-    return NULL;
+    return type;
 }
 
 int be_instance_setmember(binstance *obj, bstring *name, bvalue *src)
 {
-    while (obj) {
-        bvalue *m = be_class_member(obj->class, name);
-        if (m) {
-            if (m->type == MT_VARIABLE) {
-                obj->members[m->v.i] = *src;
-                return 1;
-            }
-            return 0;
-        }
-        obj = obj->super;
+    bvalue v;
+    obj = instance_member(obj, name, &v);
+    if (obj && var_istype(&v, MT_VARIABLE)) {
+        obj->members[var_toint(&v)] = *src;
+        return 1;
     }
     return 0;
 }
