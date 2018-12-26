@@ -20,6 +20,7 @@ struct bgc {
 };
 
 static void mark_object(bvm *vm, bgcobject *obj, int type);
+static void free_object(bvm *vm, bgcobject *obj);
 
 void be_gc_init(bvm *vm)
 {
@@ -31,6 +32,17 @@ void be_gc_init(bvm *vm)
     gc->steprate = 200;
     gc->pause = 0;
     vm->gc = gc;
+}
+
+void be_gc_deleteall(bvm *vm)
+{
+    bgcobject *node = vm->gc->list;
+    while (node) {
+        bgcobject *next = node->next;
+        free_object(vm, node);
+        node = next;
+    }
+    be_free(vm->gc);
 }
 
 void be_gc_setsteprate(bvm *vm, int rate)

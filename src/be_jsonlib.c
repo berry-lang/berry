@@ -267,8 +267,8 @@ static const char* parser_value(bvm *vm, const char *json)
         return parser_false(vm, json);
     case 'n': /* null */
         return parser_null(vm, json);
-    default:
-        if (is_digit(*json)) { /* number */
+    default: /* number */
+        if (*json == '-' || is_digit(*json)) {
             return be_str2num(vm, json);
         }
     }

@@ -10,6 +10,7 @@
 #define be_vector_isend(vector, item)   ((item) > (vector)->end)
 #define be_vector_end(vector)           ((vector)->end)
 #define be_stack_init(stack, size)      be_vector_init(stack, size)
+#define be_stack_delete(stack)          be_vector_delete(stack)
 #define be_stack_clear(stack)           be_vector_clear(stack)
 #define be_stack_push(stack, data)      be_vector_append(stack, data)
 #define be_stack_pop(stack)             be_vector_remove_end(stack)

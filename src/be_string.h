@@ -19,6 +19,7 @@ typedef struct {
 #define str_hash(_s)        be_strhash((_s)->s, str_len(_s))
 
 void be_string_init(bvm *vm);
+void be_string_deleteall(bvm *vm);
 int be_eqstr(bstring *s1, bstring *s2);
 uint32_t be_strhash(const char *str, int len);
 bstring* be_newstr(bvm *vm, const char *str);

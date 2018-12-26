@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#define BERRY_DEBUG     0
+#include "berry_conf.h"
 
 #define BERRY_VERSION   "0.0.1"
 
@@ -47,7 +47,7 @@ typedef struct {
     be_loadbuffer((vm), "string", (str), strlen(str))
 
 #define be_dostring(vm, s) \
-    be_loadstring((vm), (s)) || be_pcall((vm), 0)
+    (be_loadstring((vm), (s)) || be_pcall((vm), 0))
 
 bint be_str2int(const char *str, const char **endstr);
 breal be_str2real(const char *str, const char **endstr);
@@ -125,7 +125,8 @@ void be_abort(void);
 void be_regcfunc(bvm *vm, const char *name, bcfunction f);
 void be_regclass(bvm *vm, const char *name, const bmemberinfo *lib);
 
-bvm* be_newvm(int nstack);
+bvm* be_vm_new(int nstack);
+void be_vm_delete(bvm *vm);
 
 int be_loadbuffer(bvm *vm,
     const char *name, const char *buffer, size_t length);

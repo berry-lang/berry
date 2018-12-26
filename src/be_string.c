@@ -72,6 +72,21 @@ void be_string_init(bvm *vm)
     resize(vm, 8);
 }
 
+void be_string_deleteall(bvm *vm)
+{
+    int i;
+    bstringtable *tab = vm->strtab;
+    for (i = 0; i < tab->size; ++i) {
+        bstring *node = tab->table[i];
+        while (node) {
+            bstring *next = next(node);
+            be_free(node);
+            node = next;
+        }
+    }
+    be_free(tab);
+}
+
 bstring* createstrobj(bvm *vm, int len, int islong, int isk)
 {
     int size = (islong ? sizeof(blstring)

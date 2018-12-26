@@ -525,7 +525,7 @@ static void i_close(bvm *vm, binstruction ins)
     be_upvals_close(vm, RA(ins));
 }
 
-bvm* be_newvm(int nstack)
+bvm* be_vm_new(int nstack)
 {
     bvm *vm = be_malloc(sizeof(bvm));
     be_gc_init(vm);
@@ -540,6 +540,14 @@ bvm* be_newvm(int nstack)
     vm->top = vm->reg;
     vm->errjmp = NULL;
     return vm;
+}
+
+void be_vm_delete(bvm *vm)
+{
+    be_gc_deleteall(vm);
+    be_string_deleteall(vm);
+    be_stack_delete(&vm->callstack);
+    be_free(vm);
 }
 
 static void vm_exec(bvm *vm)

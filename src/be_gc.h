@@ -39,6 +39,7 @@ enum {
 } bgcmark;
 
 void be_gc_init(bvm *vm);
+void be_gc_deleteall(bvm *vm);
 void be_gc_setsteprate(bvm *vm, int rate);
 void be_gc_setpause(bvm *vm, int pause);
 bgcobject* be_newgcobj(bvm *vm, int type, int size);

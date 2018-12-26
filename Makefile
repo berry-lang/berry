@@ -2,8 +2,8 @@ CFLAGS	 = -Wall -Wextra -std=c89 -O2
 TARGET	 = berry
 CC	 = gcc
 
-INCPATH	 = src
-SRCPATH	 = src
+INCPATH	 = src default
+SRCPATH	 = src default
 
 ifneq ($(OS), Windows_NT)
   ifeq ($(shell uname), Linux) # Linux
