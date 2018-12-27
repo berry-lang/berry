@@ -84,6 +84,11 @@ typedef struct {
     bbyte idx;
 } bupvaldesc;
 
+typedef struct {
+    int linenumber;
+    int endpc;
+} blineinfo;
+
 typedef struct bupval {
     bvalue *value;
     union {
@@ -107,9 +112,11 @@ typedef struct bproto {
     int nconst; /* constants count */
     int nproto; /* proto count */
     char argc; /* argument count */
-    /* debug information */
+#if BE_RUNTIME_DEBUG_INFO /* debug information */
     bstring *source;
-    int *lineinfo;
+    blineinfo *lineinfo;
+    int nlineinfo;
+#endif
 } bproto;
 
 struct bclosure {

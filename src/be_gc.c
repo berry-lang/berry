@@ -135,7 +135,9 @@ static void mark_proto(bvm *vm, bgcobject *obj)
             mark_object(vm, gc_object(*ptab), BE_PROTO);
         }
         gc_setdark(gc_object(p->name));
+#if BE_RUNTIME_DEBUG_INFO
         gc_setdark(gc_object(p->source));
+#endif
         gc_setdark(obj);
     }
 }
@@ -224,6 +226,9 @@ static void free_proto(bgcobject *obj)
         be_free(proto->ktab);
         be_free(proto->ptab);
         be_free(proto->code);
+#if BE_RUNTIME_DEBUG_INFO
+        be_free(proto->lineinfo);
+#endif
         be_free(proto);
     }
 }

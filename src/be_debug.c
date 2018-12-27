@@ -103,52 +103,56 @@ void be_dprintcode(bclosure *cl)
     printproto(cl->proto);
 }
 
-static const char* srcinfo(char *buf, bcallframe *cf)
+static const char* sourceinfo(char *buf, bcallframe *cf)
 {
-    bvalue *func = cf->func;
-    if (var_isclosure(func)) {
-        bclosure *cl = var_toobj(func);
-        bproto *proto = cl->proto;
-        int pc = cf->ip - proto->code;
-        sprintf(buf, "%s:%d:", str(proto->source), proto->lineinfo[pc]);
-    } else {
-        strcpy(buf, "<native>:");
+#if BE_RUNTIME_DEBUG_INFO
+    bproto *proto = cast(bclosure*, var_toobj(cf->func))->proto;
+    int pc = cf->ip - proto->code;
+    blineinfo *start = proto->lineinfo;
+    blineinfo *it = start + proto->nlineinfo - 1;
+    while (it > start && it->endpc > pc) {
+        --it;
     }
+    sprintf(buf, "%s:%d:", str(proto->source), it->linenumber);
     return buf;
+#else
+    (void)buf; (void)cf;
+    return "<unknow source>:";
+#endif
 }
 
-static void tracestack(bvm *vm, char *buf)
+static void tracestack(bvm *vm)
 {
     bcallframe *cf = be_stack_top(&vm->callstack);
     bcallframe *base = be_stack_base(&vm->callstack);
-    buf[0] = '\0';
     for (; cf >= base; --cf) {
-        char sbuf[100];
         if (var_isclosure(cf->func)) {
+            char buf[100];
             bclosure *cl = var_toobj(cf->func);
-            buf += sprintf(buf, "\t%s in function `%s`\n",
-                    srcinfo(sbuf, cf), str(cl->proto->name));
+            be_pushfstring(vm, "\t%s in function `%s`\n",
+                sourceinfo(buf, cf), str(cl->proto->name));
         } else {
-            buf += sprintf(buf, "\t%s in native function\n", srcinfo(sbuf, cf));
+            be_pushstring(vm, "\t<native>: in native function\n");
         }
+        be_strconcat(vm, -2);
+        be_pop(vm, 1);
     }
-    strcat(buf, "\t[C]: in ?");
+    be_pushstring(vm, "\t[C]: in ?");
+    be_strconcat(vm, -2);
+    be_pop(vm, 1);
 }
 
 void addinfo(bvm *vm, const char *msg)
 {
-    bvalue *func = vm->cf->func;
-    char buf[500];
-    tracestack(vm, buf);
-    if (var_isclosure(func)) {
-        bclosure *cl = var_toobj(func);
-        bproto *proto = cl->proto;
-        int pc = vm->cf->ip - proto->code;
-        be_pushfstring(vm, "%s:%d: error: %s\nstack traceback:\n%s",
-            str(proto->source), proto->lineinfo[pc], msg, buf);
+    bcallframe *cf = vm->cf;
+    if (var_isclosure(cf->func)) {
+        char buf[100];
+        be_pushfstring(vm, "%s error: %s\nstack traceback:\n",
+            sourceinfo(buf, cf), msg);
     } else {
-        be_pushfstring(vm, "native error: %s\n%s", msg, buf);
+        be_pushfstring(vm, "native error: %s\n", msg);
     }
+    tracestack(vm);
 }
 
 void be_debug_error(bvm *vm, int errcode, const char *format, ...)

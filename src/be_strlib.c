@@ -156,7 +156,7 @@ const char* be_pushvfstr(bvm *vm, const char *format, va_list arg)
         case 'f': case 'g': {
             bstring *s;
             bvalue *v = vm->top++;
-            var_setreal(v, va_arg(arg, breal));
+            var_setreal(v, cast(breal, va_arg(arg, double)));
             s = be_num2str(vm, v);
             var_setstr(v, s);
             break;

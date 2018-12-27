@@ -19,13 +19,31 @@
 
 static int var2reg(bfuncinfo *finfo, bexpdesc *e, int dst);
 
+#if BE_RUNTIME_DEBUG_INFO
+static void codelineinfo(bfuncinfo *finfo)
+{
+    bvector *vec = &finfo->linevec;
+    int line = finfo->lexer->lastline;
+    blineinfo *li = be_vector_end(vec);
+    if (be_vector_isempty(vec) || li->linenumber != line) {
+        be_vector_append(vec, NULL);
+        li = be_vector_end(vec);
+        li->endpc = finfo->pc;
+        li->linenumber = line;
+        finfo->proto->lineinfo = be_vector_data(vec);
+        finfo->proto->nlineinfo = be_vector_count(vec);
+    }
+}
+#else
+    #define codelineinfo(finfo)
+#endif
+
 static int codeinst(bfuncinfo *finfo, binstruction ins)
 {
     /* put new instruction in code array */
     be_vector_append(&finfo->code, &ins);
     finfo->proto->code = be_vector_data(&finfo->code);
-    be_vector_append(&finfo->linevec, &finfo->lexer->lastline);
-    finfo->proto->lineinfo = be_vector_data(&finfo->linevec);
+    codelineinfo(finfo);
     return finfo->pc++;
 }
 

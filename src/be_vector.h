@@ -8,6 +8,7 @@
 #define be_vector_data(vector)          ((vector)->data)
 #define be_vector_first(vector)         ((vector)->data)
 #define be_vector_isend(vector, item)   ((item) > (vector)->end)
+#define be_vector_isempty(stack)        (be_vector_count(stack) == 0)
 #define be_vector_end(vector)           ((vector)->end)
 #define be_stack_init(stack, size)      be_vector_init(stack, size)
 #define be_stack_delete(stack)          be_vector_delete(stack)
@@ -16,7 +17,7 @@
 #define be_stack_pop(stack)             be_vector_remove_end(stack)
 #define be_stack_top(stack)             be_vector_end(stack)
 #define be_stack_base(stack)            be_vector_first(stack)
-#define be_stack_isempty(stack)         (be_vector_count(stack) == 0)
+#define be_stack_isempty(stack)         be_vector_isempty(stack)
 
 /* ========================== function extern ========================== */
 void be_vector_init(bvector *vector, int size);

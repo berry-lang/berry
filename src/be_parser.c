@@ -136,7 +136,6 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     be_vector_init(&finfo->code, sizeof(binstruction));
     be_vector_init(&finfo->kvec, sizeof(bvalue));
     be_vector_init(&finfo->pvec, sizeof(bproto*));
-    be_vector_init(&finfo->linevec, sizeof(int));
     finfo->prev = parser->finfo;
     finfo->local = be_list_new(vm);
     finfo->upval = be_map_new(vm);
@@ -152,9 +151,12 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     proto->code = be_vector_data(&finfo->code);
     proto->ktab = be_vector_data(&finfo->kvec);
     proto->ptab = be_vector_data(&finfo->pvec);
+#if BE_RUNTIME_DEBUG_INFO
+    be_vector_init(&finfo->linevec, sizeof(blineinfo));
     proto->source = be_newstr(vm, parser->lexer.fname);
     proto->lineinfo = be_vector_data(&finfo->linevec);
     finfo->lexer = &parser->lexer;
+#endif
     begin_block(finfo, binfo, 0);
     var_setproto(vm->top, finfo->proto);
     be_stackpush(vm);

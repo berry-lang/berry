@@ -78,8 +78,11 @@ bproto* be_newproto(bvm *vm)
         p->nstack = 0;
         p->codesize = 0;
         p->argc = 0;
+#if BE_RUNTIME_DEBUG_INFO
         p->source = NULL;
         p->lineinfo = NULL;
+        p->nlineinfo = 0;
+#endif
     }
     return p;
 }
