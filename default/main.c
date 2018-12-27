@@ -15,7 +15,7 @@
     #define OS_NAME   "Unix"
 #elif defined(__APPLE__)
     #define OS_NAME   "macOS"
-#elif defined(WINVER)
+#elif defined(_WIN32)
     #define OS_NAME   "Windows"
 #else
     #define OS_NAME   "Unknown OS"
@@ -64,20 +64,31 @@ static const char* get_line(const char *prompt)
 #endif
 }
 
+static char* readfile(FILE *fp, int *len)
+{
+    char *buffer;
+    fseek(fp,0L,SEEK_END);
+    *len = (int)ftell(fp);
+    buffer = malloc(*len);
+    fseek(fp, 0L, SEEK_SET);
+    if (buffer) {
+        *len = fread(buffer, 1, *len, fp);
+    }
+    fclose(fp);
+    return buffer;
+}
+
 static int dofile(bvm *vm)
 {
     const char *name = be_tostring(vm, 1);
     FILE *fp = fopen(name, "r");
     if (fp) {
-        int res;
-        size_t len;
-        char *buffer;
-        fseek(fp,0L,SEEK_END);
-        len = ftell(fp);
-        buffer = malloc(len);
-        fseek(fp, 0L, SEEK_SET);
-        len = fread(buffer, 1, len, fp);
-        fclose(fp);
+        int res, len;
+        char *buffer = readfile(fp, &len);
+        if (buffer == NULL) {
+            printf("error: memory allocation failed.\n");
+            return 2;
+        }
         res = be_loadbuffer(vm, name, buffer, len) || be_pcall(vm, 0);
         free(buffer);
         if (res) {

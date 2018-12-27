@@ -30,7 +30,6 @@ static int l_exit(bvm *vm)
         status = be_toint(vm, -1);
     }
     exit(status);
-    return be_return(vm);
 }
 
 static int l_memcount(bvm *vm)

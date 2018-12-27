@@ -158,7 +158,7 @@ static const char* parser_string(bvm *vm, const char *json)
                     default: be_free(buf); return NULL; /* error */
                     }
                 } else {
-                    *dst++ = ch;
+                    *dst++ = (char)ch;
                 }
             }
             if (ch == '"') {

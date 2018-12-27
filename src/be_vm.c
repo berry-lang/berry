@@ -17,8 +17,8 @@
 
 #define NOT_METHOD      BE_NONE
 
-#define vm_error(vm, fmt, arg...)                   \
-    be_debug_error((vm), BE_EXEC_ERROR, (fmt), ##arg)
+#define vm_error(vm, fmt, ...) \
+    be_debug_error((vm), BE_EXEC_ERROR, (fmt), __VA_ARGS__)
 
 #define RA(i)   (vm->reg + IGET_RA(i))
 #define RKB(i)  ((isKB(i) ? curcl(vm)->proto->ktab \

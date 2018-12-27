@@ -239,7 +239,7 @@ breal be_str2real(const char *str, const char **endstr)
     if (c == '.') {
         c = *str++;
         while (is_digit(c)) {
-            deci = deci + (c - '0') * point;
+            deci = deci + ((breal)c - '0') * point;
             point *= (breal)0.1;
             c = *str++;
         }

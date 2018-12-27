@@ -35,8 +35,8 @@
 
 #define parser_error(p, msg)    be_lexerror(&(p)->lexer, msg)
 
-#define push_error(parser, fmt, arg...) \
-    parser_error(parser, be_pushfstring(parser->vm, fmt, ##arg)
+#define push_error(parser, fmt, ...) \
+    parser_error(parser, be_pushfstring(parser->vm, fmt, __VA_ARGS__)
 
 typedef struct {
     blexer lexer;
