@@ -29,7 +29,7 @@ bvalue* be_list_index(blist *list, int index)
     if (index < 0) {
         index = list->count + index;
     }
-    if (index < 0 || index > list->count) {
+    if (index < 0 || index >= list->count) {
         return NULL;
     }
     return be_list_at(list, index);

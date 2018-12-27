@@ -17,7 +17,7 @@
 
 #define NOT_METHOD      BE_NONE
 
-#define vm_error(vm, fmt, arg...)   \
+#define vm_error(vm, fmt, arg...)                   \
     be_debug_error((vm), BE_EXEC_ERROR, (fmt), ##arg)
 
 #define RA(i)   (vm->reg + IGET_RA(i))
@@ -51,7 +51,7 @@
     } else if (var_isinstance(a)) { \
         object_binop(vm, #op, dst, a, b); \
     } else { \
-        vm_error(vm, "a " #op " b param error."); \
+        binop_error(vm, #op, a, b); \
     }
 
 #define equal_block(op, opstr) \
@@ -71,7 +71,7 @@
     } else if (var_isinstance(a)) { \
         object_binop(vm, #op, dst, a, b); \
     } else { \
-        vm_error(vm, "a " #op " b param error."); \
+        binop_error(vm, #op, a, b); \
     }
 
 /* script closure call */
@@ -108,6 +108,14 @@
     _vm->cf = be_stack_top(&_vm->callstack); \
     _vm->reg = _cf->reg; \
     _vm->top = _cf->top; \
+}
+
+#define attribute_error(vm, b, c, t) {          \
+    const char *attr = var_isstr(c) ?           \
+        str(var_tostr(c)) : be_vtype2str(c);    \
+    vm_error(vm,                                \
+        "'%s' value has no " t " '%s'",         \
+        be_vtype2str(b), attr);                 \
 }
 
 static void binop_error(bvm *vm, const char *op, bvalue *a, bvalue *b)
@@ -155,12 +163,35 @@ static bbool var2bool(bvm *vm, bvalue *v)
     }
 }
 
+static void obj_method(bvm *vm, bvalue *o, bstring *attr)
+{
+    binstance *obj = var_toobj(o);
+    int type = be_instance_member(obj, attr, vm->top);
+    if (basetype(type) != BE_FUNCTION) {
+        vm_error(vm,
+            "the class '%s' has no method '%s'",
+            str(be_instance_name(obj)), str(attr));
+    }
+}
+
+static int obj_attribute(bvm *vm, bvalue *o, bstring *attr, bvalue *dst)
+{
+    binstance *obj = var_toobj(o);
+    int type = be_instance_member(obj, attr, dst);
+    if (basetype(type) == BE_NIL) {
+        vm_error(vm,
+            "the class '%s' has no attribute '%s'",
+            str(be_instance_name(obj)), str(attr));
+    }
+    return type;
+}
+
 static void object_binop(bvm *vm, const char *op,
                          bvalue *dst, bvalue *a, bvalue *b)
 {
     bvalue *top = vm->top;
     /* get operator method */
-    be_instance_member(a->v.p, be_newconststr(vm, op), top);
+    obj_method(vm, a, be_newconststr(vm, op));
     top[1] = *a; /* move self to argv[0] */
     top[2] = *b; /* move other to argv[1] */
     vm->top++;   /* prevent collection results */
@@ -173,7 +204,7 @@ static void object_unop(bvm *vm, const char *op,
 {
     bvalue *top = vm->top;
     /* get operator method */
-    be_instance_member(src->v.p, be_newconststr(vm, op), top);
+    obj_method(vm, src, be_newconststr(vm, op));
     top[1] = *src; /* move self to argv[0] */
     be_dofunc(vm, top, 1); /* call method 'item' */
     *dst = *top; /* copy result to dst */
@@ -435,7 +466,8 @@ static void i_call(bvm *vm, binstruction ins)
         break;
     }
     default:
-        vm_error(vm, "value is not function");
+        vm_error(vm, "'%s' value is not callable",
+            be_vtype2str(var));
     }
 }
 
@@ -453,9 +485,9 @@ static void i_getmember(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
     if (var_isinstance(b) && var_isstr(c)) {
-        be_instance_member(var_toobj(b), var_tostr(c), a);
+        obj_attribute(vm, b, var_tostr(c), a);
     } else {
-        vm_error(vm, "get member: object error");
+        attribute_error(vm, b, c, "attribute");
     }
 }
 
@@ -464,17 +496,20 @@ static void i_getmethod(bvm *vm, binstruction ins)
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
     if (var_isinstance(b) && var_isstr(c)) {
         bvalue self = *b;
-        int mtype = be_instance_member(var_toobj(b), var_tostr(c), a);
-        if (mtype == MT_METHOD || mtype == MT_PRIMMETHOD) {
+        bstring *attr = var_tostr(c);
+        binstance *obj = var_toobj(b);
+        int type = obj_attribute(vm, b, var_tostr(c), a);
+        if (type == MT_METHOD || type == MT_PRIMMETHOD) {
             a[1] = self;
         } else if (var_basetype(a) == BE_FUNCTION) {
             a[1] = *a;
             var_settype(a, NOT_METHOD);
         } else {
-            vm_error(vm, "member is not function");
+            vm_error(vm, "class '%s' has no method '%s'",
+                str(be_instance_name(obj)), str(attr));
         }
     } else {
-        vm_error(vm, "get method: error");
+        attribute_error(vm, b, c, "method");
     }
 }
 
@@ -482,9 +517,14 @@ static void i_setmember(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
     if (var_isinstance(a) && var_isstr(b)) {
-        be_instance_setmember(var_toobj(a), var_tostr(b), c);
+        binstance *obj = var_toobj(a);
+        bstring *attr = var_tostr(b);
+        if (!be_instance_setmember(obj, attr, c)) {
+            vm_error(vm, "class '%s' cannot assign to attribute '%s'",
+                str(be_instance_name(obj)), str(attr));
+        }
     } else {
-        vm_error(vm, "set member: object error");
+        attribute_error(vm, b, c, "attribute");
     }
 }
 
@@ -494,7 +534,7 @@ static void i_getindex(bvm *vm, binstruction ins)
     if (var_isinstance(b)) {
         bvalue *top = vm->top;
         /* get method 'item' */
-        be_instance_member(var_toobj(b), be_newconststr(vm, "item"), top);
+        obj_method(vm, b, be_newconststr(vm, "item"));
         top[1] = *b; /* move object to argv[0] */
         top[2] = *c; /* move key to argv[1] */
         vm->top += 3;   /* prevent collection results */
@@ -502,7 +542,9 @@ static void i_getindex(bvm *vm, binstruction ins)
         vm->top -= 3;
         *a = *top;   /* copy result to R(A) */
     } else {
-        vm_error(vm, "get index: object error");
+        vm_error(vm,
+            "value '%s' does not support index operation",
+            be_vtype2str(b));
     }
 }
 
@@ -511,8 +553,8 @@ static void i_setindex(bvm *vm, binstruction ins)
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
     if (var_isinstance(a)) {
         bvalue *top = vm->top;
-        /* get method 'item' */
-        be_instance_member(var_toobj(a), be_newconststr(vm, "setitem"), top);
+        /* get method 'setitem' */
+        obj_method(vm, a, be_newconststr(vm, "setitem"));
         top[1] = *a; /* move object to argv[0] */
         top[2] = *b; /* move key to argv[1] */
         top[3] = *c; /* move src to argv[2] */
@@ -520,7 +562,9 @@ static void i_setindex(bvm *vm, binstruction ins)
         be_dofunc(vm, top, 3); /* call method 'setitem' */
         vm->top -= 4;
     } else {
-        vm_error(vm, "set index: object error");
+        vm_error(vm,
+            "value '%s' does not support index operation",
+            be_vtype2str(b));
     }
 }
 
@@ -528,9 +572,12 @@ static void i_setsuper(bvm *vm, binstruction ins)
 {
     bvalue *a = RA(ins), *b = RKB(ins);
     if (var_isclass(a) && var_isclass(b)) {
-        be_class_setsuper(cast(bclass*, var_toobj(a)), var_toobj(b));
+        bclass *obj = var_toobj(a);
+        be_class_setsuper(obj, var_toobj(b));
     } else {
-        vm_error(vm, "set super: class error");
+        vm_error(vm,
+            "value '%s' does not support set super",
+            be_vtype2str(b));
     }
 }
 

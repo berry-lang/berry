@@ -127,9 +127,10 @@ struct bntvclos {
 };
 
 #define cast(_T, _v)            ((_T)_v)
+#define basetype(_t)            ((_t) & 0x1F)
 
 #define var_type(_v)            ((_v)->type)
-#define var_basetype(_v)        ((_v)->type & 0x1F)
+#define var_basetype(_v)        basetype((_v)->type)
 #define var_istype(_v, _t)      (var_type(_v) == _t)
 #define var_settype(_v, _t)     ((_v)->type = _t)
 #define var_setobj(_v, _t, _o)  { (_v)->v.p = _o; var_settype(_v, _t); }

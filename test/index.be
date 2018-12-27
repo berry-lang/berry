@@ -70,4 +70,4 @@ l[4] = ['list index test', 0]
 it = l.iter()
 print(it(), it(), it())
 print('l:', l)
-print('l[range(0, 5)]:', l[range(0, 8)])
+print('l[range(0, 8)]:', l[range(0, 8)])

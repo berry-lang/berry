@@ -153,6 +153,14 @@ const char* be_pushvfstr(bvm *vm, const char *format, va_list arg)
             var_setstr(v, s);
             break;
         }
+        case 'f': case 'g': {
+            bstring *s;
+            bvalue *v = vm->top++;
+            var_setreal(v, va_arg(arg, breal));
+            s = be_num2str(vm, v);
+            var_setstr(v, s);
+            break;
+        }
         case 'c': {
             char c = cast(char, va_arg(arg, int));
             pushstr(vm, &c, 1);

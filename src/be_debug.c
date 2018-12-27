@@ -144,10 +144,10 @@ void addinfo(bvm *vm, const char *msg)
         bclosure *cl = var_toobj(func);
         bproto *proto = cl->proto;
         int pc = vm->cf->ip - proto->code;
-        be_pushfstring(vm, "%s:%d: %s\nstack traceback:\n%s",
+        be_pushfstring(vm, "%s:%d: error: %s\nstack traceback:\n%s",
             str(proto->source), proto->lineinfo[pc], msg, buf);
     } else {
-        be_pushfstring(vm, "%s\n%s", msg, buf);
+        be_pushfstring(vm, "native error: %s\n%s", msg, buf);
     }
 }
 
