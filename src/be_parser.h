@@ -51,7 +51,7 @@ typedef struct bblockinfo {
 typedef struct bfuncinfo {
     bproto *proto;
     struct bfuncinfo *prev;
-    bblockinfo *binfo; /* block infomation */
+    bblockinfo *binfo; /* block information */
     bvector code;
     blist *local; /* local variable */
     bmap *upval; /* upvalue variable */
@@ -63,6 +63,9 @@ typedef struct bfuncinfo {
     bbyte nlocal; /* local variable count */
     bbyte nstack; /* stack usage */
     bbyte freereg; /* first free register */
+    /* debug information */
+    struct blexer *lexer;
+    bvector linevec;
 } bfuncinfo;
 
 bclosure* be_parser_source(bvm *vm,

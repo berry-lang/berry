@@ -135,6 +135,7 @@ static void mark_proto(bvm *vm, bgcobject *obj)
             mark_object(vm, gc_object(*ptab), BE_PROTO);
         }
         gc_setdark(gc_object(p->name));
+        gc_setdark(gc_object(p->source));
         gc_setdark(obj);
     }
 }

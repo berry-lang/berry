@@ -5,9 +5,13 @@
 #include "be_class.h"
 #include "be_api.h"
 #include "be_vm.h"
+#include "be_vector.h"
+#include "be_strlib.h"
+#include "be_exec.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 
 void be_abort(void)
 {
@@ -97,4 +101,63 @@ void printproto(bproto *proto)
 void be_dprintcode(bclosure *cl)
 {
     printproto(cl->proto);
+}
+
+static const char* srcinfo(char *buf, bcallframe *cf)
+{
+    bvalue *func = cf->func;
+    if (var_isclosure(func)) {
+        bclosure *cl = var_toobj(func);
+        bproto *proto = cl->proto;
+        int pc = cf->ip - proto->code;
+        sprintf(buf, "%s:%d:", str(proto->source), proto->lineinfo[pc]);
+    } else {
+        strcpy(buf, "<native>:");
+    }
+    return buf;
+}
+
+static void tracestack(bvm *vm, char *buf)
+{
+    bcallframe *cf = be_stack_top(&vm->callstack);
+    bcallframe *base = be_stack_base(&vm->callstack);
+    buf[0] = '\0';
+    for (; cf >= base; --cf) {
+        char sbuf[100];
+        if (var_isclosure(cf->func)) {
+            bclosure *cl = var_toobj(cf->func);
+            buf += sprintf(buf, "\t%s in function `%s`\n",
+                    srcinfo(sbuf, cf), str(cl->proto->name));
+        } else {
+            buf += sprintf(buf, "\t%s in native function\n", srcinfo(sbuf, cf));
+        }
+    }
+    strcat(buf, "\t[C]: in ?");
+}
+
+void addinfo(bvm *vm, const char *msg)
+{
+    bvalue *func = vm->cf->func;
+    char buf[500];
+    tracestack(vm, buf);
+    if (var_isclosure(func)) {
+        bclosure *cl = var_toobj(func);
+        bproto *proto = cl->proto;
+        int pc = vm->cf->ip - proto->code;
+        be_pushfstring(vm, "%s:%d: %s\nstack traceback:\n%s",
+            str(proto->source), proto->lineinfo[pc], msg, buf);
+    } else {
+        be_pushfstring(vm, "%s\n%s", msg, buf);
+    }
+}
+
+void be_debug_error(bvm *vm, int errcode, const char *format, ...)
+{
+    va_list arg_ptr;
+    va_start(arg_ptr, format);
+    be_pushvfstr(vm, format, arg_ptr);
+    va_end(arg_ptr);
+    addinfo(vm, be_tostring(vm, -1));
+    be_removeone(vm, -2);
+    be_throw(vm, errcode);
 }

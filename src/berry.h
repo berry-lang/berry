@@ -10,8 +10,13 @@
 #define BERRY_VERSION   "0.0.1"
 
 typedef uint8_t         bbyte;
-typedef float           breal;
 typedef int             bint;
+
+#if BE_SINGLE_FLOAT != 0
+    typedef float       breal;
+#else
+    typedef double      breal;
+#endif
 
 typedef enum {
     bfalse = 0,

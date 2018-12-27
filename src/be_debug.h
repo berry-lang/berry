@@ -4,5 +4,6 @@
 #include "be_object.h"
 
 void be_dprintcode(bclosure *cl);
+void be_debug_error(bvm *vm, int errcode, const char *format, ...);
 
 #endif

@@ -76,7 +76,8 @@ typedef struct blexer {
     btoken token;
     int size;
     char *data;
-    int linepos;
+    int linenumber;
+    int lastline;
     bvm *vm;
 } blexer;
 

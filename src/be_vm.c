@@ -12,7 +12,13 @@
 #include "be_exec.h"
 #include "be_debug.h"
 
+#include <stdio.h>
+#include <string.h>
+
 #define NOT_METHOD      BE_NONE
+
+#define vm_error(vm, fmt, arg...)   \
+    be_debug_error((vm), BE_EXEC_ERROR, (fmt), ##arg)
 
 #define RA(i)   (vm->reg + IGET_RA(i))
 #define RKB(i)  ((isKB(i) ? curcl(vm)->proto->ktab \
@@ -104,10 +110,18 @@
     _vm->top = _cf->top; \
 }
 
-static void vm_error(bvm *vm, const char *msg)
+static void binop_error(bvm *vm, const char *op, bvalue *a, bvalue *b)
 {
-    be_pushfstring(vm, "%s", msg);
-    be_throw(vm, BE_EXEC_ERROR);
+    vm_error(vm,
+        "unsupported operand type(s) for %s: '%s' and '%s'",
+        op, be_vtype2str(a), be_vtype2str(b));
+}
+
+static void unop_error(bvm *vm, const char *op, bvalue *a)
+{
+    vm_error(vm,
+        "unsupported operand type(s) for %s: '%s'",
+        op, be_vtype2str(a) );
 }
 
 static bbool obj2bool(bvm *vm, bvalue *obj)
@@ -239,7 +253,7 @@ static void i_add(bvm *vm, binstruction ins)
     } else if (var_isinstance(a)) {
         object_binop(vm, "+", dst, a, b);
     } else {
-        vm_error(vm, "ADD param error.");
+        binop_error(vm, "+", a, b);
     }
 }
 
@@ -254,7 +268,7 @@ static void i_sub(bvm *vm, binstruction ins)
     } else if (var_isinstance(a)) {
         object_binop(vm, "-", dst, a, b);
     } else {
-        vm_error(vm, "SUB param error.");
+        binop_error(vm, "-", a, b);
     }
 }
 
@@ -269,7 +283,7 @@ static void i_mul(bvm *vm, binstruction ins)
     } else if (var_isinstance(a)) {
         object_binop(vm, "*", dst, a, b);
     } else {
-        vm_error(vm, "MUL param error.");
+        binop_error(vm, "*", a, b);
     }
 }
 
@@ -284,7 +298,7 @@ static void i_div(bvm *vm, binstruction ins)
     } else if (var_isinstance(a)) {
         object_binop(vm, "/", dst, a, b);
     } else {
-        vm_error(vm, "DIV param error.");
+        binop_error(vm, "/", a, b);
     }
 }
 
@@ -296,7 +310,7 @@ static void i_mod(bvm *vm, binstruction ins)
     } else if (var_isinstance(a)) {
         object_binop(vm, "%", dst, a, b);
     } else {
-        vm_error(vm, "MOD param error.");
+        binop_error(vm, "%", a, b);
     }
 }
 
@@ -310,7 +324,7 @@ static void i_neg(bvm *vm, binstruction ins)
     } else if (var_isinstance(a)) {
         object_unop(vm, "-*", dst, a);
     } else {
-        vm_error(vm, "NEG param error.");
+        unop_error(vm, "-", a);
     }
 }
 

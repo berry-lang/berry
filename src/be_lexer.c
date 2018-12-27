@@ -32,7 +32,7 @@ void be_lexerror(blexer *lexer, const char *msg)
 {
     bvm *vm = lexer->vm;
     be_pushfstring(vm, "%s:%d: error: %s",
-                   lexer->fname, lexer->linepos, msg);
+                   lexer->fname, lexer->linenumber, msg);
     be_lexer_deinit(lexer);
     be_throw(vm, BE_SYNTAX_ERROR);
 }
@@ -189,7 +189,7 @@ static const char* skip_newline(blexer *lexer)
     if (is_newline(lgetc(lexer)) && lgetc(lexer) != lc) {
         next(lexer); /* skip "\n\r" or "\r\n" */
     }
-    lexer->linepos++;
+    lexer->linenumber++;
     return lexer->line = lexer->cursor;
 }
 
@@ -428,7 +428,8 @@ void be_lexer_set_source(blexer *lexer,
     lexer->line = text;
     lexer->cursor = text;
     lexer->endbuf = text + length;
-    lexer->linepos = 1;
+    lexer->linenumber = 1;
+    lexer->lastline = 1;
 }
 
 int be_lexer_scan_next(blexer *lexer)
@@ -442,6 +443,7 @@ int be_lexer_scan_next(blexer *lexer)
         lexer->token.type = TokenEOS;
         return 0;
     }
+    lexer->lastline = lexer->linenumber;
     type = lexer_next(lexer);
     if (type != TokenNone) {
         lexer->token.type = type;

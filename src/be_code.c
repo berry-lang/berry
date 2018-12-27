@@ -24,6 +24,8 @@ static int codeinst(bfuncinfo *finfo, binstruction ins)
     /* put new instruction in code array */
     be_vector_append(&finfo->code, &ins);
     finfo->proto->code = be_vector_data(&finfo->code);
+    be_vector_append(&finfo->linevec, &finfo->lexer->lastline);
+    finfo->proto->lineinfo = be_vector_data(&finfo->linevec);
     return finfo->pc++;
 }
 

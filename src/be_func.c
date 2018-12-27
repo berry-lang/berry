@@ -78,6 +78,8 @@ bproto* be_newproto(bvm *vm)
         p->nstack = 0;
         p->codesize = 0;
         p->argc = 0;
+        p->source = NULL;
+        p->lineinfo = NULL;
     }
     return p;
 }

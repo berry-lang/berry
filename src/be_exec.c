@@ -70,7 +70,7 @@ int be_protectedparser(bvm *vm,
     if (res) { /* recovery call stack */
         int idx = vm->top - vm->reg;
         vm->top = top;
-        be_pushvalue(vm, idx); /* copy error infomation */
+        be_pushvalue(vm, idx); /* copy error information */
     }
     return res;
 }
@@ -96,7 +96,7 @@ int be_protectedcall(bvm *vm, bvalue *v, int argc)
         vm->reg = reg;
         vm->top = top;
         vm->cf = be_stack_top(&vm->callstack);
-        be_pushvalue(vm, idx); /* copy error infomation */
+        be_pushvalue(vm, idx); /* copy error information */
     }
     return res;
 }

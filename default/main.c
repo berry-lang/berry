@@ -147,7 +147,7 @@ static int analysis_args(bvm *vm)
 int main(int argc, char *argv[])
 {
     int i = 0, res;
-    bvm *vm = be_vm_new(32);
+    bvm *vm = be_vm_new(200);
     be_loadlibs(vm);
     srand((unsigned)time(NULL)); /* Set the random seed to system time */
     for (i = 1; i < argc; ++i) {

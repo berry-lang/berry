@@ -107,6 +107,9 @@ typedef struct bproto {
     int nconst; /* constants count */
     int nproto; /* proto count */
     char argc; /* argument count */
+    /* debug information */
+    bstring *source;
+    int *lineinfo;
 } bproto;
 
 struct bclosure {
@@ -168,5 +171,7 @@ struct bntvclos {
 #define var_tostr(_v)           ((_v)->v.s)
 #define var_togc(_v)            ((_v)->v.gc)
 #define var_toobj(_v)           ((_v)->v.p)
+
+const char* be_vtype2str(bvalue *v);
 
 #endif

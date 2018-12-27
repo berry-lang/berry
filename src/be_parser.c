@@ -131,10 +131,11 @@ static void end_block(bparser *parser)
 static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
 {
     bvm *vm = parser->vm;
-    bproto *proto = be_newproto(parser->vm);
+    bproto *proto = be_newproto(vm);
     be_vector_init(&finfo->code, sizeof(binstruction));
     be_vector_init(&finfo->kvec, sizeof(bvalue));
     be_vector_init(&finfo->pvec, sizeof(bproto*));
+    be_vector_init(&finfo->linevec, sizeof(int));
     finfo->prev = parser->finfo;
     finfo->local = be_list_new(vm);
     finfo->upval = be_map_new(vm);
@@ -150,6 +151,9 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     proto->code = be_vector_data(&finfo->code);
     proto->ktab = be_vector_data(&finfo->kvec);
     proto->ptab = be_vector_data(&finfo->pvec);
+    proto->source = be_newstr(vm, parser->lexer.fname);
+    proto->lineinfo = be_vector_data(&finfo->linevec);
+    finfo->lexer = &parser->lexer;
     begin_block(finfo, binfo, 0);
     var_setproto(vm->top, finfo->proto);
     be_stackpush(vm);
@@ -626,7 +630,7 @@ static void assign_expr(bparser *parser)
     bexpdesc e;
     init_exp(&e, ETVOID, 0);
     expr(parser, &e);
-    line = parser->lexer.linepos;
+    line = parser->lexer.linenumber;
     if (next_token(parser).type == OptAssign) { /* '=' */
         bexpdesc e1;
         init_exp(&e1, ETVOID, 0);
@@ -637,7 +641,7 @@ static void assign_expr(bparser *parser)
             new_var(parser, e.v.s, &e);
         }
         if (be_code_setvar(parser->finfo, &e, &e1)) {
-            parser->lexer.linepos = line;
+            parser->lexer.linenumber = line;
             parser_error(parser,
                 "try to assign constant expressions.");
         }
