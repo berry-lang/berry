@@ -2,6 +2,8 @@
 #include "be_parser.h"
 #include "be_vm.h"
 #include "be_vector.h"
+#include "be_mem.h"
+#include "be_debug.h"
 #include <setjmp.h>
 #include <stdlib.h>
 
@@ -86,15 +88,16 @@ int be_protectedcall(bvm *vm, bvalue *v, int argc)
     int res;
     struct pcall s;
     int calldepth = be_vector_count(&vm->callstack);
-    bvalue *reg = vm->reg, *top = vm->top;
+    int reg = vm->reg - vm->stack;
+    int top = vm->top - vm->stack;
     s.v = v;
     s.argc = argc;
     res = be_execprotected(vm, m_pcall, &s);
     if (res) { /* recovery call stack */
-        int idx = vm->top - reg;
+        int idx = vm->top - (vm->stack + reg);
         be_vector_resize(&vm->callstack, calldepth);
-        vm->reg = reg;
-        vm->top = top;
+        vm->reg = vm->stack + reg;
+        vm->top = vm->stack + top;
         vm->cf = be_stack_top(&vm->callstack);
         be_pushvalue(vm, idx); /* copy error information */
     }
@@ -104,4 +107,35 @@ int be_protectedcall(bvm *vm, bvalue *v, int argc)
 void be_stackpush(bvm *vm)
 {
     vm->top++;
+}
+
+static void update_callstack(bvm *vm, size_t pos)
+{
+    bcallframe *cf = be_stack_top(&vm->callstack);
+    bcallframe *base = be_stack_base(&vm->callstack);
+    for (; cf >= base; --cf) {
+        cf->func += pos;
+        cf->top += pos;
+        cf->reg += pos;
+    }
+    vm->top += pos;
+    vm->reg += pos;
+}
+
+size_t be_stack_expansion(bvm *vm, int n)
+{
+    size_t pos, newsize;
+    bvalue *oldstack = vm->stack;
+
+    newsize = vm->stacktop - oldstack + n;
+    if (newsize > BE_STACK_TOTAL_MAX) {
+        be_debug_error(vm, BE_EXEC_ERROR,
+            "stack overflow (maxim stack size: %d)",
+            BE_STACK_TOTAL_MAX);
+    }
+    vm->stack = be_realloc(oldstack, sizeof(bvalue) * newsize);
+    vm->stacktop = vm->stack + newsize;
+    pos = vm->stack - oldstack;
+    update_callstack(vm, pos);
+    return pos;
 }

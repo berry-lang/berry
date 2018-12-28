@@ -130,7 +130,7 @@ void be_abort(void);
 void be_regcfunc(bvm *vm, const char *name, bcfunction f);
 void be_regclass(bvm *vm, const char *name, const bmemberinfo *lib);
 
-bvm* be_vm_new(int nstack);
+bvm* be_vm_new(void);
 void be_vm_delete(bvm *vm);
 
 int be_loadbuffer(bvm *vm,

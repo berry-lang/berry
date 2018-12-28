@@ -79,8 +79,9 @@ static void sim2str(bvm *vm, bvalue *v)
     var_setstr(v, be_newstr(vm, sbuf));
 }
 
-static void ins2str(bvm *vm, bvalue *v)
+static void ins2str(bvm *vm, int idx)
 {
+    bvalue *v = vm->reg + idx;
     bvalue *top = vm->top++;
     binstance *obj = var_toobj(v);
     /* get method 'tostring' */
@@ -91,18 +92,20 @@ static void ins2str(bvm *vm, bvalue *v)
         --vm->top;
         var_setstr(v, be_newstr(vm, sbuf));
     } else {
-        bvalue *ins = vm->top++;
-        var_setval(ins, v);
-        be_call(vm, 1);
-        var_setval(v, top);
+        vm->top++;
+        var_setval(top + 1, v);
+        be_dofunc(vm, top, 1);
         vm->top -= 2;
+        var_setval(vm->reg + idx, vm->top);
     }
 }
 
-void be_val2str(bvm *vm, bvalue *v)
+void be_val2str(bvm *vm, int index)
 {
+    int absidx = be_absindex(vm, index) - 1;
+    bvalue *v = vm->reg + absidx;
     if (var_isinstance(v)) {
-        ins2str(vm, v);
+        ins2str(vm, absidx);
     } else {
         sim2str(vm, v);
     }

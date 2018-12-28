@@ -197,7 +197,8 @@ const char* be_tostring(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     if (!var_isstr(v)) {
-        be_val2str(vm, v);
+        be_val2str(vm, index);
+        v = index2value(vm, index);
     }
     return str(var_tostr(v));
 }

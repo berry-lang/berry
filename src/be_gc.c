@@ -302,7 +302,7 @@ static void premark_stack(bvm *vm)
         ++v;
     }
     /* set other values to nil */
-    end = vm->stack + vm->stacksize;
+    end = vm->stacktop;
     while (v < end) {
         var_setnil(v);
         ++v;

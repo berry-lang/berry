@@ -49,7 +49,7 @@
         int res = be_strcmp(s1, s2); \
         var_setbool(dst, res op 0); \
     } else if (var_isinstance(a)) { \
-        object_binop(vm, #op, dst, a, b); \
+        object_binop(vm, #op, ins, a, b); \
     } else { \
         binop_error(vm, #op, a, b); \
     }
@@ -69,37 +69,22 @@
     } else if (var_isstr(a) && var_isstr(b)) { \
         var_setbool(dst, opstr be_eqstr(a->v.s, b->v.s)); \
     } else if (var_isinstance(a)) { \
-        object_binop(vm, #op, dst, a, b); \
+        object_binop(vm, #op, ins, a, b); \
     } else { \
         binop_error(vm, #op, a, b); \
     }
 
 /* script closure call */
 #define push_closure(_vm, _f, _ns, _t) { \
-    bcallframe *_cf; \
-    be_stack_push(&_vm->callstack, NULL); \
-    _cf = be_stack_top(&_vm->callstack); \
-    _cf->func = _t ? _f - 1 : _f; \
-    _cf->top = _vm->top; \
-    _cf->reg = _vm->reg; \
-    _cf->ip = var2cl(_f)->proto->code; \
-    _cf->status = NONE_FLAG; \
-    _vm->reg = _f + 1; \
-    _vm->top = _f + 1 + _ns; \
-    _vm->cf = _cf; \
+    bclosure *cl = var_toobj(_f); \
+    precall(_vm, _f, _ns, _t); \
+    _vm->cf->ip = cl->proto->code; \
+    _vm->cf->status = NONE_FLAG; \
 }
 
 #define push_native(_vm, _f, _ns, _t) { \
-    bcallframe *_cf; \
-    be_stack_push(&_vm->callstack, NULL); \
-    _cf = be_stack_top(&_vm->callstack); \
-    _cf->func = _t ? _f - 1 : _f; \
-    _cf->top = _vm->top; \
-    _cf->reg = _vm->reg; \
-    _cf->status = PRIM_FUNC; \
-    _vm->reg = _f + 1; \
-    _vm->top = _f + 1 + _ns; \
-    _vm->cf = _cf; \
+    precall(_vm, _f, _ns, _t); \
+    _vm->cf->status = PRIM_FUNC; \
 }
 
 #define ret_native(_vm) { \
@@ -132,6 +117,23 @@ static void unop_error(bvm *vm, const char *op, bvalue *a)
         op, be_vtype2str(a) );
 }
 
+static void precall(bvm *vm, bvalue *func, int nstack, int mode)
+{
+    bcallframe *cf;
+    int expan = nstack + BE_STACK_FREE_MIN;
+    if (vm->stacktop < func + expan) {
+        func += be_stack_expansion(vm, expan);
+    }
+    be_stack_push(&vm->callstack, NULL);
+    cf = be_stack_top(&vm->callstack);
+    cf->func = func - mode;
+    cf->top = vm->top;
+    cf->reg = vm->reg;
+    vm->reg = func + 1;
+    vm->top = func + 1 + nstack;
+    vm->cf = cf;
+}
+
 static bbool obj2bool(bvm *vm, bvalue *obj)
 {
     bvalue *top = vm->top;
@@ -140,6 +142,7 @@ static bbool obj2bool(bvm *vm, bvalue *obj)
     if (be_instance_member(obj->v.p, tobool, top)) {
         top[1] = *obj; /* move self to argv[0] */
         be_dofunc(vm, top, 1); /* call method 'tobool' */
+        top = vm->top;
         return var_isbool(top) ? var_tobool(top) : btrue;
     }
     return btrue;
@@ -186,8 +189,8 @@ static int obj_attribute(bvm *vm, bvalue *o, bstring *attr, bvalue *dst)
     return type;
 }
 
-static void object_binop(bvm *vm, const char *op,
-                         bvalue *dst, bvalue *a, bvalue *b)
+static void object_binop(bvm *vm,
+    const char *op, binstruction ins, bvalue *a, bvalue *b)
 {
     bvalue *top = vm->top;
     /* get operator method */
@@ -197,17 +200,17 @@ static void object_binop(bvm *vm, const char *op,
     vm->top++;   /* prevent collection results */
     be_dofunc(vm, top, 2); /* call method 'item' */
     vm->top--;
-    *dst = *top; /* copy result to dst */
+    *RA(ins) = *vm->top; /* copy result to dst */
 }
-static void object_unop(bvm *vm, const char *op,
-                        bvalue *dst, bvalue *src)
+static void object_unop(bvm *vm,
+    const char *op, binstruction ins, bvalue *src)
 {
     bvalue *top = vm->top;
     /* get operator method */
     obj_method(vm, src, be_newconststr(vm, op));
     top[1] = *src; /* move self to argv[0] */
     be_dofunc(vm, top, 1); /* call method 'item' */
-    *dst = *top; /* copy result to dst */
+    *RA(ins) = *vm->top; /* copy result to dst */
 }
 
 static void i_ldnil(bvm *vm, binstruction ins)
@@ -282,7 +285,7 @@ static void i_add(bvm *vm, binstruction ins)
         bstring *s = be_strcat(vm, var_tostr(a), var_tostr(b));
         var_setstr(dst, s);
     } else if (var_isinstance(a)) {
-        object_binop(vm, "+", dst, a, b);
+        object_binop(vm, "+", ins, a, b);
     } else {
         binop_error(vm, "+", a, b);
     }
@@ -297,7 +300,7 @@ static void i_sub(bvm *vm, binstruction ins)
         breal x = var2real(a), y = var2real(b);
         var_setreal(dst, x - y);
     } else if (var_isinstance(a)) {
-        object_binop(vm, "-", dst, a, b);
+        object_binop(vm, "-", ins, a, b);
     } else {
         binop_error(vm, "-", a, b);
     }
@@ -312,7 +315,7 @@ static void i_mul(bvm *vm, binstruction ins)
         breal x = var2real(a), y = var2real(b);
         var_setreal(dst, x * y);
     } else if (var_isinstance(a)) {
-        object_binop(vm, "*", dst, a, b);
+        object_binop(vm, "*", ins, a, b);
     } else {
         binop_error(vm, "*", a, b);
     }
@@ -327,7 +330,7 @@ static void i_div(bvm *vm, binstruction ins)
         breal x = var2real(a), y = var2real(b);
         var_setreal(dst, x / y);
     } else if (var_isinstance(a)) {
-        object_binop(vm, "/", dst, a, b);
+        object_binop(vm, "/", ins, a, b);
     } else {
         binop_error(vm, "/", a, b);
     }
@@ -339,7 +342,7 @@ static void i_mod(bvm *vm, binstruction ins)
     if (var_isint(a) && var_isint(b)) {
         var_setint(dst, ibinop(%, a, b));
     } else if (var_isinstance(a)) {
-        object_binop(vm, "%", dst, a, b);
+        object_binop(vm, "%", ins, a, b);
     } else {
         binop_error(vm, "%", a, b);
     }
@@ -353,7 +356,7 @@ static void i_neg(bvm *vm, binstruction ins)
     } else if (var_isreal(a)) {
         var_setreal(dst, -a->v.r);
     } else if (var_isinstance(a)) {
-        object_unop(vm, "-*", dst, a);
+        object_unop(vm, "-*", ins, a);
     } else {
         unop_error(vm, "-", a);
     }
@@ -368,7 +371,7 @@ define_function(i_ge, relop_block(>=))
 
 static void i_range(bvm *vm, binstruction ins)
 {
-    bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
+    bvalue *b = RKB(ins), *c = RKC(ins);
     bvalue *top = vm->top;
     /* get method 'item' */
     int idx = be_globalvar_find(vm, be_newconststr(vm, "range"));
@@ -378,7 +381,7 @@ static void i_range(bvm *vm, binstruction ins)
     vm->top += 3; /* prevent collection results */
     be_dofunc(vm, top, 2); /* call method 'item' */
     vm->top -= 3;
-    *a = *top; /* copy result to R(A) */
+    *RA(ins) = *vm->top; /* copy result to R(A) */
 }
 
 static void i_jump(bvm *vm, binstruction ins)
@@ -530,7 +533,7 @@ static void i_setmember(bvm *vm, binstruction ins)
 
 static void i_getindex(bvm *vm, binstruction ins)
 {
-    bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
+    bvalue *b = RKB(ins), *c = RKC(ins);
     if (var_isinstance(b)) {
         bvalue *top = vm->top;
         /* get method 'item' */
@@ -540,7 +543,7 @@ static void i_getindex(bvm *vm, binstruction ins)
         vm->top += 3;   /* prevent collection results */
         be_dofunc(vm, top, 2); /* call method 'item' */
         vm->top -= 3;
-        *a = *top;   /* copy result to R(A) */
+        *RA(ins) = *vm->top;   /* copy result to R(A) */
     } else {
         vm_error(vm,
             "value '%s' does not support index operation",
@@ -586,15 +589,15 @@ static void i_close(bvm *vm, binstruction ins)
     be_upvals_close(vm, RA(ins));
 }
 
-bvm* be_vm_new(int nstack)
+bvm* be_vm_new(void)
 {
     bvm *vm = be_malloc(sizeof(bvm));
     be_gc_init(vm);
     be_string_init(vm);
     be_globalvar_init(vm);
     be_stack_init(&vm->callstack, sizeof(bcallframe));
-    vm->stack = be_malloc(sizeof(bvalue) * nstack);
-    vm->stacksize = nstack;
+    vm->stack = be_malloc(sizeof(bvalue) * 100);
+    vm->stacktop = vm->stack + 100;
     vm->cf = NULL;
     vm->upvalist = NULL;
     vm->reg = vm->stack;

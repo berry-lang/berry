@@ -22,6 +22,7 @@ struct bvm {
     bgc *gc;
     bvalue *global; /* global variable vector */
     bvalue *stack; /* stack space */
+    bvalue *stacktop;
     bupval *upvalist; /* open upvalue list */
     bstack callstack; /* function call stack */
     bglobaldesc gbldesc; /* global description */
@@ -29,7 +30,6 @@ struct bvm {
     bvalue *reg;
     bvalue *top;
     struct blongjmp *errjmp; /* error jump point */
-    int stacksize;
 };
 
 #define NONE_FLAG           0

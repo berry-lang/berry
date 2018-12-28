@@ -21,9 +21,16 @@
  **/
 #define BE_RUNTIME_DEBUG_INFO           1
 
-/* Macro: BE_START_STACK_SIZE
- * Set the initial size of the stack.
+/* Macro: BE_STACK_TOTAL_MAX
+ * Set the maximum total stack size.
  **/
-#define BE_START_STACK_SIZE             128
+#define BE_STACK_TOTAL_MAX              200
+
+/* Macro: BE_STACK_FREE_MIN
+ * Set the minimum free count of the stack. The stack idles will
+ * be checked when a function is called, and the stack will be
+ * expanded if the number of free is less than BE_STACK_FREE_MIN.
+ **/
+#define BE_STACK_FREE_MIN               10
 
 #endif
