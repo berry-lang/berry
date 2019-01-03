@@ -29,6 +29,7 @@ struct bvm {
     bcallframe *cf; /* function call frame */
     bvalue *reg;
     bvalue *top;
+	binstruction *ip;
     struct blongjmp *errjmp; /* error jump point */
 };
 

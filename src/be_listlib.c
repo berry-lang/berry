@@ -34,8 +34,7 @@ static int m_tostring(bvm *vm)
         be_next(vm, -3);
         if (be_isstring(vm, -1)) { /* Add '"' to strings */
             be_pushfstring(vm, "'%s'", be_tostring(vm, -1));
-            be_moveto(vm, -1, -2);
-            be_pop(vm, 1);
+			be_removeone(vm, -2);
         } else {
             be_tostring(vm, -1);
         }

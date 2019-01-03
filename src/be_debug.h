@@ -5,5 +5,6 @@
 
 void be_dprintcode(bclosure *cl);
 void be_debug_error(bvm *vm, int errcode, const char *format, ...);
+void be_debug_ins_info(bvm *vm);
 
 #endif

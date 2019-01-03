@@ -17,6 +17,7 @@
 #define be_stack_pop(stack)             be_vector_remove_end(stack)
 #define be_stack_top(stack)             be_vector_end(stack)
 #define be_stack_base(stack)            be_vector_first(stack)
+#define be_stack_count(stack)           be_vector_count(stack)
 #define be_stack_isempty(stack)         be_vector_isempty(stack)
 
 /* ========================== function extern ========================== */

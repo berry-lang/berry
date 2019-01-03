@@ -11,6 +11,6 @@ int be_protectedparser(bvm *vm,
     const char *fname, const char *source, size_t length);
 int be_protectedcall(bvm *vm, bvalue *v, int argc);
 void be_stackpush(bvm *vm);
-size_t be_stack_expansion(bvm *vm, int n);
+void be_stack_expansion(bvm *vm, int n);
 
 #endif

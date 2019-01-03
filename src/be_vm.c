@@ -78,8 +78,9 @@
 #define push_closure(_vm, _f, _ns, _t) { \
     bclosure *cl = var_toobj(_f); \
     precall(_vm, _f, _ns, _t); \
-    _vm->cf->ip = cl->proto->code; \
+    _vm->cf->ip = _vm->ip; \
     _vm->cf->status = NONE_FLAG; \
+	_vm->ip = cl->proto->code; \
 }
 
 #define push_native(_vm, _f, _ns, _t) { \
@@ -89,10 +90,10 @@
 
 #define ret_native(_vm) { \
     bcallframe *_cf = _vm->cf; \
-    be_stack_pop(&_vm->callstack); \
-    _vm->cf = be_stack_top(&_vm->callstack); \
     _vm->reg = _cf->reg; \
     _vm->top = _cf->top; \
+    be_stack_pop(&_vm->callstack); \
+    _vm->cf = be_stack_top(&_vm->callstack); \
 }
 
 #define attribute_error(vm, b, c, t) {          \
@@ -114,7 +115,7 @@ static void unop_error(bvm *vm, const char *op, bvalue *a)
 {
     vm_error(vm,
         "unsupported operand type(s) for %s: '%s'",
-        op, be_vtype2str(a) );
+        op, be_vtype2str(a));
 }
 
 static void precall(bvm *vm, bvalue *func, int nstack, int mode)
@@ -122,7 +123,9 @@ static void precall(bvm *vm, bvalue *func, int nstack, int mode)
     bcallframe *cf;
     int expan = nstack + BE_STACK_FREE_MIN;
     if (vm->stacktop < func + expan) {
-        func += be_stack_expansion(vm, expan);
+		size_t fpos = func - vm->stack;
+        be_stack_expansion(vm, expan);
+		func = vm->stack + fpos;
     }
     be_stack_push(&vm->callstack, NULL);
     cf = be_stack_top(&vm->callstack);
@@ -130,7 +133,7 @@ static void precall(bvm *vm, bvalue *func, int nstack, int mode)
     cf->top = vm->top;
     cf->reg = vm->reg;
     vm->reg = func + 1;
-    vm->top = func + 1 + nstack;
+    vm->top = vm->reg + nstack;
     vm->cf = cf;
 }
 
@@ -223,7 +226,7 @@ static void i_ldbool(bvm *vm, binstruction ins)
     bvalue *v = RA(ins);
     var_setbool(v, IGET_RKB(ins));
     if (IGET_RKC(ins)) { /* skip next instruction */
-        vm->cf->ip++;
+        vm->ip++;
     }
 }
 
@@ -386,23 +389,20 @@ static void i_range(bvm *vm, binstruction ins)
 
 static void i_jump(bvm *vm, binstruction ins)
 {
-    bcallframe *cf = vm->cf;
-    cf->ip += IGET_sBx(ins);
+    vm->ip += IGET_sBx(ins);
 }
 
 static void i_jumptrue(bvm *vm, binstruction ins)
 {
-    bcallframe *cf = vm->cf;
     if (var2bool(vm, RA(ins))) {
-        cf->ip += IGET_sBx(ins);
+		vm->ip += IGET_sBx(ins);
     }
 }
 
 static void i_jumpfalse(bvm *vm, binstruction ins)
 {
-    bcallframe *cf = vm->cf;
     if (!var2bool(vm, RA(ins))) {
-        cf->ip += IGET_sBx(ins);
+		vm->ip += IGET_sBx(ins);
     }
 }
 
@@ -416,9 +416,10 @@ static void i_return(bvm *vm, binstruction ins)
     } else {
         var_setnil(ret);
     }
-    be_stack_pop(&vm->callstack); /* pop don't delete */
     vm->reg = cf->reg;
     vm->top = cf->top;
+	vm->ip = cf->ip;
+    be_stack_pop(&vm->callstack); /* pop don't delete */
     if (cf->status & BASE_FRAME) { /* entrance function */
         vm->cf = NULL; /* mainfunction return */
     } else {
@@ -441,12 +442,14 @@ static void i_call(bvm *vm, binstruction ins)
             ++var; /* to next register */
             goto recall; /* call constructor */
         }
-        ++vm->cf->ip; /* to next instruction */
+        ++vm->ip; /* to next instruction */
         break;
     case BE_CLOSURE: {
+        bvalue *v, *end;
         bproto *proto = var2cl(var)->proto;
-        bvalue *v = var + argc + 1, *end = var + proto->argc + 1;
         push_closure(vm, var, proto->nstack, mode);
+        v = vm->reg + argc;
+        end = vm->reg + proto->argc;
         for (; v <= end; ++v) {
             var_setnil(v);
         }
@@ -457,7 +460,7 @@ static void i_call(bvm *vm, binstruction ins)
         push_native(vm, var, argc, mode);
         f->f(vm); /* call C primitive function */
         ret_native(vm);
-        ++vm->cf->ip; /* to next instruction */
+        ++vm->ip; /* to next instruction */
         break;
     }
     case BE_NTVFUNC: {
@@ -465,7 +468,7 @@ static void i_call(bvm *vm, binstruction ins)
         push_native(vm, var, argc, mode);
         f(vm); /* call C primitive function */
         ret_native(vm);
-        ++vm->cf->ip; /* to next instruction */
+        ++vm->ip; /* to next instruction */
         break;
     }
     default:
@@ -596,9 +599,10 @@ bvm* be_vm_new(void)
     be_string_init(vm);
     be_globalvar_init(vm);
     be_stack_init(&vm->callstack, sizeof(bcallframe));
-    vm->stack = be_malloc(sizeof(bvalue) * 100);
-    vm->stacktop = vm->stack + 100;
+    vm->stack = be_malloc(sizeof(bvalue) * BE_STACK_FREE_MIN);
+    vm->stacktop = vm->stack + BE_STACK_FREE_MIN;
     vm->cf = NULL;
+	vm->ip = NULL;
     vm->upvalist = NULL;
     vm->reg = vm->stack;
     vm->top = vm->reg;
@@ -616,13 +620,11 @@ void be_vm_delete(bvm *vm)
 
 static void vm_exec(bvm *vm)
 {
-    bcallframe *cf;
     binstruction ins;
     vm->cf->status |= BASE_FRAME;
     newframe:
-    cf = vm->cf;
     for (;;) {
-        ins = *cf->ip;
+        ins = *vm->ip;
         switch (IGET_OP(ins)) {
         case OP_LDNIL: i_ldnil(vm, ins); break;
         case OP_LDBOOL: i_ldbool(vm, ins); break;
@@ -667,18 +669,19 @@ static void vm_exec(bvm *vm)
                 }
                 return;
             }
-            cf = vm->cf;
             break;
         }
-        ++cf->ip;
+        ++vm->ip;
     }
 }
 
 static void do_closure(bvm *vm, bvalue *reg, int argc)
 {
+    bvalue *v, *end;
     bproto *proto = var2cl(reg)->proto;
-    bvalue *v = reg + argc + 1, *end = reg + proto->argc + 1;
     push_closure(vm, reg, proto->nstack, 0);
+    v = vm->reg + argc;
+    end = vm->reg + proto->argc;
     for (; v <= end; ++v) {
         var_setnil(v);
     }

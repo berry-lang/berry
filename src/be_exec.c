@@ -109,22 +109,23 @@ void be_stackpush(bvm *vm)
     vm->top++;
 }
 
-static void update_callstack(bvm *vm, size_t pos)
+static void update_callstack(bvm *vm, bvalue *oldstack)
 {
     bcallframe *cf = be_stack_top(&vm->callstack);
     bcallframe *base = be_stack_base(&vm->callstack);
+	bvalue *stack = vm->stack;
     for (; cf >= base; --cf) {
-        cf->func += pos;
-        cf->top += pos;
-        cf->reg += pos;
+        cf->func = stack + (cf->func - oldstack);
+        cf->top = stack + (cf->top - oldstack);
+        cf->reg = stack + (cf->reg - oldstack);
     }
-    vm->top += pos;
-    vm->reg += pos;
+    vm->top = stack + (vm->top - oldstack);
+    vm->reg = stack + (vm->reg - oldstack);
 }
 
-size_t be_stack_expansion(bvm *vm, int n)
+void be_stack_expansion(bvm *vm, int n)
 {
-    size_t pos, newsize;
+    size_t newsize;
     bvalue *oldstack = vm->stack;
 
     newsize = vm->stacktop - oldstack + n;
@@ -135,7 +136,5 @@ size_t be_stack_expansion(bvm *vm, int n)
     }
     vm->stack = be_realloc(oldstack, sizeof(bvalue) * newsize);
     vm->stacktop = vm->stack + newsize;
-    pos = vm->stack - oldstack;
-    update_callstack(vm, pos);
-    return pos;
+    update_callstack(vm, oldstack);
 }
