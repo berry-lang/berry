@@ -84,6 +84,7 @@ void be_string_deleteall(bvm *vm)
             node = next;
         }
     }
+    be_free(tab->table);
     be_free(tab);
 }
 

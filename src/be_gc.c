@@ -178,16 +178,20 @@ static void mark_ntvclos(bvm *vm, bgcobject *obj)
 static void mark_class(bvm *vm, bgcobject *obj)
 {
     bclass *c = cast_class(obj);
-    if (c) {
+    /* mark this class and super class */
+    while (c) {
         mark_map(vm, gc_object(be_class_members(c)));
         gc_setdark(be_class_name(c));
-        gc_setdark(obj);
+        gc_setdark(c);
+        c = be_class_super(c);
     }
 }
 
 static void mark_instance(bvm *vm, bgcobject *obj)
 {
     binstance *o = cast_instance(obj);
+    mark_class(vm, gc_object(o->class));
+    /* mark self instance and super instance */
     while (o) {
         bvalue *var = be_instance_members(o);
         int nvar = be_instance_member_count(o);
@@ -195,7 +199,6 @@ static void mark_instance(bvm *vm, bgcobject *obj)
             mark_object(vm, var->v.gc, var_type(var));
             var++;
         }
-        mark_class(vm, gc_object(o->class));
         gc_setdark(o);
         o = be_instance_super(o);
     }
@@ -269,6 +272,7 @@ static void free_object(bvm *vm, bgcobject *obj)
     (void)vm;
     switch (obj->type) {
     case BE_STRING: be_free(obj); break; /* long string */
+    case BE_CLASS: be_free(obj); break;
     case BE_INSTANCE: be_free(obj); break;
     case BE_MAP: be_map_delete(cast_map(obj)); break;
     case BE_LIST: be_list_delete(cast_list(obj)); break;

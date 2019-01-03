@@ -106,7 +106,9 @@ int be_protectedcall(bvm *vm, bvalue *v, int argc)
 
 void be_stackpush(bvm *vm)
 {
-    vm->top++;
+    if (++vm->top >= vm->stacktop) {
+        be_stack_expansion(vm, BE_STACK_FREE_MIN);
+    }
 }
 
 static void update_callstack(bvm *vm, bvalue *oldstack)

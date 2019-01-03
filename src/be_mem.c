@@ -31,13 +31,14 @@ void be_free(void *p)
 void* be_realloc(void *p, size_t size)
 {
     if (p != NULL) {
-        mnode *obj = (mnode*)((char*)p - sizeof(mnode));
-        m_mem_count = m_mem_count + size - obj->size;
-        obj = realloc(obj, size + sizeof(mnode));
+        mnode *old = (mnode*)((char*)p - sizeof(mnode));
+        m_mem_count = m_mem_count + size - old->size;
+        mnode *obj = realloc(old, size + sizeof(mnode));
         if (obj != NULL) {
             obj->size = size;
             return (char*)obj + sizeof(mnode);
         }
+        free(old);
         return NULL;
     }
     return be_malloc(size);

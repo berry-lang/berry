@@ -13,6 +13,13 @@ void be_globalvar_init(bvm *vm)
     be_gc_fix(vm, gc_object(vm->gbldesc.idxtab));
 }
 
+void be_globalvar_deinit(bvm *vm)
+{
+    vm->gbldesc.idxtab = NULL;
+    vm->gbldesc.nglobal = 0;
+    be_vector_delete(&vm->gbldesc.gvalist);
+}
+
 int be_globalvar_find(bvm *vm, bstring *name)
 {
     bvalue *res = be_map_findstr(vm->gbldesc.idxtab, name);
