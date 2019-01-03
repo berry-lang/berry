@@ -85,9 +85,9 @@ static int check_next(blexer *lexer, int c)
     return 0;
 }
 
-static char* lexer_resize_data(blexer *lexer, int len)
+static char* lexer_resize_data(blexer *lexer, size_t len)
 {
-    int size = len > SHORT_STR_LEN ? len : SHORT_STR_LEN;
+    size_t size = len > SHORT_STR_LEN ? len : SHORT_STR_LEN;
 
     size += 1; /* include '\0' */
     if (size > lexer->size) {
@@ -142,8 +142,7 @@ static int read_oct(blexer *lexer, const char *src)
 
 static void tr_string(blexer *lexer, const char *src, const char *end)
 {
-    char *dst = lexer_resize_data(lexer, (int)(end - src));
-
+    char *dst = lexer_resize_data(lexer, end - src);
     while (src < end) {
         int c = *src++;
         switch (c) {
@@ -301,7 +300,7 @@ static btokentype scan_identifier(blexer *lexer)
 
     next(lexer);
     match(lexer, is_word);
-    s = be_newstrn(lexer->vm, begin, (int)(lexer->cursor - begin));
+    s = be_newstrn(lexer->vm, begin, lexer->cursor - begin);
     if (str_extra(s) != 0) {
         lexer->token.type = (btokentype)str_extra(s);
         return lexer->token.type;

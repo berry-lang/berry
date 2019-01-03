@@ -54,7 +54,7 @@ static void resize(bvm *vm, int size)
 }
 
 /* FNV-1a Hash */
-uint32_t be_strhash(const char *str, int len)
+uint32_t be_strhash(const char *str, size_t len)
 {
     uint32_t hash = 2166136261u;
     while (len--) {
@@ -88,9 +88,9 @@ void be_string_deleteall(bvm *vm)
     be_free(tab);
 }
 
-bstring* createstrobj(bvm *vm, int len, int islong, int isk)
+bstring* createstrobj(bvm *vm, size_t len, int islong, int isk)
 {
-    int size = (islong ? sizeof(blstring)
+    size_t size = (islong ? sizeof(blstring)
                 : sizeof(bstring)) + (isk ? 0 : len + 1);
     bgcobject *gco = be_gc_newstr(vm, size, islong);
     bstring *s = cast_str(gco);
@@ -110,7 +110,7 @@ bstring* createstrobj(bvm *vm, int len, int islong, int isk)
     return s;
 }
 
-static bstring* newshortstr(bvm *vm, const char *str, int len, int isk)
+static bstring* newshortstr(bvm *vm, const char *str, size_t len, int isk)
 {
     bstring *s;
     int size = vm->strtab->size;
@@ -138,14 +138,14 @@ static bstring* newshortstr(bvm *vm, const char *str, int len, int isk)
     return s;
 }
 
-static bstring* newlongstr(bvm *vm, const char *str, int len, int isk)
+static bstring* newlongstr(bvm *vm, const char *str, size_t len, int isk)
 {
     bstring *s;
     blstring *ls;
     s = createstrobj(vm, len, 1, isk);
     ls = cast(blstring*, s);
     s->extra = 0;
-    ls->llen = len;
+    ls->llen = cast_int(len);
     if (isk) {
         s->s = str;
     } else {
@@ -156,10 +156,10 @@ static bstring* newlongstr(bvm *vm, const char *str, int len, int isk)
 
 bstring* be_newstr(bvm *vm, const char *str)
 {
-    return be_newstrn(vm, str, (int)strlen(str));
+    return be_newstrn(vm, str, strlen(str));
 }
 
-bstring* be_newstrn(bvm *vm, const char *str, int len)
+bstring* be_newstrn(bvm *vm, const char *str, size_t len)
 {
     if (len <= SHORT_STR_MAX_LEN) {
         return newshortstr(vm, str, len, 0);
@@ -169,7 +169,7 @@ bstring* be_newstrn(bvm *vm, const char *str, int len)
 
 bstring* be_newconststr(bvm *vm, const char *str)
 {
-    int len = (int)strlen(str);
+    size_t len = strlen(str);
     if (len <= SHORT_STR_MAX_LEN) {
         return newshortstr(vm, str, len, 1);
     }

@@ -7,7 +7,7 @@
 
 #define addr_pos(a, p)          ((void*)((char*)(a) + (p)))
 #define addr_region(a, s)       (addr_pos((a), sizeof(s)))
-#define addr_base(a, s)         (addr_pos((a), -(int)sizeof(s)))
+#define addr_base(a, s)         (addr_pos((a), -cast_int(sizeof(s))))
 
 void be_vector_init(bvector *vector, int size)
 {

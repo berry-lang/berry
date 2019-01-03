@@ -61,7 +61,7 @@ make
 
 ``` bash
 ./berry # Bash
-berry   # Windows CMD or PowerShell
+berry   # Windows CMD
 ```
 
 ## Editor pulgins

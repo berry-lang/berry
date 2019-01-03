@@ -12,7 +12,7 @@
 
 bstring* be_strcat(bvm *vm, bstring *s1, bstring *s2)
 {
-    int len = (int)str_len(s1) + (int)str_len(s2);
+    size_t len = str_len(s1) + str_len(s2);
     if (len <= SHORT_STR_MAX_LEN) {
         char buf[SHORT_STR_MAX_LEN + 1];
         strcpy(buf, str(s1));
@@ -111,7 +111,7 @@ void be_val2str(bvm *vm, int index)
     }
 }
 
-static void pushstr(bvm *vm, const char *s, int len)
+static void pushstr(bvm *vm, const char *s, size_t len)
 {
     bvalue *reg = vm->top++;
     bstring *str = be_newstrn(vm, s, len);

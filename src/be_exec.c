@@ -13,8 +13,8 @@
 typedef jmp_buf bjmpbuf;
 
 struct blongjmp {
-    struct blongjmp *prev;
     bjmpbuf b;
+    struct blongjmp *prev;
     volatile int status;
 };
 
@@ -70,7 +70,7 @@ int be_protectedparser(bvm *vm,
     s.length = length;
     res = be_execprotected(vm, m_parser, &s);
     if (res) { /* recovery call stack */
-        int idx = vm->top - vm->reg;
+        int idx = cast_int(vm->top - vm->reg);
         vm->top = top;
         be_pushvalue(vm, idx); /* copy error information */
     }
@@ -88,13 +88,13 @@ int be_protectedcall(bvm *vm, bvalue *v, int argc)
     int res;
     struct pcall s;
     int calldepth = be_vector_count(&vm->callstack);
-    int reg = vm->reg - vm->stack;
-    int top = vm->top - vm->stack;
+    int reg = cast_int(vm->reg - vm->stack);
+    int top = cast_int(vm->top - vm->stack);
     s.v = v;
     s.argc = argc;
     res = be_execprotected(vm, m_pcall, &s);
     if (res) { /* recovery call stack */
-        int idx = vm->top - (vm->stack + reg);
+        int idx = cast_int(vm->top - (vm->stack + reg));
         be_vector_resize(&vm->callstack, calldepth);
         vm->reg = vm->stack + reg;
         vm->top = vm->stack + top;

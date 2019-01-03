@@ -17,7 +17,7 @@
 #define IBx_BITS                (IRKC_BITS + IRKB_BITS)
 
 #define INS_MASK(pos, bits)     (((1 << (bits)) - 1) << pos)
-#define INS_GETx(i, mask, pos)  ((int)(((binstruction)(i) & (mask)) >> (pos)))
+#define INS_GETx(i, mask, pos)  cast_int(((binstruction)(i) & (mask)) >> (pos))
 #define INS_SETx(v, mask, pos)  (((binstruction)(v) << (pos)) & (mask))
 
 #define isK(v)                  (((v) & (1 << (IRKB_BITS - 1))) != 0)
@@ -47,7 +47,7 @@
 #define ISET_RKB(i)             INS_SETx(i, IRKB_MASK, IRKB_POS)
 #define ISET_RKC(i)             INS_SETx(i, IRKC_MASK, IRKC_POS)
 #define ISET_Bx(i)              INS_SETx(i, IBx_MASK, 0)
-#define ISET_sBx(i)             (ISET_Bx((int)(i) + IsBx_MAX))
+#define ISET_sBx(i)             (ISET_Bx(cast_int(i) + IsBx_MAX))
 
 typedef enum {
     /* don't change order */

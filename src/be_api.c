@@ -63,7 +63,7 @@ void be_regclass(bvm *vm, const char *name, const bmemberinfo *lib)
 
 int be_top(bvm *vm)
 {
-    return vm->top - vm->reg;
+    return cast_int(vm->top - vm->reg);
 }
 
 int be_type(bvm *vm, int index)
@@ -82,7 +82,7 @@ int be_absindex(bvm *vm, int index)
     if (index > 0) {
         return index;
     }
-    return vm->top + index - vm->reg + 1;
+    return cast_int(vm->top + index - vm->reg + 1);
 }
 
 int be_isnil(bvm *vm, int index)

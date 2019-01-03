@@ -21,9 +21,9 @@ typedef struct {
 void be_string_init(bvm *vm);
 void be_string_deleteall(bvm *vm);
 int be_eqstr(bstring *s1, bstring *s2);
-uint32_t be_strhash(const char *str, int len);
+uint32_t be_strhash(const char *str, size_t len);
 bstring* be_newstr(bvm *vm, const char *str);
-bstring* be_newstrn(bvm *vm, const char *str, int len);
+bstring* be_newstrn(bvm *vm, const char *str, size_t len);
 bstring* be_newconststr(bvm *vm, const char *str);
 void be_gcstrtab(bvm *vm);
 

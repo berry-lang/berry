@@ -20,7 +20,7 @@
 #define UNARY_OP_PRIO           8
 
 /* get binary operator priority */
-#define binary_op_prio(op)      (binary_op_prio_tab[(int)(op) - OptAdd])
+#define binary_op_prio(op)      (binary_op_prio_tab[cast_int(op) - OptAdd])
 
 #define scan_next_token(parser) (be_lexer_scan_next(&(parser)->lexer))
 #define next_token(parser)      ((parser)->lexer.token)

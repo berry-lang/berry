@@ -55,7 +55,7 @@ void be_gc_setpause(bvm *vm, int pause)
     vm->gc->pause = (bbyte)pause;
 }
 
-bgcobject* be_newgcobj(bvm *vm, int type, int size)
+bgcobject* be_newgcobj(bvm *vm, int type, size_t size)
 {
     bgc *gc = vm->gc;
     bgcobject *obj = be_malloc(size);
@@ -68,7 +68,7 @@ bgcobject* be_newgcobj(bvm *vm, int type, int size)
     return obj;
 }
 
-bgcobject* be_gc_newstr(bvm *vm, int size, int islong)
+bgcobject* be_gc_newstr(bvm *vm, size_t size, int islong)
 {
     bgcobject *obj;
     if (islong) {

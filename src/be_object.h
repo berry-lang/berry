@@ -133,7 +133,8 @@ struct bntvclos {
     bcfunction f;
 };
 
-#define cast(_T, _v)            ((_T)_v)
+#define cast(_T, _v)            ((_T)(_v))
+#define cast_int(_v)            cast(int, _v)
 #define basetype(_t)            ((_t) & 0x1F)
 
 #define var_type(_v)            ((_v)->type)

@@ -55,7 +55,7 @@ static int json_strlen(const char *json)
             }
         }
     }
-    return ch ?  s - json - 1 : -1;
+    return ch ? cast_int(s - json - 1) : -1;
 }
 
 static void json2berry(bvm *vm, const char *class)
@@ -162,7 +162,7 @@ static const char* parser_string(bvm *vm, const char *json)
                 }
             }
             if (ch == '"') {
-                be_pushnstring(vm, buf, dst - buf);
+                be_pushnstring(vm, buf, cast_int(dst - buf));
                 be_free(buf);
                 return json + 1; /* skip '"' */
             }

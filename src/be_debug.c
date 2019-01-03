@@ -122,10 +122,10 @@ static const char* sourceinfo(bvm *vm, char *buf, int deepth)
     blineinfo *it = start + proto->nlineinfo - 1;
 	int pc;
 	if (deepth == -1) {
-		pc = vm->ip - proto->code;
+		pc = cast_int(vm->ip - proto->code);
 	} else {
 		cf = be_vector_at(&vm->callstack, size + deepth + 1);
-		pc = cf->ip - proto->code;
+		pc = cast_int(cf->ip - proto->code);
 	}
     while (it > start && it->endpc > pc) {
         --it;
@@ -143,7 +143,7 @@ void be_debug_ins_info(bvm *vm)
     char buf[100];
     bcallframe *cf = vm->cf;
     bproto *proto = cast(bclosure*, var_toobj(cf->func))->proto;
-    int pc = vm->ip - proto->code;
+    int pc = cast_int(vm->ip - proto->code);
     printf("%s %s\t\t", sourceinfo(vm, buf, -1), str(proto->name));
     print_inst(*vm->ip, pc);
 }

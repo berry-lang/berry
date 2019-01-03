@@ -4,7 +4,7 @@
 #include "be_vm.h"
 
 #define clousersize(n) \
-    (int)(sizeof(bclosure) + sizeof(bupval*) * ((n) - 1))
+    (sizeof(bclosure) + sizeof(bupval*) * ((n) - 1))
 
 void be_initupvals(bvm *vm, bclosure *cl)
 {
@@ -116,7 +116,7 @@ static void init_upvals(bntvclos *f)
 
 bntvclos* be_newprimclosure(bvm *vm, bcfunction cf, int nupvals)
 {
-    int size = (int)(sizeof(bntvclos) + sizeof(bupval*) * nupvals);
+    size_t size = sizeof(bntvclos) + sizeof(bupval*) * nupvals;
     bgcobject *gco = be_newgcobj(vm, BE_NTVCLOS, size);
     bntvclos *f = cast_ntvclos(gco);
     if (f) {

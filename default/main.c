@@ -64,11 +64,11 @@ static const char* get_line(const char *prompt)
 #endif
 }
 
-static char* readfile(FILE *fp, int *len)
+static char* readfile(FILE *fp, size_t *len)
 {
     char *buffer;
     fseek(fp,0L,SEEK_END);
-    *len = (int)ftell(fp);
+    *len = ftell(fp);
     buffer = malloc(*len);
     fseek(fp, 0L, SEEK_SET);
     if (buffer) {
@@ -83,7 +83,8 @@ static int dofile(bvm *vm)
     const char *name = be_tostring(vm, 1);
     FILE *fp = fopen(name, "r");
     if (fp) {
-        int res, len;
+        int res;
+        size_t len;
         char *buffer = readfile(fp, &len);
         if (buffer == NULL) {
             printf("error: memory allocation failed.\n");
