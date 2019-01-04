@@ -130,7 +130,7 @@ static const char* sourceinfo(bvm *vm, char *buf, int deepth)
     while (it > start && it->endpc > pc) {
         --it;
     }
-    sprintf(buf, "%s:%d: (pc: %d)", str(proto->source), it->linenumber, pc);
+    sprintf(buf, "%s:%d:", str(proto->source), it->linenumber);
     return buf;
 #else
     (void)buf; (void)cf;
