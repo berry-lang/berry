@@ -9,17 +9,17 @@ static int m_init(bvm *vm)
 {
     if (be_top(vm) > 1 && be_ismap(vm, 2)) {
         be_pushvalue(vm, 2);
-        be_setmember(vm, 1, "__data__");
+        be_setmember(vm, 1, ".data");
     } else {
         be_newmap(vm);
-        be_setmember(vm, 1, "__data__");
+        be_setmember(vm, 1, ".data");
     }
     return be_returnnil(vm);
 }
 
 static int m_tostring(bvm *vm)
 {
-    be_getmember(vm, 1, "__data__");
+    be_getmember(vm, 1, ".data");
     map_check_data(vm, 1);
     be_pushstring(vm, "{");
     be_pushiter(vm, -2); /* map iterator use 1 register */
@@ -61,7 +61,7 @@ static int m_tostring(bvm *vm)
 
 static int m_insert(bvm *vm)
 {
-    be_getmember(vm, 1, "__data__");
+    be_getmember(vm, 1, ".data");
     map_check_data(vm, 3);
     be_pushvalue(vm, 2);
     be_pushvalue(vm, 3);
@@ -71,7 +71,7 @@ static int m_insert(bvm *vm)
 
 static int m_remove(bvm *vm)
 {
-    be_getmember(vm, 1, "__data__");
+    be_getmember(vm, 1, ".data");
     map_check_data(vm, 2);
     be_pushvalue(vm, 2);
     be_remove(vm, -2);
@@ -80,7 +80,7 @@ static int m_remove(bvm *vm)
 
 static int m_item(bvm *vm)
 {
-    be_getmember(vm, 1, "__data__");
+    be_getmember(vm, 1, ".data");
     map_check_data(vm, 2);
     be_pushvalue(vm, 2);
     be_getindex(vm, -2);
@@ -89,7 +89,7 @@ static int m_item(bvm *vm)
 
 static int m_setitem(bvm *vm)
 {
-    be_getmember(vm, 1, "__data__");
+    be_getmember(vm, 1, ".data");
     map_check_data(vm, 3);
     be_pushvalue(vm, 2);
     be_pushvalue(vm, 3);
@@ -99,7 +99,7 @@ static int m_setitem(bvm *vm)
 
 static int m_size(bvm *vm)
 {
-    be_getmember(vm, 1, "__data__");
+    be_getmember(vm, 1, ".data");
     map_check_data(vm, 1);
     be_getsize(vm, -1);
     return be_return(vm);
@@ -110,7 +110,7 @@ static int i_init(bvm *vm)
     be_pushvalue(vm, 2);
     be_setmember(vm, 1, "__obj__");
     be_pop(vm, 1);
-    be_getmember(vm, 2, "__data__");
+    be_getmember(vm, 2, ".data");
     be_pushiter(vm, -1);
     be_setmember(vm, 1, "__iter__");
     return be_returnnil(vm);
@@ -119,7 +119,7 @@ static int i_init(bvm *vm)
 static int i_hashnext(bvm *vm)
 {
     be_getmember(vm, 1, "__obj__");
-    be_getmember(vm, -1, "__data__");
+    be_getmember(vm, -1, ".data");
     be_getmember(vm, 1, "__iter__");
     be_pushbool(vm, be_hasnext(vm, -2));
     return be_return(vm);
@@ -128,7 +128,7 @@ static int i_hashnext(bvm *vm)
 static int i_next(bvm *vm)
 {
     be_getmember(vm, 1, "__obj__");
-    be_getmember(vm, -1, "__data__");
+    be_getmember(vm, -1, ".data");
     be_getmember(vm, 1, "__iter__");
     be_next(vm, -2); /* map next key and value */
     be_pushvalue(vm, -3); /* push __iter__ to top */
@@ -157,7 +157,7 @@ static int m_iter(bvm *vm)
 void be_map_init(bvm *vm)
 {
     static const bmemberinfo members[] = {
-        { "__data__", NULL },
+        { ".data", NULL },
         { "init", m_init },
         { "tostring", m_tostring },
         { "insert", m_insert },

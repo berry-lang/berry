@@ -302,7 +302,7 @@ static void make_indent(bvm *vm, int stridx, int indent)
 
 static void object_tostr(bvm *vm, int *indent, int idx, int fmt)
 {
-    be_getmember(vm, idx, "__data__");
+    be_getmember(vm, idx, ".data");
     be_pushstring(vm, fmt ? "{\n" : "{");
     be_pushiter(vm, -2); /* map iterator use 1 register */
     *indent += fmt;
@@ -341,7 +341,7 @@ static void object_tostr(bvm *vm, int *indent, int idx, int fmt)
 
 static void array_tostr(bvm *vm, int *indent, int idx, int fmt)
 {
-    be_getmember(vm, idx, "__data__");
+    be_getmember(vm, idx, ".data");
     be_pushstring(vm, fmt ? "[\n" : "[");
     be_pushiter(vm, -2);
     *indent += fmt;

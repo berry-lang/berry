@@ -169,6 +169,12 @@ int be_ismap(bvm *vm, int index)
     return var_ismap(v);
 }
 
+int be_iscomptr(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    return var_istype(v, BE_COMPTR);
+}
+
 int be_toint(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
@@ -201,6 +207,12 @@ const char* be_tostring(bvm *vm, int index)
         v = index2value(vm, index);
     }
     return str(var_tostr(v));
+}
+
+void* be_tocomptr(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    return var_toobj(v);
 }
 
 void be_moveto(bvm *vm, int from, int to)
@@ -290,6 +302,12 @@ void be_pushclass(bvm *vm, const char *name, const bmemberinfo *lib)
     class_init(vm, c, lib); /* bind members */
 }
 
+void be_pushcomptr(bvm *vm, void *ptr)
+{
+    bvalue *top = pushtop(vm);
+    var_setobj(top, BE_COMPTR, ptr);
+}
+
 void be_removeone(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
@@ -354,6 +372,15 @@ const char* be_classname(bvm *vm, int index)
         return str(be_instance_name(i));
     }
     return NULL;
+}
+
+int be_strlen(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    if (var_isstr(v)) {
+        return str_len(var_tostr(v));
+    }
+    return 0;
 }
 
 void be_newlist(bvm *vm)

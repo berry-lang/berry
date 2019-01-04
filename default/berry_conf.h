@@ -1,6 +1,8 @@
 #ifndef __BERRY_CONF_H
 #define __BERRY_CONF_H
 
+#include <stdio.h>
+
 /* Macro: BE_SINGLE_FLOAT
  * Unused.
  **/
@@ -32,5 +34,14 @@
  * expanded if the number of free is less than BE_STACK_FREE_MIN.
  **/
 #define BE_STACK_FREE_MIN               10
+
+#define be_fstream                      FILE
+#define be_fopen(fname, mode)           fopen(fname, mode)
+#define be_fclose(fp)                   fclose(fp)
+#define be_fwrite(fp, buffer, len)      fwrite(buffer, 1, len, fp)
+#define be_fread(fp, buffer, len)       fread(buffer, 1, len, fp)
+#define be_fgets(fp, buffer, max)       fgets(buffer, max, fp)
+#define be_fseek(fp, pos, mode)         fseek(fp, pos, mode)
+#define be_ftell(fp)                    ftell(fp)
 
 #endif
