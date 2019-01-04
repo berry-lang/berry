@@ -6,7 +6,8 @@ static int try_return(bvm *vm, const char *line)
 {
     int res;
     be_pushfstring(vm, "return (%s)", line);
-    res = be_loadstring(vm, be_tostring(vm, -1)); /* compile line */
+    line = be_tostring(vm, -1);
+    res = be_loadbuffer(vm, "stdin", line, strlen(line)); /* compile line */
     be_removeone(vm, -2); /* remove source string */
     return res;
 }
