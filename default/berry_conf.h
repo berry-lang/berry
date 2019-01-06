@@ -41,7 +41,8 @@
 #define be_fwrite(fp, buffer, len)      fwrite(buffer, 1, len, fp)
 #define be_fread(fp, buffer, len)       fread(buffer, 1, len, fp)
 #define be_fgets(fp, buffer, max)       fgets(buffer, max, fp)
-#define be_fseek(fp, pos, mode)         fseek(fp, pos, mode)
+#define be_fseek(fp, pos)               fseek(fp, pos, SEEK_SET)
 #define be_ftell(fp)                    ftell(fp)
+/* #define be_fsize */
 
 #endif

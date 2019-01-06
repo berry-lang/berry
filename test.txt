@@ -1,0 +1,20 @@
+450
+static int i_readline(bvm *vm)
+{
+    be_getmember(vm, 1, ".data");
+    if (be_iscomptr(vm, -1)) {
+        be_fstream *fp = be_tocomptr(vm, -1);
+
+        size_t size = 100;
+        char *buffer = be_malloc(size);
+        char *res = be_fgets(fp, buffer, size);
+        while (res && buffer[strlen(buffer) - 2] != '\n') {
+            size += 100;
+            buffer = be_realloc(buffer, size);
+            res = be_fgets(fp, buffer, size);
+        }
+        be_pushnstring(vm, buffer, size);
+        return be_return(vm);
+    }
+    return be_returnnil(vm);
+}

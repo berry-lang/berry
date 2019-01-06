@@ -55,14 +55,14 @@ static int m_setrange(bvm *vm)
 static int i_init(bvm *vm)
 {
     be_pushvalue(vm, 2);
-    be_setmember(vm, 1, "__obj__");
+    be_setmember(vm, 1, ".obj");
     return be_returnnil(vm);
 }
 
 static int i_hashnext(bvm *vm)
 {
-    be_getmember(vm, 1, "__obj__");
-    be_getmember(vm, 1, "__iter__");
+    be_getmember(vm, 1, ".obj");
+    be_getmember(vm, 1, ".iter");
     be_getmember(vm, -2, "__upper__");
     if (!be_isint(vm, -2) || be_toint(vm, -2) < be_toint(vm, -1)) {
         be_pushbool(vm, btrue);
@@ -74,15 +74,15 @@ static int i_hashnext(bvm *vm)
 
 static int i_next(bvm *vm)
 {
-    be_getmember(vm, 1, "__iter__");
+    be_getmember(vm, 1, ".iter");
     if (!be_isint(vm, -1)) {
-        be_getmember(vm, 1, "__obj__");
+        be_getmember(vm, 1, ".obj");
         be_getmember(vm, -1, "__lower__");
-        be_setmember(vm, 1, "__iter__");
+        be_setmember(vm, 1, ".iter");
     } else {
-        be_getmember(vm, 1, "__iter__");
+        be_getmember(vm, 1, ".iter");
         be_pushint(vm, be_toint(vm, -1) + 1);
-        be_setmember(vm, 1, "__iter__");
+        be_setmember(vm, 1, ".iter");
     }
     return be_return(vm);
 }
@@ -90,8 +90,8 @@ static int i_next(bvm *vm)
 static int m_iter(bvm *vm)
 {
     static const bmemberinfo members[] = {
-        { "__obj__", NULL },
-        { "__iter__", NULL },
+        { ".obj", NULL },
+        { ".iter", NULL },
         { "init", i_init },
         { "hasnext", i_hashnext },
         { "next", i_next },

@@ -8,12 +8,14 @@ static int l_print(bvm *vm)
 {
     int i, n = be_top(vm);
     for (i = 1; i <= n; ++i) {
-        be_printf("%s", be_tostring(vm, i));
+        const char *str = be_tostring(vm, i);
+        size_t len = be_strlen(vm, i);
+        be_fwrite(stdout, str, len);
         if (i < n) {
-            be_printf(" ");
+            be_fwrite(stdout, " ", 1);
         }
     }
-    be_printf("\n");
+    be_fwrite(stdout, "\n", 1);
     return be_returnnil(vm);
 }
 
