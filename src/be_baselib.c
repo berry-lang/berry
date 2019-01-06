@@ -130,6 +130,16 @@ static int l_string(bvm *vm)
     return be_return(vm);
 }
 
+static int l_length(bvm *vm)
+{
+    if (be_isstring(vm, 1)) {
+        be_pushint(vm, be_strlen(vm, 1));
+    } else {
+        be_pushint(vm, 0);
+    }
+    return be_return(vm);
+}
+
 void be_loadbaselib(bvm *vm)
 {
     be_regcfunc(vm, "print", l_print);
@@ -142,6 +152,7 @@ void be_loadbaselib(bvm *vm)
     be_regcfunc(vm, "number", l_number);
     be_regcfunc(vm, "random", l_random);
     be_regcfunc(vm, "string", l_string);
+    be_regcfunc(vm, "length", l_length);
     be_regcfunc(vm, "__iterator__", l_iterator);
     be_regcfunc(vm, "__hasnext__", l_hasnext);
     be_regcfunc(vm, "__next__", l_next);
