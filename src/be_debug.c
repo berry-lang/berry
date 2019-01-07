@@ -18,14 +18,6 @@ void be_abort(void)
     exit(0);
 }
 
-void be_printf(const char *format, ...)
-{
-    va_list arg_ptr;
-    va_start(arg_ptr, format);
-    vprintf(format, arg_ptr);
-    va_end(arg_ptr);
-}
-
 static void print_inst(binstruction ins, int pc)
 {
     bopcode op = IGET_OP(ins);

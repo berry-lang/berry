@@ -41,17 +41,20 @@ void be_repl(bvm *vm, breadline getl)
     const char *line;
     while ((line = getl("> ")) != NULL) {
         if (compile(vm, line, getl)) {
-            be_printf("%s\n", be_tostring(vm, -1)); /* some error */
+            be_putstr(be_tostring(vm, -1)); /* some error */
+            be_putline();
             be_pop(vm, 1);
         } else if (be_pcall(vm, 0)) { /* vm run error */
-            be_printf("%s\n", be_tostring(vm, -1));
+            be_putstr(be_tostring(vm, -1));
+            be_putline();
             be_pop(vm, 2);
         } else {
             if (!be_isnil(vm, -1)) {
-                be_printf("%s\n", be_tostring(vm, -1));
+                be_putstr(be_tostring(vm, -1));
+                be_putline();
             }
             be_pop(vm, 1);
         }
     }
-    be_printf("\n");
+    be_putline();
 }

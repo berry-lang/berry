@@ -133,15 +133,15 @@ static int analysis_args(bvm *vm)
 {
     int args = check_args(vm);
     if (args & arg_v) {
-        be_printf(FULL_VERSION "\n");
+        be_putstr(FULL_VERSION "\n");
         return 0;
     }
     if (args & arg_h) {
-        be_printf(help_information);
+        be_putstr(help_information);
         return 0;
     }
     if (args & arg_i) {
-        be_printf(repl_prelude);
+        be_putstr(repl_prelude);
     }
     if (be_top(vm) > 0) {
         int res = dofile(vm);

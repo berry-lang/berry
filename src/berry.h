@@ -48,6 +48,9 @@ typedef struct {
     bcfunction function;
 } bmemberinfo;
 
+#define be_putstr(s)        be_fwrite(stdout, s, strlen(s))
+#define be_putline()        be_fwrite(stdout, "\n", 1)
+
 #define be_loadstring(vm, str) \
     be_loadbuffer((vm), "string", (str), strlen(str))
 
@@ -128,7 +131,6 @@ int be_returnnil(bvm *vm);
 
 void be_call(bvm *vm, int argc);
 int be_pcall(bvm *vm, int argc);
-void be_printf(const char *format, ...);
 void be_abort(void);
 
 void be_regcfunc(bvm *vm, const char *name, bcfunction f);

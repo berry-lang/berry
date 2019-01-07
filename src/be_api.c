@@ -327,7 +327,7 @@ void be_strconcat(bvm *vm, int index)
         var_setstr(dst, s);
     } else {
         var_setnil(dst);
-        be_printf("strconcat error: object not string.\n");
+        be_putstr("strconcat error: object not string.\n");
     }
 }
 
@@ -737,9 +737,9 @@ int be_loadbuffer(bvm *vm,
     int res = be_protectedparser(vm, name, buffer, length);
 #if 0
     if (!res) {
-        be_printf("bytecode:\n");
+        be_putstr("bytecode:\n");
         be_dprintcode(var_toobj(vm->top - 1));
-        be_printf("bytecode end.\n");
+        be_putstr("bytecode end.\n");
     }
 #endif
     return res;
