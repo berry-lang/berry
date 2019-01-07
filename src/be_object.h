@@ -135,6 +135,7 @@ struct bntvclos {
 
 #define cast(_T, _v)            ((_T)(_v))
 #define cast_int(_v)            cast(int, _v)
+#define cast_bool(_v)           cast(bbool, _v)
 #define basetype(_t)            ((_t) & 0x1F)
 
 #define var_type(_v)            ((_v)->type)
@@ -161,9 +162,9 @@ struct bntvclos {
 
 #define var_setnil(_v)          var_settype(_v, BE_NIL)
 #define var_setval(_v, _s)      (*(_v) = *(_s))
-#define var_setbool(_v, _b)     { var_settype(_v, BE_BOOL); (_v)->v.b = _b; }
-#define var_setint(_v, _i)      { var_settype(_v, BE_INT); (_v)->v.i = _i; }
-#define var_setreal(_v, _r)     { var_settype(_v, BE_REAL); (_v)->v.r = _r; }
+#define var_setbool(_v, _b)     { var_settype(_v, BE_BOOL); (_v)->v.b = (bbool)(_b); }
+#define var_setint(_v, _i)      { var_settype(_v, BE_INT); (_v)->v.i = (_i); }
+#define var_setreal(_v, _r)     { var_settype(_v, BE_REAL); (_v)->v.r = (_r); }
 #define var_setstr(_v, _s)      var_setobj(_v, BE_STRING, _s)
 #define var_setinstance(_v, _o) var_setobj(_v, BE_INSTANCE, _o)
 #define var_setclass(_v, _o)    var_setobj(_v, BE_CLASS, _o)

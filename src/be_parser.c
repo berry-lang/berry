@@ -197,7 +197,7 @@ static void end_func(bparser *parser)
     binstruction *ins = be_vector_end(&finfo->code);
 
     /* append a return to last code */
-    if (!finfo->pc || IGET_OP(*ins) != OP_RET) {
+    if (!finfo->pc || IGET_OP(*ins) != cast_int(OP_RET)) {
         be_code_ret(finfo, NULL);
     }
     end_block(parser);

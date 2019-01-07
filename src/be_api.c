@@ -193,7 +193,7 @@ breal be_toreal(bvm *vm, int index)
     return (breal)0.0;
 }
 
-bbool be_tobool(bvm *vm, int index)
+int be_tobool(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_tobool(v) != bfalse;

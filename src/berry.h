@@ -84,7 +84,7 @@ int be_iscomptr(bvm *vm, int index);
 
 int be_toint(bvm *vm, int index);
 breal be_toreal(bvm *vm, int index);
-bbool be_tobool(bvm *vm, int index);
+int be_tobool(bvm *vm, int index);
 const char* be_tostring(bvm *vm, int index);
 void* be_tocomptr(bvm *vm, int index);
 void be_moveto(bvm *vm, int from, int to);

@@ -32,7 +32,7 @@
 #define be_isgcobj(o)       be_isgctype(var_type(o))
 #define be_gcnew(v, t, s)   be_newgcobj((v), (t), sizeof(s))
 
-enum {
+typedef enum {
     GC_WHITE, /* unreachable object */
     GC_GRAY,  /* unscanned object */
     GC_BLACK  /* scanned object */

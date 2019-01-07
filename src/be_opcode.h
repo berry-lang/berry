@@ -4,19 +4,19 @@
 #define NO_JUMP                 -1
 
 /* define bits */
-#define IOP_BITS                6
-#define IRA_BITS                8
-#define IRKB_BITS               9
-#define IRKC_BITS               9
+#define IOP_BITS                6u
+#define IRA_BITS                8u
+#define IRKB_BITS               9u
+#define IRKC_BITS               9u
 
-#define IRKC_POS                0
+#define IRKC_POS                0u
 #define IRKB_POS                (IRKC_POS + IRKC_BITS)
 #define IRA_POS                 (IRKB_POS + IRKB_BITS)
 #define IOP_POS                 (IRA_POS + IRA_BITS)
 #define IAx_BITS                (IRA_BITS + IRKB_BITS + IRKC_BITS)
 #define IBx_BITS                (IRKC_BITS + IRKB_BITS)
 
-#define INS_MASK(pos, bits)     (((1 << (bits)) - 1) << pos)
+#define INS_MASK(pos, bits)     ((binstruction)((1 << (bits)) - 1) << (pos))
 #define INS_GETx(i, mask, pos)  cast_int(((binstruction)(i) & (mask)) >> (pos))
 #define INS_SETx(v, mask, pos)  (((binstruction)(v) << (pos)) & (mask))
 
@@ -32,10 +32,10 @@
 #define IRKC_MASK               INS_MASK(IRKC_POS, IRKC_BITS)
 #define IAx_MASK                INS_MASK(0, IAx_BITS)
 #define IBx_MASK                INS_MASK(0, IBx_BITS)
-#define IsBx_MAX                (IBx_MASK >> 1)
-#define IsBx_MIN                (-IsBx_MAX - 1)
+#define IsBx_MAX                cast_int(IBx_MASK >> 1)
+#define IsBx_MIN                cast_int(-IsBx_MAX - 1)
 
-#define IGET_OP(i)              INS_GETx(i, IOP_MASK, IOP_POS)
+#define IGET_OP(i)              cast(bopcode, INS_GETx(i, IOP_MASK, IOP_POS))
 #define IGET_RA(i)              INS_GETx(i, IRA_MASK, IRA_POS)
 #define IGET_RKB(i)             INS_GETx(i, IRKB_MASK, IRKB_POS)
 #define IGET_RKC(i)             INS_GETx(i, IRKC_MASK, IRKC_POS)

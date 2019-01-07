@@ -29,7 +29,7 @@
 #define var2real(_v) \
     (var_isreal(_v) ? (_v)->v.r : (breal)(_v)->v.i)
 
-#define cast_bool(v)        ((v) ? btrue : bfalse)
+#define val2bool(v)        ((v) ? btrue : bfalse)
 #define ibinop(op, a, b)    ((a)->v.i op (b)->v.i)
 
 #define define_function(name, block) \
@@ -64,7 +64,7 @@
     } else if (var_isbool(a) || var_isbool(b)) { \
         var_setbool(dst, var_tobool(a) op var_tobool(b)); \
     } else if (var_isnil(a) || var_isnil(b)) { \
-        bbool res = var_type(a) op var_type(b); \
+        int res = var_type(a) op var_type(b); \
         var_setbool(dst, res); \
     } else if (var_isstr(a) && var_isstr(b)) { \
         var_setbool(dst, opstr be_eqstr(a->v.s, b->v.s)); \
@@ -159,9 +159,9 @@ static bbool var2bool(bvm *vm, bvalue *v)
     case BE_BOOL:
         return v->v.b;
     case BE_INT:
-        return cast_bool(v->v.i);
+        return val2bool(v->v.i);
     case BE_REAL:
-        return cast_bool(v->v.r);
+        return val2bool(v->v.r);
     case BE_INSTANCE:
         return obj2bool(vm, v);
     default:
