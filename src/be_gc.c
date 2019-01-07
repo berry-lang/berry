@@ -8,6 +8,7 @@
 #include "be_list.h"
 #include "be_func.h"
 #include "be_map.h"
+#include "be_exec.h"
 #include "be_debug.h"
 
 struct bgc {
@@ -20,6 +21,7 @@ struct bgc {
 };
 
 static void mark_object(bvm *vm, bgcobject *obj, int type);
+static void destruct_object(bvm *vm, bgcobject *obj);
 static void free_object(bvm *vm, bgcobject *obj);
 
 void be_gc_init(bvm *vm)
@@ -36,11 +38,15 @@ void be_gc_init(bvm *vm)
 
 void be_gc_deleteall(bvm *vm)
 {
-    bgcobject *node = vm->gc->list;
-    while (node) {
-        bgcobject *next = node->next;
+    bgcobject *node, *next;
+    /* first: call destructor */
+    for (node = vm->gc->list; node; node = node->next) {
+        destruct_object(vm, node);
+    }
+    /* second: free objects */
+    for (node = vm->gc->list; node; node = next) {
+        next = node->next;
         free_object(vm, node);
-        node = next;
     }
     be_free(vm->gc);
 }
@@ -334,6 +340,34 @@ static void mark_unscanned(bvm *vm)
     }
 }
 
+static void destruct_object(bvm *vm, bgcobject *obj)
+{
+    if (obj->type == BE_INSTANCE) {
+        bvalue *top = vm->top;
+        binstance *i = cast_instance(obj);
+        int type;
+        be_stackcheck(vm, 2);
+        type = be_instance_member(i,
+            be_newconststr(vm, "deinit"), top);
+        if (basetype(type) == BE_FUNCTION) {
+            var_setinstance(top + 1, i);
+            vm->top += 2;
+            be_dofunc(vm, top, 1);
+        }
+    }
+}
+
+static void destruct_white(bvm *vm)
+{
+    bgcobject *node = vm->gc->list;
+    while (node) {
+        if (gc_iswhite(node)) {
+            destruct_object(vm, node);
+        }
+        node = node->next;
+    }
+}
+
 static void delete_white(bvm *vm)
 {
     bgc *gc = vm->gc;
@@ -383,7 +417,8 @@ void be_gc_collect(bvm *vm)
     premark_fixed(vm);
     /* step 2: set unscanned object to black */
     mark_unscanned(vm);
-    /* step 3: delete unreachable object */
+    /* step 3: destruct and delete unreachable object */
+    destruct_white(vm);
     delete_white(vm);
     clear_graylist(vm);
     be_gcstrtab(vm);

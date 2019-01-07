@@ -130,6 +130,7 @@ static int m_open(bvm *vm)
         { "tell", i_tell },
         { "size", i_size },
         { "close", i_close },
+        { "deinit", i_close },
         { NULL, NULL }
     };
     fname = argc >= 1 && be_isstring(vm, 1) ? be_tostring(vm, 1) : NULL;

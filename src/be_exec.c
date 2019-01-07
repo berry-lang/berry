@@ -111,6 +111,13 @@ void be_stackpush(bvm *vm)
     }
 }
 
+void be_stackcheck(bvm *vm, int need)
+{
+    if (vm->top + need >= vm->stacktop) {
+        be_stack_expansion(vm, need);
+    }
+}
+
 static void update_callstack(bvm *vm, bvalue *oldstack)
 {
     bcallframe *cf = be_stack_top(&vm->callstack);
