@@ -35,7 +35,10 @@
  **/
 #define BE_STACK_FREE_MIN               10
 
-#define be_fstream                      FILE
+/* File operation interface.
+ * Modify these macros to port file system support.
+ **/
+#define be_fhandle                      FILE
 #define be_fopen(fname, mode)           fopen(fname, mode)
 #define be_fclose(fp)                   fclose(fp)
 #define be_fwrite(fp, buffer, len)      fwrite(buffer, 1, len, fp)
