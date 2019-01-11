@@ -200,9 +200,9 @@ static void object_binop(bvm *vm,
     obj_method(vm, a, be_newconststr(vm, op));
     top[1] = *a; /* move self to argv[0] */
     top[2] = *b; /* move other to argv[1] */
-    vm->top++;   /* prevent collection results */
+    be_incrtop(vm); /* prevent collection results */
     be_dofunc(vm, top, 2); /* call method 'item' */
-    vm->top--;
+    be_stackpop(vm, 1);
     *RA(ins) = *vm->top; /* copy result to dst */
 }
 static void object_unop(bvm *vm,
@@ -709,9 +709,9 @@ static void do_ntvfunc(bvm *vm, bvalue *reg, int argc)
 static void do_class(bvm *vm, bvalue *reg, int argc)
 {
     if (be_class_newobj(vm, var_toobj(reg), reg, ++argc)) {
-        vm->top++;
+        be_incrtop(vm);
         be_dofunc(vm, reg + 1, argc);
-        vm->top--;
+        be_stackpop(vm, 1);
     }
 }
 

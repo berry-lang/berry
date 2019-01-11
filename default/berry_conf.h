@@ -2,11 +2,14 @@
 #define __BERRY_CONF_H
 
 #include <stdio.h>
+#include <assert.h>
 
-/* Macro: BE_SINGLE_FLOAT
- * Unused.
+/* Macro: BE_DEBUG
+ * Berry interpreter debug switch.
  **/
+#ifndef BE_DEBUG
 #define BE_DEBUG                        0
+#endif
 
 /* Macro: BE_SINGLE_FLOAT
  * Select floating point precision.
@@ -34,6 +37,11 @@
  * expanded if the number of free is less than BE_STACK_FREE_MIN.
  **/
 #define BE_STACK_FREE_MIN               10
+
+/* Macro: be_assert
+ * Berry debug assertion. Only enabled when BE_DEBUG is active.
+ **/
+#define be_assert(expr)                 assert(expr)
 
 /* File operation interface.
  * Modify these macros to port file system support.

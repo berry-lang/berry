@@ -211,10 +211,10 @@ static void end_func(bparser *parser)
     proto->ktab = be_vector_release(&finfo->kvec);
     proto->ptab = be_vector_release(&finfo->pvec);
     parser->finfo = parser->finfo->prev;
-    be_pop(vm, 2); /* pop upval and local */
+    be_stackpop(vm, 2); /* pop upval and local */
     be_gc_collect(vm);
     /* proto still needs to be used. */
-    be_pop(vm, 1); /* pop proto */
+    be_stackpop(vm, 1); /* pop proto */
 }
 
 static btokentype get_binop(bparser *parser)
@@ -1116,7 +1116,7 @@ bclosure* be_parser_source(bvm *vm,
     be_lexer_set_source(&parser.lexer, fname, text, length);
     scan_next_token(&parser); /* scan first token */
     mainfunc(&parser, cl);
-    be_pop(vm, 1);
+    be_stackpop(vm, 1);
     scan_next_token(&parser); /* clear lexer */
     be_lexer_deinit(&parser.lexer);
     return cl;

@@ -154,11 +154,11 @@ static void tracestack(bvm *vm)
             be_pushstring(vm, "\t<native>: in native function\n");
         }
         be_strconcat(vm, -2);
-        be_pop(vm, 1);
+        be_stackpop(vm, 1);
     }
     be_pushstring(vm, "\t[C]: in ?");
     be_strconcat(vm, -2);
-    be_pop(vm, 1);
+    be_stackpop(vm, 1);
 }
 
 void addinfo(bvm *vm, const char *msg)

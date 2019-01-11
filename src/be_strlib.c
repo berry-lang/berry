@@ -2,6 +2,7 @@
 #include "be_string.h"
 #include "be_vm.h"
 #include "be_class.h"
+#include "be_exec.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -82,7 +83,7 @@ static void sim2str(bvm *vm, bvalue *v)
 static void ins2str(bvm *vm, int idx)
 {
     bvalue *v = vm->reg + idx;
-    bvalue *top = vm->top++;
+    bvalue *top = be_incrtop(vm);
     binstance *obj = var_toobj(v);
     /* get method 'tostring' */
     be_instance_member(obj, be_newstr(vm, "tostring"), top);
@@ -92,7 +93,7 @@ static void ins2str(bvm *vm, int idx)
         --vm->top;
         var_setstr(v, be_newstr(vm, sbuf));
     } else {
-        vm->top++;
+        be_incrtop(vm);
         var_setval(top + 1, v);
         be_dofunc(vm, top, 1);
         vm->top -= 2;
@@ -113,7 +114,7 @@ void be_val2str(bvm *vm, int index)
 
 static void pushstr(bvm *vm, const char *s, size_t len)
 {
-    bvalue *reg = vm->top++;
+    bvalue *reg = be_incrtop(vm);
     bstring *str = be_newstrn(vm, s, len);
     var_setstr(reg, str);
 }
@@ -150,7 +151,7 @@ const char* be_pushvfstr(bvm *vm, const char *format, va_list arg)
         }
         case 'd': {
             bstring *s;
-            bvalue *v = vm->top++;
+            bvalue *v = be_incrtop(vm);
             var_setint(v, va_arg(arg, int));
             s = be_num2str(vm, v);
             var_setstr(v, s);
@@ -158,7 +159,7 @@ const char* be_pushvfstr(bvm *vm, const char *format, va_list arg)
         }
         case 'f': case 'g': {
             bstring *s;
-            bvalue *v = vm->top++;
+            bvalue *v = be_incrtop(vm);
             var_setreal(v, cast(breal, va_arg(arg, double)));
             s = be_num2str(vm, v);
             var_setstr(v, s);

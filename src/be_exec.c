@@ -56,7 +56,7 @@ static void m_parser(bvm *vm, void *data)
     struct pparser *p = cast(struct pparser*, data);
     bclosure *cl = be_parser_source(vm, p->fname, p->source, p->length);
     var_setclosure(vm->top, cl);
-    vm->top++;
+    be_incrtop(vm);
 }
 
 int be_protectedparser(bvm *vm,
@@ -64,14 +64,14 @@ int be_protectedparser(bvm *vm,
 {
     int res;
     struct pparser s;
-    bvalue *top = vm->top;
+    int top = cast_int(vm->top - vm->stack);
     s.fname = fname;
     s.source = source;
     s.length = length;
     res = be_execprotected(vm, m_parser, &s);
     if (res) { /* recovery call stack */
         int idx = cast_int(vm->top - vm->reg);
-        vm->top = top;
+        vm->top = vm->stack + top;
         be_pushvalue(vm, idx); /* copy error information */
     }
     return res;
@@ -104,15 +104,25 @@ int be_protectedcall(bvm *vm, bvalue *v, int argc)
     return res;
 }
 
+#if BE_DEBUG && defined(be_assert)
+/* increase top register */
+bvalue* be_incrtop(bvm *vm)
+{
+    bvalue *top = vm->top++;
+    be_assert(top < vm->stacktop);
+    return top;
+}
+#endif
+
 void be_stackpush(bvm *vm)
 {
-    if (++vm->top >= vm->stacktop) {
-        be_stack_expansion(vm, BE_STACK_FREE_MIN);
-    }
+    be_stackcheck(vm, 1);
+    be_incrtop(vm);
 }
 
 void be_stackcheck(bvm *vm, int need)
 {
+    need += BE_STACK_FREE_MIN;
     if (vm->top + need >= vm->stacktop) {
         be_stack_expansion(vm, need);
     }

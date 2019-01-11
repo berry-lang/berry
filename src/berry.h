@@ -48,8 +48,15 @@ typedef struct {
     bcfunction function;
 } bmemberinfo;
 
-#define be_putstr(s)        be_fwrite(stdout, s, strlen(s))
-#define be_putline()        be_fwrite(stdout, "\n", 1)
+#if !BE_DEBUG
+  #if defined(be_assert)
+    #undef be_assert
+  #endif
+  #define be_assert(expr)
+#endif
+
+#define be_writestring(s)       be_fwrite(stdout, s, strlen(s))
+#define be_writenewline()       be_fwrite(stdout, "\n", 1)
 
 #define be_loadstring(vm, str) \
     be_loadbuffer((vm), "string", (str), strlen(str))
