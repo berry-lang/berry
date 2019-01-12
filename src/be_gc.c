@@ -67,7 +67,7 @@ bgcobject* be_newgcobj(bvm *vm, int type, size_t size)
     bgcobject *obj = be_malloc(size);
 
     var_settype(obj, (bbyte)type);
-    obj->marked = GC_BLACK; /* default gc object type is black */
+    obj->marked = GC_GRAY; /* default gc object type is gray */
     be_gc_auto(vm);
     obj->next = gc->list; /* insert to head */
     gc->list = obj;
@@ -82,7 +82,7 @@ bgcobject* be_gc_newstr(bvm *vm, size_t size, int islong)
     }
     obj = be_malloc(size);
     var_settype(obj, BE_STRING);
-    obj->marked = GC_BLACK; /* default gc object type is black */
+    obj->marked = GC_GRAY; /* default gc object type is gray */
     return obj;
 }
 
@@ -101,10 +101,10 @@ void be_gc_unfix(bvm *vm, bgcobject *obj)
 static void mark_map(bvm *vm, bgcobject *obj)
 {
     bmap *map = cast_map(obj);
-    gc_setdark(obj);
     if (map) {
         bmapnode *node;
         bmapiter iter = be_map_iter();
+        gc_setdark(obj);
         while ((node = be_map_next(map, &iter)) != NULL) {
             bmapkey *key = &node->key;
             bvalue *val = &node->value;
@@ -117,10 +117,10 @@ static void mark_map(bvm *vm, bgcobject *obj)
 static void mark_list(bvm *vm, bgcobject *obj)
 {
     blist *list = cast_list(obj);
-    gc_setdark(obj);
     if (list) {
         bvalue *val = be_list_data(list);
         int count = be_list_count(list);
+        gc_setdark(obj);
         for (; count--; val++) {
             mark_object(vm, val->v.gc, var_type(val));
         }
@@ -130,11 +130,11 @@ static void mark_list(bvm *vm, bgcobject *obj)
 static void mark_proto(bvm *vm, bgcobject *obj)
 {
     bproto *p = cast_proto(obj);
-    gc_setdark(obj);
     if (p) {
         int count;
         bvalue *k = p->ktab;
         bproto **ptab = p->ptab;
+        gc_setdark(obj);
         for (count = p->nconst; count--; ++k) {
             mark_object(vm, k->v.gc, var_type(k));
         }
@@ -151,10 +151,10 @@ static void mark_proto(bvm *vm, bgcobject *obj)
 static void mark_closure(bvm *vm, bgcobject *obj)
 {
     bclosure *cl = cast_closure(obj);
-    gc_setdark(obj);
     if (cl) {
         int count = cl->nupvals;
         bupval **uv = cl->upvals;
+        gc_setdark(obj);
         for (; count--; ++uv) {
             if ((*uv)->refcnt) {
                 bvalue *v = (*uv)->value;
@@ -168,10 +168,10 @@ static void mark_closure(bvm *vm, bgcobject *obj)
 static void mark_ntvclos(bvm *vm, bgcobject *obj)
 {
     bntvclos *f = cast_ntvclos(obj);
-    gc_setdark(obj);
     if (f) {
         int count = f->nupvals;
         bupval **uv = &be_ntvclos_upval(f, 0);
+        gc_setdark(obj);
         for (; count--; ++uv) {
             if ((*uv)->refcnt) {
                 bvalue *v = (*uv)->value;
@@ -196,12 +196,13 @@ static void mark_class(bvm *vm, bgcobject *obj)
 static void mark_instance(bvm *vm, bgcobject *obj)
 {
     binstance *o = cast_instance(obj);
-    gc_setdark(obj);
+    be_assert(o != NULL);
     mark_class(vm, gc_object(o->class));
     /* mark self instance and super instance */
     while (o) {
         bvalue *var = be_instance_members(o);
         int nvar = be_instance_member_count(o);
+        gc_setdark(o);
         while (nvar--) {
             mark_object(vm, var->v.gc, var_type(var));
             var++;

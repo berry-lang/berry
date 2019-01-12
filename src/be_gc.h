@@ -19,11 +19,11 @@
 #define gc_ismark(o, m)     (((o)->marked & 0x03) == m)
 #define gc_iswhite(o)       gc_ismark((o), GC_WHITE)
 #define gc_isgray(o)        gc_ismark((o), GC_GRAY)
-#define gc_isdark(o)        gc_ismark((o), GC_BLACK)
+#define gc_isdark(o)        gc_ismark((o), GC_DARK)
 #define gc_setmark(o, m)    { (o)->marked &= ~0x03; (o)->marked |= (m) & 0x03; }
 #define gc_setwhite(o)      gc_setmark((o), GC_WHITE)
 #define gc_setgray(o)       gc_setmark((o), GC_GRAY)
-#define gc_setdark(o)       gc_setmark((o), GC_BLACK)
+#define gc_setdark(o)       gc_setmark((o), GC_DARK)
 #define gc_isfixed(o)       (((o)->marked & 0x04) != 0)
 #define gc_setfixed(o)      ((o)->marked |= 0x04)
 #define gc_clearfixed(o)    ((o)->marked &= ~0x04)
@@ -35,7 +35,7 @@
 typedef enum {
     GC_WHITE, /* unreachable object */
     GC_GRAY,  /* unscanned object */
-    GC_BLACK  /* scanned object */
+    GC_DARK  /* scanned object */
 } bgcmark;
 
 void be_gc_init(bvm *vm);
