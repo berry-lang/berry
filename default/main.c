@@ -31,7 +31,11 @@
     #define COMPILER  "Unknown Compiler"
 #endif
 
+#if BE_DEBUG
+#define FULL_VERSION "Berry " BERRY_VERSION " (debug)"
+#else
 #define FULL_VERSION "Berry " BERRY_VERSION
+#endif
 
 #define repl_prelude                                            \
     FULL_VERSION " (build in " __DATE__ ", " __TIME__ ")\n"     \

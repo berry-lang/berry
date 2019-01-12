@@ -20,6 +20,9 @@ CFLAGS	+= $(foreach dir, $(INCPATH), -I"$(dir)")
 
 all: $(TARGET)
 
+debug: CFLAGS += -O0 -g -DBE_DEBUG
+debug: $(TARGET)
+
 $(TARGET): $(OBJS)
 	@ echo [Linking...]
 	@ $(CC) $(OBJS) $(CFLAGS) $(LIBS) -o $@
