@@ -703,6 +703,35 @@ int be_hasnext(bvm *vm, int index)
     return 0;
 }
 
+int be_refcontains(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    binstance **ref = be_stack_base(&vm->refstack);
+    binstance **top = be_stack_top(&vm->refstack);
+    binstance *ins = var_toobj(v);
+    be_assert(var_isinstance(v));
+    while (ref <= top && *ref != ins) {
+        ++ref;
+    }
+    return ref <= top;
+}
+
+void be_refpush(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    binstance *ins = var_toobj(v);
+    be_assert(var_isinstance(v));
+    be_stack_push(&vm->refstack, &ins);
+}
+
+void be_refpop(bvm *vm)
+{
+    be_stack_pop(&vm->refstack);
+    if (be_stack_isempty(&vm->refstack)) {
+        be_vector_release(&vm->refstack);
+    }
+}
+
 int be_return(bvm *vm)
 {
     bvalue *src = vm->top - 1;

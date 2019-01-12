@@ -31,6 +31,7 @@ struct bvm {
     bvalue *top;
 	binstruction *ip;
     struct blongjmp *errjmp; /* error jump point */
+    bstack refstack; /* object reference stack */
 };
 
 #define NONE_FLAG           0

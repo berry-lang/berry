@@ -3,6 +3,10 @@
 #define map_check_data(vm, argc)                        \
     if (!be_ismap(vm, -1) || be_top(vm) - 1 < argc) {   \
         return be_returnnil(vm);                        \
+    }                                                   \
+    if (be_refcontains(vm, 1)) {                        \
+        be_pushstring(vm, "{...}");                     \
+        return be_return(vm);                           \
     }
 
 static int m_init(bvm *vm)
@@ -17,45 +21,55 @@ static int m_init(bvm *vm)
     return be_returnnil(vm);
 }
 
+static void push_key(bvm *vm)
+{
+    if (be_isstring(vm, -2)) { /* add ''' to strings */
+        be_pushfstring(vm, "'%s'", be_tostring(vm, -2));
+    } else {
+        be_tostring(vm, -2);
+        be_pushvalue(vm, -2); /* push to top */
+    }
+    be_strconcat(vm, -5);
+    be_pop(vm, 1);
+}
+
+static void push_value(bvm *vm)
+{
+    if (be_isstring(vm, -1)) { /* add ''' to strings */
+        be_pushfstring(vm, "'%s'", be_tostring(vm, -1));
+    } else {
+        be_tostring(vm, -1);
+        be_pushvalue(vm, -1); /* push to top */
+    }
+    be_strconcat(vm, -5);
+    be_pop(vm, 3);
+    if (be_hasnext(vm, -3)) {
+        be_pushstring(vm, ", ");
+        be_strconcat(vm, -3);
+        be_pop(vm, 1);
+    }
+}
+
 static int m_tostring(bvm *vm)
 {
     be_getmember(vm, 1, ".data");
     map_check_data(vm, 1);
+    be_refpush(vm, 1);
     be_pushstring(vm, "{");
     be_pushiter(vm, -2); /* map iterator use 1 register */
     while (be_hasnext(vm, -3)) {
         be_next(vm, -3);
-        /* key.tostring() */
-        if (be_isstring(vm, -2)) { /* add ''' to strings */
-            be_pushfstring(vm, "'%s'", be_tostring(vm, -2));
-        } else {
-            be_tostring(vm, -2);
-            be_pushvalue(vm, -2); /* push to top */
-        }
-        be_strconcat(vm, -5);
-        be_pop(vm, 1);
+        push_key(vm); /* key.tostring() */
         be_pushstring(vm, ": "); /* add ': ' */
         be_strconcat(vm, -5);
         be_pop(vm, 1);
-        /* value.tostring() */
-        if (be_isstring(vm, -1)) { /* add ''' to strings */
-            be_pushfstring(vm, "'%s'", be_tostring(vm, -1));
-        } else {
-            be_tostring(vm, -1);
-            be_pushvalue(vm, -1); /* push to top */
-        }
-        be_strconcat(vm, -5);
-        be_pop(vm, 3);
-        if (be_hasnext(vm, -3)) {
-            be_pushstring(vm, ", ");
-            be_strconcat(vm, -3);
-            be_pop(vm, 1);
-        }
+        push_value(vm); /* value.tostring() */
     }
     be_pop(vm, 1); /* pop iterator */
     be_pushstring(vm, "}");
     be_strconcat(vm, -2);
     be_pop(vm, 1);
+    be_refpop(vm);
     return be_return(vm);
 }
 

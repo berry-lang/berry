@@ -52,7 +52,7 @@ typedef struct {
   #if defined(be_assert)
     #undef be_assert
   #endif
-  #define be_assert(expr)
+  #define be_assert(expr)       ((void)0)
 #endif
 
 #define be_writestring(s)       be_fwrite(stdout, s, strlen(s))
@@ -133,6 +133,9 @@ void be_resize(bvm *vm, int index);
 int be_pushiter(bvm *vm, int index);
 int be_next(bvm *vm, int index);
 int be_hasnext(bvm *vm, int index);
+int be_refcontains(bvm *vm, int index);
+void be_refpush(bvm *vm, int index);
+void be_refpop(bvm *vm);
 int be_return(bvm *vm);
 int be_returnnil(bvm *vm);
 

@@ -101,6 +101,7 @@ void be_gc_unfix(bvm *vm, bgcobject *obj)
 static void mark_map(bvm *vm, bgcobject *obj)
 {
     bmap *map = cast_map(obj);
+    gc_setdark(obj);
     if (map) {
         bmapnode *node;
         bmapiter iter = be_map_iter();
@@ -110,26 +111,26 @@ static void mark_map(bvm *vm, bgcobject *obj)
             mark_object(vm, key->v.gc, var_type(key));
             mark_object(vm, val->v.gc, var_type(val));
         }
-        gc_setdark(obj);
     }
 }
 
 static void mark_list(bvm *vm, bgcobject *obj)
 {
     blist *list = cast_list(obj);
+    gc_setdark(obj);
     if (list) {
         bvalue *val = be_list_data(list);
         int count = be_list_count(list);
         for (; count--; val++) {
             mark_object(vm, val->v.gc, var_type(val));
         }
-        gc_setdark(obj);
     }
 }
 
 static void mark_proto(bvm *vm, bgcobject *obj)
 {
     bproto *p = cast_proto(obj);
+    gc_setdark(obj);
     if (p) {
         int count;
         bvalue *k = p->ktab;
@@ -144,13 +145,13 @@ static void mark_proto(bvm *vm, bgcobject *obj)
 #if BE_RUNTIME_DEBUG_INFO
         gc_setdark(gc_object(p->source));
 #endif
-        gc_setdark(obj);
     }
 }
 
 static void mark_closure(bvm *vm, bgcobject *obj)
 {
     bclosure *cl = cast_closure(obj);
+    gc_setdark(obj);
     if (cl) {
         int count = cl->nupvals;
         bupval **uv = cl->upvals;
@@ -161,13 +162,13 @@ static void mark_closure(bvm *vm, bgcobject *obj)
             }
         }
         mark_proto(vm, gc_object(cl->proto));
-        gc_setdark(obj);
     }
 }
 
 static void mark_ntvclos(bvm *vm, bgcobject *obj)
 {
     bntvclos *f = cast_ntvclos(obj);
+    gc_setdark(obj);
     if (f) {
         int count = f->nupvals;
         bupval **uv = &be_ntvclos_upval(f, 0);
@@ -177,7 +178,6 @@ static void mark_ntvclos(bvm *vm, bgcobject *obj)
                 mark_object(vm, v->v.gc, var_type(v));
             }
         }
-        gc_setdark(obj);
     }
 }
 
@@ -196,6 +196,7 @@ static void mark_class(bvm *vm, bgcobject *obj)
 static void mark_instance(bvm *vm, bgcobject *obj)
 {
     binstance *o = cast_instance(obj);
+    gc_setdark(obj);
     mark_class(vm, gc_object(o->class));
     /* mark self instance and super instance */
     while (o) {
@@ -205,14 +206,13 @@ static void mark_instance(bvm *vm, bgcobject *obj)
             mark_object(vm, var->v.gc, var_type(var));
             var++;
         }
-        gc_setdark(o);
         o = be_instance_super(o);
     }
 }
 
 static void mark_object(bvm *vm, bgcobject *obj, int type)
 {
-    if (be_isgctype(type)) {
+    if (be_isgctype(type) && !gc_isdark(obj)) {
         switch (type) {
         case BE_STRING: gc_setdark(obj); break;
         case BE_CLASS: mark_class(vm, obj); break;

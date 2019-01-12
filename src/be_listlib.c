@@ -4,6 +4,10 @@
 #define list_check_data(vm, argc)                       \
     if (!be_islist(vm, -1) || be_top(vm) - 1 < argc) {  \
         return be_returnnil(vm);                        \
+    }                                                   \
+    if (be_refcontains(vm, 1)) {                        \
+        be_pushstring(vm, "[...]");                     \
+        return be_return(vm);                           \
     }
 
 static int m_init(bvm *vm)
@@ -24,22 +28,28 @@ static int m_init(bvm *vm)
     return be_returnnil(vm);
 }
 
+static void push_element(bvm *vm)
+{
+    if (be_isstring(vm, -1)) { /* Add '"' to strings */
+        be_pushfstring(vm, "'%s'", be_tostring(vm, -1));
+		be_removeone(vm, -2);
+    } else {
+        be_tostring(vm, -1);
+    }
+    be_strconcat(vm, -3);
+    be_pop(vm, 1);
+}
+
 static int m_tostring(bvm *vm)
 {
     be_getmember(vm, 1, ".data");
     list_check_data(vm, 1);
+    be_refpush(vm, 1);
     be_pushstring(vm, "[");
     be_pushiter(vm, -2);
     while (be_hasnext(vm, -3)) {
         be_next(vm, -3);
-        if (be_isstring(vm, -1)) { /* Add '"' to strings */
-            be_pushfstring(vm, "'%s'", be_tostring(vm, -1));
-			be_removeone(vm, -2);
-        } else {
-            be_tostring(vm, -1);
-        }
-        be_strconcat(vm, -3);
-        be_pop(vm, 1);
+        push_element(vm);
         if (be_hasnext(vm, -3)) {
             be_pushstring(vm, ", ");
             be_strconcat(vm, -3);
@@ -50,6 +60,7 @@ static int m_tostring(bvm *vm)
     be_pushstring(vm, "]");
     be_strconcat(vm, -2);
     be_pop(vm, 1);
+    be_refpop(vm);
     return be_return(vm);
 }
 

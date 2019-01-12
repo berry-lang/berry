@@ -599,6 +599,7 @@ bvm* be_vm_new(void)
     be_string_init(vm);
     be_globalvar_init(vm);
     be_stack_init(&vm->callstack, sizeof(bcallframe));
+    be_stack_init(&vm->refstack, sizeof(binstance*));
     vm->stack = be_malloc(sizeof(bvalue) * BE_STACK_FREE_MIN);
     vm->stacktop = vm->stack + BE_STACK_FREE_MIN;
     vm->cf = NULL;
