@@ -21,15 +21,15 @@ struct bvm {
     bstringtable *strtab;
     bgc *gc;
     bvalue *global; /* global variable vector */
+    bglobaldesc gbldesc; /* global description */
     bvalue *stack; /* stack space */
-    bvalue *stacktop;
+    bvalue *stacktop; /* stack top register */
     bupval *upvalist; /* open upvalue list */
     bstack callstack; /* function call stack */
-    bglobaldesc gbldesc; /* global description */
     bcallframe *cf; /* function call frame */
-    bvalue *reg;
-    bvalue *top;
-	binstruction *ip;
+    bvalue *reg; /* function base register */
+    bvalue *top; /* function top register */
+	binstruction *ip; /* function instruction pointer */
     struct blongjmp *errjmp; /* error jump point */
     bstack refstack; /* object reference stack */
 };
