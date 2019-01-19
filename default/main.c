@@ -94,12 +94,24 @@ static int dofile(bvm *vm)
             printf("error: memory allocation failed.\n");
             return 2;
         }
-        res = be_loadbuffer(vm, name, buffer, len) || be_pcall(vm, 0);
+        res = be_loadbuffer(vm, name, buffer, len);
         free(buffer);
-        if (res) {
+        res = res == BE_OK ? be_pcall(vm, 0) : res;
+        switch (res) {
+        case BE_OK:
+            return 0;
+        case BE_SYNTAX_ERROR: /* syntax error */
+        case BE_EXEC_ERROR: /* vm run error */
             printf("%s\n", be_tostring(vm, -1));
+            return 1;
+        case BE_EXIT: /* return exit code */
+            return be_toint(vm, -1);
+        case BE_MALLOC_FAIL:
+            printf("error: malloc fail.\n");
+            return -1;
+        default: /* unkonw result */
+            return 2;
         }
-        return 0;
     }
     printf("error: can not open file '%s'.\n", name);
     return 1;
@@ -155,7 +167,7 @@ static int analysis_args(bvm *vm)
         be_pop(vm, be_top(vm));
     }
     if (args & arg_i) {
-        be_repl(vm, get_line);
+        return be_repl(vm, get_line);
     }
     return 0;
 }

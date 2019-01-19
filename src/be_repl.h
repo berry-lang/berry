@@ -5,6 +5,6 @@
 
 typedef const char* (*breadline)(const char *prompt);
 
-void be_repl(bvm *vm, breadline getl);
+int be_repl(bvm *vm, breadline getl);
 
 #endif

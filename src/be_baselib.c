@@ -31,7 +31,8 @@ static int l_exit(bvm *vm)
     if (be_isint(vm, -1)) {
         status = be_toint(vm, -1);
     }
-    exit(status);
+    be_exit(vm, status);
+    return be_returnnil(vm);
 }
 
 static int l_memcount(bvm *vm)

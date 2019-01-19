@@ -37,7 +37,9 @@ typedef enum {
 enum {
     BE_OK = 0,
     BE_SYNTAX_ERROR,
-    BE_EXEC_ERROR
+    BE_EXEC_ERROR,
+    BE_EXIT,
+    BE_MALLOC_FAIL
 };
 
 typedef struct bvm bvm;
@@ -142,6 +144,7 @@ int be_returnnil(bvm *vm);
 void be_call(bvm *vm, int argc);
 int be_pcall(bvm *vm, int argc);
 void be_abort(void);
+void be_exit(bvm *vm, int status);
 
 void be_regcfunc(bvm *vm, const char *name, bcfunction f);
 void be_regclass(bvm *vm, const char *name, const bmemberinfo *lib);

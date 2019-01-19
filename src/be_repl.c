@@ -36,7 +36,7 @@ static int compile(bvm *vm, const char *line, breadline getl)
     return res;
 }
 
-void be_repl(bvm *vm, breadline getl)
+int be_repl(bvm *vm, breadline getl)
 {
     const char *line;
     while ((line = getl("> ")) != NULL) {
@@ -44,17 +44,29 @@ void be_repl(bvm *vm, breadline getl)
             be_writestring(be_tostring(vm, -1)); /* some error */
             be_writenewline();
             be_pop(vm, 1);
-        } else if (be_pcall(vm, 0)) { /* vm run error */
-            be_writestring(be_tostring(vm, -1));
-            be_writenewline();
-            be_pop(vm, 2);
         } else {
-            if (!be_isnil(vm, -1)) {
+            switch (be_pcall(vm, 0)) {
+            case BE_OK:
+                if (!be_isnil(vm, -1)) {
+                    be_writestring(be_tostring(vm, -1));
+                    be_writenewline();
+                }
+                be_pop(vm, 1);
+                break;
+            case BE_EXEC_ERROR: /* vm run error */
                 be_writestring(be_tostring(vm, -1));
                 be_writenewline();
+                be_pop(vm, 2);
+                break;
+            case BE_EXIT:
+                return be_toint(vm, -1);
+            case BE_MALLOC_FAIL:
+                return -1;
+            default:
+                break;
             }
-            be_pop(vm, 1);
         }
     }
     be_writenewline();
+    return 0;
 }

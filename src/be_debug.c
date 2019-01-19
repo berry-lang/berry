@@ -13,11 +13,6 @@
 #include <stdarg.h>
 #include <string.h>
 
-void be_abort(void)
-{
-    exit(0);
-}
-
 static void print_inst(binstruction ins, int pc)
 {
     bopcode op = IGET_OP(ins);

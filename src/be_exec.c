@@ -39,6 +39,16 @@ void be_throw(bvm *vm, int errorcode)
     }
 }
 
+void be_exit(bvm *vm, int status)
+{
+    if (vm->errjmp) {
+        be_pushint(vm, status);
+        be_throw(vm, BE_EXIT);
+    } else {
+        exit(status);
+    }
+}
+
 int be_execprotected(bvm *vm, bpfunc f, void *data)
 {
     struct blongjmp jmp;
