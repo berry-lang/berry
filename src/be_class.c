@@ -13,9 +13,10 @@ bclass* be_newclass(bvm *vm, bstring *name, bclass *super)
     bclass *obj = cast_class(gco);
     if (obj) {
         obj->super = super;
-        obj->members = be_map_new(vm);
+        obj->members = NULL;
         obj->nvar = 0;
         obj->name = name;
+        obj->members = be_map_new(vm);
     }
     return obj;
 }

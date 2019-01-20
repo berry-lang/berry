@@ -23,17 +23,6 @@ typedef enum {
     btrue = 1
 } bbool;
 
-/* basic types, do not change value */
-#define BE_NONE         (-1)
-#define BE_NIL          0
-#define BE_INT          1
-#define BE_REAL         2
-#define BE_BOOL         3
-#define BE_FUNCTION     4
-#define BE_STRING       5
-#define BE_CLASS        6
-#define BE_INSTANCE     7
-
 enum {
     BE_OK = 0,
     BE_SYNTAX_ERROR,
@@ -49,6 +38,24 @@ typedef struct {
     const char *name;
     bcfunction function;
 } bmemberinfo;
+
+typedef const struct {
+    const char *name;
+    const bmemberinfo *table;
+    size_t size;
+} bmodule_native;
+
+#define be_native_module(name)  be_native_module_##name
+
+#define be_extern_native_module(name)               \
+extern bmodule_native be_native_module(name)
+
+#define be_define_native_module(name, attrs)        \
+bmodule_native be_native_module(name) = {           \
+    #name,                                          \
+    attrs,                                          \
+    (sizeof(attrs) / sizeof((attrs)[0])),           \
+}
 
 #if !BE_DEBUG
   #if defined(be_assert)

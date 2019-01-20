@@ -1056,6 +1056,25 @@ static void class_stmt(bparser *parser)
     }
 }
 
+static void import_stmt(bparser *parser)
+{
+    bstring *name;
+    bexpdesc m, v;
+    /* 'import' ID ['as' ID] */
+    scan_next_token(parser); /* skip 'import' */
+    name = next_token(parser).u.s;
+    match_token(parser, TokenId); /* match and skip ID */
+    init_exp(&m, ETSTRING, 0);
+    m.v.s = name;
+    if (next_token(parser).type == KeyAs) {
+        scan_next_token(parser); /* skip 'as' */
+        name = next_token(parser).u.s;
+        match_token(parser, TokenId);  /* match and skip ID */
+    }
+    new_var(parser, name, &v);
+    be_code_import(parser->finfo, &m, &v);
+}
+
 static void statement(bparser *parser)
 {
     switch (next_token(parser).type) {
@@ -1068,6 +1087,7 @@ static void statement(bparser *parser)
     case KeyDef: def_stmt(parser); break;
     case KeyClass: class_stmt(parser); break;
     case KeyReturn: return_stmt(parser); break;
+    case KeyImport: import_stmt(parser); break;
     case OptSemic: scan_next_token(parser); break; /* empty statement */
     default: expr_stmt(parser); break;
     }

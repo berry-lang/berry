@@ -1,4 +1,4 @@
-#include "be_jsonlib.h"
+#include "be_object.h"
 #include "be_mem.h"
 #include <string.h>
 
@@ -397,8 +397,9 @@ static int m_json_dump(bvm *vm)
     return be_return(vm);
 }
 
-void be_json_init(bvm *vm)
-{
-    be_regcfunc(vm, "json_load", m_json_load);
-    be_regcfunc(vm, "json_dump", m_json_dump);
-}
+static const bmemberinfo attr_table[] = {
+    { "load", m_json_load },
+    { "dump", m_json_dump }
+};
+
+be_define_native_module(json, attr_table);

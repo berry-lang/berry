@@ -3,13 +3,24 @@
 
 #include "berry.h"
 
-#define BE_PROTO        10
-#define BE_LIST         11
-#define BE_MAP          12
+/* basic types, do not change value */
+#define BE_NONE         (-1)    /* unknow type */
+#define BE_COMPTR       (-2)    /* common pointer */
+#define BE_NIL          0
+#define BE_INT          1
+#define BE_REAL         2
+#define BE_BOOL         3
+#define BE_FUNCTION     4
+#define BE_STRING       5
+#define BE_CLASS        6
+#define BE_INSTANCE     7
+#define BE_PROTO        8
+#define BE_LIST         9
+#define BE_MAP          10
+#define BE_MODULE       11
 #define BE_NTVFUNC      ((0 << 5) | BE_FUNCTION)
 #define BE_CLOSURE      ((1 << 5) | BE_FUNCTION)
 #define BE_NTVCLOS      ((2 << 5) | BE_FUNCTION)
-#define BE_COMPTR       (-2)    /* common pointer */
 
 #define array_count(a)   (sizeof(a) / sizeof((a)[0]))
 
@@ -158,6 +169,7 @@ struct bntvclos {
 #define var_isinstance(_v)      var_istype(_v, BE_INSTANCE)
 #define var_islist(_v)          var_istype(_v, BE_LIST)
 #define var_ismap(_v)           var_istype(_v, BE_MAP)
+#define var_ismodule(_v)        var_istype(_v, BE_MODULE)
 #define var_isnumber(_v)        (var_isint(_v) || var_isreal(_v))
 
 #define var_setnil(_v)          var_settype(_v, BE_NIL)
@@ -173,6 +185,7 @@ struct bntvclos {
 #define var_setntvfunc(_v, _o)  var_setobj(_v, BE_NTVFUNC, _o)
 #define var_setlist(_v, _o)     var_setobj(_v, BE_LIST, _o)
 #define var_setmap(_v, _o)      var_setobj(_v, BE_MAP, _o)
+#define var_setmodule(_v, _o)   var_setobj(_v, BE_MODULE, _o)
 #define var_setproto(_v, _o)    var_setobj(_v, BE_PROTO, _o)
 
 #define var_tobool(_v)          ((_v)->v.b)

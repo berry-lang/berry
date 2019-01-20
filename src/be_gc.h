@@ -15,6 +15,7 @@
 #define cast_instance(o)    gc_cast(o, BE_INSTANCE, binstance)
 #define cast_map(o)         gc_cast(o, BE_MAP, bmap)
 #define cast_list(o)        gc_cast(o, BE_LIST, blist)
+#define cast_module(o)      gc_cast(o, BE_MODULE, bmodule)
 
 #define gc_ismark(o, m)     (((o)->marked & 0x03) == m)
 #define gc_iswhite(o)       gc_ismark((o), GC_WHITE)

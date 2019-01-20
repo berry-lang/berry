@@ -32,6 +32,7 @@ struct bvm {
 	binstruction *ip; /* function instruction pointer */
     struct blongjmp *errjmp; /* error jump point */
     bstack refstack; /* object reference stack */
+    struct bmodule *modulelist;
 };
 
 #define NONE_FLAG           0

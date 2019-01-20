@@ -2,6 +2,7 @@
 #include "be_string.h"
 #include "be_vm.h"
 #include "be_class.h"
+#include "be_module.h"
 #include "be_exec.h"
 #include <string.h>
 #include <stdlib.h>
@@ -50,7 +51,7 @@ bstring* be_num2str(bvm *vm, bvalue *v)
 
 static void sim2str(bvm *vm, bvalue *v)
 {
-    char sbuf[32];
+    char sbuf[64];
     switch (var_type(v)) {
     case BE_NIL:
         strcpy(sbuf, "nil");
@@ -72,6 +73,10 @@ static void sim2str(bvm *vm, bvalue *v)
     case BE_CLASS:
         sprintf(sbuf, "<class: %s>",
             str(be_class_name(cast(bclass*, var_toobj(v)))));
+        break;
+    case BE_MODULE:
+        sprintf(sbuf, "<module: %s>",
+            be_module_name(cast(bmodule*, var_toobj(v))));
         break;
     default:
         strcpy(sbuf, "(unknow value)");

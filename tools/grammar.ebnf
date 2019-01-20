@@ -3,7 +3,8 @@ program = block;
 (* block define *)
 block = {class_def | statement};
 (* statement define *)
-statement = func_def | var_def | if_stmt | while_stmt | for_stmt | break_stmt | return_stmt | expr_stmt;
+statement = func_def | var_def | if_stmt | while_stmt |
+            for_stmt | break_stmt | return_stmt | expr_stmt | import_stmt;
 if_stmt = 'if' '(' 'expr' ')' block {'elseif' '(' expr ')' block} ['else' block] 'end';
 while_stmt = 'while' '(' expr ')' block 'end';
 for_stmt = 'for' '(' ID ':' [expr]')' block 'end';
@@ -14,6 +15,7 @@ func_def = 'def' ID '(' [ID {',' ID}] ')' block 'end';
 (* class define *)
 class_def = 'class' ID [':' ID] class_block 'end';
 class_block = {'var' ID | func_define};
+import_stmt = 'import' ID ['as' ID];
 (* variable define *)
 var_def = 'var' ID ['=' expr] {, ID ['=' expr]};
 (* expression define *)

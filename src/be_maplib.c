@@ -1,4 +1,4 @@
-#include "be_maplib.h"
+#include "be_object.h"
 
 #define map_check_data(vm, argc)                        \
     if (!be_ismap(vm, -1) || be_top(vm) - 1 < argc) {   \
@@ -168,7 +168,7 @@ static int m_iter(bvm *vm)
     return be_return(vm);
 }
 
-void be_map_init(bvm *vm)
+void be_load_maplib(bvm *vm)
 {
     static const bmemberinfo members[] = {
         { ".data", NULL },

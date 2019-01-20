@@ -1,4 +1,4 @@
-#include "be_baselib.h"
+#include "be_object.h"
 #include "be_mem.h"
 #include <time.h>
 #include <stdlib.h>
@@ -141,7 +141,7 @@ static int l_length(bvm *vm)
     return be_return(vm);
 }
 
-void be_loadbaselib(bvm *vm)
+void be_load_baselib(bvm *vm)
 {
     be_regcfunc(vm, "print", l_print);
     be_regcfunc(vm, "clock", l_clock);

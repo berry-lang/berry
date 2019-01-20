@@ -601,3 +601,18 @@ void be_code_setsuper(bfuncinfo *finfo, bexpdesc *c, bexpdesc *s)
     int super = exp2anyreg(finfo, s);
     codeABC(finfo, OP_SETSUPER, self, super, 0);
 }
+
+void be_code_import(bfuncinfo *finfo, bexpdesc *m, bexpdesc *v)
+{
+    int dst, src = exp2anyreg(finfo, m);
+    if (v->type == ETLOCAL) {
+        dst = v->v.idx;
+        codeABC(finfo, OP_IMPORT, dst, src, 0);
+    } else {
+        dst = be_code_allocregs(finfo, 1);
+        codeABC(finfo, OP_IMPORT, dst, src, 0);
+        m->type = ETREG;
+        m->v.idx = dst;
+        be_code_setvar(finfo, v, m);
+    }
+}

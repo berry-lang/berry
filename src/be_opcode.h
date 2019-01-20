@@ -86,7 +86,8 @@ typedef enum {
     OP_GETIDX,    /*  A, B, C  |   R(A) <- RK(B)[RK(C)] */
     OP_SETIDX,    /*  A, B, C  |   R(A)[RK(B)] <- RK(C) */
     OP_SETSUPER,  /*  A, B     |   class:R(A) set super with class:RK(B) */
-    OP_CLOSE      /*  A        |   close upvalues */
+    OP_CLOSE,     /*  A        |   close upvalues */
+    OP_IMPORT     /*  A, B     |   R(A) <- import module from name RK(B) */
 } bopcode;
 
 const char *be_opcode2str(bopcode op);

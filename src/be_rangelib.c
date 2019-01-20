@@ -1,4 +1,4 @@
-#include "be_rangelib.h"
+#include "be_object.h"
 
 static int m_init(bvm *vm)
 {
@@ -104,7 +104,7 @@ static int m_iter(bvm *vm)
     return be_return(vm);
 }
 
-void be_range_init(bvm *vm)
+void be_load_rangelib(bvm *vm)
 {
     static const bmemberinfo members[] = {
         { "__lower__", NULL },

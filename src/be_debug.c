@@ -29,7 +29,7 @@ static void print_inst(binstruction ins, int pc)
     case OP_GETGBL: case OP_SETGBL:
         printf("%s\tR%d\tG:%d\n", be_opcode2str(op), IGET_RA(ins), IGET_Bx(ins));
         break;
-    case OP_MOVE: case OP_SETSUPER: case OP_NEG:
+    case OP_MOVE: case OP_SETSUPER: case OP_NEG: case OP_IMPORT:
         printf("%s\tR%d\tR%d\n", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins));
         break;
     case OP_JMP:

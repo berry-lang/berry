@@ -58,7 +58,9 @@ typedef enum {
     KeyFalse,       /* keyword false */
     KeyNil,         /* keyword nil */
     KeyVar,         /* keyword var */
-    KeyDo           /* keyword do */
+    KeyDo,          /* keyword do */
+    KeyImport,      /* keyword import */
+    KeyAs           /* keyword as */
 } btokentype;
 
 typedef struct btoken {

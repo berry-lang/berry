@@ -1,9 +1,9 @@
-#include "be_iolib.h"
+#include "be_object.h"
 #include "be_mem.h"
 
 #define READLINE_STEP       100
 
-static int l_input(bvm *vm)
+static int m_input(bvm *vm)
 {
     size_t pos = 0, size = READLINE_STEP;
     char *buffer = be_malloc(size);
@@ -21,7 +21,8 @@ static int l_input(bvm *vm)
     return be_return(vm);
 }
 
-void be_loadiolib(bvm *vm)
-{
-    be_regcfunc(vm, "input", l_input);
-}
+static const bmemberinfo attr_table[] = {
+    { "input", m_input }
+};
+
+be_define_native_module(io, attr_table);

@@ -11,7 +11,7 @@ const char *be_opcode2str(bopcode op)
         "SETGBL", "GETUPV", "SETUPV", "JMP",
         "JMPT", "JMPF", "CALL", "RET", "CLOSURE",
         "GETMBR", "GETMET", "SETMBR", "GETIDX",
-        "SETIDX", "SETSUPER", "CLOSE"
+        "SETIDX", "SETSUPER", "CLOSE", "IMPORT"
     };
     return op < array_count(opcode_tab) ? opcode_tab[op] : "ERROP";
 }

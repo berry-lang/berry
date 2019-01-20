@@ -1,4 +1,4 @@
-#include "be_listlib.h"
+#include "be_object.h"
 #include <string.h>
 
 #define list_check_data(vm, argc)                       \
@@ -251,7 +251,7 @@ static int m_iter(bvm *vm)
     return be_return(vm);
 }
 
-void be_list_init(bvm *vm)
+void be_load_listlib(bvm *vm)
 {
     static const bmemberinfo members[] = {
         { ".data", NULL },

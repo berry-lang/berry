@@ -6,6 +6,7 @@
 #include "be_func.h"
 #include "be_vector.h"
 #include "be_map.h"
+#include "be_module.h"
 #include "be_mem.h"
 #include "be_var.h"
 #include "be_gc.h"
@@ -492,6 +493,16 @@ static void i_getmember(bvm *vm, binstruction ins)
     bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
     if (var_isinstance(b) && var_isstr(c)) {
         obj_attribute(vm, b, var_tostr(c), a);
+    } else if (var_ismodule(b) && var_isstr(c)) {
+        bstring *attr = var_tostr(c);
+        bmodule *module = var_toobj(b);
+        bvalue *v = be_module_attr(module, attr);
+        if (v) {
+            *a = *v;
+        } else {
+            vm_error(vm, "module '%s' has no attribute '%s'",
+                be_module_name(module), str(attr));
+        }
     } else {
         attribute_error(vm, b, c, "attribute");
     }
@@ -513,6 +524,17 @@ static void i_getmethod(bvm *vm, binstruction ins)
         } else {
             vm_error(vm, "class '%s' has no method '%s'",
                 str(be_instance_name(obj)), str(attr));
+        }
+    } else if (var_ismodule(b) && var_isstr(c)) {
+        bstring *attr = var_tostr(c);
+        bmodule *module = var_toobj(b);
+        bvalue *src = be_module_attr(module, attr);
+        if (src) {
+            var_settype(a, NOT_METHOD);
+            a[1] = *src;
+        } else {
+            vm_error(vm, "module '%s' has no method '%s'",
+                be_module_name(module), str(attr));
         }
     } else {
         attribute_error(vm, b, c, "method");
@@ -592,6 +614,22 @@ static void i_close(bvm *vm, binstruction ins)
     be_upvals_close(vm, RA(ins));
 }
 
+static void i_import(bvm *vm, binstruction ins)
+{
+    bvalue *dst = RA(ins), *b = RKB(ins);
+    if (var_isstr(b)) {
+        bmodule *m = be_module_load(vm, var_tostr(b), dst);
+        if (m == NULL) {
+            vm_error(vm, "module '%s' does not found",
+                str(var_tostr(b)));
+        }
+    } else {
+        vm_error(vm,
+            "import '%s' does not support import",
+            be_vtype2str(b));
+    }
+}
+
 bvm* be_vm_new(void)
 {
     bvm *vm = be_malloc(sizeof(bvm));
@@ -663,6 +701,7 @@ static void vm_exec(bvm *vm)
         case OP_SETIDX: i_setindex(vm, ins); break;
         case OP_SETSUPER: i_setsuper(vm, ins); break;
         case OP_CLOSE: i_close(vm, ins); break;
+        case OP_IMPORT: i_import(vm, ins); break;
         case OP_RET: i_return(vm, ins); goto retpoint;
         default: retpoint:
             if (vm->cf == NULL) {

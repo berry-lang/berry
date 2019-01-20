@@ -8,6 +8,7 @@
 #include "be_list.h"
 #include "be_func.h"
 #include "be_map.h"
+#include "be_module.h"
 #include "be_exec.h"
 #include "be_debug.h"
 
@@ -196,7 +197,9 @@ static void mark_class(bvm *vm, bgcobject *obj)
 static void mark_instance(bvm *vm, bgcobject *obj)
 {
     binstance *o = cast_instance(obj);
-    be_assert(o != NULL);
+    if (o == NULL) {
+        return;
+    }
     mark_class(vm, gc_object(o->class));
     /* mark self instance and super instance */
     while (o) {
@@ -208,6 +211,15 @@ static void mark_instance(bvm *vm, bgcobject *obj)
             var++;
         }
         o = be_instance_super(o);
+    }
+}
+
+static void mark_module(bvm *vm, bgcobject *obj)
+{
+    bmodule *o = cast_module(obj);
+    if (o) {
+        gc_setdark(o);
+        mark_map(vm, gc_object(o->table));
     }
 }
 
@@ -223,6 +235,7 @@ static void mark_object(bvm *vm, bgcobject *obj, int type)
         case BE_LIST: mark_list(vm, obj); break;
         case BE_CLOSURE: mark_closure(vm, obj); break;
         case BE_NTVCLOS: mark_ntvclos(vm, obj); break;
+        case BE_MODULE: mark_module(vm, obj); break;
         default: break;
         }
     }
@@ -286,6 +299,9 @@ static void free_object(bvm *vm, bgcobject *obj)
     case BE_CLOSURE: free_closure(obj); break;
     case BE_NTVCLOS: free_ntvclos(obj); break;
     case BE_PROTO: free_proto(obj); break;
+    case BE_MODULE:
+        be_module_delete(vm, cast_module(obj));
+        break;
     default: break; /* case BE_STRING: break; */
     }
 }

@@ -1,4 +1,4 @@
-#include "be_filelib.h"
+#include "be_object.h"
 #include "be_mem.h"
 
 #define READLINE_STEP           100
@@ -151,7 +151,7 @@ static int m_open(bvm *vm)
     return be_returnnil(vm);
 }
 
-void be_loadfilelib(bvm *vm)
+void be_load_filelib(bvm *vm)
 {
     be_regcfunc(vm, "open", m_open);
 }
