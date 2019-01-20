@@ -646,6 +646,7 @@ bvm* be_vm_new(void)
     vm->reg = vm->stack;
     vm->top = vm->reg;
     vm->errjmp = NULL;
+    vm->modulelist = NULL;
     return vm;
 }
 

@@ -21,8 +21,8 @@ static int m_input(bvm *vm)
     return be_return(vm);
 }
 
-static const bmemberinfo attr_table[] = {
-    { "input", m_input }
+static bnative_module_obj attr_table[] = {
+    be_native_module_function("input", m_input)
 };
 
 be_define_native_module(io, attr_table);

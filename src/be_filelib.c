@@ -121,7 +121,7 @@ static int m_open(bvm *vm)
 {
     int argc = be_top(vm);
     const char *fname, *mode;
-    static const bmemberinfo members[] = {
+    static const bcfuncinfo members[] = {
         { ".data", NULL },
         { "write", i_write },
         { "read", i_read },

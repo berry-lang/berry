@@ -25,7 +25,7 @@ static bvalue* index2value(bvm *vm, int idx)
     return vm->top + idx;
 }
 
-static void class_init(bvm *vm, bclass *c, const bmemberinfo *lib)
+static void class_init(bvm *vm, bclass *c, const bcfuncinfo *lib)
 {
     while (lib->name) {
         bstring *s = be_newconststr(vm, lib->name);
@@ -50,7 +50,7 @@ void be_regcfunc(bvm *vm, const char *name, bcfunction f)
     } /* else error */
 }
 
-void be_regclass(bvm *vm, const char *name, const bmemberinfo *lib)
+void be_regclass(bvm *vm, const char *name, const bcfuncinfo *lib)
 {
     bstring *s = be_newconststr(vm, name); /* immediate reference must be made, prevent GC. */
     int idx = be_globalvar_new(vm, s);   /* because relloc is possible, index must first figure out. */
@@ -290,7 +290,7 @@ void be_pushntvfunction(bvm *vm, bcfunction f)
     var_setntvfunc(top, (void*)f);
 }
 
-void be_pushclass(bvm *vm, const char *name, const bmemberinfo *lib)
+void be_pushclass(bvm *vm, const char *name, const bcfuncinfo *lib)
 {
     bstring *s;
     bclass *c;

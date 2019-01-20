@@ -89,7 +89,7 @@ static int i_next(bvm *vm)
 
 static int m_iter(bvm *vm)
 {
-    static const bmemberinfo members[] = {
+    static const bcfuncinfo members[] = {
         { ".obj", NULL },
         { ".iter", NULL },
         { "init", i_init },
@@ -106,7 +106,7 @@ static int m_iter(bvm *vm)
 
 void be_load_rangelib(bvm *vm)
 {
-    static const bmemberinfo members[] = {
+    static const bcfuncinfo members[] = {
         { "__lower__", NULL },
         { "__upper__", NULL },
         { "init", m_init },

@@ -153,7 +153,7 @@ static int i_next(bvm *vm)
 
 static int m_iter(bvm *vm)
 {
-    static const bmemberinfo members[] = {
+    static const bcfuncinfo members[] = {
         { ".obj", NULL },
         { ".iter", NULL },
         { "init", i_init },
@@ -170,7 +170,7 @@ static int m_iter(bvm *vm)
 
 void be_load_maplib(bvm *vm)
 {
-    static const bmemberinfo members[] = {
+    static const bcfuncinfo members[] = {
         { ".data", NULL },
         { "init", m_init },
         { "tostring", m_tostring },

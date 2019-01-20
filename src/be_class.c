@@ -13,7 +13,7 @@ bclass* be_newclass(bvm *vm, bstring *name, bclass *super)
     bclass *obj = cast_class(gco);
     if (obj) {
         obj->super = super;
-        obj->members = NULL;
+        obj->members = NULL; /* gc protection */
         obj->nvar = 0;
         obj->name = name;
         obj->members = be_map_new(vm);

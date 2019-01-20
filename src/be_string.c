@@ -169,7 +169,9 @@ bstring* be_newstrn(bvm *vm, const char *str, size_t len)
 
 bstring* be_newconststr(bvm *vm, const char *str)
 {
-    size_t len = strlen(str);
+    size_t len;
+    be_assert(str != NULL);
+    len = strlen(str);
     if (len <= SHORT_STR_MAX_LEN) {
         return newshortstr(vm, str, len, 1);
     }

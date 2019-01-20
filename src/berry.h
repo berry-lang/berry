@@ -31,27 +31,64 @@ enum {
     BE_MALLOC_FAIL
 };
 
+#define BE_CNIL                 0
+#define BE_CINT                 1
+#define BE_CREAL                2
+#define BE_CBOOL                3
+#define BE_CFUNCTION            4
+#define BE_CSTRING              5
+
 typedef struct bvm bvm;
 typedef int (*bcfunction)(bvm *vm);
 
 typedef struct {
     const char *name;
     bcfunction function;
-} bmemberinfo;
+} bcfuncinfo;
 
 typedef const struct {
     const char *name;
-    const bmemberinfo *table;
-    size_t size;
-} bmodule_native;
+    int type;
+    union {
+        int i;
+        breal r;
+        bbool b;
+        bcfunction f;
+        const char *s;
+    } u;
+} bnative_module_obj;
+
+typedef const struct {
+    const char *name;
+    const bnative_module_obj *table;
+    size_t func_count;
+} bnative_module;
+
+#define be_native_module_nil(_name)                 \
+    { .name = (_name), .type = BE_CNIL, .u.i = 0 }
+
+#define be_native_module_int(_name, _v)             \
+    { .name = (_name), .type = BE_CINT, .u.i = (bint)(_v) }
+
+#define be_native_module_real(_name, _v)            \
+    { .name = (_name), .type = BE_CREAL, .u.r = (breal)(_v) }
+
+#define be_native_module_bool(_name, _b)            \
+    { .name = (_name), .type = BE_CBOOL, .u.b = (bbool)(_b) }
+
+#define be_native_module_function(_name, _f)        \
+    { .name = (_name), .type = BE_CFUNCTION, .u.f = (_f) }
+
+#define be_native_module_str(_name, _s)             \
+    { .name = (_name), .type = BE_CSTRING, .u.s = (_s) }
 
 #define be_native_module(name)  be_native_module_##name
 
 #define be_extern_native_module(name)               \
-extern bmodule_native be_native_module(name)
+extern bnative_module be_native_module(name)
 
 #define be_define_native_module(name, attrs)        \
-bmodule_native be_native_module(name) = {           \
+bnative_module be_native_module(name) = {           \
     #name,                                          \
     attrs,                                          \
     (sizeof(attrs) / sizeof((attrs)[0])),           \
@@ -117,7 +154,7 @@ const char* be_pushfstring(bvm *vm, const char *format, ...);
 void be_pushvalue(bvm *vm, int index);
 void be_pushntvclosure(bvm *vm, bcfunction f, int nupvals);
 void be_pushntvfunction(bvm *vm, bcfunction f);
-void be_pushclass(bvm *vm, const char *name, const bmemberinfo *lib);
+void be_pushclass(bvm *vm, const char *name, const bcfuncinfo *lib);
 void be_pushcomptr(bvm *vm, void *ptr);
 void be_removeone(bvm *vm, int index);
 void be_strconcat(bvm *vm, int index);
@@ -154,7 +191,7 @@ void be_abort(void);
 void be_exit(bvm *vm, int status);
 
 void be_regcfunc(bvm *vm, const char *name, bcfunction f);
-void be_regclass(bvm *vm, const char *name, const bmemberinfo *lib);
+void be_regclass(bvm *vm, const char *name, const bcfuncinfo *lib);
 
 bvm* be_vm_new(void);
 void be_vm_delete(bvm *vm);

@@ -1,4 +1,6 @@
-json = json_load('{"strs":123, "test": {"hello": [false, null]}}')
+import json as jsonlib
+
+json = jsonlib.load('{"strs":123, "test": {"hello": [false, null]}}')
 obj =
     [
         0,
@@ -16,6 +18,6 @@ obj =
 print("json parser:")
 print(json)
 print("json dump (compress):")
-print(json_dump(obj))
+print(jsonlib.dump(obj))
 print("json dump (format):")
-print(json_dump(obj, "format"))
+print(jsonlib.dump(obj, "format"))

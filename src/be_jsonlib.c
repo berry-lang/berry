@@ -397,9 +397,9 @@ static int m_json_dump(bvm *vm)
     return be_return(vm);
 }
 
-static const bmemberinfo attr_table[] = {
-    { "load", m_json_load },
-    { "dump", m_json_dump }
+static bnative_module_obj attr_table[] = {
+    be_native_module_function("load", m_json_load),
+    be_native_module_function("dump", m_json_dump)
 };
 
 be_define_native_module(json, attr_table);
