@@ -37,7 +37,7 @@ static bmodule* find_existed(bvm *vm, bnative_module *nm)
 void insert_functions(bvm *vm, bmap *table, bnative_module *nm)
 {
     size_t i;
-    for (i = 0; i < nm->func_count; ++i) {
+    for (i = 0; i < nm->size; ++i) {
         bnative_module_obj *node = nm->table + i;
         bstring *name = be_newconststr(vm, node->name);
         bvalue *v = be_map_insertstr(table, name, NULL);

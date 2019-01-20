@@ -60,8 +60,8 @@ typedef const struct {
 
 typedef const struct {
     const char *name;
-    const bnative_module_obj *table;
-    size_t func_count;
+    bnative_module_obj *table;
+    size_t size;
 } bnative_module;
 
 #define be_native_module_nil(_name)                 \
@@ -87,11 +87,11 @@ typedef const struct {
 #define be_extern_native_module(name)               \
 extern bnative_module be_native_module(name)
 
-#define be_define_native_module(name, attrs)        \
-bnative_module be_native_module(name) = {           \
-    #name,                                          \
-    attrs,                                          \
-    (sizeof(attrs) / sizeof((attrs)[0])),           \
+#define be_define_native_module(_name, _attrs)      \
+bnative_module be_native_module(_name) = {          \
+    .name = #_name,                                 \
+    .table = (_attrs),                              \
+    .size = (sizeof(_attrs) / sizeof((_attrs)[0]))  \
 }
 
 #if !BE_DEBUG
