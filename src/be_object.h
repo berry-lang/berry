@@ -182,7 +182,7 @@ struct bntvclos {
 #define var_setclass(_v, _o)    var_setobj(_v, BE_CLASS, _o)
 #define var_setclosure(_v, _o)  var_setobj(_v, BE_CLOSURE, _o)
 #define var_setntvclos(_v, _o)  var_setobj(_v, BE_NTVCLOS, _o)
-#define var_setntvfunc(_v, _o)  var_setobj(_v, BE_NTVFUNC, _o)
+#define var_setntvfunc(_v, _o)  var_setobj(_v, BE_NTVFUNC, (void*)(_o))
 #define var_setlist(_v, _o)     var_setobj(_v, BE_LIST, _o)
 #define var_setmap(_v, _o)      var_setobj(_v, BE_MAP, _o)
 #define var_setmodule(_v, _o)   var_setobj(_v, BE_MODULE, _o)

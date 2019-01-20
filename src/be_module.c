@@ -7,10 +7,16 @@
 
 be_extern_native_module(io);
 be_extern_native_module(json);
+be_extern_native_module(math);
 
 static bnative_module * module_tab[] = {
     &be_native_module(io),
-    &be_native_module(json)
+#if BE_USE_JSON_LIB
+    &be_native_module(json),
+#endif
+#if BE_USE_MATH_LIB
+    &be_native_module(math),
+#endif
 };
 
 static bnative_module* find_native(bstring *path)

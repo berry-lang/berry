@@ -2,6 +2,8 @@
 #include "be_mem.h"
 #include <string.h>
 
+#if BE_USE_JSON_LIB
+
 #define MAX_INDENT      12
 #define INDENT_WIDTH    4
 
@@ -403,3 +405,5 @@ static bnative_module_obj attr_table[] = {
 };
 
 be_define_native_module(json, attr_table);
+
+#endif

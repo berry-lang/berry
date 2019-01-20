@@ -38,6 +38,20 @@
  **/
 #define BE_STACK_FREE_MIN               10
 
+/* Macro: BE_USE_MATH_LIB
+ * This math module is enabled when this macro is true.
+ * Otherwise disabled the math module.
+ * default: 1
+ **/
+#define BE_USE_MATH_LIB                 1
+
+/* Macro: BE_USE_JSON_LIB
+ * This json module is enabled when this macro is true.
+ * Otherwise disabled the json module.
+ * default: 1
+ **/
+#define BE_USE_JSON_LIB                 1
+
 /* Macro: be_assert
  * Berry debug assertion. Only enabled when BE_DEBUG is active.
  **/

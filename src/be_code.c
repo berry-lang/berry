@@ -310,7 +310,7 @@ static int var2reg(bfuncinfo *finfo, bexpdesc *e, int dst)
     case ETINDEX:
         dst = code_suffix(finfo, OP_GETIDX, e, dst);
         break;
-    case ETLOCAL: case ETREG:
+    case ETLOCAL: case ETREG: case ETCONST:
         return e->v.idx;
     default:
         return dst; /* error */

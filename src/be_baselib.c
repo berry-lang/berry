@@ -82,12 +82,6 @@ static int l_number(bvm *vm)
     return be_returnnil(vm);
 }
 
-static int l_random(bvm *vm)
-{
-    be_pushint(vm, rand());
-    return be_return(vm);
-}
-
 static int l_iterator(bvm *vm)
 {
     if (be_isinstance(vm, 1)) {
@@ -151,7 +145,6 @@ void be_load_baselib(bvm *vm)
     be_regcfunc(vm, "type", l_type);
     be_regcfunc(vm, "classname", l_classname);
     be_regcfunc(vm, "number", l_number);
-    be_regcfunc(vm, "random", l_random);
     be_regcfunc(vm, "string", l_string);
     be_regcfunc(vm, "length", l_length);
     be_regcfunc(vm, "__iterator__", l_iterator);

@@ -46,7 +46,7 @@ void be_regcfunc(bvm *vm, const char *name, bcfunction f)
         bvalue *var;
         idx = be_globalvar_new(vm, s);
         var = be_globalvar(vm, idx);
-        var_setntvfunc(var, (void*)f);
+        var_setntvfunc(var, f);
     } /* else error */
 }
 
@@ -287,7 +287,7 @@ void be_pushntvclosure(bvm *vm, bcfunction f, int nupvals)
 void be_pushntvfunction(bvm *vm, bcfunction f)
 {
     bvalue *top = be_incrtop(vm);
-    var_setntvfunc(top, (void*)f);
+    var_setntvfunc(top, f);
 }
 
 void be_pushclass(bvm *vm, const char *name, const bcfuncinfo *lib)

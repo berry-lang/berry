@@ -1,4 +1,5 @@
 CFLAGS	 = -Wall -Wextra -std=c89 -O2
+LIBS	 =  -lm
 TARGET	 = berry
 CC	 = gcc
 
@@ -7,9 +8,9 @@ SRCPATH	 = src default
 
 ifneq ($(OS), Windows_NT)
   ifeq ($(shell uname), Linux) # Linux
-    LIBS = -lreadline
+    LIBS += -lreadline
   else ifeq  ($(shell uname), Darwin) # MacOS
-    LIBS = -lreadline
+    LIBS += -lreadline
   endif
 endif
 

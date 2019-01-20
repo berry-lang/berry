@@ -55,7 +55,7 @@ static int i_readline(bvm *vm)
         be_fhandle fh = be_tocomptr(vm, -1);
         size_t pos = 0, size = READLINE_STEP;
         char *buffer = be_malloc(size);
-        char *res = be_fgets(fh, buffer, size);
+        char *res = be_fgets(fh, buffer, (int)size);
         while (res) {
             pos += strlen(buffer + pos) - 1;
             if (!pos || buffer[pos] == '\n') {
