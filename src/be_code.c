@@ -204,21 +204,27 @@ static int newconst(bfuncinfo *finfo, bvalue *k)
 static int findconst(bfuncinfo *finfo, bexpdesc *e)
 {
     int i, count = be_vector_count(&finfo->kvec);
+    /* if the constant table is too large, the lookup
+     * operation will become very time consuming.
+     * so only search the constant table for the
+     * previous value.
+     **/
+    count = count < 50 ? count : 50;
     for (i = 0; i < count; ++i) {
         bvalue *k = be_vector_at(&finfo->kvec, i);
         switch (e->type) {
         case ETINT:
-            if (k->type == BE_INT && k->v.i == e->v.i) {
+            if (var_isint(k) && k->v.i == e->v.i) {
                 return i;
             }
             break;
         case ETREAL:
-            if (k->type == BE_REAL && k->v.r == e->v.r) {
+            if (var_isreal(k) && k->v.r == e->v.r) {
                 return i;
             }
             break;
         case ETSTRING:
-            if (k->type == BE_STRING && be_eqstr(k->v.p, e->v.s)) {
+            if (var_isstr(k) && be_eqstr(k->v.p, e->v.s)) {
                 return i;
             }
             break;
@@ -252,8 +258,14 @@ static int exp2const(bfuncinfo *finfo, bexpdesc *e)
         }
         idx = newconst(finfo, &k);
     }
-    e->type = ETCONST;
-    e->v.idx = setK(idx);
+    if (idx < 256) {
+        e->type = ETCONST;
+        e->v.idx = setK(idx);
+    } else { /* index value is too large */
+        e->type = ETREG;
+        e->v.idx = be_code_allocregs(finfo, 1);
+        codeABx(finfo, OP_LDCONST, e->v.idx, idx);
+    }
     return e->v.idx;
 }
 

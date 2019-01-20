@@ -2,7 +2,6 @@
 #include "be_repl.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
 #if defined(__linux) || defined(__unix) || defined(__APPLE__)
     #include <readline/readline.h>
@@ -177,7 +176,6 @@ int main(int argc, char *argv[])
     int i = 0, res;
     bvm *vm = be_vm_new();
     be_loadlibs(vm);
-    srand((unsigned)time(NULL)); /* Set the random seed to system time */
     for (i = 1; i < argc; ++i) {
         be_pushstring(vm, argv[i]);
     }

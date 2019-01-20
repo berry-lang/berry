@@ -7,7 +7,7 @@
 
 #include "berry_conf.h"
 
-#define BERRY_VERSION   "0.0.2"
+#define BERRY_VERSION   "0.0.3"
 
 typedef uint8_t         bbyte;
 typedef int             bint;

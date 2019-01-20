@@ -174,6 +174,50 @@ static int m_exp(bvm *vm)
     return be_return(vm);
 }
 
+static int m_log(bvm *vm)
+{
+    if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
+        breal x = be_toreal(vm, 1);
+        be_pushreal(vm, mathfunc(log)(x));
+    } else {
+        be_pushreal(vm, (breal)0.0);
+    }
+    return be_return(vm);
+}
+
+static int m_log10(bvm *vm)
+{
+    if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
+        breal x = be_toreal(vm, 1);
+        be_pushreal(vm, mathfunc(log10)(x));
+    } else {
+        be_pushreal(vm, (breal)0.0);
+    }
+    return be_return(vm);
+}
+
+static int m_deg(bvm *vm)
+{
+    if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
+        breal x = be_toreal(vm, 1);
+        be_pushreal(vm, (breal)(x * 180.0 / M_PI));
+    } else {
+        be_pushreal(vm, (breal)0.0);
+    }
+    return be_return(vm);
+}
+
+static int m_rad(bvm *vm)
+{
+    if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
+        breal x = be_toreal(vm, 1);
+        be_pushreal(vm, (breal)(x * M_PI / 180.0));
+    } else {
+        be_pushreal(vm, (breal)0.0);
+    }
+    return be_return(vm);
+}
+
 static int m_pow(bvm *vm)
 {
     if (be_top(vm) >= 2 && be_isnumber(vm, 1) && be_isnumber(vm, 2)) {
@@ -186,7 +230,15 @@ static int m_pow(bvm *vm)
     return be_return(vm);
 }
 
-static int m_random(bvm *vm)
+static int m_srand(bvm *vm)
+{
+    if (be_top(vm) >= 1 && be_isint(vm, 1)) {
+        srand((unsigned int)be_toint(vm, 1));
+    }
+    return be_returnnil(vm);
+}
+
+static int m_rand(bvm *vm)
 {
     be_pushint(vm, rand());
     return be_return(vm);
@@ -207,10 +259,14 @@ static bnative_module_obj attr_table[] = {
     be_native_module_function("tanh", m_tanh),
     be_native_module_function("sqrt", m_sqrt),
     be_native_module_function("exp", m_exp),
+    be_native_module_function("log", m_log),
+    be_native_module_function("log10", m_log10),
+    be_native_module_function("deg", m_deg),
+    be_native_module_function("rad", m_rad),
     be_native_module_function("pow", m_pow),
-    be_native_module_function("random", m_random),
-    be_native_module_real("pi", (breal)M_PI),
-    be_native_module_real("e", (breal)M_PI)
+    be_native_module_function("srand", m_srand),
+    be_native_module_function("rand", m_rand),
+    be_native_module_real("pi", (breal)M_PI)
 };
 
 be_define_native_module(math, attr_table);
