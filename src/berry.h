@@ -51,7 +51,7 @@ typedef struct {
     bntvfunc function;
 } bnfuncinfo;
 
-typedef const struct bnative_module_obj {
+typedef const struct {
     const char *name;
     int type;
     union {
@@ -60,15 +60,15 @@ typedef const struct bnative_module_obj {
         bbool b;
         bntvfunc f;
         const char *s;
-        const struct bnative_module_obj *m;
+        const struct bntvmodule *m;
     } u;
-} bnative_module_obj;
+} bntvmodule_obj;
 
-typedef const struct {
+typedef const struct bntvmodule {
     const char *name;
-    bnative_module_obj *table;
+    bntvmodule_obj *table;
     size_t size;
-} bnative_module;
+} bntvmodule;
 
 #define be_native_module_nil(_name)                 \
     { .name = (_name), .type = BE_CNIL, .u.i = 0 }
@@ -88,13 +88,16 @@ typedef const struct {
 #define be_native_module_str(_name, _s)             \
     { .name = (_name), .type = BE_CSTRING, .u.s = (_s) }
 
+#define be_native_module_module(_name, _m)          \
+    { .name = (_name), .type = BE_CMODULE, .u.m = &(_m) }
+
 #define be_native_module(name)  be_native_module_##name
 
 #define be_extern_native_module(name)               \
-    extern bnative_module be_native_module(name)
+    extern bntvmodule be_native_module(name)
 
 #define be_define_native_module(_name, _attrs)      \
-bnative_module be_native_module(_name) = {          \
+bntvmodule be_native_module(_name) = {              \
     .name = #_name,                                 \
     .table = (_attrs),                              \
     .size = (sizeof(_attrs) / sizeof((_attrs)[0]))  \

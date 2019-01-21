@@ -124,17 +124,23 @@ static int m_exists(bvm *vm)
     be_return(vm);
 }
 
-static bnative_module_obj attr_table[] = {
-    be_native_module_function("getcwd", m_getcwd),
-    be_native_module_function("chdir", m_chdir),
-    be_native_module_function("mkdir", m_mkdir),
-    be_native_module_function("rmdir", m_rmdir),
-    be_native_module_function("listdir", m_listdir),
+static bntvmodule_obj path_attr[] = {
     be_native_module_function("isdir", m_isdir),
     be_native_module_function("isfile", m_isfile),
     be_native_module_function("exists", m_exists)
 };
 
-be_define_native_module(os, attr_table);
+static be_define_native_module(path, path_attr);
+
+static bntvmodule_obj os_attr[] = {
+    be_native_module_function("getcwd", m_getcwd),
+    be_native_module_function("chdir", m_chdir),
+    be_native_module_function("mkdir", m_mkdir),
+    be_native_module_function("rmdir", m_rmdir),
+    be_native_module_function("listdir", m_listdir),
+    be_native_module_module("path", be_native_module(path))
+};
+
+be_define_native_module(os, os_attr);
 
 #endif

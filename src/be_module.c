@@ -13,7 +13,7 @@ be_extern_native_module(os);
 be_extern_native_module(board);
 be_extern_native_module(wifi);
 
-static bnative_module * module_tab[] = {
+static bntvmodule * module_tab[] = {
     &be_native_module(io),
 #if BE_USE_JSON_MODULE
     &be_native_module(json),
@@ -35,11 +35,13 @@ static bnative_module * module_tab[] = {
 #endif
 };
 
-static bnative_module* find_native(bstring *path)
+static bmodule* load_module(bvm *vm, bntvmodule *nm, bvalue *dst);
+
+static bntvmodule* find_native(bstring *path)
 {
     size_t i, size = array_count(module_tab);
     for (i = 0; i < size; ++i) {
-        bnative_module *node = module_tab[i];
+        bntvmodule *node = module_tab[i];
         if (!strcmp(node->name, str(path))) {
             return node;
         }
@@ -47,7 +49,7 @@ static bnative_module* find_native(bstring *path)
     return NULL;
 }
 
-static bmodule* find_existed(bvm *vm, bnative_module *nm)
+static bmodule* find_existed(bvm *vm, bntvmodule *nm)
 {
     bmodule *node  = vm->modulelist;
     while (node && node->native != nm) {
@@ -56,14 +58,14 @@ static bmodule* find_existed(bvm *vm, bnative_module *nm)
     return node;
 }
 
-void insert_functions(bvm *vm, bmap *table, bnative_module *nm)
+static void insert_attrs(bvm *vm, bmap *table, bntvmodule *nm)
 {
     size_t i;
     for (i = 0; i < nm->size; ++i) {
-        bnative_module_obj *node = nm->table + i;
+        bntvmodule_obj *node = nm->table + i;
         bstring *name = be_newconststr(vm, node->name);
         bvalue *v = be_map_insertstr(table, name, NULL);
-        be_assert(node->type <= BE_CFUNCTION);
+        be_assert(node->type <= BE_CMODULE);
         switch (node->type) {
         case BE_CNIL:
             var_setnil(v);
@@ -83,13 +85,16 @@ void insert_functions(bvm *vm, bmap *table, bnative_module *nm)
         case BE_CSTRING:
             var_setstr(v, be_newconststr(vm, node->u.s));
             break;
+        case BE_CMODULE:
+            load_module(vm, node->u.m, v);
+            break;
         default: /* error */
             break;
         }
     }
 }
 
-bmodule* new_module(bvm *vm, bnative_module *nm, bvalue *dst)
+static bmodule* new_module(bvm *vm, bntvmodule *nm, bvalue *dst)
 {
     bgcobject *gco = be_gcnew(vm, BE_MODULE, bmodule);
     bmodule *obj = cast_module(gco);
@@ -98,16 +103,15 @@ bmodule* new_module(bvm *vm, bnative_module *nm, bvalue *dst)
         obj->native = nm;
         obj->table = NULL; /* gc protection */
         obj->table = be_map_new(vm);
-        insert_functions(vm, obj->table, nm);
+        insert_attrs(vm, obj->table, nm);
         obj->mnext = vm->modulelist;
         vm->modulelist = obj;
     }
     return obj;
 }
 
-bmodule* be_module_load(bvm *vm, bstring *path, bvalue *dst)
+static bmodule* load_module(bvm *vm, bntvmodule *nm, bvalue *dst)
 {
-    bnative_module *nm = find_native(path);
     if (nm) {
         bmodule *obj = find_existed(vm, nm);
         if (obj) { /* existed module */
@@ -118,6 +122,12 @@ bmodule* be_module_load(bvm *vm, bstring *path, bvalue *dst)
         return obj;
     }
     return NULL;
+}
+
+bmodule* be_module_load(bvm *vm, bstring *path, bvalue *dst)
+{
+    bntvmodule *nm = find_native(path);
+    return load_module(vm, nm, dst);
 }
 
 void be_module_delete(bvm *vm, bmodule *module)

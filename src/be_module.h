@@ -5,7 +5,7 @@
 
 typedef struct bmodule {
     bcommon_header;
-    bnative_module *native;
+    bntvmodule *native;
     bmap *table;
     struct bmodule *mnext;
 } bmodule;

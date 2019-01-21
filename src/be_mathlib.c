@@ -239,7 +239,7 @@ static int m_rand(bvm *vm)
     be_return(vm);
 }
 
-static bnative_module_obj attr_table[] = {
+static bntvmodule_obj attr_table[] = {
     be_native_module_function("abs", m_abs),
     be_native_module_function("ceil", m_ceil),
     be_native_module_function("floor", m_floor),

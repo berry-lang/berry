@@ -41,6 +41,9 @@ The implementation of Berry include a one pass compiler and register-based VM, a
   * Inheritance (only public single inheritance)
   * Method and Operator Overload
   * Constructor method
+* Module support
+  * Statically allocated memory: no RAM used before import.
+  * Module nesting.
 
 ## Build
 
