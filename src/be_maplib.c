@@ -2,11 +2,11 @@
 
 #define map_check_data(vm, argc)                        \
     if (!be_ismap(vm, -1) || be_top(vm) - 1 < argc) {   \
-        return be_returnnil(vm);                        \
+        be_return_nil(vm);                               \
     }                                                   \
     if (be_refcontains(vm, 1)) {                        \
         be_pushstring(vm, "{...}");                     \
-        return be_return(vm);                           \
+        be_return(vm);                                  \
     }
 
 static int m_init(bvm *vm)
@@ -18,7 +18,7 @@ static int m_init(bvm *vm)
         be_newmap(vm);
         be_setmember(vm, 1, ".data");
     }
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 static void push_key(bvm *vm)
@@ -70,7 +70,7 @@ static int m_tostring(bvm *vm)
     be_strconcat(vm, -2);
     be_pop(vm, 1);
     be_refpop(vm);
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_insert(bvm *vm)
@@ -80,7 +80,7 @@ static int m_insert(bvm *vm)
     be_pushvalue(vm, 2);
     be_pushvalue(vm, 3);
     be_insert(vm, -3);
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 static int m_remove(bvm *vm)
@@ -89,7 +89,7 @@ static int m_remove(bvm *vm)
     map_check_data(vm, 2);
     be_pushvalue(vm, 2);
     be_remove(vm, -2);
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 static int m_item(bvm *vm)
@@ -98,7 +98,7 @@ static int m_item(bvm *vm)
     map_check_data(vm, 2);
     be_pushvalue(vm, 2);
     be_getindex(vm, -2);
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_setitem(bvm *vm)
@@ -108,7 +108,7 @@ static int m_setitem(bvm *vm)
     be_pushvalue(vm, 2);
     be_pushvalue(vm, 3);
     be_setindex(vm, -3);
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 static int m_size(bvm *vm)
@@ -116,7 +116,7 @@ static int m_size(bvm *vm)
     be_getmember(vm, 1, ".data");
     map_check_data(vm, 1);
     be_getsize(vm, -1);
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int i_init(bvm *vm)
@@ -127,7 +127,7 @@ static int i_init(bvm *vm)
     be_getmember(vm, 2, ".data");
     be_pushiter(vm, -1);
     be_setmember(vm, 1, ".iter");
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 static int i_hashnext(bvm *vm)
@@ -136,7 +136,7 @@ static int i_hashnext(bvm *vm)
     be_getmember(vm, -1, ".data");
     be_getmember(vm, 1, ".iter");
     be_pushbool(vm, be_hasnext(vm, -2));
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int i_next(bvm *vm)
@@ -148,12 +148,12 @@ static int i_next(bvm *vm)
     be_pushvalue(vm, -3); /* push .iter to top */
     be_setmember(vm, 1, ".iter");
     be_pop(vm, 1);
-    return be_return(vm); /* return value */
+    be_return(vm); /* return value */
 }
 
 static int m_iter(bvm *vm)
 {
-    static const bcfuncinfo members[] = {
+    static const bnfuncinfo members[] = {
         { ".obj", NULL },
         { ".iter", NULL },
         { "init", i_init },
@@ -165,12 +165,12 @@ static int m_iter(bvm *vm)
     be_pushvalue(vm, 1);
     be_call(vm, 1);
     be_pop(vm, 1);
-    return be_return(vm);
+    be_return(vm);
 }
 
 void be_load_maplib(bvm *vm)
 {
-    static const bcfuncinfo members[] = {
+    static const bnfuncinfo members[] = {
         { ".data", NULL },
         { "init", m_init },
         { "tostring", m_tostring },

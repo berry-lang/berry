@@ -2,17 +2,12 @@
 #include <math.h>
 #include <stdlib.h>
 
-#if BE_USE_MATH_LIB
+#if BE_USE_MATH_MODULE
 
 #ifdef M_PI
 #undef M_PI
 #endif
 #define M_PI        3.141592653589793238462643383279
-
-#ifdef M_EXP
-#undef M_EXP
-#endif
-#define M_EXP       2.718281828459045235360287471352
 
 #if BE_SINGLE_FLOAT
 #define mathfunc(func)          func##f
@@ -28,7 +23,7 @@ static int m_abs(bvm *vm)
     } else {
         be_pushreal(vm, (breal)0.0);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_ceil(bvm *vm)
@@ -39,7 +34,7 @@ static int m_ceil(bvm *vm)
     } else {
         be_pushreal(vm, (breal)0.0);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_floor(bvm *vm)
@@ -50,7 +45,7 @@ static int m_floor(bvm *vm)
     } else {
         be_pushreal(vm, (breal)0.0);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_sin(bvm *vm)
@@ -61,7 +56,7 @@ static int m_sin(bvm *vm)
     } else {
         be_pushreal(vm, (breal)0.0);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_cos(bvm *vm)
@@ -72,7 +67,7 @@ static int m_cos(bvm *vm)
     } else {
         be_pushreal(vm, (breal)0.0);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_tan(bvm *vm)
@@ -83,7 +78,7 @@ static int m_tan(bvm *vm)
     } else {
         be_pushreal(vm, (breal)0.0);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_asin(bvm *vm)
@@ -94,7 +89,7 @@ static int m_asin(bvm *vm)
     } else {
         be_pushreal(vm, (breal)0.0);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_acos(bvm *vm)
@@ -105,7 +100,7 @@ static int m_acos(bvm *vm)
     } else {
         be_pushreal(vm, (breal)0.0);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_atan(bvm *vm)
@@ -116,7 +111,7 @@ static int m_atan(bvm *vm)
     } else {
         be_pushreal(vm, (breal)0.0);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_sinh(bvm *vm)
@@ -127,7 +122,7 @@ static int m_sinh(bvm *vm)
     } else {
         be_pushreal(vm, (breal)0.0);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_cosh(bvm *vm)
@@ -138,7 +133,7 @@ static int m_cosh(bvm *vm)
     } else {
         be_pushreal(vm, (breal)0.0);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_tanh(bvm *vm)
@@ -149,7 +144,7 @@ static int m_tanh(bvm *vm)
     } else {
         be_pushreal(vm, (breal)0.0);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_sqrt(bvm *vm)
@@ -160,7 +155,7 @@ static int m_sqrt(bvm *vm)
     } else {
         be_pushreal(vm, (breal)0.0);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_exp(bvm *vm)
@@ -171,7 +166,7 @@ static int m_exp(bvm *vm)
     } else {
         be_pushreal(vm, (breal)0.0);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_log(bvm *vm)
@@ -182,7 +177,7 @@ static int m_log(bvm *vm)
     } else {
         be_pushreal(vm, (breal)0.0);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_log10(bvm *vm)
@@ -193,29 +188,29 @@ static int m_log10(bvm *vm)
     } else {
         be_pushreal(vm, (breal)0.0);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_deg(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
         breal x = be_toreal(vm, 1);
-        be_pushreal(vm, (breal)(x * 180.0 / M_PI));
+        be_pushreal(vm, x * (breal)(180.0 / M_PI));
     } else {
         be_pushreal(vm, (breal)0.0);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_rad(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
         breal x = be_toreal(vm, 1);
-        be_pushreal(vm, (breal)(x * M_PI / 180.0));
+        be_pushreal(vm, x * (breal)(M_PI / 180.0));
     } else {
         be_pushreal(vm, (breal)0.0);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_pow(bvm *vm)
@@ -227,7 +222,7 @@ static int m_pow(bvm *vm)
     } else {
         be_pushreal(vm, (breal)0.0);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_srand(bvm *vm)
@@ -235,13 +230,13 @@ static int m_srand(bvm *vm)
     if (be_top(vm) >= 1 && be_isint(vm, 1)) {
         srand((unsigned int)be_toint(vm, 1));
     }
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 static int m_rand(bvm *vm)
 {
     be_pushint(vm, rand());
-    return be_return(vm);
+    be_return(vm);
 }
 
 static bnative_module_obj attr_table[] = {
@@ -266,7 +261,7 @@ static bnative_module_obj attr_table[] = {
     be_native_module_function("pow", m_pow),
     be_native_module_function("srand", m_srand),
     be_native_module_function("rand", m_rand),
-    be_native_module_real("pi", (breal)M_PI)
+    be_native_module_real("pi", M_PI)
 };
 
 be_define_native_module(math, attr_table);

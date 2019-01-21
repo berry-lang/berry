@@ -2,7 +2,7 @@
 #include "be_mem.h"
 #include <string.h>
 
-#if BE_USE_JSON_LIB
+#if BE_USE_JSON_MODULE
 
 #define MAX_INDENT      12
 #define INDENT_WIDTH    4
@@ -282,10 +282,10 @@ static int m_json_load(bvm *vm)
     if (be_isstring(vm, 1)) {
         const char *json = be_tostring(vm, 1);
         if (parser_value(vm, json)) {
-            return be_return(vm);
+            be_return(vm);
         }
     }
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 static void make_indent(bvm *vm, int stridx, int indent)
@@ -396,7 +396,7 @@ static int m_json_dump(bvm *vm)
         fmt = !strcmp(be_tostring(vm, 2), "format");
     }
     json2str(vm, &indent, 1, fmt);
-    return be_return(vm);
+    be_return(vm);
 }
 
 static bnative_module_obj attr_table[] = {

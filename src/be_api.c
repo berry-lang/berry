@@ -25,7 +25,7 @@ static bvalue* index2value(bvm *vm, int idx)
     return vm->top + idx;
 }
 
-static void class_init(bvm *vm, bclass *c, const bcfuncinfo *lib)
+static void class_init(bvm *vm, bclass *c, const bnfuncinfo *lib)
 {
     while (lib->name) {
         bstring *s = be_newconststr(vm, lib->name);
@@ -38,7 +38,7 @@ static void class_init(bvm *vm, bclass *c, const bcfuncinfo *lib)
     }
 }
 
-void be_regcfunc(bvm *vm, const char *name, bcfunction f)
+void be_regcfunc(bvm *vm, const char *name, bntvfunc f)
 {
     bstring *s = be_newconststr(vm, name);
     int idx = be_globalvar_find(vm, s);
@@ -50,7 +50,7 @@ void be_regcfunc(bvm *vm, const char *name, bcfunction f)
     } /* else error */
 }
 
-void be_regclass(bvm *vm, const char *name, const bcfuncinfo *lib)
+void be_regclass(bvm *vm, const char *name, const bnfuncinfo *lib)
 {
     bstring *s = be_newconststr(vm, name); /* immediate reference must be made, prevent GC. */
     int idx = be_globalvar_new(vm, s);   /* because relloc is possible, index must first figure out. */
@@ -277,20 +277,20 @@ void be_pushvalue(bvm *vm, int index)
     be_incrtop(vm);
 }
 
-void be_pushntvclosure(bvm *vm, bcfunction f, int nupvals)
+void be_pushntvclosure(bvm *vm, bntvfunc f, int nupvals)
 {
     bvalue *top = be_incrtop(vm);
     bntvclos *cl = be_newprimclosure(vm, f, nupvals);
     var_setntvclos(top, cl);
 }
 
-void be_pushntvfunction(bvm *vm, bcfunction f)
+void be_pushntvfunction(bvm *vm, bntvfunc f)
 {
     bvalue *top = be_incrtop(vm);
     var_setntvfunc(top, f);
 }
 
-void be_pushclass(bvm *vm, const char *name, const bcfuncinfo *lib)
+void be_pushclass(bvm *vm, const char *name, const bnfuncinfo *lib)
 {
     bstring *s;
     bclass *c;
@@ -732,7 +732,7 @@ void be_refpop(bvm *vm)
     }
 }
 
-int be_return(bvm *vm)
+int be_returnvalue(bvm *vm)
 {
     bvalue *src = vm->top - 1;
     bvalue *ret = retreg(vm);
@@ -740,7 +740,7 @@ int be_return(bvm *vm)
     return 0;
 }
 
-int be_returnnil(bvm *vm)
+int be_returnnilvalue(bvm *vm)
 {
     bvalue *ret = retreg(vm);
     var_setnil(ret);

@@ -16,13 +16,13 @@ static int l_print(bvm *vm)
         }
     }
     be_fwrite(stdout, "\n", 1);
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 static int l_clock(bvm *vm)
 {
     be_pushreal(vm, clock() / (breal)CLOCKS_PER_SEC);
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int l_exit(bvm *vm)
@@ -32,7 +32,7 @@ static int l_exit(bvm *vm)
         status = be_toint(vm, -1);
     }
     be_exit(vm, status);
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 static int l_memcount(bvm *vm)
@@ -43,20 +43,20 @@ static int l_memcount(bvm *vm)
     } else {
         be_pushreal(vm, (breal)count);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int l_super(bvm *vm)
 {
     be_getsuper(vm, 1);
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int l_type(bvm *vm)
 {
     const char *t = be_typename(vm, 1);
     be_pushstring(vm, t);
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int l_classname(bvm *vm)
@@ -67,7 +67,7 @@ static int l_classname(bvm *vm)
     } else {
         be_pushnil(vm);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int l_number(bvm *vm)
@@ -75,11 +75,11 @@ static int l_number(bvm *vm)
     if (be_isstring(vm, 1)) {
         const char *str = be_tostring(vm, 1);
         be_str2num(vm, str);
-        return be_return(vm);
+        be_return(vm);
     } else if (be_isnumber(vm, -1)) {
-        return be_return(vm);
+        be_return(vm);
     }
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 static int l_iterator(bvm *vm)
@@ -89,9 +89,9 @@ static int l_iterator(bvm *vm)
         be_pushvalue(vm, 1);
         be_call(vm, 1);
         be_pop(vm, 1);
-        return be_return(vm);
+        be_return(vm);
     }
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 static int l_hasnext(bvm *vm)
@@ -104,7 +104,7 @@ static int l_hasnext(bvm *vm)
     } else {
         be_pushbool(vm, bfalse);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int l_next(bvm *vm)
@@ -114,15 +114,15 @@ static int l_next(bvm *vm)
         be_pushvalue(vm, 1);
         be_call(vm, 1);
         be_pop(vm, 1);
-        return be_return(vm);
+        be_return(vm);
     }
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 static int l_string(bvm *vm)
 {
     be_tostring(vm, 1);
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int l_length(bvm *vm)
@@ -132,7 +132,7 @@ static int l_length(bvm *vm)
     } else {
         be_pushint(vm, 0);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 void be_load_baselib(bvm *vm)

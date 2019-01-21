@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Berry is a small dynamically typed embedded scripting language. Berry's design goals include running on very small memory devices, and so, Berry must be very streamlined. Its core language only supports a few types, but we still provide class and closure support.
+Berry is a ultra-lightweight dynamically typed embedded scripting language. Berry's design goals include running on very small memory devices, and so, Berry must be very streamlined. Its core language only supports a few types, but we still provide class and closure support.
 
 The implementation of Berry include a one pass compiler and register-based VM, all the codes are written in ANSI C. Berry is not everything is object. Some simple value types, such as int, real, boolean and string are not class object, but list, map and range are class object. This is a consideration about performance. Register-based VM is also based on this consideration.
 

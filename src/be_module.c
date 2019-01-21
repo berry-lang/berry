@@ -8,14 +8,30 @@
 be_extern_native_module(io);
 be_extern_native_module(json);
 be_extern_native_module(math);
+be_extern_native_module(time);
+be_extern_native_module(os);
+be_extern_native_module(board);
+be_extern_native_module(wifi);
 
 static bnative_module * module_tab[] = {
     &be_native_module(io),
-#if BE_USE_JSON_LIB
+#if BE_USE_JSON_MODULE
     &be_native_module(json),
 #endif
-#if BE_USE_MATH_LIB
+#if BE_USE_MATH_MODULE
     &be_native_module(math),
+#endif
+#if BE_USE_TIME_MODULE
+    &be_native_module(time),
+#endif
+#if BE_USE_OS_MODULE
+    &be_native_module(os),
+#endif
+#if BE_USE_BOARD_MODULE
+    &be_native_module(board),
+#endif
+#if BE_USE_WIFI_MODULE
+    &be_native_module(wifi),
 #endif
 };
 

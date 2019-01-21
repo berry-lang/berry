@@ -19,7 +19,7 @@
 #define NOT_METHOD      BE_NONE
 
 #define vm_error(vm, fmt, ...) \
-    be_debug_error((vm), BE_EXEC_ERROR, (fmt), __VA_ARGS__)
+    be_debug_error(vm, BE_EXEC_ERROR, be_pushfstring(vm, fmt, __VA_ARGS__))
 
 #define RA(i)   (vm->reg + IGET_RA(i))
 #define RKB(i)  ((isKB(i) ? curcl(vm)->proto->ktab \
@@ -465,7 +465,7 @@ static void i_call(bvm *vm, binstruction ins)
         break;
     }
     case BE_NTVFUNC: {
-        bcfunction f = cast(bcfunction, var_toobj(var));
+        bntvfunc f = var_tontvfunc(var);
         push_native(vm, var, argc, mode);
         f(vm); /* call C primitive function */
         ret_native(vm);
@@ -741,7 +741,7 @@ static void do_ntvclos(bvm *vm, bvalue *reg, int argc)
 
 static void do_ntvfunc(bvm *vm, bvalue *reg, int argc)
 {
-    bcfunction f = cast(bcfunction, var_toobj(reg));
+    bntvfunc f = var_tontvfunc(reg);
     push_native(vm, reg, argc, 0);
     f(vm); /* call C primitive function */
     ret_native(vm);

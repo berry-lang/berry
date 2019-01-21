@@ -72,6 +72,7 @@ union bvaldata {
     void *p;        /* object pointer */
     bstring *s;     /* string pointer */
     bgcobject *gc;  /* GC object */
+    bntvfunc nf;    /* native C function */
 };
 
 typedef struct bvalue {
@@ -141,7 +142,7 @@ struct bclosure {
 struct bntvclos {
     bcommon_header;
     bbyte nupvals;
-    bcfunction f;
+    bntvfunc f;
 };
 
 #define cast(_T, _v)            ((_T)(_v))
@@ -182,7 +183,7 @@ struct bntvclos {
 #define var_setclass(_v, _o)    var_setobj(_v, BE_CLASS, _o)
 #define var_setclosure(_v, _o)  var_setobj(_v, BE_CLOSURE, _o)
 #define var_setntvclos(_v, _o)  var_setobj(_v, BE_NTVCLOS, _o)
-#define var_setntvfunc(_v, _o)  var_setobj(_v, BE_NTVFUNC, (void*)(_o))
+#define var_setntvfunc(_v, _o)  { (_v)->v.nf = (_o); var_settype(_v, BE_NTVFUNC); }
 #define var_setlist(_v, _o)     var_setobj(_v, BE_LIST, _o)
 #define var_setmap(_v, _o)      var_setobj(_v, BE_MAP, _o)
 #define var_setmodule(_v, _o)   var_setobj(_v, BE_MODULE, _o)
@@ -194,6 +195,7 @@ struct bntvclos {
 #define var_tostr(_v)           ((_v)->v.s)
 #define var_togc(_v)            ((_v)->v.gc)
 #define var_toobj(_v)           ((_v)->v.p)
+#define var_tontvfunc(_v)       ((_v)->v.nf)
 
 const char* be_vtype2str(bvalue *v);
 

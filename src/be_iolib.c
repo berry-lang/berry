@@ -18,7 +18,7 @@ static int m_input(bvm *vm)
         res = be_fgets(stdin, buffer + pos + 1, READLINE_STEP);
     }
     be_pushstring(vm, buffer);
-    return be_return(vm);
+    be_return(vm);
 }
 
 static bnative_module_obj attr_table[] = {

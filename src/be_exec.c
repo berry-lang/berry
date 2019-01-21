@@ -10,6 +10,9 @@
 #define exec_try(j)     if (setjmp((j)->b) == 0)
 #define exec_throw(j)   longjmp((j)->b, 1)
 
+#define STACK_OVER_MSG(n) \
+    "stack overflow (maxim stack size: " #n ")"
+
 typedef jmp_buf bjmpbuf;
 
 struct blongjmp {
@@ -152,18 +155,23 @@ static void update_callstack(bvm *vm, bvalue *oldstack)
     vm->reg = stack + (vm->reg - oldstack);
 }
 
+static void stack_resize(bvm *vm, size_t size)
+{
+    bvalue *olds = vm->stack;
+    vm->stack = be_realloc(olds, sizeof(bvalue) * size);
+    vm->stacktop = vm->stack + size;
+    update_callstack(vm, olds);
+}
+
 void be_stack_expansion(bvm *vm, int n)
 {
-    size_t newsize;
-    bvalue *oldstack = vm->stack;
-
-    newsize = vm->stacktop - oldstack + n;
-    if (newsize > BE_STACK_TOTAL_MAX) {
+    size_t size = vm->stacktop - vm->stack;
+    /* check new stack size */
+    if (size + n > BE_STACK_TOTAL_MAX) {
+        /* ensure the stack is enough when generating error messages. */
+        stack_resize(vm, size + 10);
         be_debug_error(vm, BE_EXEC_ERROR,
-            "stack overflow (maxim stack size: %d)",
-            BE_STACK_TOTAL_MAX);
+            STACK_OVER_MSG(BE_STACK_TOTAL_MAX));
     }
-    vm->stack = be_realloc(oldstack, sizeof(bvalue) * newsize);
-    vm->stacktop = vm->stack + newsize;
-    update_callstack(vm, oldstack);
+    stack_resize(vm, size + n);
 }

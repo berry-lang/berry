@@ -26,6 +26,10 @@
     #define COMPILER  "GCC " __VERSION__
 #elif defined(_MSC_VER)
     #define COMPILER  "MSVC"
+#elif defined(__CC_ARM)
+    #define COMPILER  "ARMCC"
+#elif defined(__ICCARM__)
+    #define COMPILER  "IAR"
 #else
     #define COMPILER  "Unknown Compiler"
 #endif

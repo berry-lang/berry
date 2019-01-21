@@ -31,9 +31,9 @@ void be_free(void *p)
 void* be_realloc(void *p, size_t size)
 {
     if (p != NULL) {
-        mnode *old = (mnode*)((char*)p - sizeof(mnode));
+        mnode *obj, *old = (mnode*)((char*)p - sizeof(mnode));
         m_mem_count = m_mem_count + size - old->size;
-        mnode *obj = realloc(old, size + sizeof(mnode));
+        obj = (mnode*)realloc(old, size + sizeof(mnode));
         if (obj != NULL) {
             obj->size = size;
             return (char*)obj + sizeof(mnode);

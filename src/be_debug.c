@@ -9,8 +9,6 @@
 #include "be_strlib.h"
 #include "be_exec.h"
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
 #include <string.h>
 
 static void print_inst(binstruction ins, int pc)
@@ -120,7 +118,7 @@ static const char* sourceinfo(bvm *vm, char *buf, int deepth)
     sprintf(buf, "%s:%d:", str(proto->source), it->linenumber);
     return buf;
 #else
-    (void)buf; (void)cf;
+    (void)vm; (void)buf; (void)deepth;
     return "<unknow source>:";
 #endif
 }
@@ -156,7 +154,7 @@ static void tracestack(bvm *vm)
     be_stackpop(vm, 1);
 }
 
-void addinfo(bvm *vm, const char *msg)
+static void addinfo(bvm *vm, const char *msg)
 {
     bcallframe *cf = vm->cf;
     if (var_isclosure(cf->func)) {
@@ -169,13 +167,8 @@ void addinfo(bvm *vm, const char *msg)
     tracestack(vm);
 }
 
-void be_debug_error(bvm *vm, int errcode, const char *format, ...)
+void be_debug_error(bvm *vm, int errcode, const char *msg)
 {
-    va_list arg_ptr;
-    va_start(arg_ptr, format);
-    be_pushvfstr(vm, format, arg_ptr);
-    va_end(arg_ptr);
-    addinfo(vm, be_tostring(vm, -1));
-    be_removeone(vm, -2);
+    addinfo(vm, msg);
     be_throw(vm, errcode);
 }

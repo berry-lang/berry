@@ -9,6 +9,10 @@
 
 #define BERRY_VERSION   "0.0.3"
 
+#if BE_STACK_TOTAL_MAX < BE_STACK_FREE_MIN * 2
+#error "The value of the macro BE_STACK_TOTAL_MAX is too small."
+#endif
+
 typedef uint8_t         bbyte;
 typedef int             bint;
 
@@ -37,24 +41,26 @@ enum {
 #define BE_CBOOL                3
 #define BE_CFUNCTION            4
 #define BE_CSTRING              5
+#define BE_CMODULE              6
 
 typedef struct bvm bvm;
-typedef int (*bcfunction)(bvm *vm);
+typedef int (*bntvfunc)(bvm *vm);
 
 typedef struct {
     const char *name;
-    bcfunction function;
-} bcfuncinfo;
+    bntvfunc function;
+} bnfuncinfo;
 
-typedef const struct {
+typedef const struct bnative_module_obj {
     const char *name;
     int type;
     union {
         int i;
         breal r;
         bbool b;
-        bcfunction f;
+        bntvfunc f;
         const char *s;
+        const struct bnative_module_obj *m;
     } u;
 } bnative_module_obj;
 
@@ -85,7 +91,7 @@ typedef const struct {
 #define be_native_module(name)  be_native_module_##name
 
 #define be_extern_native_module(name)               \
-extern bnative_module be_native_module(name)
+    extern bnative_module be_native_module(name)
 
 #define be_define_native_module(_name, _attrs)      \
 bnative_module be_native_module(_name) = {          \
@@ -103,6 +109,9 @@ bnative_module be_native_module(_name) = {          \
 
 #define be_writestring(s)       be_fwrite(stdout, s, strlen(s))
 #define be_writenewline()       be_fwrite(stdout, "\n", 1)
+
+#define be_return(vm)           return be_returnvalue(vm)
+#define be_return_nil(vm)       return be_returnnilvalue(vm)
 
 #define be_loadstring(vm, str) \
     be_loadbuffer((vm), "string", (str), strlen(str))
@@ -152,9 +161,9 @@ void be_pushstring(bvm *vm, const char *str);
 void be_pushnstring(bvm *vm, const char *str, size_t n);
 const char* be_pushfstring(bvm *vm, const char *format, ...);
 void be_pushvalue(bvm *vm, int index);
-void be_pushntvclosure(bvm *vm, bcfunction f, int nupvals);
-void be_pushntvfunction(bvm *vm, bcfunction f);
-void be_pushclass(bvm *vm, const char *name, const bcfuncinfo *lib);
+void be_pushntvclosure(bvm *vm, bntvfunc f, int nupvals);
+void be_pushntvfunction(bvm *vm, bntvfunc f);
+void be_pushclass(bvm *vm, const char *name, const bnfuncinfo *lib);
 void be_pushcomptr(bvm *vm, void *ptr);
 void be_removeone(bvm *vm, int index);
 void be_strconcat(bvm *vm, int index);
@@ -182,16 +191,16 @@ int be_hasnext(bvm *vm, int index);
 int be_refcontains(bvm *vm, int index);
 void be_refpush(bvm *vm, int index);
 void be_refpop(bvm *vm);
-int be_return(bvm *vm);
-int be_returnnil(bvm *vm);
+int be_returnvalue(bvm *vm);
+int be_returnnilvalue(bvm *vm);
 
 void be_call(bvm *vm, int argc);
 int be_pcall(bvm *vm, int argc);
 void be_abort(void);
 void be_exit(bvm *vm, int status);
 
-void be_regcfunc(bvm *vm, const char *name, bcfunction f);
-void be_regclass(bvm *vm, const char *name, const bcfuncinfo *lib);
+void be_regcfunc(bvm *vm, const char *name, bntvfunc f);
+void be_regclass(bvm *vm, const char *name, const bnfuncinfo *lib);
 
 bvm* be_vm_new(void);
 void be_vm_delete(bvm *vm);

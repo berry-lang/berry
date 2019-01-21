@@ -14,6 +14,6 @@ bupval* be_findupval(bvm *vm, bvalue *level);
 void be_upvals_close(bvm *vm, bvalue *level);
 bproto* be_newproto(bvm *vm);
 bclosure* be_newclosure(bvm *vm, int nupval);
-bntvclos* be_newprimclosure(bvm *vm, bcfunction cf, int nupvals);
+bntvclos* be_newprimclosure(bvm *vm, bntvfunc cf, int nupvals);
 
 #endif

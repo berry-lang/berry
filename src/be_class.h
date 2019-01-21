@@ -34,7 +34,7 @@ struct binstance {
 bclass* be_newclass(bvm *vm, bstring *name, bclass *super);
 void be_member_bind(bclass *c, bstring *name);
 void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p);
-void be_prim_method_bind(bclass *c, bstring *name, bcfunction f);
+void be_prim_method_bind(bclass *c, bstring *name, bntvfunc f);
 int be_class_newobj(bvm *vm, bclass *c, bvalue *argv, int argc);
 int be_instance_member(binstance *obj, bstring *name, bvalue *dst);
 int be_instance_setmember(binstance *obj, bstring *name, bvalue *src);

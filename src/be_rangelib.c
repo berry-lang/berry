@@ -7,7 +7,7 @@ static int m_init(bvm *vm)
     be_pop(vm, 1);
     be_pushvalue(vm, 3);
     be_setmember(vm, 1, "__upper__");
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 static int m_tostring(bvm *vm)
@@ -27,19 +27,19 @@ static int m_tostring(bvm *vm)
     be_pushstring(vm, ")");
     be_strconcat(vm, -2);
     be_pop(vm, 1);
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_upper(bvm *vm)
 {
     be_getmember(vm, 1, "__upper__");
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_lower(bvm *vm)
 {
     be_getmember(vm, 1, "__lower__");
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_setrange(bvm *vm)
@@ -49,14 +49,14 @@ static int m_setrange(bvm *vm)
     be_pop(vm, 1);
     be_pushvalue(vm, 3);
     be_setmember(vm, 1, "__upper__");
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 static int i_init(bvm *vm)
 {
     be_pushvalue(vm, 2);
     be_setmember(vm, 1, ".obj");
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 static int i_hashnext(bvm *vm)
@@ -69,7 +69,7 @@ static int i_hashnext(bvm *vm)
     } else {
         be_pushbool(vm, bfalse);
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int i_next(bvm *vm)
@@ -84,12 +84,12 @@ static int i_next(bvm *vm)
         be_pushint(vm, be_toint(vm, -1) + 1);
         be_setmember(vm, 1, ".iter");
     }
-    return be_return(vm);
+    be_return(vm);
 }
 
 static int m_iter(bvm *vm)
 {
-    static const bcfuncinfo members[] = {
+    static const bnfuncinfo members[] = {
         { ".obj", NULL },
         { ".iter", NULL },
         { "init", i_init },
@@ -101,12 +101,12 @@ static int m_iter(bvm *vm)
     be_pushvalue(vm, 1);
     be_call(vm, 1);
     be_pop(vm, 1);
-    return be_return(vm);
+    be_return(vm);
 }
 
 void be_load_rangelib(bvm *vm)
 {
-    static const bcfuncinfo members[] = {
+    static const bnfuncinfo members[] = {
         { "__lower__", NULL },
         { "__upper__", NULL },
         { "init", m_init },

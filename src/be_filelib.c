@@ -22,7 +22,7 @@ static int i_write(bvm *vm)
         const char *data = be_tostring(vm, 2);
         be_fwrite(fh, data, be_strlen(vm, 2));
     }
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 static size_t readsize(bvm *vm, int argc, be_fhandle fh)
@@ -43,9 +43,9 @@ static int i_read(bvm *vm)
         char *buffer = be_malloc(size);
         size = be_fread(fh, buffer, size);
         be_pushnstring(vm, buffer, size);
-        return be_return(vm);
+        be_return(vm);
     }
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 static int i_readline(bvm *vm)
@@ -66,9 +66,9 @@ static int i_readline(bvm *vm)
             res = be_fgets(fh, buffer + pos + 1, READLINE_STEP);
         }
         be_pushnstring(vm, buffer, size);
-        return be_return(vm);
+        be_return(vm);
     }
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 static int i_seek(bvm *vm)
@@ -78,7 +78,7 @@ static int i_seek(bvm *vm)
         be_fhandle fh = be_tocomptr(vm, -1);
         be_fseek(fh, be_toint(vm, 2));
     }
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 static int i_tell(bvm *vm)
@@ -88,9 +88,9 @@ static int i_tell(bvm *vm)
         be_fhandle fh = be_tocomptr(vm, -1);
         size_t pos = be_ftell(fh);
         be_pushint(vm, cast(bint, pos));
-        return be_return(vm);
+        be_return(vm);
     }
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 static int i_size(bvm *vm)
@@ -100,9 +100,19 @@ static int i_size(bvm *vm)
         be_fhandle fh = be_tocomptr(vm, -1);
         size_t pos = be_fsize(fh);
         be_pushint(vm, cast(bint, pos));
-        return be_return(vm);
+        be_return(vm);
     }
-    return be_returnnil(vm);
+    be_return_nil(vm);
+}
+
+static int i_flush(bvm *vm)
+{
+    be_getmember(vm, 1, ".data");
+    if (be_iscomptr(vm, -1)) {
+        be_fhandle fh = be_tocomptr(vm, -1);
+        be_fflush(fh);
+    }
+    be_return_nil(vm);
 }
 
 static int i_close(bvm *vm)
@@ -114,14 +124,14 @@ static int i_close(bvm *vm)
         be_pushnil(vm);
         be_setmember(vm, 1, ".data");
     }
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 static int m_open(bvm *vm)
 {
     int argc = be_top(vm);
     const char *fname, *mode;
-    static const bcfuncinfo members[] = {
+    static const bnfuncinfo members[] = {
         { ".data", NULL },
         { "write", i_write },
         { "read", i_read },
@@ -129,6 +139,7 @@ static int m_open(bvm *vm)
         { "seek", i_seek },
         { "tell", i_tell },
         { "size", i_size },
+        { "flush", i_flush },
         { "close", i_close },
         { "deinit", i_close },
         { NULL, NULL }
@@ -146,9 +157,9 @@ static int m_open(bvm *vm)
         }
         be_setmember(vm, -2, ".data");
         be_pop(vm, 1);
-        return be_return(vm);
+        be_return(vm);
     }
-    return be_returnnil(vm);
+    be_return_nil(vm);
 }
 
 void be_load_filelib(bvm *vm)
