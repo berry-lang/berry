@@ -399,7 +399,7 @@ static int m_json_dump(bvm *vm)
     be_return(vm);
 }
 
-static bntvmodule_obj attr_table[] = {
+be_native_module_attr_table(attr_table) {
     be_native_module_function("load", m_json_load),
     be_native_module_function("dump", m_json_dump)
 };

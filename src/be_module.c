@@ -11,9 +11,9 @@ be_extern_native_module(math);
 be_extern_native_module(time);
 be_extern_native_module(os);
 be_extern_native_module(board);
-be_extern_native_module(wifi);
+be_extern_native_module(network);
 
-static bntvmodule * module_tab[] = {
+static bntvmodule* const module_tab[] = {
     &be_native_module(io),
 #if BE_USE_JSON_MODULE
     &be_native_module(json),
@@ -30,8 +30,8 @@ static bntvmodule * module_tab[] = {
 #if BE_USE_BOARD_MODULE
     &be_native_module(board),
 #endif
-#if BE_USE_WIFI_MODULE
-    &be_native_module(wifi),
+#if BE_USE_NETWORK_MODULE
+    &be_native_module(network),
 #endif
 };
 

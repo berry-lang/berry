@@ -21,7 +21,7 @@ static int m_input(bvm *vm)
     be_return(vm);
 }
 
-static bntvmodule_obj attr_table[] = {
+be_native_module_attr_table(attr_table) {
     be_native_module_function("input", m_input)
 };
 

@@ -980,7 +980,9 @@ static void return_stmt(bparser *parser)
     scan_next_token(parser); /* skip 'return' */
     init_exp(&e, ETVOID, 0);
     expr(parser, &e);
-    check_var(parser, &e);
+    if (e.v.s) { /* expression is not empty */
+        check_var(parser, &e);
+    }
     be_code_ret(parser->finfo, &e);
 }
 

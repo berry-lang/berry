@@ -93,6 +93,9 @@ typedef const struct bntvmodule {
 
 #define be_native_module(name)  be_native_module_##name
 
+#define be_native_module_attr_table(name)           \
+    static bntvmodule_obj const name[] =
+
 #define be_extern_native_module(name)               \
     extern bntvmodule be_native_module(name)
 

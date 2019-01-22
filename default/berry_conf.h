@@ -54,7 +54,7 @@
 #define BE_USE_TIME_MODULE              0
 #define BE_USE_OS_MODULE                1
 #define BE_USE_BOARD_MODULE             0
-#define BE_USE_WIFI_MODULE              0
+#define BE_USE_NETWORK_MODULE           0
 
 /* Macro: be_assert
  * Berry debug assertion. Only enabled when BE_DEBUG is active.

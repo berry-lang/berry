@@ -18,7 +18,7 @@
 #define setint(lex, v)      ((lex)->token.u.i = (v))
 #define setreal(lex, v)     ((lex)->token.u.r = (v))
 
-static const char* kwords_tab[] = {
+static const char* const kwords_tab[] = {
         "NONE", "EOS", "ID", "INT", "REAL", "STR",
         "=", "+", "-", "*", "/", "%", "<", "<=",
         "==", "!=", ">", ">=", "..", "&&", "||", "!",

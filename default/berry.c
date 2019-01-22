@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#if defined(__linux) || defined(__unix) || defined(__APPLE__)
+#if defined(USE_READLINE_LIB)
     #include <readline/readline.h>
     #include <readline/history.h>
 #endif
@@ -57,7 +57,7 @@
 
 static const char* get_line(const char *prompt)
 {
-#if defined(__linux) || defined(__unix) || defined(__APPLE__)
+#if defined(USE_READLINE_LIB)
     const char *line = readline(prompt);
     add_history(line);
     return line;
