@@ -6,12 +6,9 @@ CC	 = gcc
 INCPATH	 = src default
 SRCPATH	 = src default
 
-ifneq ($(OS), Windows_NT)
-  ifeq ($(shell uname), Linux) # Linux
+ifneq ($(OS), Windows_NT) # not windows
+    CFLAGS += -DUSE_READLINE_LIB
     LIBS += -lreadline
-  else ifeq  ($(shell uname), Darwin) # MacOS
-    LIBS += -lreadline
-  endif
 endif
 
 SRCS	 = $(foreach dir, $(SRCPATH), $(wildcard $(dir)/*.c))

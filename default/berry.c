@@ -63,7 +63,8 @@ static const char* get_line(const char *prompt)
     return line;
 #else
     static char buffer[1000];
-    printf(prompt);
+    fputs(prompt, stdout);
+    fflush(stdout);
     if (fgets(buffer, sizeof(buffer), stdin)) {
         return buffer;
     }
