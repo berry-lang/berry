@@ -41,7 +41,7 @@ The implementation of Berry include a one pass compiler and register-based VM, a
   * Inheritance (only public single inheritance)
   * Method and Operator Overload
   * Constructor method
-* Module support
+* Module Management
   * Statically allocated memory: no RAM used before import.
   * Module nesting.
 
@@ -121,7 +121,7 @@ This examples is a simple list iterator. Let's look at the output:
 [0, 1, 2, 3, 4, 5]
 ```
 
-You can save the above code to a file (eg test.c) and run:
+You can save the above code to a file (eg test.be) and run:
 
 ``` bash
 ./berry test.be
