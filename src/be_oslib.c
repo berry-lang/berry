@@ -59,8 +59,8 @@ static int m_rmdir(bvm *vm)
 static int m_listdir(bvm *vm)
 {
     DIR *dp;
-    struct dirent *ep;     
-    
+    struct dirent *ep;
+
     if (be_top(vm) >= 1 && be_isstring(vm, 1)) {
         dp = opendir(be_tostring(vm, 1));
     } else {
@@ -131,6 +131,26 @@ static int m_isfile(bvm *vm)
     be_return(vm);
 }
 
+static int m_splitext(bvm *vm)
+{
+    if (be_top(vm) >= 1 && be_isstring(vm, 1)) {
+        const char *ptr, *dot, *str = be_tostring(vm, 1);
+        for (ptr = str; *ptr != '\0' && *ptr == '.'; ++ptr);
+        for (dot = str; *ptr != '\0'; ++ptr) {
+            if (*ptr == '.') {
+                dot = ptr;
+            }
+        }
+        dot = dot == str ? ptr : dot;
+        be_getglobal(vm, "list");
+        be_pushnstring(vm, str, dot - str);
+        be_pushstring(vm, dot);
+        be_call(vm, 2);
+        be_return(vm);
+    }
+    be_return_nil(vm);
+}
+
 static int m_exists(bvm *vm)
 {
     int res;
@@ -147,7 +167,8 @@ static int m_exists(bvm *vm)
 be_native_module_attr_table(path_attr) {
     be_native_module_function("isdir", m_isdir),
     be_native_module_function("isfile", m_isfile),
-    be_native_module_function("exists", m_exists)
+    be_native_module_function("exists", m_exists),
+    be_native_module_function("splitext", m_splitext)
 };
 
 static be_define_native_module(path, path_attr);

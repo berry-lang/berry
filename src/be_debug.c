@@ -129,7 +129,12 @@ void be_debug_ins_info(bvm *vm)
     bcallframe *cf = vm->cf;
     bproto *proto = cast(bclosure*, var_toobj(cf->func))->proto;
     int pc = cast_int(vm->ip - proto->code);
-    printf("%s %s\t\t", sourceinfo(vm, buf, -1), str(proto->name));
+    const char *srcinfo = sourceinfo(vm, buf, -1);
+    int len = strlen(srcinfo) + strlen(str(proto->name)) + 1;
+    printf("%s %s", srcinfo, str(proto->name));
+    for (; len < 40 ; len += 8) {
+        printf("\t");
+    }
     print_inst(*vm->ip, pc);
 }
 

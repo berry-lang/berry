@@ -194,12 +194,8 @@ static void end_func(bparser *parser)
     bvm *vm = parser->vm;
     bfuncinfo *finfo = parser->finfo;
     bproto *proto = finfo->proto;
-    binstruction *ins = be_vector_end(&finfo->code);
 
-    /* append a return to last code */
-    if (!finfo->pc || IGET_OP(*ins) != cast_int(OP_RET)) {
-        be_code_ret(finfo, NULL);
-    }
+    be_code_ret(finfo, NULL); /* append a return to last code */
     end_block(parser);
     setupvals(finfo);
     proto->codesize = finfo->pc;
