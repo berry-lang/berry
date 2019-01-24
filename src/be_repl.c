@@ -12,6 +12,16 @@ static int try_return(bvm *vm, const char *line)
     return res;
 }
 
+static int is_multline(bvm *vm)
+{
+    const char *msg = be_tostring(vm, -1);
+    size_t len = strlen(msg);
+    if (len > 5) {
+        return !strcmp(msg + len - 5, "'EOS'");
+    }
+    return 0;
+}
+
 static int compile(bvm *vm, const char *line, breadline getl)
 {
     int res = try_return(vm, line);
@@ -22,7 +32,7 @@ static int compile(bvm *vm, const char *line, breadline getl)
             const char *src = be_tostring(vm, -1);
             /* compile source line */
             res = be_loadbuffer(vm, "stdin", src, strlen(src));
-            if (!res || !strstr(be_tostring(vm, -1), "'EOS'")) {
+            if (!res || !is_multline(vm)) {
                 be_removeone(vm, -2);
                 return res;
             }

@@ -106,7 +106,7 @@ static int char2hex(int c)
         return c - '0';
     } else if (c >= 'a' && c <= 'f') {
         return c - 'a' + 0x0A;
-    } else if (c > 'A' && c <= 'F') {
+    } else if (c >= 'A' && c <= 'F') {
         return c - 'A' + 0x0A;
     }
     return -1;

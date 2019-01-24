@@ -406,4 +406,4 @@ be_native_module_attr_table(attr_table) {
 
 be_define_native_module(json, attr_table);
 
-#endif
+#endif /* BE_USE_JSON_MODULE */

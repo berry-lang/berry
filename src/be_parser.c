@@ -59,8 +59,8 @@ static void match_token(bparser *parser, btokentype type)
 {
     if (next_token(parser).type != type) {
         btoken *token = &next_token(parser);
-        const char *s1 = be_token2str(parser->vm, token);
-        const char *s2 = be_tokentype2str(type);
+        const char *s1 = be_tokentype2str(type);
+        const char *s2 = be_token2str(parser->vm, token);
         push_error(parser, "expected '%s' before '%s'", s1, s2));
     }
     scan_next_token(parser);
@@ -70,7 +70,7 @@ static void match_notoken(bparser *parser, btokentype type)
 {
     if (next_token(parser).type == type) {
         push_error(parser,
-            "expected expression before '%s'", token2str(parser)));
+            "expected statement before '%s'", token2str(parser)));
     }
 }
 
@@ -1116,6 +1116,7 @@ static void mainfunc(bparser *parser, bclosure *cl)
     cl->proto = finfo.proto;
     stmtlist(parser);
     end_func(parser);
+    match_token(parser, TokenEOS); /* skip EOS */
 }
 
 bclosure* be_parser_source(bvm *vm,

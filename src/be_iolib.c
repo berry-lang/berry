@@ -1,6 +1,8 @@
 #include "be_object.h"
 #include "be_mem.h"
 
+#ifdef BE_USE_IO_MODULE
+
 #define READLINE_STEP       100
 
 static int m_input(bvm *vm)
@@ -26,3 +28,5 @@ be_native_module_attr_table(attr_table) {
 };
 
 be_define_native_module(io, attr_table);
+
+#endif /* BE_USE_IO_MODULE */

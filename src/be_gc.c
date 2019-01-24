@@ -64,12 +64,13 @@ void be_gc_setpause(bvm *vm, int pause)
 
 bgcobject* be_newgcobj(bvm *vm, int type, size_t size)
 {
+    bgcobject *obj;
     bgc *gc = vm->gc;
-    bgcobject *obj = be_malloc(size);
 
+    be_gc_auto(vm); /* first: auto gc */
+    obj = be_malloc(size);
     var_settype(obj, (bbyte)type);
-    obj->marked = GC_GRAY; /* default gc object type is gray */
-    be_gc_auto(vm);
+    obj->marked = GC_WHITE; /* default gc object type is white */
     obj->next = gc->list; /* insert to head */
     gc->list = obj;
     return obj;
@@ -78,12 +79,14 @@ bgcobject* be_newgcobj(bvm *vm, int type, size_t size)
 bgcobject* be_gc_newstr(bvm *vm, size_t size, int islong)
 {
     bgcobject *obj;
+
     if (islong) {
         return be_newgcobj(vm, BE_STRING, size);
     }
+    be_gc_auto(vm); /* first: auto gc */
     obj = be_malloc(size);
     var_settype(obj, BE_STRING);
-    obj->marked = GC_GRAY; /* default gc object type is gray */
+    obj->marked = GC_WHITE; /* default string type is white */
     return obj;
 }
 
@@ -360,17 +363,19 @@ static void mark_unscanned(bvm *vm)
 static void destruct_object(bvm *vm, bgcobject *obj)
 {
     if (obj->type == BE_INSTANCE) {
+        int type, pause = vm->gc->pause;
         bvalue *top = vm->top;
-        binstance *i = cast_instance(obj);
-        int type;
+        binstance *insobj = cast_instance(obj);
+        vm->gc->pause = 0; /* disable gc during destruction to prevent recursion */
         be_stackcheck(vm, 2);
-        type = be_instance_member(i,
+        type = be_instance_member(insobj,
             be_newconststr(vm, "deinit"), top);
         if (basetype(type) == BE_FUNCTION) {
-            var_setinstance(top + 1, i);
+            var_setinstance(top + 1, insobj);
             vm->top += 2;
             be_dofunc(vm, top, 1);
         }
+        vm->gc->pause = pause; /* restore gc status */
     }
 }
 
@@ -406,7 +411,7 @@ static void delete_white(bvm *vm)
     }
 }
 
-static void clear_graylist(bvm *vm)
+static void reset_fixedlist(bvm *vm)
 {
     bgc *gc = vm->gc;
     bgcobject *node;
@@ -437,7 +442,7 @@ void be_gc_collect(bvm *vm)
     /* step 3: destruct and delete unreachable object */
     destruct_white(vm);
     delete_white(vm);
-    clear_graylist(vm);
     be_gcstrtab(vm);
+    reset_fixedlist(vm);
     vm->gc->mcount = be_mcount();
 }

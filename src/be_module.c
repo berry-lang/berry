@@ -5,45 +5,17 @@
 #include "be_mem.h"
 #include "be_vm.h"
 
-be_extern_native_module(io);
-be_extern_native_module(json);
-be_extern_native_module(math);
-be_extern_native_module(time);
-be_extern_native_module(os);
-be_extern_native_module(board);
-be_extern_native_module(network);
-
-static bntvmodule* const module_tab[] = {
-    &be_native_module(io),
-#if BE_USE_JSON_MODULE
-    &be_native_module(json),
-#endif
-#if BE_USE_MATH_MODULE
-    &be_native_module(math),
-#endif
-#if BE_USE_TIME_MODULE
-    &be_native_module(time),
-#endif
-#if BE_USE_OS_MODULE
-    &be_native_module(os),
-#endif
-#if BE_USE_BOARD_MODULE
-    &be_native_module(board),
-#endif
-#if BE_USE_NETWORK_MODULE
-    &be_native_module(network),
-#endif
-};
+extern bntvmodule* const be_module_table[];
 
 static bmodule* load_module(bvm *vm, bntvmodule *nm, bvalue *dst);
 
 static bntvmodule* find_native(bstring *path)
 {
-    size_t i, size = array_count(module_tab);
-    for (i = 0; i < size; ++i) {
-        bntvmodule *node = module_tab[i];
-        if (!strcmp(node->name, str(path))) {
-            return node;
+    bntvmodule *module;
+    bntvmodule * const *node = be_module_table;
+    for (; (module = *node) != NULL; ++node) {
+        if (!strcmp(module->name, str(path))) {
+            return module;
         }
     }
     return NULL;

@@ -185,4 +185,4 @@ be_native_module_attr_table(os_attr) {
 
 be_define_native_module(os, os_attr);
 
-#endif
+#endif /* BE_USE_OS_MODULE */

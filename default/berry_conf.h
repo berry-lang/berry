@@ -49,12 +49,12 @@
  * point you can use the import statement to import the module.
  * They will not compile related modules when they are false.
  **/
+#define BE_USE_IO_MODULE                1
+#define BE_USE_STRING_MODULE            1
 #define BE_USE_JSON_MODULE              1
 #define BE_USE_MATH_MODULE              1
-#define BE_USE_TIME_MODULE              0
+#define BE_USE_TIME_MODULE              1
 #define BE_USE_OS_MODULE                1
-#define BE_USE_BOARD_MODULE             0
-#define BE_USE_NETWORK_MODULE           0
 
 /* Macro: be_assert
  * Berry debug assertion. Only enabled when BE_DEBUG is active.
