@@ -97,8 +97,13 @@ typedef struct {
 } bupvaldesc;
 
 typedef struct {
+#if BE_RUNTIME_DEBUG_INFO > 1
+    uint16_t linenumber;
+    uint16_t endpc;
+#else
     int linenumber;
     int endpc;
+#endif
 } blineinfo;
 
 typedef struct bupval {

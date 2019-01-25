@@ -5,7 +5,7 @@ typedef struct {
     size_t size;
 } mnode;
 
-static size_t m_mem_count = 0;
+static volatile size_t m_mem_count = 0;
 
 void* be_malloc(size_t size)
 {

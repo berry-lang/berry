@@ -76,6 +76,7 @@ static bmodule* new_module(bvm *vm, bntvmodule *nm, bvalue *dst)
         obj->table = NULL; /* gc protection */
         obj->table = be_map_new(vm);
         insert_attrs(vm, obj->table, nm);
+        be_map_release(vm, obj->table); /* clear space */
         obj->mnext = vm->modulelist;
         vm->modulelist = obj;
     }

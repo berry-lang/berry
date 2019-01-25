@@ -206,6 +206,9 @@ static void end_func(bparser *parser)
     proto->code = be_vector_release(&finfo->code);
     proto->ktab = be_vector_release(&finfo->kvec);
     proto->ptab = be_vector_release(&finfo->pvec);
+#if BE_RUNTIME_DEBUG_INFO
+    proto->lineinfo = be_vector_release(&finfo->linevec);
+#endif
     parser->finfo = parser->finfo->prev;
     be_stackpop(vm, 2); /* pop upval and local */
     be_gc_collect(vm);
@@ -1048,6 +1051,7 @@ static void class_stmt(bparser *parser)
         scan_next_token(parser); /* skip ID */
         class_inherit(parser, &e);
         class_block(parser, c);
+        be_map_release(parser->vm, c->members); /* clear space */
         match_token(parser, KeyEnd); /* skip 'end' */
     } else {
         parser_error(parser, "class name error");
@@ -1138,5 +1142,6 @@ bclosure* be_parser_source(bvm *vm,
     be_stackpop(vm, 1);
     scan_next_token(&parser); /* clear lexer */
     be_lexer_deinit(&parser.lexer);
+    be_globalvar_release_space(vm); /* clear global space */
     return cl;
 }

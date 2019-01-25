@@ -45,3 +45,11 @@ int be_globalvar_new(bvm *vm, bstring *name)
     }
     return idx;
 }
+
+void be_globalvar_release_space(bvm *vm)
+{
+    bglobaldesc *gd = &vm->gbldesc;
+    be_map_release(vm, gd->idxtab);
+    be_vector_release(&gd->gvalist);
+    vm->global = be_vector_data(&gd->gvalist);
+}

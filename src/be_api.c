@@ -36,6 +36,7 @@ static void class_init(bvm *vm, bclass *c, const bnfuncinfo *lib)
         }
         ++lib;
     }
+    be_map_release(vm, c->members); /* clear space */
 }
 
 void be_regcfunc(bvm *vm, const char *name, bntvfunc f)

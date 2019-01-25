@@ -655,6 +655,7 @@ void be_vm_delete(bvm *vm)
     be_gc_deleteall(vm);
     be_string_deleteall(vm);
     be_stack_delete(&vm->callstack);
+    be_stack_delete(&vm->refstack);
     be_free(vm->stack);
     be_globalvar_deinit(vm);
     be_free(vm);

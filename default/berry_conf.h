@@ -24,7 +24,8 @@
 /* Macro: BE_RUNTIME_DEBUG_INFO
  * Set runtime error debugging information.
  * 0: unable to output source file and line number at runtime.
- * 1: output source file and line number information at runtime
+ * 1: output source file and line number information at runtime.
+ * 2: the information use uint16_t type (save space)
  * default: 1
  **/
 #define BE_RUNTIME_DEBUG_INFO           1

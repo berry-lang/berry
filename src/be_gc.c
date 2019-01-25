@@ -32,7 +32,7 @@ void be_gc_init(bvm *vm)
     gc->gray = NULL;
     gc->fixed = NULL;
     gc->mcount = be_mcount();
-    gc->steprate = 200;
+    gc->steprate = 150;
     gc->pause = 0;
     vm->gc = gc;
 }

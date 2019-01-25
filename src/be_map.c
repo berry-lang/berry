@@ -299,3 +299,9 @@ bvalue be_map_key2value(bmapnode *node)
     v.v = node->key.v;
     return v;
 }
+
+void be_map_release(bvm *vm, bmap *map)
+{
+    (void)vm;
+    resize(map, map->count);
+}
