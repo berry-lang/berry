@@ -57,6 +57,9 @@
 #define BE_USE_TIME_MODULE              1
 #define BE_USE_OS_MODULE                1
 
+#define BE_MEM_HEAP_SIZE                4096
+#define BE_MEM_SMALLOBJ_SIZE            512
+
 /* Macro: be_assert
  * Berry debug assertion. Only enabled when BE_DEBUG is active.
  * default: use the assert() function of the standard library.

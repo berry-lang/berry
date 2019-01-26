@@ -130,7 +130,7 @@ void be_debug_ins_info(bvm *vm)
     bproto *proto = cast(bclosure*, var_toobj(cf->func))->proto;
     int pc = cast_int(vm->ip - proto->code);
     const char *srcinfo = sourceinfo(vm, buf, -1);
-    int len = strlen(srcinfo) + strlen(str(proto->name)) + 1;
+    size_t len = strlen(srcinfo) + strlen(str(proto->name)) + 1;
     printf("%s %s", srcinfo, str(proto->name));
     for (; len < 40 ; len += 8) {
         printf("\t");

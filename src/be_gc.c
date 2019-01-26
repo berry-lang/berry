@@ -375,7 +375,7 @@ static void destruct_object(bvm *vm, bgcobject *obj)
             vm->top += 2;
             be_dofunc(vm, top, 1);
         }
-        vm->gc->pause = pause; /* restore gc status */
+        vm->gc->pause = (bbyte)pause; /* restore gc status */
     }
 }
 
