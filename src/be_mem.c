@@ -114,28 +114,32 @@ static void free_empty_heap(memlist *m)
     }
 }
 
+static void node_split(mheap *heap, mnode *node, size_t size)
+{
+    size_t tail = node->size - size - sizeof(mnode);
+    mnode *next = next_ptr(node);
+    if (next < (mnode*)addr_pos(heap, heap->size, +)) {
+        next->prev = data_size(tail); /* link next node */
+    }
+    node->size = data_size(size) | 1; /* mark used */
+    next = next_ptr(node);  /* split */
+    next->size = data_size(tail);
+    next->prev = data_size(size);
+}
+
 static void* node_alloc(memlist *m, mheap *heap, size_t size)
 {
     mnode *node = addr_region(heap, mheap);
     mnode *end = addr_pos(heap, heap->size, +);
     for (; node < end; node = next_ptr(node)) {
         if (node->size >= size && !isused(node)) {
-            size_t tail = node->size - size;
-            if (tail > sizeof(mnode)) { /* split node */
-                mnode *next;
-                tail -= sizeof(mnode);
-                if ((next = next_ptr(node)) < end) { /* link next node */
-                    next->prev = data_size(tail);
-                }
-                node->size = data_size(size) | 1; /* mark used */
-                next = next_ptr(node);  /* split */
-                next->size = data_size(tail);
-                next->prev = data_size(size);
+            if (node->size - size > sizeof(mnode)) {
+                node_split(heap, node, size); /* split node */
             } else {
                 node->size |= 1; /* mark used */
             }
-            heap->use += data_size(size);
-            m->use += data_size(size);
+            heap->use += data_size(node->size);
+            m->use += data_size(node->size);
             return addr_region(node, mnode);
         }
     }
@@ -184,11 +188,7 @@ static void* node_realloc(memlist *m, mheap *heap, void *ptr, size_t size)
     /* split node */
     tail = data_size(node->size) - size;
     if (tail > sizeof(mnode)) { /* split node */
-        mnode *next;
-        node->size = data_size(size) | 1; /* mark used */
-        next = next_ptr(node);
-        next->size = data_size(tail - sizeof(mnode));
-        next->prev = data_size(size);
+        node_split(heap, node, size);
         heap->use -= (uint16_t)tail;
         m->use -= tail;
     }
