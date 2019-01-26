@@ -25,6 +25,7 @@ typedef struct {
 
 typedef struct mheap {
     uint16_t use, size;
+    mnode *lastuse;
     struct mheap *next;
 } mheap;
 
@@ -37,11 +38,13 @@ typedef struct {
     size_t size;
 } mdesc;
 
-static memlist mlist = { .heap = NULL,.use = 0 };
+static memlist mlist = { .heap = NULL, .use = 0 };
 
+#if BE_USE_SOBJ_HEAP
 static void* __malloc(memlist *m, size_t size);
 static void __free(memlist *m, void *ptr);
 static void* __realloc(memlist *m, void *ptr, size_t size);
+#endif
 
 static void* l_malloc(size_t size)
 {
@@ -80,6 +83,7 @@ static void* l_realloc(void *ptr, size_t size)
     return be_malloc(size);
 }
 
+#if BE_USE_SOBJ_HEAP
 static mheap* heap_insert(memlist *m, size_t size)
 {
     mheap *heap = os_malloc(size);
@@ -87,9 +91,10 @@ static mheap* heap_insert(memlist *m, size_t size)
         mnode *node = addr_region(heap, mheap);
         heap->size = (uint16_t)size;
         heap->use = 0;
+        heap->next = m->heap ? m->heap : NULL;
+        heap->lastuse = node;
         node->size = data_size(size - sizeof(mheap));
         node->prev = 0;
-        heap->next = m->heap ? m->heap : NULL;
         m->heap = heap;
     }
     return heap;
@@ -129,15 +134,20 @@ static void node_split(mheap *heap, mnode *node, size_t size)
 
 static void* node_alloc(memlist *m, mheap *heap, size_t size)
 {
-    mnode *node = addr_region(heap, mheap);
+    mnode *node = heap->lastuse, *next = NULL;
     mnode *end = addr_pos(heap, heap->size, +);
-    for (; node < end; node = next_ptr(node)) {
+    for (; next != node; node = next_ptr(node)) {
+        next = next_ptr(node);
+        if (next >= end) {
+            next = addr_region(heap, mheap);   
+        }
         if (node->size >= size && !isused(node)) {
             if (node->size - size > sizeof(mnode)) {
                 node_split(heap, node, size); /* split node */
             } else {
                 node->size |= 1; /* mark used */
             }
+            heap->lastuse = node;
             heap->use += data_size(node->size);
             m->use += data_size(node->size);
             return addr_region(node, mnode);
@@ -153,6 +163,7 @@ static void node_free(memlist *m, mheap *heap, void *ptr)
     mnode *next = next_ptr(node);
     mnode *end = addr_pos(heap, heap->size, +);
     node->size = data_size(node->size);
+    heap->lastuse = node;
     heap->use -= node->size;
     m->use -= node->size;
     /* splicing the free block behind */
@@ -168,6 +179,7 @@ static void node_free(memlist *m, mheap *heap, void *ptr)
     if (node->prev && !isused(prev)) {
         /* merge size with previous */
         prev->size = prev->size + node_size(node->size);
+        heap->lastuse = prev;
         next = next_ptr(prev); /* update next node */
         if (next < end) {
             next->prev = data_size(prev->size);
@@ -189,6 +201,7 @@ static void* node_realloc(memlist *m, mheap *heap, void *ptr, size_t size)
     tail = data_size(node->size) - size;
     if (tail > sizeof(mnode)) { /* split node */
         node_split(heap, node, size);
+        heap->lastuse = node;
         heap->use -= (uint16_t)tail;
         m->use -= tail;
     }
@@ -207,7 +220,7 @@ static size_t align_size(size_t size)
 static void* __malloc(memlist *m, size_t size)
 {
     size = align_size(size);
-    if (size <= BE_MEM_SMALLOBJ_SIZE) {
+    if (size <= BE_SOBJ_SIZE_MAX) {
         void *data = NULL;
         mheap *heap = m->heap;
         for (; heap && data; heap = heap->next) {
@@ -219,7 +232,7 @@ static void* __malloc(memlist *m, size_t size)
                 }
             }
         }
-        heap = heap_insert(m, BE_MEM_HEAP_SIZE);
+        heap = heap_insert(m, BE_SOBJ_HEAP_SIZE);
         return heap ? node_alloc(m, heap, size) : NULL;
     }
     return l_malloc(size);
@@ -230,8 +243,6 @@ static void __free(memlist *m, void *ptr)
     mheap *heap = m->heap;
     for (; heap; heap = heap->next) {
         if (inheap(heap, ptr)) {
-            mnode *node = addr_base(ptr, mnode);
-            heap->use -= node->size;
             node_free(m, heap, ptr);
             break;
         }
@@ -253,20 +264,33 @@ static void* __realloc(memlist *m, void *ptr, size_t size)
     }
     return l_realloc(ptr, size);
 }
+#endif
 
 void* be_malloc(size_t size)
 {
+#if BE_USE_SOBJ_HEAP
     return __malloc(&mlist, size);
+#else
+    return l_malloc(size);
+#endif
 }
 
 void be_free(void *ptr)
 {
+#if BE_USE_SOBJ_HEAP
     __free(&mlist, ptr);
+#else
+    l_free(ptr);
+#endif
 }
 
 void* be_realloc(void *ptr, size_t size)
 {
+#if BE_USE_SOBJ_HEAP
     return __realloc(&mlist, ptr, size);
+#else
+    return l_realloc(ptr, size);
+#endif
 }
 
 size_t be_mcount(void)
