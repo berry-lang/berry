@@ -21,22 +21,31 @@
 #define gc_iswhite(o)       gc_ismark((o), GC_WHITE)
 #define gc_isgray(o)        gc_ismark((o), GC_GRAY)
 #define gc_isdark(o)        gc_ismark((o), GC_DARK)
-#define gc_setmark(o, m)    { (o)->marked &= ~0x03; (o)->marked |= (m) & 0x03; }
+
+#define gc_setmark(o, m) \
+if (!gc_isconst(o)) { \
+    (o)->marked &= ~0x03; \
+    (o)->marked |= (m) & 0x03; \
+}
+
 #define gc_setwhite(o)      gc_setmark((o), GC_WHITE)
 #define gc_setgray(o)       gc_setmark((o), GC_GRAY)
 #define gc_setdark(o)       gc_setmark((o), GC_DARK)
-#define gc_isfixed(o)       (((o)->marked & 0x04) != 0)
-#define gc_setfixed(o)      ((o)->marked |= 0x04)
-#define gc_clearfixed(o)    ((o)->marked &= ~0x04)
+#define gc_isfixed(o)       (((o)->marked & GC_FIXED) != 0)
+#define gc_setfixed(o)      ((o)->marked |= GC_FIXED)
+#define gc_clearfixed(o)    ((o)->marked &= ~GC_FIXED)
+#define gc_isconst(o)       (((o)->marked & GC_CONST) != 0)
 
 #define be_isgctype(t)      (t >= BE_GCOBJECT)
 #define be_isgcobj(o)       be_isgctype(var_type(o))
 #define be_gcnew(v, t, s)   be_newgcobj((v), (t), sizeof(s))
 
 typedef enum {
-    GC_WHITE, /* unreachable object */
-    GC_GRAY,  /* unscanned object */
-    GC_DARK  /* scanned object */
+    GC_WHITE = 0x00, /* unreachable object */
+    GC_GRAY = 0x01,  /* unscanned object */
+    GC_DARK = 0x02,  /* scanned object */
+    GC_FIXED = 0x04,
+    GC_CONST = 0x08
 } bgcmark;
 
 void be_gc_init(bvm *vm);

@@ -1,4 +1,5 @@
 #include "be_string.h"
+#include "be_conststr.h"
 #include "be_vm.h"
 #include "be_mem.h"
 #include "be_gc.h"
@@ -13,6 +14,8 @@ struct bstringtable {
     int count; /* string count */
     int size;
 };
+
+extern const bconststrtab be_const_string_table;
 
 int be_eqstr(bstring *s1, bstring *s2)
 {
@@ -111,6 +114,19 @@ bstring* createstrobj(bvm *vm, size_t len, int islong)
     return s;
 }
 
+static bstring* find_conststr(const char *str, size_t len)
+{
+    const bconststrtab *tab = &be_const_string_table;
+    uint32_t hash = be_strhash(str, len);
+    bcstring *s = (bcstring*)tab->table[hash & (tab->size - 1)];
+    for (; s != NULL; s = next(s)) {
+        if (len == s->slen && !strncmp(str, s->s, len)) {
+            return (bstring*)s;
+        }
+    }
+    return NULL;
+}
+
 static bstring* newshortstr(bvm *vm, const char *str, size_t len)
 {
     bstring *s;
@@ -155,7 +171,8 @@ bstring* be_newstr(bvm *vm, const char *str)
 bstring* be_newstrn(bvm *vm, const char *str, size_t len)
 {
     if (len <= SHORT_STR_MAX_LEN) {
-        return newshortstr(vm, str, len);
+        bstring *s = find_conststr(str, len);
+        return s ? s : newshortstr(vm, str, len);
     }
     return newlongstr(vm, str, len); /* long string */
 }
@@ -186,4 +203,15 @@ void be_gcstrtab(bvm *vm)
     if (strtab->count < size >> 2 && size > 8) {
         resize(vm, size >> 1);
     }
+}
+
+const char* be_str2cstr(bstring *s)
+{
+    if (gc_isconst(s)) {
+        return cast(bcstring*, s)->s;
+    }
+    if (s->slen == 255) {
+        return cast(blstring*, s)->s;
+    }
+    return cast(bsstring*, s)->s;
 }
