@@ -711,10 +711,13 @@ int be_refcontains(bvm *vm, int index)
     binstance **top = be_stack_top(&vm->refstack);
     binstance *ins = var_toobj(v);
     be_assert(var_isinstance(v));
-    while (ref <= top && *ref != ins) {
-        ++ref;
+    if (ref) {
+        while (ref <= top && *ref != ins) {
+            ++ref;
+        }
+        return ref <= top;
     }
-    return ref <= top;
+    return 0;
 }
 
 void be_refpush(bvm *vm, int index)

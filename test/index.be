@@ -25,7 +25,6 @@ class mylist : list
                 l.append(self[i])
                 i = i + 1
             end
-            print(l)
             return l
         end
         return nil
