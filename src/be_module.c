@@ -35,7 +35,7 @@ static void insert_attrs(bvm *vm, bmap *table, bntvmodule *nm)
     size_t i;
     for (i = 0; i < nm->size; ++i) {
         bntvmodule_obj *node = nm->table + i;
-        bstring *name = be_newconststr(vm, node->name);
+        bstring *name = be_newstr(vm, node->name);
         bvalue *v = be_map_insertstr(table, name, NULL);
         be_assert(node->type <= BE_CMODULE);
         switch (node->type) {
@@ -55,7 +55,7 @@ static void insert_attrs(bvm *vm, bmap *table, bntvmodule *nm)
             var_setntvfunc(v, node->u.f);
             break;
         case BE_CSTRING:
-            var_setstr(v, be_newconststr(vm, node->u.s));
+            var_setstr(v, be_newstr(vm, node->u.s));
             break;
         case BE_CMODULE:
             load_module(vm, node->u.m, v);

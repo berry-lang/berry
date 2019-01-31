@@ -57,10 +57,6 @@
 #define BE_USE_TIME_MODULE              1
 #define BE_USE_OS_MODULE                1
 
-#define BE_USE_SOBJ_HEAP                1
-#define BE_SOBJ_HEAP_SIZE               1024
-#define BE_SOBJ_SIZE_MAX                128
-
 /* Macro: be_assert
  * Berry debug assertion. Only enabled when BE_DEBUG is active.
  * default: use the assert() function of the standard library.

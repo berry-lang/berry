@@ -141,7 +141,7 @@ static void precall(bvm *vm, bvalue *func, int nstack, int mode)
 static bbool obj2bool(bvm *vm, bvalue *obj)
 {
     bvalue *top = vm->top;
-    bstring *tobool = be_newconststr(vm, "tobool");
+    bstring *tobool = be_newstr(vm, "tobool");
     /* get operator method */
     if (be_instance_member(obj->v.p, tobool, top)) {
         top[1] = *obj; /* move self to argv[0] */
@@ -198,7 +198,7 @@ static void object_binop(bvm *vm,
 {
     bvalue *top = vm->top;
     /* get operator method */
-    obj_method(vm, a, be_newconststr(vm, op));
+    obj_method(vm, a, be_newstr(vm, op));
     top[1] = *a; /* move self to argv[0] */
     top[2] = *b; /* move other to argv[1] */
     be_incrtop(vm); /* prevent collection results */
@@ -211,7 +211,7 @@ static void object_unop(bvm *vm,
 {
     bvalue *top = vm->top;
     /* get operator method */
-    obj_method(vm, src, be_newconststr(vm, op));
+    obj_method(vm, src, be_newstr(vm, op));
     top[1] = *src; /* move self to argv[0] */
     be_dofunc(vm, top, 1); /* call method 'item' */
     *RA(ins) = *vm->top; /* copy result to dst */
@@ -378,7 +378,7 @@ static void i_range(bvm *vm, binstruction ins)
     bvalue *b = RKB(ins), *c = RKC(ins);
     bvalue *top = vm->top;
     /* get method 'item' */
-    int idx = be_globalvar_find(vm, be_newconststr(vm, "range"));
+    int idx = be_globalvar_find(vm, be_newstr(vm, "range"));
     top[0] = vm->global[idx];
     top[1] = *b; /* move lower to argv[0] */
     top[2] = *c; /* move upper to argv[1] */
@@ -562,7 +562,7 @@ static void i_getindex(bvm *vm, binstruction ins)
     if (var_isinstance(b)) {
         bvalue *top = vm->top;
         /* get method 'item' */
-        obj_method(vm, b, be_newconststr(vm, "item"));
+        obj_method(vm, b, be_newstr(vm, "item"));
         top[1] = *b; /* move object to argv[0] */
         top[2] = *c; /* move key to argv[1] */
         vm->top += 3;   /* prevent collection results */
@@ -582,7 +582,7 @@ static void i_setindex(bvm *vm, binstruction ins)
     if (var_isinstance(a)) {
         bvalue *top = vm->top;
         /* get method 'setitem' */
-        obj_method(vm, a, be_newconststr(vm, "setitem"));
+        obj_method(vm, a, be_newstr(vm, "setitem"));
         top[1] = *a; /* move object to argv[0] */
         top[2] = *b; /* move key to argv[1] */
         top[3] = *c; /* move src to argv[2] */

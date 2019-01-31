@@ -24,10 +24,15 @@
 
 #define array_count(a)   (sizeof(a) / sizeof((a)[0]))
 
-#define bcommon_header        \
-    struct bgcobject *next;   \
-    bbyte type;               \
+#define bcommon_header          \
+    struct bgcobject *next;     \
+    bbyte type;                 \
     bbyte marked
+
+#define bstring_header          \
+    bcommon_header;             \
+    bbyte extra;                \
+    bbyte slen
 
 typedef struct bgcobject {
     bcommon_header;
@@ -45,19 +50,7 @@ typedef struct bmap bmap;
 typedef uint32_t binstruction;
 
 typedef struct bstring {
-    bcommon_header;
-    bbyte extra;
-    bbyte slen; /* short string length */
-    const char *s;
-    /* implicit fields:
-    union {
-        char sstr[]; // short string data
-        struct {
-            int llen; // long string length
-            char ls[]; // long string data
-        } lstr;
-    } data;
-    */
+    bstring_header;
 } bstring;
 
 typedef struct bvector {

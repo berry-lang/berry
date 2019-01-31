@@ -369,7 +369,7 @@ static void destruct_object(bvm *vm, bgcobject *obj)
         vm->gc->pause = 0; /* disable gc during destruction to prevent recursion */
         be_stackcheck(vm, 2);
         type = be_instance_member(insobj,
-            be_newconststr(vm, "deinit"), top);
+            be_newstr(vm, "deinit"), top);
         if (basetype(type) == BE_FUNCTION) {
             var_setinstance(top + 1, insobj);
             vm->top += 2;

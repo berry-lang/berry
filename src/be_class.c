@@ -84,7 +84,7 @@ int be_class_newobj(bvm *vm, bclass *c, bvalue *argv, int argc)
 
     var_setinstance(argv, obj);
     /* find constructor */
-    obj = instance_member(obj, be_newconststr(vm, "init"), &init);
+    obj = instance_member(obj, be_newstr(vm, "init"), &init);
     if (obj && var_type(&init) != MT_VARIABLE) {
         /* user constructor */
         bvalue *reg = argv + 1;
