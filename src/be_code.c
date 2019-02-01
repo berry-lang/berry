@@ -127,10 +127,16 @@ static void dischargejpc(bfuncinfo *finfo)
     finfo->jpc = NO_JUMP;
 }
 
-static int appendjump(bfuncinfo *finfo, bopcode op, int reg)
+static int appendjump(bfuncinfo *finfo, bopcode op, bexpdesc *e)
 {
     int j, jpc = finfo->jpc;
+    int reg = e ? var2anyreg(finfo, e) : 0;
     finfo->jpc = NO_JUMP;
+    if (isK(reg)) {
+        reg = be_code_allocregs(finfo, 1);
+        code_move(finfo, reg, e->v.idx);
+        e->v.idx = reg;
+    }
     j = codeABx(finfo, op, reg, NO_JUMP + IsBx_MAX);
     be_code_conjump(finfo, &j, jpc);
     return j;
@@ -138,7 +144,7 @@ static int appendjump(bfuncinfo *finfo, bopcode op, int reg)
 
 int be_code_jump(bfuncinfo *finfo)
 {
-    return appendjump(finfo, OP_JMP, 0);
+    return appendjump(finfo, OP_JMP, NULL);
 }
 
 void be_code_jumpto(bfuncinfo *finfo, int dst)
@@ -148,8 +154,7 @@ void be_code_jumpto(bfuncinfo *finfo, int dst)
 
 void be_code_jumpbool(bfuncinfo *finfo, bexpdesc *e, int jture)
 {
-    int reg = var2anyreg(finfo, e); /* get result register */
-    int pc = appendjump(finfo, jumpboolop(e, jture), reg);
+    int pc = appendjump(finfo, jumpboolop(e, jture), e);
     be_code_conjump(finfo, jture ? &e->t : &e->f, pc);
     be_code_patchjump(finfo, jture ? e->f : e->t);
     free_expreg(finfo, e);
@@ -341,7 +346,8 @@ static int exp2reg(bfuncinfo *finfo, bexpdesc *e, int dst)
     if (hasjump(e)) {
         int pcf = NO_JUMP;  /* position of an eventual LOAD false */
         int pct = NO_JUMP;  /* position of an eventual LOAD true */
-        int jpt = appendjump(finfo, jumpboolop(e, 1), e->v.idx);
+        int jpt = appendjump(finfo, jumpboolop(e, 1), e);
+        reg = e->v.idx;
         be_code_conjump(finfo, &e->t, jpt);
         pcf = code_bool(finfo, reg, 0, 1);
         pct = code_bool(finfo, reg, 1, 0);
