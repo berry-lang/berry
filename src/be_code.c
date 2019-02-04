@@ -136,6 +136,7 @@ static int appendjump(bfuncinfo *finfo, bopcode op, bexpdesc *e)
         reg = be_code_allocregs(finfo, 1);
         code_move(finfo, reg, e->v.idx);
         e->v.idx = reg;
+        e->type = ETREG;
     }
     j = codeABx(finfo, op, reg, NO_JUMP + IsBx_MAX);
     be_code_conjump(finfo, &j, jpc);

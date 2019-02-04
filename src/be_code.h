@@ -1,5 +1,5 @@
-#ifndef __BE_CODE_H
-#define __BE_CODE_H
+#ifndef BE_CODE_H
+#define BE_CODE_H
 
 #include "be_parser.h"
 

@@ -1,5 +1,5 @@
-#ifndef __BE_MAP_H
-#define __BE_MAP_H
+#ifndef BE_MAP_H
+#define BE_MAP_H
 
 #include "be_object.h"
 

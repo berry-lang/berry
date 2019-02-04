@@ -1,5 +1,5 @@
-#ifndef __BE_VAR_H
-#define __BE_VAR_H
+#ifndef BE_VAR_H
+#define BE_VAR_H
 
 #include "be_object.h"
 

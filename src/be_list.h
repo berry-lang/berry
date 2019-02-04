@@ -1,5 +1,5 @@
-#ifndef __BE_LIST_H
-#define __BE_LIST_H
+#ifndef BE_LIST_H
+#define BE_LIST_H
 
 #include "be_object.h"
 

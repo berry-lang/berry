@@ -1,5 +1,5 @@
-#ifndef __BE_STRING_H
-#define __BE_STRING_H
+#ifndef BE_STRING_H
+#define BE_STRING_H
 
 #include "be_object.h"
 #include <string.h>
@@ -8,19 +8,26 @@
 
 typedef struct {
     bstring_header;
-    char s[];
+    /* char s[]; */
 } bsstring;
 
 typedef struct {
     bstring str;
     int llen;
-    char s[];
+    /* char s[]; */
 } blstring;
 
 typedef struct {
     bstring_header;
     const char *s;
 } bcstring;
+
+/* const string table */
+struct bconststrtab {
+    const bstring **table;
+    int count; /* string count */
+    int size;
+};
 
 #define str_len(_s) \
     ((_s)->slen == 255 ? cast(blstring*, _s)->llen : (_s)->slen)

@@ -1,5 +1,5 @@
-#ifndef __BE_EXEC_H
-#define __BE_EXEC_H
+#ifndef BE_EXEC_H
+#define BE_EXEC_H
 
 #include "be_object.h"
 

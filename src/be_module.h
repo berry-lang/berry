@@ -1,5 +1,5 @@
-#ifndef __BE_MODULE_H
-#define __BE_MODULE_H
+#ifndef BE_MODULE_H
+#define BE_MODULE_H
 
 #include "be_object.h"
 

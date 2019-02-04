@@ -1,5 +1,5 @@
-#ifndef __BE_CLASS_H
-#define __BE_CLASS_H
+#ifndef BE_CLASS_H
+#define BE_CLASS_H
 
 #include "be_object.h"
 

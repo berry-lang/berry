@@ -1,5 +1,5 @@
-#ifndef __BE_OBJECT_H
-#define __BE_OBJECT_H
+#ifndef BE_OBJECT_H
+#define BE_OBJECT_H
 
 #include "berry.h"
 

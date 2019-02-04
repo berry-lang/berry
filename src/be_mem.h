@@ -1,5 +1,5 @@
-#ifndef __BE_MEM_H
-#define __BE_MEM_H
+#ifndef BE_MEM_H
+#define BE_MEM_H
 
 #include <stddef.h>
 
