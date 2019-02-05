@@ -1077,6 +1077,36 @@ static void import_stmt(bparser *parser)
     be_code_import(parser->finfo, &m, &v);
 }
 
+static void var_field(bparser *parser)
+{
+    /* ID ['=' expr] */
+    bexpdesc e1, e2;
+    bstring *name;
+    name = next_token(parser).u.s;
+    match_token(parser, TokenId); /* match and skip ID */
+    if (next_token(parser).type == OptAssign) { /* '=' */
+        init_exp(&e2, ETVOID, 0);
+        scan_next_token(parser); /* skip '=' */
+        expr(parser, &e2);
+        check_var(parser, &e2);
+    } else {
+        init_exp(&e2, ETNIL, 0);
+    }
+    new_var(parser, name, &e1);
+    be_code_setvar(parser->finfo, &e1, &e2);
+}
+
+static void var_stmt(bparser *parser)
+{
+    /* 'var' ID ['=' expr] {',' ID ['=' expr]} */
+    scan_next_token(parser); /* skip 'var' */
+    var_field(parser);
+    while (next_token(parser).type == OptComma) {
+        scan_next_token(parser); /* skip ',' */
+        var_field(parser);
+    }
+}
+
 static void statement(bparser *parser)
 {
     switch (next_token(parser).type) {
@@ -1090,6 +1120,7 @@ static void statement(bparser *parser)
     case KeyClass: class_stmt(parser); break;
     case KeyReturn: return_stmt(parser); break;
     case KeyImport: import_stmt(parser); break;
+    case KeyVar: var_stmt(parser); break;
     case OptSemic: scan_next_token(parser); break; /* empty statement */
     default: expr_stmt(parser); break;
     }
