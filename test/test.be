@@ -15,9 +15,9 @@ class A : Base
         return self.test * a + b * self.b
     end
     def tostring()
-		l1 = "test: " + string(self.test) + "\n"
-		l2 = "super.b: " + string(super(self).b) + "\n"
-		l3 = "method: " + string(self.method)
+		l1 = "test: " + str(self.test) + "\n"
+		l2 = "super.b: " + str(super(self).b) + "\n"
+		l3 = "method: " + str(self.method)
 		return l1 + l2 + l3
     end
 	def +(other)
