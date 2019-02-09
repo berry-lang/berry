@@ -374,17 +374,17 @@ static void array_tostr(bvm *vm, int *indent, int idx, int fmt)
 
 static void json2str(bvm *vm, int *indent, int idx, int fmt)
 {
-    if (is_object(vm, "map", idx)) {
+    if (is_object(vm, "map", idx)) { /* convert to json object */
         object_tostr(vm, indent, idx, fmt);
-    } else if (is_object(vm, "list", idx)) {
+    } else if (is_object(vm, "list", idx)) { /* convert to json array */
         array_tostr(vm, indent, idx, fmt);
-    } else if (be_isnil(vm, idx)) {
+    } else if (be_isnil(vm, idx)) { /* convert to json null */
         be_pushstring(vm, "null");
-    } else if (be_isstring(vm, idx)) { /* add '"" to strings */
-        be_pushfstring(vm, "\"%s\"", be_tostring(vm, idx));
-    } else {
+    } else if (be_isnumber(vm, idx) || be_isbool(vm, idx)) { /* convert to json number and boolean */
         be_tostring(vm, idx);
         be_pushvalue(vm, idx); /* push to top */
+    } else { /* convert to string and add '"" to string */
+        be_pushfstring(vm, "\"%s\"", be_tostring(vm, idx));
     }
 }
 
