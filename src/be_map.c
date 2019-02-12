@@ -303,5 +303,5 @@ bvalue be_map_key2value(bmapnode *node)
 void be_map_release(bvm *vm, bmap *map)
 {
     (void)vm;
-    resize(map, map->count);
+    resize(map, map->count ? map->count : 1);
 }
