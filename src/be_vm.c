@@ -18,8 +18,8 @@
 
 #define NOT_METHOD      BE_NONE
 
-#define vm_error(vm, fmt, ...) \
-    be_debug_error(vm, BE_EXEC_ERROR, be_pushfstring(vm, fmt, __VA_ARGS__))
+#define vm_error(vm, ...) \
+    be_debug_error(vm, BE_EXEC_ERROR, be_pushfstring(vm, __VA_ARGS__))
 
 #define RA(i)   (vm->reg + IGET_RA(i))
 #define RKB(i)  ((isKB(i) ? curcl(vm)->proto->ktab \
@@ -329,9 +329,16 @@ static void i_div(bvm *vm, binstruction ins)
 {
     bvalue *dst = RA(ins), *a = RKB(ins), *b = RKC(ins);
     if (var_isint(a) && var_isint(b)) {
-        var_setint(dst, ibinop(/, a, b));
+        bint x = var_toint(a), y = var_toint(b);
+        if (y == 0) {
+            vm_error(vm, "division by zero");
+        }
+        var_setint(dst, x / y);
     } else if (var_isnumber(a) && var_isnumber(b)) {
         breal x = var2real(a), y = var2real(b);
+        if (y == cast(breal, 0)) {
+            vm_error(vm, "division by zero");
+        }
         var_setreal(dst, x / y);
     } else if (var_isinstance(a)) {
         object_binop(vm, "/", ins, a, b);
