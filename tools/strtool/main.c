@@ -145,17 +145,14 @@ static const char* name(const char *str)
     char *p;
     int ch;
     static char buf[1024];
-    strcpy(buf, "be_conststr_");
-    p = buf + sizeof("be_conststr_") - 1;
+    strcpy(buf, "be_const_str_");
+    p = buf + sizeof("be_const_str_") - 1;
     while ((ch = *str++) != '\0') {
         if (ch >= 0 && ch <= 9 || ch >= 'a' && ch <= 'z'
             || ch >= 'A' && ch <= 'Z' || ch == '_') {
             *p++ = (char)ch;
-        } else {
-            int hex = (ch >> 4) & 0x0F;
-            *p++ = (char)(hex <= 9 ? hex + '0' : hex - 10 + 'A');
-            hex = ch & 0x0F;
-            *p++ = (char)(hex <= 9 ? hex + '0' : hex - 10 + 'A');
+        } else if (ch == '.') {
+            p = strcpy(p, "dot_");
         }
     }
     *p = '\0';

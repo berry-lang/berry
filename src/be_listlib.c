@@ -251,6 +251,7 @@ static int m_iter(bvm *vm)
     be_return(vm);
 }
 
+#if !BE_USE_PRECOMPLIED_OBJECT
 void be_load_listlib(bvm *vm)
 {
     static const bnfuncinfo members[] = {
@@ -269,3 +270,41 @@ void be_load_listlib(bvm *vm)
     };
     be_regclass(vm, "list", members);
 }
+#else
+#include "be_constobj.h"
+
+static const bmapnode __map_slots[] = {
+    { be_const_key(be_const_str_resize, -1), be_const_func(m_resize) },
+    { be_const_key(be_const_str_insert, -1), be_const_func(m_insert) },
+    { be_const_key(be_const_str_init, -1), be_const_func(m_init) },
+    { be_const_key(be_const_str_tostring, -1), be_const_func(m_tostring) },
+    { be_const_key(be_const_str_iter, 5), be_const_func(m_iter) },
+    { be_const_key(be_const_str_size, -1), be_const_func(m_size) },
+    { be_const_key(be_const_str_dot_data, 0), be_const_int(0) },
+    { be_const_key(be_const_str_setitem, -1), be_const_func(m_setitem) },
+    { be_const_key(be_const_str_remove, -1), be_const_func(m_remove) },
+    { be_const_key(be_const_str_append, 2), be_const_func(m_append) },
+    { be_const_key(be_const_str_item, 1), be_const_func(m_item) },
+};
+
+static const bmap __class_map = {
+    be_const_header_map(),
+    .slots = (bmapnode *)__map_slots,
+    .lastfree = (bmapnode *)&__map_slots[10],
+    .size = 11,
+    .count = 11
+};
+
+static const bclass __cl_list = {
+    be_const_header_class(),
+    .nvar = 1,
+    .super = NULL,
+    .members = (bmap *)&__class_map,
+    .name = (bstring *)&be_const_str_list
+};
+
+void be_load_listlib(bvm *vm)
+{
+    be_const_regclass(vm, &__cl_list);
+}
+#endif

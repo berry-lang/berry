@@ -168,6 +168,7 @@ static int m_iter(bvm *vm)
     be_return(vm);
 }
 
+#if !BE_USE_PRECOMPLIED_OBJECT
 void be_load_maplib(bvm *vm)
 {
     static const bnfuncinfo members[] = {
@@ -184,3 +185,40 @@ void be_load_maplib(bvm *vm)
     };
     be_regclass(vm, "map", members);
 }
+#else
+#include "be_constobj.h"
+
+static const bmapnode __map_slots[] = {
+    { be_const_key(be_const_str_size, -1), be_const_func(m_size) },
+    { be_const_key(be_const_str_iter, -1), be_const_func(m_iter) },
+    { be_const_key(be_const_str_setitem, -1), be_const_func(m_setitem) },
+    { be_const_key(be_const_str_remove, -1), be_const_func(m_remove) },
+    { be_const_key(be_const_str_item, 1), be_const_func(m_item) },
+    { be_const_key(be_const_str_dot_data, 2), be_const_int(0) },
+    { be_const_key(be_const_str_init, -1), be_const_func(m_init) },
+    { be_const_key(be_const_str_tostring, -1), be_const_func(m_tostring) },
+    { be_const_key(be_const_str_insert, -1), be_const_func(m_insert) },
+};
+
+static const bmap __class_map = {
+    be_const_header_map(),
+    .slots = (bmapnode *)__map_slots,
+    .lastfree = (bmapnode *)&__map_slots[8],
+    .size = 9,
+    .count = 9
+};
+
+static const bclass __cl_map = {
+    be_const_header_class(),
+    .nvar = 1,
+    .super = NULL,
+    .members = (bmap *)&__class_map,
+    .name = (bstring *)&be_const_str_map
+};
+
+void be_load_maplib(bvm *vm)
+{
+    be_const_regclass(vm, &__cl_map);
+}
+
+#endif

@@ -1,8 +1,8 @@
 #include "be_cstrtab.h"
 #include "be_gc.h"
 
-const bcstring be_conststr_number = {
-    .next = (bgcobject *)&be_conststr_print,
+const bcstring be_const_str_number = {
+    .next = (bgcobject *)&be_const_str_print,
     .type = BE_STRING,
     .marked = GC_CONST,
     .extra = 0,
@@ -10,7 +10,7 @@ const bcstring be_conststr_number = {
     .s = "number"
 };
 
-const bcstring be_conststr_print = {
+const bcstring be_const_str_print = {
     .next = NULL,
     .type = BE_STRING,
     .marked = GC_CONST,
@@ -19,8 +19,8 @@ const bcstring be_conststr_print = {
     .s = "print"
 };
 
-const bcstring be_conststr_seek = {
-    .next = (bgcobject *)&be_conststr_resize,
+const bcstring be_const_str_seek = {
+    .next = (bgcobject *)&be_const_str_resize,
     .type = BE_STRING,
     .marked = GC_CONST,
     .extra = 0,
@@ -28,8 +28,8 @@ const bcstring be_conststr_seek = {
     .s = "seek"
 };
 
-const bcstring be_conststr_resize = {
-    .next = (bgcobject *)&be_conststr_append,
+const bcstring be_const_str_resize = {
+    .next = (bgcobject *)&be_const_str_append,
     .type = BE_STRING,
     .marked = GC_CONST,
     .extra = 0,
@@ -37,7 +37,7 @@ const bcstring be_conststr_resize = {
     .s = "resize"
 };
 
-const bcstring be_conststr_append = {
+const bcstring be_const_str_append = {
     .next = NULL,
     .type = BE_STRING,
     .marked = GC_CONST,
@@ -46,7 +46,7 @@ const bcstring be_conststr_append = {
     .s = "append"
 };
 
-const bcstring be_conststr_range = {
+const bcstring be_const_str_range = {
     .next = NULL,
     .type = BE_STRING,
     .marked = GC_CONST,
@@ -55,8 +55,8 @@ const bcstring be_conststr_range = {
     .s = "range"
 };
 
-const bcstring be_conststr_close = {
-    .next = (bgcobject *)&be_conststr_init,
+const bcstring be_const_str_close = {
+    .next = (bgcobject *)&be_const_str_init,
     .type = BE_STRING,
     .marked = GC_CONST,
     .extra = 0,
@@ -64,7 +64,7 @@ const bcstring be_conststr_close = {
     .s = "close"
 };
 
-const bcstring be_conststr_init = {
+const bcstring be_const_str_init = {
     .next = NULL,
     .type = BE_STRING,
     .marked = GC_CONST,
@@ -73,8 +73,8 @@ const bcstring be_conststr_init = {
     .s = "init"
 };
 
-const bcstring be_conststr_classname = {
-    .next = (bgcobject *)&be_conststr_super,
+const bcstring be_const_str_classname = {
+    .next = (bgcobject *)&be_const_str_super,
     .type = BE_STRING,
     .marked = GC_CONST,
     .extra = 0,
@@ -82,7 +82,7 @@ const bcstring be_conststr_classname = {
     .s = "classname"
 };
 
-const bcstring be_conststr_super = {
+const bcstring be_const_str_super = {
     .next = NULL,
     .type = BE_STRING,
     .marked = GC_CONST,
@@ -91,8 +91,8 @@ const bcstring be_conststr_super = {
     .s = "super"
 };
 
-const bcstring be_conststr_memcount = {
-    .next = (bgcobject *)&be_conststr_clock,
+const bcstring be_const_str_memcount = {
+    .next = (bgcobject *)&be_const_str_clock,
     .type = BE_STRING,
     .marked = GC_CONST,
     .extra = 0,
@@ -100,7 +100,7 @@ const bcstring be_conststr_memcount = {
     .s = "memcount"
 };
 
-const bcstring be_conststr_clock = {
+const bcstring be_const_str_clock = {
     .next = NULL,
     .type = BE_STRING,
     .marked = GC_CONST,
@@ -109,8 +109,8 @@ const bcstring be_conststr_clock = {
     .s = "clock"
 };
 
-const bcstring be_conststr_readline = {
-    .next = (bgcobject *)&be_conststr_iter,
+const bcstring be_const_str_readline = {
+    .next = (bgcobject *)&be_const_str_iter,
     .type = BE_STRING,
     .marked = GC_CONST,
     .extra = 0,
@@ -118,7 +118,7 @@ const bcstring be_conststr_readline = {
     .s = "readline"
 };
 
-const bcstring be_conststr_iter = {
+const bcstring be_const_str_iter = {
     .next = NULL,
     .type = BE_STRING,
     .marked = GC_CONST,
@@ -127,8 +127,8 @@ const bcstring be_conststr_iter = {
     .s = "iter"
 };
 
-const bcstring be_conststr_setrange = {
-    .next = (bgcobject *)&be_conststr_insert,
+const bcstring be_const_str_setrange = {
+    .next = (bgcobject *)&be_const_str_insert,
     .type = BE_STRING,
     .marked = GC_CONST,
     .extra = 0,
@@ -136,8 +136,8 @@ const bcstring be_conststr_setrange = {
     .s = "setrange"
 };
 
-const bcstring be_conststr_insert = {
-    .next = (bgcobject *)&be_conststr___next__,
+const bcstring be_const_str_insert = {
+    .next = (bgcobject *)&be_const_str___next__,
     .type = BE_STRING,
     .marked = GC_CONST,
     .extra = 0,
@@ -145,7 +145,7 @@ const bcstring be_conststr_insert = {
     .s = "insert"
 };
 
-const bcstring be_conststr___next__ = {
+const bcstring be_const_str___next__ = {
     .next = NULL,
     .type = BE_STRING,
     .marked = GC_CONST,
@@ -154,8 +154,8 @@ const bcstring be_conststr___next__ = {
     .s = "__next__"
 };
 
-const bcstring be_conststr_open = {
-    .next = (bgcobject *)&be_conststr_map,
+const bcstring be_const_str_open = {
+    .next = (bgcobject *)&be_const_str_map,
     .type = BE_STRING,
     .marked = GC_CONST,
     .extra = 0,
@@ -163,8 +163,8 @@ const bcstring be_conststr_open = {
     .s = "open"
 };
 
-const bcstring be_conststr_map = {
-    .next = (bgcobject *)&be_conststr_list,
+const bcstring be_const_str_map = {
+    .next = (bgcobject *)&be_const_str_list,
     .type = BE_STRING,
     .marked = GC_CONST,
     .extra = 0,
@@ -172,7 +172,7 @@ const bcstring be_conststr_map = {
     .s = "map"
 };
 
-const bcstring be_conststr_list = {
+const bcstring be_const_str_list = {
     .next = NULL,
     .type = BE_STRING,
     .marked = GC_CONST,
@@ -181,7 +181,7 @@ const bcstring be_conststr_list = {
     .s = "list"
 };
 
-const bcstring be_conststr_lower = {
+const bcstring be_const_str_lower = {
     .next = NULL,
     .type = BE_STRING,
     .marked = GC_CONST,
@@ -190,7 +190,7 @@ const bcstring be_conststr_lower = {
     .s = "lower"
 };
 
-const bcstring be_conststr___upper__ = {
+const bcstring be_const_str___upper__ = {
     .next = NULL,
     .type = BE_STRING,
     .marked = GC_CONST,
@@ -199,7 +199,7 @@ const bcstring be_conststr___upper__ = {
     .s = "__upper__"
 };
 
-const bcstring be_conststr_size = {
+const bcstring be_const_str_size = {
     .next = NULL,
     .type = BE_STRING,
     .marked = GC_CONST,
@@ -208,8 +208,8 @@ const bcstring be_conststr_size = {
     .s = "size"
 };
 
-const bcstring be_conststr_flush = {
-    .next = (bgcobject *)&be_conststr_tostring,
+const bcstring be_const_str_flush = {
+    .next = (bgcobject *)&be_const_str_tostring,
     .type = BE_STRING,
     .marked = GC_CONST,
     .extra = 0,
@@ -217,8 +217,8 @@ const bcstring be_conststr_flush = {
     .s = "flush"
 };
 
-const bcstring be_conststr_tostring = {
-    .next = (bgcobject *)&be_conststr_exit,
+const bcstring be_const_str_tostring = {
+    .next = (bgcobject *)&be_const_str_exit,
     .type = BE_STRING,
     .marked = GC_CONST,
     .extra = 0,
@@ -226,7 +226,7 @@ const bcstring be_conststr_tostring = {
     .s = "tostring"
 };
 
-const bcstring be_conststr_exit = {
+const bcstring be_const_str_exit = {
     .next = NULL,
     .type = BE_STRING,
     .marked = GC_CONST,
@@ -235,7 +235,7 @@ const bcstring be_conststr_exit = {
     .s = "exit"
 };
 
-const bcstring be_conststr___lower__ = {
+const bcstring be_const_str___lower__ = {
     .next = NULL,
     .type = BE_STRING,
     .marked = GC_CONST,
@@ -244,8 +244,8 @@ const bcstring be_conststr___lower__ = {
     .s = "__lower__"
 };
 
-const bcstring be_conststr_upper = {
-    .next = (bgcobject *)&be_conststr___iterator__,
+const bcstring be_const_str_upper = {
+    .next = (bgcobject *)&be_const_str___iterator__,
     .type = BE_STRING,
     .marked = GC_CONST,
     .extra = 0,
@@ -253,7 +253,7 @@ const bcstring be_conststr_upper = {
     .s = "upper"
 };
 
-const bcstring be_conststr___iterator__ = {
+const bcstring be_const_str___iterator__ = {
     .next = NULL,
     .type = BE_STRING,
     .marked = GC_CONST,
@@ -262,8 +262,8 @@ const bcstring be_conststr___iterator__ = {
     .s = "__iterator__"
 };
 
-const bcstring be_conststr_deinit = {
-    .next = (bgcobject *)&be_conststr_string,
+const bcstring be_const_str_deinit = {
+    .next = (bgcobject *)&be_const_str_string,
     .type = BE_STRING,
     .marked = GC_CONST,
     .extra = 0,
@@ -271,7 +271,7 @@ const bcstring be_conststr_deinit = {
     .s = "deinit"
 };
 
-const bcstring be_conststr_string = {
+const bcstring be_const_str_string = {
     .next = NULL,
     .type = BE_STRING,
     .marked = GC_CONST,
@@ -280,7 +280,7 @@ const bcstring be_conststr_string = {
     .s = "string"
 };
 
-const bcstring be_conststr_2Edata = {
+const bcstring be_const_str_dot_data = {
     .next = NULL,
     .type = BE_STRING,
     .marked = GC_CONST,
@@ -289,8 +289,8 @@ const bcstring be_conststr_2Edata = {
     .s = ".data"
 };
 
-const bcstring be_conststr_tell = {
-    .next = (bgcobject *)&be_conststr___hasnext__,
+const bcstring be_const_str_tell = {
+    .next = (bgcobject *)&be_const_str___hasnext__,
     .type = BE_STRING,
     .marked = GC_CONST,
     .extra = 0,
@@ -298,7 +298,7 @@ const bcstring be_conststr_tell = {
     .s = "tell"
 };
 
-const bcstring be_conststr___hasnext__ = {
+const bcstring be_const_str___hasnext__ = {
     .next = NULL,
     .type = BE_STRING,
     .marked = GC_CONST,
@@ -307,8 +307,8 @@ const bcstring be_conststr___hasnext__ = {
     .s = "__hasnext__"
 };
 
-const bcstring be_conststr_write = {
-    .next = (bgcobject *)&be_conststr_setitem,
+const bcstring be_const_str_write = {
+    .next = (bgcobject *)&be_const_str_setitem,
     .type = BE_STRING,
     .marked = GC_CONST,
     .extra = 0,
@@ -316,7 +316,7 @@ const bcstring be_conststr_write = {
     .s = "write"
 };
 
-const bcstring be_conststr_setitem = {
+const bcstring be_const_str_setitem = {
     .next = NULL,
     .type = BE_STRING,
     .marked = GC_CONST,
@@ -325,8 +325,8 @@ const bcstring be_conststr_setitem = {
     .s = "setitem"
 };
 
-const bcstring be_conststr_read = {
-    .next = (bgcobject *)&be_conststr_remove,
+const bcstring be_const_str_read = {
+    .next = (bgcobject *)&be_const_str_remove,
     .type = BE_STRING,
     .marked = GC_CONST,
     .extra = 0,
@@ -334,8 +334,8 @@ const bcstring be_conststr_read = {
     .s = "read"
 };
 
-const bcstring be_conststr_remove = {
-    .next = (bgcobject *)&be_conststr_length,
+const bcstring be_const_str_remove = {
+    .next = (bgcobject *)&be_const_str_length,
     .type = BE_STRING,
     .marked = GC_CONST,
     .extra = 0,
@@ -343,8 +343,8 @@ const bcstring be_conststr_remove = {
     .s = "remove"
 };
 
-const bcstring be_conststr_length = {
-    .next = (bgcobject *)&be_conststr_type,
+const bcstring be_const_str_length = {
+    .next = (bgcobject *)&be_const_str_type,
     .type = BE_STRING,
     .marked = GC_CONST,
     .extra = 0,
@@ -352,7 +352,7 @@ const bcstring be_conststr_length = {
     .s = "length"
 };
 
-const bcstring be_conststr_type = {
+const bcstring be_const_str_type = {
     .next = NULL,
     .type = BE_STRING,
     .marked = GC_CONST,
@@ -361,7 +361,7 @@ const bcstring be_conststr_type = {
     .s = "type"
 };
 
-const bcstring be_conststr_item = {
+const bcstring be_const_str_item = {
     .next = NULL,
     .type = BE_STRING,
     .marked = GC_CONST,
@@ -371,29 +371,29 @@ const bcstring be_conststr_item = {
 };
 
 static const bstring* m_string_table[] = {
-    (const bstring *)&be_conststr_number,
-    (const bstring *)&be_conststr_seek,
-    (const bstring *)&be_conststr_range,
-    (const bstring *)&be_conststr_close,
-    (const bstring *)&be_conststr_classname,
-    (const bstring *)&be_conststr_memcount,
+    (const bstring *)&be_const_str_number,
+    (const bstring *)&be_const_str_seek,
+    (const bstring *)&be_const_str_range,
+    (const bstring *)&be_const_str_close,
+    (const bstring *)&be_const_str_classname,
+    (const bstring *)&be_const_str_memcount,
     NULL,
-    (const bstring *)&be_conststr_readline,
-    (const bstring *)&be_conststr_setrange,
-    (const bstring *)&be_conststr_open,
-    (const bstring *)&be_conststr_lower,
-    (const bstring *)&be_conststr___upper__,
-    (const bstring *)&be_conststr_size,
-    (const bstring *)&be_conststr_flush,
-    (const bstring *)&be_conststr___lower__,
-    (const bstring *)&be_conststr_upper,
-    (const bstring *)&be_conststr_deinit,
-    (const bstring *)&be_conststr_2Edata,
-    (const bstring *)&be_conststr_tell,
+    (const bstring *)&be_const_str_readline,
+    (const bstring *)&be_const_str_setrange,
+    (const bstring *)&be_const_str_open,
+    (const bstring *)&be_const_str_lower,
+    (const bstring *)&be_const_str___upper__,
+    (const bstring *)&be_const_str_size,
+    (const bstring *)&be_const_str_flush,
+    (const bstring *)&be_const_str___lower__,
+    (const bstring *)&be_const_str_upper,
+    (const bstring *)&be_const_str_deinit,
+    (const bstring *)&be_const_str_dot_data,
+    (const bstring *)&be_const_str_tell,
     NULL,
-    (const bstring *)&be_conststr_write,
-    (const bstring *)&be_conststr_read,
-    (const bstring *)&be_conststr_item,
+    (const bstring *)&be_const_str_write,
+    (const bstring *)&be_const_str_read,
+    (const bstring *)&be_const_str_item,
     NULL
 };
 
