@@ -55,24 +55,29 @@
         binop_error(vm, #op, a, b); \
     }
 
-#define equal_block(op, opstr) \
+#define equal_block(op) \
     bvalue *dst = RA(ins), *a = RKB(ins), *b = RKC(ins); \
     if (var_isint(a) && var_isint(b)) { \
         var_setbool(dst, ibinop(op, a, b)); \
     } else if (var_isnumber(a) && var_isnumber(b)) { \
         breal x = var2real(a), y = var2real(b); \
         var_setbool(dst, x op y); \
-    } else if (var_isbool(a) || var_isbool(b)) { \
-        var_setbool(dst, var_tobool(a) op var_tobool(b)); \
-    } else if (var_isnil(a) || var_isnil(b)) { \
-        int res = var_type(a) op var_type(b); \
-        var_setbool(dst, res); \
-    } else if (var_isstr(a) && var_isstr(b)) { \
-        var_setbool(dst, opstr be_eqstr(a->v.s, b->v.s)); \
-    } else if (var_isinstance(a)) { \
-        object_binop(vm, #op, ins, a, b); \
-    } else { \
-        binop_error(vm, #op, a, b); \
+    } else if (var_type(a) == var_type(b)) { /* same types */ \
+        if (var_isnil(a)) { /* nil op nil */\
+            var_setbool(dst, 1 op 1); \
+        } else if (var_isbool(a)) { /* bool op bool */ \
+            var_setbool(dst, var_tobool(a) op var_tobool(b)); \
+        } else if (var_isstr(a)) { /* string op string */ \
+            var_setbool(dst, 1 op be_eqstr(a->v.s, b->v.s)); \
+        } else if (var_isclass(a) || var_isfunction(a)) { \
+            var_setbool(dst, var_toobj(a) op var_toobj(b)); \
+        } else if (var_isinstance(a)) { \
+            object_eqop(vm, #op, ins, a, b); \
+        } else { \
+            binop_error(vm, #op, a, b); \
+        } \
+    } else { /* different types */ \
+        var_setbool(dst, 1 op 0); \
     }
 
 /* script closure call */
@@ -193,6 +198,32 @@ static int obj_attribute(bvm *vm, bvalue *o, bstring *attr, bvalue *dst)
     return type;
 }
 
+static void object_eqop(bvm *vm,
+    const char *op, binstruction ins, bvalue *a, bvalue *b)
+{
+    binstance *obj = var_toobj(a);
+    /* get operator method */
+    int type = be_instance_member(obj, be_newstr(vm, op), vm->top);
+    if (basetype(type) == BE_FUNCTION) { /* call method */
+        bvalue *top = vm->top;
+        top[1] = *a; /* move self to argv[0] */
+        top[2] = *b; /* move other to argv[1] */
+        be_incrtop(vm); /* prevent collection results */
+        be_dofunc(vm, top, 2); /* call method 'item' */
+        be_stackpop(vm, 1);
+        *RA(ins) = *vm->top; /* copy result to dst */
+    } else { /* default implementation */
+        bbool opt = IGET_OP(ins) == OP_EQ; /* operator tyoe is '==' */
+        bbool eqv = var_toobj(a) == var_toobj(b); /* object address is equal */
+        /* if the operator is the '==', the expression is equivalent to:
+         *     RA(ins) = address(a) == address(b)
+         * else the operator is the '!=', the expression is equivalent to:
+         *     RA(ins) = address(a) != address(b)
+         **/
+        var_setbool(RA(ins),  opt == eqv);
+    }
+}
+
 static void object_binop(bvm *vm,
     const char *op, binstruction ins, bvalue *a, bvalue *b)
 {
@@ -206,6 +237,7 @@ static void object_binop(bvm *vm,
     be_stackpop(vm, 1);
     *RA(ins) = *vm->top; /* copy result to dst */
 }
+
 static void object_unop(bvm *vm,
     const char *op, binstruction ins, bvalue *src)
 {
@@ -375,10 +407,10 @@ static void i_neg(bvm *vm, binstruction ins)
 
 define_function(i_lt, relop_block(<))
 define_function(i_le, relop_block(<=))
-define_function(i_eq, equal_block(==, ))
-define_function(i_ne, equal_block(!=, !))
 define_function(i_gt, relop_block(>))
 define_function(i_ge, relop_block(>=))
+define_function(i_eq, equal_block(==))
+define_function(i_ne, equal_block(!=))
 
 static void i_range(bvm *vm, binstruction ins)
 {
