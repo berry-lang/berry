@@ -1,5 +1,5 @@
-#ifndef __BERRY_H
-#define __BERRY_H
+#ifndef BERRY_H
+#define BERRY_H
 
 #include <stddef.h>
 #include <stdint.h>

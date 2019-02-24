@@ -17,7 +17,7 @@ class_def = 'class' ID [':' ID] class_block 'end';
 class_block = {'var' ID | func_define};
 import_stmt = 'import' ID ['as' ID];
 (* variable define *)
-var_def = 'var' ID ['=' expr] {, ID ['=' expr]};
+var_def = 'var' ID ['=' expr] {',' ID ['=' expr]};
 (* expression define *)
 expr_stmt = assign_expr [';'];
 assign_expr = expr ['=' expr];

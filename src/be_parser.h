@@ -1,5 +1,5 @@
-#ifndef __BE_PARSER_H
-#define __BE_PARSER_H
+#ifndef BE_PARSER_H
+#define BE_PARSER_H
 
 #include "be_object.h"
 #include "be_string.h"

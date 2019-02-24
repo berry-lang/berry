@@ -119,7 +119,7 @@ static int l_next(bvm *vm)
     be_return_nil(vm);
 }
 
-static int l_string(bvm *vm)
+static int l_str(bvm *vm)
 {
     be_tostring(vm, 1);
     be_return(vm);
@@ -145,7 +145,7 @@ void be_load_baselib(bvm *vm)
     be_regcfunc(vm, "type", l_type);
     be_regcfunc(vm, "classname", l_classname);
     be_regcfunc(vm, "number", l_number);
-    be_regcfunc(vm, "string", l_string);
+    be_regcfunc(vm, "str", l_str);
     be_regcfunc(vm, "length", l_length);
     be_regcfunc(vm, "__iterator__", l_iterator);
     be_regcfunc(vm, "__hasnext__", l_hasnext);

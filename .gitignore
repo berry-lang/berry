@@ -36,7 +36,6 @@
 *.x86_64
 *.hex
 /berry
-tools/strtool/strtool
 
 # Debug files
 *.dSYM/

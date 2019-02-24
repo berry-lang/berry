@@ -1,5 +1,5 @@
-#ifndef __BE_GC_H
-#define __BE_GC_H
+#ifndef BE_GC_H
+#define BE_GC_H
 
 #include "be_object.h"
 

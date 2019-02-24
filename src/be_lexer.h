@@ -1,5 +1,5 @@
-#ifndef __BE_LEXER_H
-#define __BE_LEXER_H
+#ifndef BE_LEXER_H
+#define BE_LEXER_H
 
 #include "be_object.h"
 

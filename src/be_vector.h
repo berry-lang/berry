@@ -1,5 +1,5 @@
-#ifndef __BE_VECTOR_H
-#define __BE_VECTOR_H
+#ifndef BE_VECTOR_H
+#define BE_VECTOR_H
 
 #include "be_object.h"
 

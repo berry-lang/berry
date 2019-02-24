@@ -1,5 +1,5 @@
-#ifndef __BE_STRLIB_H
-#define __BE_STRLIB_H
+#ifndef BE_STRLIB_H
+#define BE_STRLIB_H
 
 #include "be_object.h"
 #include <stdarg.h>

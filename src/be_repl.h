@@ -1,5 +1,5 @@
-#ifndef __BE_REPL_H
-#define __BE_REPL_H
+#ifndef BE_REPL_H
+#define BE_REPL_H
 
 #include "berry.h"
 

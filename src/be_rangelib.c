@@ -104,6 +104,7 @@ static int m_iter(bvm *vm)
     be_return(vm);
 }
 
+#if !BE_USE_PRECOMPLIED_OBJECT
 void be_load_rangelib(bvm *vm)
 {
     static const bnfuncinfo members[] = {
@@ -119,3 +120,38 @@ void be_load_rangelib(bvm *vm)
     };
     be_regclass(vm, "range", members);
 }
+#else
+#include "be_constobj.h"
+
+static const bmapnode __map_slots[] = {
+    { be_const_key(be_const_str_setrange, -1), be_const_func(m_setrange) },
+    { be_const_key(be_const_str_iter, -1), be_const_func(m_iter) },
+    { be_const_key(be_const_str_lower, -1), be_const_func(m_lower) },
+    { be_const_key(be_const_str_init, 4), be_const_func(m_init) },
+    { be_const_key(be_const_str___upper__, -1), be_const_int(0) },
+    { be_const_key(be_const_str_tostring, -1), be_const_func(m_tostring) },
+    { be_const_key(be_const_str___lower__, -1), be_const_int(1) },
+    { be_const_key(be_const_str_upper, 1), be_const_func(m_upper) },
+};
+
+static const bmap __class_map = {
+    be_const_header_map(),
+    .slots = (bmapnode *)__map_slots,
+    .lastfree = (bmapnode *)&__map_slots[7],
+    .size = 8,
+    .count = 8
+};
+
+static const bclass __cl_range = {
+    be_const_header_class(),
+    .nvar = 2,
+    .super = NULL,
+    .members = (bmap *)&__class_map,
+    .name = (bstring *)&be_const_str_range
+};
+
+void be_load_rangelib(bvm *vm)
+{
+    be_const_regclass(vm, &__cl_range);
+}
+#endif

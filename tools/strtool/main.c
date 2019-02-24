@@ -1,11 +1,13 @@
-#include "be_conststr.h"
 #include "be_string.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-#define default_size 8
+#define count_of(a) (sizeof(a) / sizeof(a[0]))
+#define sstr(_s)    cast(char*, cast(bsstring*, _s) + 1)
 
-#define count_of(a)     (sizeof(a) / sizeof(a[0]))
+typedef struct bconststrtab bconststrtab;
+
+#define default_size 24
 
 static const char *const_strlist[] = {
     "iter",
@@ -62,7 +64,7 @@ static bstring* create_sstr(const char *str)
         s->marked = 0;
         s->extra = 0;
         s->slen = cast(bbyte, len);
-        strcpy(s->s, str);
+        strcpy(sstr(s), str);
     }
     return cast(bstring*, s);
 }
@@ -81,7 +83,7 @@ static uint32_t strhash(const char *str)
 static bstring* findstr(bstring *list, const char *str)
 {
     while (list) {
-        if (!strcmp(((bsstring *)list)->s, str)) {
+        if (!strcmp(sstr(list), str)) {
             printf("duplicate string: %s\n", str);
             return list;
         }
@@ -120,10 +122,22 @@ static bconststrtab* table_build(const char **list, size_t count)
 
 static void print_src_header(FILE *fp)
 {
-    fprintf(fp, "#include \"be_conststr.h\"\n"
-                "#include \"be_string.h\"\n"
+    fprintf(fp, "#include \"be_cstrtab.h\"\n"
                 "#include \"be_gc.h\"\n"
                 "\n");
+}
+
+static void print_inc_header(FILE *fp)
+{
+    fprintf(fp, "#ifndef BE_CSTRTAB_H\n"
+                "#define BE_CSTRTAB_H\n\n"
+                "#include \"be_string.h\"\n"
+                "\n");
+}
+
+static void print_inc_footer(FILE *fp)
+{
+    fprintf(fp, "#endif\n");
 }
 
 static const char* name(const char *str)
@@ -131,17 +145,14 @@ static const char* name(const char *str)
     char *p;
     int ch;
     static char buf[1024];
-    strcpy(buf, "be_conststr_");
-    p = buf + sizeof("be_conststr_") - 1;
+    strcpy(buf, "be_const_str_");
+    p = buf + sizeof("be_const_str_") - 1;
     while ((ch = *str++) != '\0') {
         if (ch >= 0 && ch <= 9 || ch >= 'a' && ch <= 'z'
-            || ch >= 'A' && ch <= 'Z') {
+            || ch >= 'A' && ch <= 'Z' || ch == '_') {
             *p++ = (char)ch;
-        } else {
-            int hex = (ch >> 4) & 0x0F;
-            *p++ = (char)(hex <= 9 ? hex + '0' : hex - 10 + 'A');
-            hex = ch & 0x0F;
-            *p++ = (char)(hex <= 9 ? hex + '0' : hex - 10 + 'A');
+        } else if (ch == '.') {
+            p = strcpy(p, "dot_");
         }
     }
     *p = '\0';
@@ -150,11 +161,11 @@ static const char* name(const char *str)
 
 static void print_string(FILE *fp, const bstring *str)
 {
-    const char *s = ((bsstring*)str)->s;
+    const char *s = sstr(str);
 
-    fprintf(fp, "static const bcstring %s = {\n", name(s));
+    fprintf(fp, "const bcstring %s = {\n", name(s));
     if (str->next) {
-        const char *next = ((bsstring*)str->next)->s;
+        const char *next = sstr(str->next);
         fprintf(fp, "    .next = (bgcobject *)&%s,\n", name(next));
     } else {
         fprintf(fp, "    .next = NULL,\n");
@@ -174,13 +185,13 @@ static void print_table(FILE *fp, bconststrtab *strtab)
         const bsstring *str = (const bsstring *)strtab->table[i];
         if (str) {
             fprintf(fp, "    (const bstring *)&%s%s\n",
-                        name(str->s), i < strtab->size - 1 ? "," : "");
+                        name(sstr(str)), i < strtab->size - 1 ? "," : "");
         } else {
             fprintf(fp, "    NULL%s\n", i < strtab->size - 1 ? "," : "");
         }
     }
     fprintf(fp, "};\n\n");
-    fprintf(fp, "const bconststrtab be_const_string_table = {\n");
+    fprintf(fp, "const struct bconststrtab be_const_string_table = {\n");
     fprintf(fp, "    .size = %d,\n", strtab->size);
     fprintf(fp, "    .count = %d,\n", strtab->count);
     fprintf(fp, "    .table = m_string_table\n");
@@ -205,8 +216,8 @@ static void print_strtab_extern(FILE *fp, bconststrtab *strtab)
     for (i = 0; i < strtab->size; ++i) {
         const bstring *str = strtab->table[i];
         while (str) {
-            const char *s = ((bsstring*)str)->s;
-            fprintf(fp, "static const bcstring %s;\n", name(s));
+            const char *s = sstr(str);
+            fprintf(fp, "extern const bcstring %s;\n", name(s));
             str = (void*)str->next;
         }
     }
@@ -215,10 +226,18 @@ static void print_strtab_extern(FILE *fp, bconststrtab *strtab)
 
 static void gen_src(bconststrtab *strtab)
 {
-    FILE *fp = fopen("../../src/be_cstrtab.c", "w");
+    FILE *fp = fopen("be_cstrtab.c", "w");
     print_src_header(fp);
-    print_strtab_extern(fp, strtab);
     print_strtab(fp, strtab);
+    fclose(fp);
+}
+
+static void gen_inc(bconststrtab *strtab)
+{
+    FILE *fp = fopen("be_cstrtab.h", "w");
+    print_inc_header(fp);
+    print_strtab_extern(fp, strtab);
+    print_inc_footer(fp);
     fclose(fp);
 }
 
@@ -227,5 +246,6 @@ int main(void)
     bconststrtab *strtab;
     strtab = table_build(const_strlist, count_of(const_strlist));
     gen_src(strtab);
+    gen_inc(strtab);
     return 0;
 }
