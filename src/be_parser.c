@@ -74,17 +74,21 @@ static void match_notoken(bparser *parser, btokentype type)
     }
 }
 
+static void check_symbol(bparser *parser, bexpdesc *e)
+{
+    if (e->type == ETVOID && e->v.s == NULL) {
+        push_error(parser,
+                "unexpected symbol near '%s'", token2str(parser)));
+    }
+}
+
 static void check_var(bparser *parser, bexpdesc *e)
 {
+    check_symbol(parser, e);
     if (e->type == ETVOID) {
         bstring *s = e->v.s;
-        if (s) {
-            push_error(parser,
-                "'%s' undeclared (first use in this function)", str(s)));
-        } else {
-            push_error(parser,
-                "unexpected symbol near '%s'", token2str(parser)));
-        }
+        push_error(parser,
+            "'%s' undeclared (first use in this function)", str(s)));
     }
 }
 
@@ -635,6 +639,7 @@ static void assign_expr(bparser *parser)
     bexpdesc e;
     init_exp(&e, ETVOID, 0);
     expr(parser, &e);
+    check_symbol(parser, &e);
     line = parser->lexer.linenumber;
     if (next_token(parser).type == OptAssign) { /* '=' */
         bexpdesc e1;
