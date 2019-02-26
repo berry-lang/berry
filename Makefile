@@ -11,10 +11,17 @@ ifneq ($(OS), Windows_NT) # not windows
     LIBS += -lreadline
 endif
 
+ifneq ($(V), 1)
+    Q=@
+    MSG=@echo
+else
+    MSG=@true
+endif
+
 SRCS	 = $(foreach dir, $(SRCPATH), $(wildcard $(dir)/*.c))
 OBJS	 = $(patsubst %.c, %.o, $(SRCS))
 DEPS	 = $(patsubst %.c, %.d, $(SRCS))
-CFLAGS	+= $(foreach dir, $(INCPATH), -I"$(dir)")
+INCFLAGS = $(foreach dir, $(INCPATH), -I"$(dir)")
 
 all: $(TARGET)
 
@@ -22,14 +29,14 @@ debug: CFLAGS += -O0 -g -DBE_DEBUG
 debug: $(TARGET)
 
 $(TARGET): $(OBJS)
-	@ echo [Linking...]
-	@ $(CC) $(OBJS) $(CFLAGS) $(LIBS) -o $@
-	@ echo done
+	$(MSG) [Linking...]
+	$(Q) $(CC) $(OBJS) $(CFLAGS) $(LIBS) -o $@
+	$(MSG) done
 
 $(OBJS): %.o: %.c
-	@ echo [Compile] $<
-	@ $(CC) -MM $(CFLAGS) -MT"$*.d" -MT"$(<:.c=.o)" $< > $*.d
-	@ $(CC) $(CFLAGS) -c $< -o $@
+	$(MSG) [Compile] $<
+	$(Q) $(CC) -MM $(CFLAGS) $(INCFLAGS) -MT"$*.d" -MT"$(<:.c=.o)" $< > $*.d
+	$(Q) $(CC) $(CFLAGS) $(INCFLAGS) -c $< -o $@
 
 sinclude $(DEPS)
 
@@ -40,6 +47,6 @@ uninstall:
 	rm /usr/local/bin/$(TARGET)
 
 clean:
-	@ echo [Clean...]
-	@ $(RM) $(OBJS) $(DEPS)
-	@ echo done
+	$(MSG) [Clean...]
+	$(Q) $(RM) $(OBJS) $(DEPS)
+	$(MSG) done
