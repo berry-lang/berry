@@ -659,7 +659,7 @@ static void i_import(bvm *vm, binstruction ins)
     if (var_isstr(b)) {
         bmodule *m = be_module_load(vm, var_tostr(b), dst);
         if (m == NULL) {
-            vm_error(vm, "module '%s' does not found",
+            vm_error(vm, "module '%s' not found",
                 str(var_tostr(b)));
         }
     } else {
