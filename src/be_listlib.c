@@ -251,7 +251,7 @@ static int m_iter(bvm *vm)
     be_return(vm);
 }
 
-#if !BE_USE_PRECOMPLIED_OBJECT
+#if !BE_USE_PRECOMPILED_OBJECT
 void be_load_listlib(bvm *vm)
 {
     static const bnfuncinfo members[] = {

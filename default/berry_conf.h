@@ -21,12 +21,12 @@
  **/
 #define BE_SINGLE_FLOAT                 0
 
-/* Macro: BE_USE_PRECOMPLIED_OBJECT
+/* Macro: BE_USE_PRECOMPILED_OBJECT
  * Use precompiled objects to avoid creating these objects at
  * runtime. Enable this macro can greatly optimize RAM usage.
  * default: 1
  **/
-#define BE_USE_PRECOMPLIED_OBJECT       1
+#define BE_USE_PRECOMPILED_OBJECT       1
 
 /* Macro: BE_RUNTIME_DEBUG_INFO
  * Set runtime error debugging information.
