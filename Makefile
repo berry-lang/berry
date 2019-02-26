@@ -21,7 +21,7 @@ endif
 SRCS	 = $(foreach dir, $(SRCPATH), $(wildcard $(dir)/*.c))
 OBJS	 = $(patsubst %.c, %.o, $(SRCS))
 DEPS	 = $(patsubst %.c, %.d, $(SRCS))
-CFLAGS	+= $(foreach dir, $(INCPATH), -I"$(dir)")
+INCFLAGS = $(foreach dir, $(INCPATH), -I"$(dir)")
 
 all: $(TARGET)
 
@@ -35,8 +35,8 @@ $(TARGET): $(OBJS)
 
 $(OBJS): %.o: %.c
 	$(MSG) [Compile] $<
-	$(Q) $(CC) -MM $(CFLAGS) -MT"$*.d" -MT"$(<:.c=.o)" $< > $*.d
-	$(Q) $(CC) $(CFLAGS) -c $< -o $@
+	$(Q) $(CC) -MM $(CFLAGS) $(INCFLAGS) -MT"$*.d" -MT"$(<:.c=.o)" $< > $*.d
+	$(Q) $(CC) $(CFLAGS) $(INCFLAGS) -c $< -o $@
 
 sinclude $(DEPS)
 
