@@ -153,6 +153,7 @@ static const char* name(const char *str)
             *p++ = (char)ch;
         } else if (ch == '.') {
             p = strcpy(p, "dot_");
+            p += 4;
         }
     }
     *p = '\0';

@@ -118,7 +118,7 @@ static bstring* find_conststr(const char *str, size_t len)
 {
     const struct bconststrtab *tab = &be_const_string_table;
     uint32_t hash = be_strhash(str, len);
-    bcstring *s = (bcstring*)tab->table[hash & (tab->size - 1)];
+    bcstring *s = (bcstring*)tab->table[hash % tab->size];
     for (; s != NULL; s = next(s)) {
         if (len == s->slen && !strncmp(str, s->s, len)) {
             return (bstring*)s;
