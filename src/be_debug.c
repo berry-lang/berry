@@ -100,18 +100,18 @@ void be_dprintcode(bclosure *cl)
 static const char* sourceinfo(bvm *vm, char *buf, int deepth)
 {
 #if BE_RUNTIME_DEBUG_INFO
-	int size = be_stack_count(&vm->callstack);
-	bcallframe *cf = be_vector_at(&vm->callstack, size + deepth);
+    int size = be_stack_count(&vm->callstack);
+    bcallframe *cf = be_vector_at(&vm->callstack, size + deepth);
     bproto *proto = cast(bclosure*, var_toobj(cf->func))->proto;
     blineinfo *start = proto->lineinfo;
     blineinfo *it = start + proto->nlineinfo - 1;
-	int pc;
-	if (deepth == -1) {
-		pc = cast_int(vm->ip - proto->code);
-	} else {
-		cf = be_vector_at(&vm->callstack, size + deepth + 1);
-		pc = cast_int(cf->ip - proto->code);
-	}
+    int pc;
+    if (deepth == -1) {
+        pc = cast_int(vm->ip - proto->code);
+    } else {
+        cf = be_vector_at(&vm->callstack, size + deepth + 1);
+        pc = cast_int(cf->ip - proto->code);
+    }
     while (it > start && it->endpc > pc) {
         --it;
     }
@@ -138,17 +138,29 @@ void be_debug_ins_info(bvm *vm)
     print_inst(*vm->ip, pc);
 }
 
+static void patch_native(bvm *vm, int deepth)
+{
+    int size = be_stack_count(&vm->callstack);
+    bcallframe *cf = be_vector_at(&vm->callstack, size + deepth);
+    if (deepth == -1) {
+        cf->ip = vm->ip;
+    } else {
+        cf->ip = cf[1].ip;
+    }
+}
+
 static void tracestack(bvm *vm)
 {
     int deepth, size = be_stack_count(&vm->callstack);
     for (deepth = 1; deepth <= size; ++deepth) {
-		bcallframe *cf = be_vector_at(&vm->callstack, size - deepth);
+        bcallframe *cf = be_vector_at(&vm->callstack, size - deepth);
         if (var_isclosure(cf->func)) {
             char buf[100];
             bclosure *cl = var_toobj(cf->func);
             be_pushfstring(vm, "\t%s in function `%s`\n",
                 sourceinfo(vm, buf, -deepth), str(cl->proto->name));
         } else {
+            patch_native(vm, -deepth);
             be_pushstring(vm, "\t<native>: in native function\n");
         }
         be_strconcat(vm, -2);
@@ -167,6 +179,7 @@ static void addinfo(bvm *vm, const char *msg)
         be_pushfstring(vm, "%s error: %s\nstack traceback:\n",
             sourceinfo(vm, buf, -1), msg);
     } else {
+        patch_native(vm, -1);
         be_pushfstring(vm, "native error: %s\n", msg);
     }
     tracestack(vm);
