@@ -183,7 +183,7 @@ static const char* parser_field(bvm *vm, const char *json)
             if (json) {
                 json = parser_value(vm, json);
                 if (json) {
-                    be_insert(vm, -3);
+                    be_data_insert(vm, -3);
                     be_pop(vm, 2); /* pop key and value */
                     return json;
                 }
@@ -232,7 +232,7 @@ static const char* parser_array(bvm *vm, const char *json)
             be_pop(vm, 1); /* pop map */
             return NULL;
         }
-        be_append(vm, -2);
+        be_data_append(vm, -2);
         be_pop(vm, 1); /* pop value */
         while ((s = match_char(json, ',')) != NULL) {
             json = parser_value(vm, s);
@@ -240,7 +240,7 @@ static const char* parser_array(bvm *vm, const char *json)
                 be_pop(vm, 1); /* pop map */
                 return NULL;
             }
-            be_append(vm, -2);
+            be_data_append(vm, -2);
             be_pop(vm, 1); /* pop value */
         }
     }
@@ -308,9 +308,9 @@ static void object_tostr(bvm *vm, int *indent, int idx, int fmt)
     be_pushstring(vm, fmt ? "{\n" : "{");
     be_pushiter(vm, -2); /* map iterator use 1 register */
     *indent += fmt;
-    while (be_hasnext(vm, -3)) {
+    while (be_iter_hasnext(vm, -3)) {
         make_indent(vm, -2, fmt ? *indent : 0);
-        be_next(vm, -3);
+        be_iter_next(vm, -3);
         /* key.tostring() */
         be_pushfstring(vm, "\"%s\"", be_tostring(vm, -2));
         be_strconcat(vm, -5);
@@ -322,7 +322,7 @@ static void object_tostr(bvm *vm, int *indent, int idx, int fmt)
         json2str(vm, indent, -1, fmt);
         be_strconcat(vm, -5);
         be_pop(vm, 3);
-        if (be_hasnext(vm, -3)) {
+        if (be_iter_hasnext(vm, -3)) {
             be_pushstring(vm, fmt ? ",\n" : ",");
             be_strconcat(vm, -3);
             be_pop(vm, 1);
@@ -347,13 +347,13 @@ static void array_tostr(bvm *vm, int *indent, int idx, int fmt)
     be_pushstring(vm, fmt ? "[\n" : "[");
     be_pushiter(vm, -2);
     *indent += fmt;
-    while (be_hasnext(vm, -3)) {
+    while (be_iter_hasnext(vm, -3)) {
         make_indent(vm, -2,  fmt ? *indent : 0);
-        be_next(vm, -3);
+        be_iter_next(vm, -3);
         json2str(vm, indent, -1, fmt);
         be_strconcat(vm, -4);
         be_pop(vm, 2);
-        if (be_hasnext(vm, -3)) {
+        if (be_iter_hasnext(vm, -3)) {
             be_pushstring(vm, fmt ? ",\n" : ",");
             be_strconcat(vm, -3);
             be_pop(vm, 1);

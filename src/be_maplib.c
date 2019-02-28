@@ -45,7 +45,7 @@ static void push_value(bvm *vm)
     }
     be_strconcat(vm, -5);
     be_pop(vm, 3);
-    if (be_hasnext(vm, -3)) {
+    if (be_iter_hasnext(vm, -3)) {
         be_pushstring(vm, ", ");
         be_strconcat(vm, -3);
         be_pop(vm, 1);
@@ -60,8 +60,8 @@ static int m_tostring(bvm *vm)
     be_refpush(vm, 1);
     be_pushstring(vm, "{");
     be_pushiter(vm, -2); /* map iterator use 1 register */
-    while (be_hasnext(vm, -3)) {
-        be_next(vm, -3);
+    while (be_iter_hasnext(vm, -3)) {
+        be_iter_next(vm, -3);
         push_key(vm); /* key.tostring() */
         be_pushstring(vm, ": "); /* add ': ' */
         be_strconcat(vm, -5);
@@ -82,7 +82,7 @@ static int m_insert(bvm *vm)
     map_check_data(vm, 3);
     be_pushvalue(vm, 2);
     be_pushvalue(vm, 3);
-    be_insert(vm, -3);
+    be_data_insert(vm, -3);
     be_return_nil(vm);
 }
 
@@ -91,7 +91,7 @@ static int m_remove(bvm *vm)
     be_getmember(vm, 1, ".data");
     map_check_data(vm, 2);
     be_pushvalue(vm, 2);
-    be_remove(vm, -2);
+    be_data_remove(vm, -2);
     be_return_nil(vm);
 }
 
@@ -118,7 +118,7 @@ static int m_size(bvm *vm)
 {
     be_getmember(vm, 1, ".data");
     map_check_data(vm, 1);
-    be_pushint(vm, be_size(vm, -1));
+    be_pushint(vm, be_data_size(vm, -1));
     be_return(vm);
 }
 
@@ -138,7 +138,7 @@ static int i_hashnext(bvm *vm)
     be_getmember(vm, 1, ".obj");
     be_getmember(vm, -1, ".data");
     be_getmember(vm, 1, ".iter");
-    be_pushbool(vm, be_hasnext(vm, -2));
+    be_pushbool(vm, be_iter_hasnext(vm, -2));
     be_return(vm);
 }
 
@@ -147,7 +147,7 @@ static int i_next(bvm *vm)
     be_getmember(vm, 1, ".obj");
     be_getmember(vm, -1, ".data");
     be_getmember(vm, 1, ".iter");
-    be_next(vm, -2); /* map next key and value */
+    be_iter_next(vm, -2); /* map next key and value */
     be_pushvalue(vm, -3); /* push .iter to top */
     be_setmember(vm, 1, ".iter");
     be_pop(vm, 1);

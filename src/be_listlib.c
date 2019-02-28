@@ -22,7 +22,7 @@ static int m_init(bvm *vm)
         be_setmember(vm, 1, ".data");
         for (i = 2; i <= argc; ++i) {
             be_pushvalue(vm, i);
-            be_append(vm, -2);
+            be_data_append(vm, -2);
             be_pop(vm, 1);
         }
     }
@@ -33,7 +33,7 @@ static void push_element(bvm *vm)
 {
     if (be_isstring(vm, -1)) { /* Add '"' to strings */
         be_pushfstring(vm, "'%s'", be_tostring(vm, -1));
-		be_removeone(vm, -2);
+		be_remove(vm, -2);
     } else {
         be_tostring(vm, -1);
     }
@@ -49,10 +49,10 @@ static int m_tostring(bvm *vm)
     be_refpush(vm, 1);
     be_pushstring(vm, "[");
     be_pushiter(vm, -2);
-    while (be_hasnext(vm, -3)) {
-        be_next(vm, -3);
+    while (be_iter_hasnext(vm, -3)) {
+        be_iter_next(vm, -3);
         push_element(vm);
-        if (be_hasnext(vm, -3)) {
+        if (be_iter_hasnext(vm, -3)) {
             be_pushstring(vm, ", ");
             be_strconcat(vm, -3);
             be_pop(vm, 1);
@@ -71,7 +71,7 @@ static int m_append(bvm *vm)
     be_getmember(vm, 1, ".data");
     list_check_data(vm, 2);
     be_pushvalue(vm, 2);
-    be_append(vm, -2);
+    be_data_append(vm, -2);
     be_return_nil(vm);
 }
 
@@ -81,7 +81,7 @@ static int m_insert(bvm *vm)
     list_check_data(vm, 3);
     be_pushvalue(vm, 2);
     be_pushvalue(vm, 3);
-    be_insert(vm, -3);
+    be_data_insert(vm, -3);
     be_return_nil(vm);
 }
 
@@ -90,14 +90,14 @@ static int m_remove(bvm *vm)
     be_getmember(vm, 1, ".data");
     list_check_data(vm, 2);
     be_pushvalue(vm, 2);
-    be_remove(vm, -2);
+    be_data_remove(vm, -2);
     be_return_nil(vm);
 }
 
 static int item_range(bvm *vm)
 {
     int lower, upper;
-    int size = be_size(vm, -1); /* get source list size */
+    int size = be_data_size(vm, -1); /* get source list size */
     /* get index range */
     be_getmember(vm, 2, "__lower__");
     lower = be_toint(vm, -1);
@@ -117,7 +117,7 @@ static int item_range(bvm *vm)
     for (; lower <= upper; ++lower) {
         be_pushint(vm, lower);
         be_getindex(vm, -2);
-        be_append(vm, -4);
+        be_data_append(vm, -4);
         be_pop(vm, 2);
     }
     be_pop(vm, 2);
@@ -128,8 +128,8 @@ static int item_list(bvm *vm)
 {
     int i, srcsize, idxsize;
     be_getmember(vm, 2, ".data"); /* get index list */
-    srcsize = be_size(vm, -2); /* get source list size */
-    idxsize = be_size(vm, -1); /* get index list size */
+    srcsize = be_data_size(vm, -2); /* get source list size */
+    idxsize = be_data_size(vm, -1); /* get index list size */
     /* construction result list instance */
     be_getglobal(vm, "list");
     be_call(vm, 0);
@@ -149,7 +149,7 @@ static int item_list(bvm *vm)
         } else {
             be_pushnil(vm);
         }
-        be_append(vm, -5);
+        be_data_append(vm, -5);
         be_pop(vm, 3);
     }
     be_pop(vm, 2);
@@ -191,7 +191,7 @@ static int m_size(bvm *vm)
 {
     be_getmember(vm, 1, ".data");
     list_check_data(vm, 1);
-    be_pushint(vm, be_size(vm, -1));
+    be_pushint(vm, be_data_size(vm, -1));
     be_return(vm);
 }
 
@@ -200,7 +200,7 @@ static int m_resize(bvm *vm)
     be_getmember(vm, 1, ".data");
     list_check_data(vm, 2);
     be_pushvalue(vm, 2);
-    be_resize(vm, -2);
+    be_data_resize(vm, -2);
     be_return_nil(vm);
 }
 
@@ -220,7 +220,7 @@ static int i_hashnext(bvm *vm)
     be_getmember(vm, 1, ".obj");
     be_getmember(vm, -1, ".data");
     be_getmember(vm, 1, ".iter");
-    be_pushbool(vm, be_hasnext(vm, -2));
+    be_pushbool(vm, be_iter_hasnext(vm, -2));
     be_return(vm);
 }
 
@@ -229,7 +229,7 @@ static int i_next(bvm *vm)
     be_getmember(vm, 1, ".obj");
     be_getmember(vm, -1, ".data");
     be_getmember(vm, 1, ".iter");
-    be_next(vm, -2); /* list next value */
+    be_iter_next(vm, -2); /* list next value */
     be_pushvalue(vm, -2); /* push .iter to top */
     be_setmember(vm, 1, ".iter");
     be_pop(vm, 1);

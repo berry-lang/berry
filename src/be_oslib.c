@@ -73,7 +73,7 @@ static int m_listdir(bvm *vm)
             const char *fn = ep->d_name;
             if (strcmp(fn, ".") && strcmp(fn, "..")) {
                 be_pushstring(vm, fn);
-                be_append(vm, -2);
+                be_data_append(vm, -2);
                 be_pop(vm, 1);
             }
         }

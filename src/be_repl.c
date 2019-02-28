@@ -8,7 +8,7 @@ static int try_return(bvm *vm, const char *line)
     be_pushfstring(vm, "return (%s)", line);
     line = be_tostring(vm, -1);
     res = be_loadbuffer(vm, "stdin", line, strlen(line)); /* compile line */
-    be_removeone(vm, -2); /* remove source string */
+    be_remove(vm, -2); /* remove source string */
     return res;
 }
 
@@ -33,7 +33,7 @@ static int compile(bvm *vm, const char *line, breadline getl)
             /* compile source line */
             res = be_loadbuffer(vm, "stdin", src, strlen(src));
             if (!res || !is_multline(vm)) {
-                be_removeone(vm, -2);
+                be_remove(vm, -2);
                 return res;
             }
             be_pop(vm, 1); /* pop error message */

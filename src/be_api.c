@@ -234,10 +234,10 @@ void be_pushbool(bvm *vm, int b)
     var_setbool(reg, b != 0);
 }
 
-void be_pushint(bvm *vm, bint i)
+void be_pushint(bvm *vm, int i)
 {
     bvalue *reg = be_incrtop(vm);
-    var_setint(reg, i);
+    var_setint(reg, cast(bint, i));
 }
 
 void be_pushreal(bvm *vm, breal r)
@@ -309,7 +309,7 @@ void be_pushcomptr(bvm *vm, void *ptr)
     var_setobj(top, BE_COMPTR, ptr);
 }
 
-void be_removeone(bvm *vm, int index)
+void be_remove(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     bvalue *top = --vm->top;
@@ -513,7 +513,7 @@ void be_setupval(bvm *vm, int index, int pos)
     }
 }
 
-int be_size(bvm *vm, int index)
+int be_data_size(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     if (var_islist(v)) {
@@ -526,7 +526,7 @@ int be_size(bvm *vm, int index)
     return -1;
 }
 
-void be_append(bvm *vm, int index)
+void be_data_append(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     bvalue *v = index2value(vm, -1);
@@ -536,7 +536,7 @@ void be_append(bvm *vm, int index)
     }
 }
 
-int be_insert(bvm *vm, int index)
+int be_data_insert(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     bvalue *k = index2value(vm, -2);
@@ -560,7 +560,7 @@ int be_insert(bvm *vm, int index)
     return bfalse;
 }
 
-int be_remove(bvm *vm, int index)
+int be_data_remove(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     bvalue *k = index2value(vm, -1);
@@ -583,7 +583,7 @@ int be_remove(bvm *vm, int index)
     return bfalse;
 }
 
-void be_resize(bvm *vm, int index)
+void be_data_resize(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     bvalue *v = index2value(vm, -1);
@@ -656,7 +656,7 @@ static int map_hasnext(bvm *vm, bvalue *v)
     return be_map_next(var_toobj(v), &iter) != NULL;
 }
 
-int be_next(bvm *vm, int index)
+int be_iter_next(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     if (var_islist(o)) {
@@ -667,7 +667,7 @@ int be_next(bvm *vm, int index)
     return 0;
 }
 
-int be_hasnext(bvm *vm, int index)
+int be_iter_hasnext(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     if (var_islist(o)) {

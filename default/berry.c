@@ -137,7 +137,7 @@ int check_args(bvm *vm)
             default: break;
             }
         }
-        be_removeone(vm, 1);
+        be_remove(vm, 1);
     }
     args |= arg_i;
     return args;
