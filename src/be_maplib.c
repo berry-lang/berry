@@ -2,8 +2,10 @@
 
 #define map_check_data(vm, argc)                        \
     if (!be_ismap(vm, -1) || be_top(vm) - 1 < argc) {   \
-        be_return_nil(vm);                               \
-    }                                                   \
+        be_return_nil(vm);                              \
+    }
+
+#define map_check_ref(vm)                               \
     if (be_refcontains(vm, 1)) {                        \
         be_pushstring(vm, "{...}");                     \
         be_return(vm);                                  \
@@ -54,6 +56,7 @@ static int m_tostring(bvm *vm)
 {
     be_getmember(vm, 1, ".data");
     map_check_data(vm, 1);
+    map_check_ref(vm);
     be_refpush(vm, 1);
     be_pushstring(vm, "{");
     be_pushiter(vm, -2); /* map iterator use 1 register */
@@ -115,7 +118,7 @@ static int m_size(bvm *vm)
 {
     be_getmember(vm, 1, ".data");
     map_check_data(vm, 1);
-    be_getsize(vm, -1);
+    be_pushint(vm, be_size(vm, -1));
     be_return(vm);
 }
 

@@ -171,9 +171,7 @@ void be_pushntvclosure(bvm *vm, bntvfunc f, int nupvals);
 void be_pushntvfunction(bvm *vm, bntvfunc f);
 void be_pushclass(bvm *vm, const char *name, const bnfuncinfo *lib);
 void be_pushcomptr(bvm *vm, void *ptr);
-void be_removeone(bvm *vm, int index);
-void be_strconcat(bvm *vm, int index);
-void be_getsuper(bvm *vm, int index);
+int be_pushiter(bvm *vm, int index);
 
 void be_newlist(bvm *vm);
 void be_newmap(bvm *vm);
@@ -184,22 +182,22 @@ void be_getindex(bvm *vm, int index);
 void be_setindex(bvm *vm, int index);
 void be_getupval(bvm *vm, int index, int pos);
 void be_setupval(bvm *vm, int index, int pos);
-void be_getfunction(bvm *vm);
-void be_getsize(bvm *vm, int index);
+void be_getsuper(bvm *vm, int index);
 int be_size(bvm *vm, int index);
 void be_append(bvm *vm, int index);
 int be_insert(bvm *vm, int index);
 int be_remove(bvm *vm, int index);
 void be_resize(bvm *vm, int index);
-int be_pushiter(bvm *vm, int index);
+void be_removeone(bvm *vm, int index);
+void be_strconcat(bvm *vm, int index);
 int be_next(bvm *vm, int index);
 int be_hasnext(bvm *vm, int index);
 int be_refcontains(bvm *vm, int index);
 void be_refpush(bvm *vm, int index);
 void be_refpop(bvm *vm);
+
 int be_returnvalue(bvm *vm);
 int be_returnnilvalue(bvm *vm);
-
 void be_call(bvm *vm, int argc);
 int be_pcall(bvm *vm, int argc);
 void be_abort(void);

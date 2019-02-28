@@ -1,10 +1,11 @@
 #include "be_object.h"
-#include <string.h>
 
 #define list_check_data(vm, argc)                       \
     if (!be_islist(vm, -1) || be_top(vm) - 1 < argc) {  \
-        be_return_nil(vm);                               \
-    }                                                   \
+        be_return_nil(vm);                              \
+    }
+
+#define list_check_ref(vm)                              \
     if (be_refcontains(vm, 1)) {                        \
         be_pushstring(vm, "[...]");                     \
         be_return(vm);                                  \
@@ -44,6 +45,7 @@ static int m_tostring(bvm *vm)
 {
     be_getmember(vm, 1, ".data");
     list_check_data(vm, 1);
+    list_check_ref(vm);
     be_refpush(vm, 1);
     be_pushstring(vm, "[");
     be_pushiter(vm, -2);
@@ -189,7 +191,7 @@ static int m_size(bvm *vm)
 {
     be_getmember(vm, 1, ".data");
     list_check_data(vm, 1);
-    be_getsize(vm, -1);
+    be_pushint(vm, be_size(vm, -1));
     be_return(vm);
 }
 

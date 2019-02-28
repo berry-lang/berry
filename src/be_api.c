@@ -513,32 +513,6 @@ void be_setupval(bvm *vm, int index, int pos)
     }
 }
 
-void be_getfunction(bvm *vm)
-{
-    bvalue *v = retreg(vm);
-    bvalue *top = be_incrtop(vm);
-    if (var_istype(v, BE_NTVCLOS)) {
-        var_setval(top, v);
-    } else {
-        var_setnil(top);
-    }
-}
-
-void be_getsize(bvm *vm, int index)
-{
-    bvalue *v = index2value(vm, index);
-    bvalue *dst = be_incrtop(vm);
-    if (var_islist(v)) {
-        blist *list = cast(blist*, var_toobj(v));
-        var_setint(dst, be_list_count(list));
-    } else if (var_ismap(v)) {
-        bmap *map = cast(bmap*, var_toobj(v));
-        var_setint(dst, be_map_count(map));
-    } else {
-        var_setnil(dst);
-    }
-}
-
 int be_size(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
