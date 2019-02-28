@@ -174,6 +174,7 @@ void be_pushntvfunction(bvm *vm, bntvfunc f);
 void be_pushclass(bvm *vm, const char *name, const bnfuncinfo *lib);
 void be_pushcomptr(bvm *vm, void *ptr);
 int be_pushiter(bvm *vm, int index);
+void be_pusherror(bvm *vm, const char *msg);
 
 void be_newlist(bvm *vm);
 void be_newmap(bvm *vm);

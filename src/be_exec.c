@@ -170,8 +170,7 @@ void be_stack_expansion(bvm *vm, int n)
     if (size + n > BE_STACK_TOTAL_MAX) {
         /* ensure the stack is enough when generating error messages. */
         stack_resize(vm, size + 10);
-        be_debug_error(vm, BE_EXEC_ERROR,
-            STACK_OVER_MSG(BE_STACK_TOTAL_MAX));
+        be_pusherror(vm, STACK_OVER_MSG(BE_STACK_TOTAL_MAX));
     }
     stack_resize(vm, size + n);
 }

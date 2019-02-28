@@ -179,14 +179,13 @@ static void addinfo(bvm *vm, const char *msg)
         be_pushfstring(vm, "%s error: %s\nstack traceback:\n",
             sourceinfo(vm, buf, -1), msg);
     } else {
-        patch_native(vm, -1);
         be_pushfstring(vm, "native error: %s\n", msg);
     }
     tracestack(vm);
 }
 
-void be_debug_error(bvm *vm, int errcode, const char *msg)
+void be_pusherror(bvm *vm, const char *msg)
 {
     addinfo(vm, msg);
-    be_throw(vm, errcode);
+    be_throw(vm, BE_EXEC_ERROR);
 }
