@@ -11,6 +11,7 @@ typedef enum {
     ETREAL,
     ETINT,
     ETSTRING,
+    ETPROTO,
     ETLOCAL,
     ETGLOBAL,
     ETUPVAL,
@@ -27,10 +28,11 @@ typedef struct {
             bbyte obj; /* object index */
             bbyte tt; /* object type */
         } ss;
-        breal r;    /* for ETREAL */
-        bint i;     /* for ETINT */
-        int idx;    /* variable index */
-        bstring *s;
+        breal r;     /* for ETREAL */
+        bint i;      /* for ETINT */
+        bstring *s;  /* for ETSTRING */
+        bproto *p;  /* for ETPROTO */
+        int idx;     /* variable index */
     } v;
     int t; /* patch list of 'exit when true' */
     int f; /* patch list of 'exit when false' */

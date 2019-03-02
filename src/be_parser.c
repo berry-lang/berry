@@ -33,6 +33,9 @@
 #define upval_desc(i, t, s)     (((i) & 0xFF) | (((t) & 0xFF) << 8) \
                                 | (((s) != 0) << 16))
 
+#define stack_save(parser)      ((parser)->vm->top - (parser)->vm->stack)
+#define stack_reset(parser, s)  ((parser)->vm->top = (parser)->vm->stack + (s))
+
 #define parser_error(p, msg)    be_lexerror(&(p)->lexer, msg)
 
 #define push_error(parser, ...) \
@@ -249,6 +252,14 @@ static void init_exp(bexpdesc *e, exptype_t type, int i)
     e->v.i = i;
 }
 
+/* avoid string being GC */
+static void string_protect(bparser *parser, bstring *s)
+{
+    bvm *vm = parser->vm;
+    var_setstr(vm->top, s);
+    be_stackpush(vm);
+}
+
 static int find_localvar(bfuncinfo *finfo, bstring *s)
 {
     int i, count = be_list_count(finfo->local);
@@ -382,6 +393,62 @@ static void singlevar(bparser *parser, bexpdesc *var)
     default:
         break;
     }
+    string_protect(parser, varname);
+}
+
+static void func_varlist(bparser *parser)
+{
+    bexpdesc v;
+    /* '(' [ID {',' ID}] ')' */
+    match_token(parser, OptLBK); /* skip '(' */
+    if (next_token(parser).type == TokenId) {
+        bstring *str = next_token(parser).u.s;
+        new_var(parser, str, &v); /* new variable */
+        scan_next_token(parser);
+        while (next_token(parser).type == OptComma) {
+            scan_next_token(parser); /* skip ',' */
+            str = next_token(parser).u.s;
+            /* new local variable */
+            if (find_localvar(parser->finfo, str) == -1) {
+                new_var(parser, str, &v);
+            } else {
+                push_error(parser,
+                    "redefinition of '%s'", token2str(parser)));
+            }
+            scan_next_token(parser); /* skip ID */
+        }
+    }
+    match_token(parser, OptRBK); /* skip ')' */
+    parser->finfo->proto->argc = parser->finfo->freereg;
+}
+
+static bproto* funcbody(bparser *parser, bstring *name, int ismethod)
+{
+    bfuncinfo finfo;
+    bblockinfo binfo;
+
+    /* '(' varlist ')' block 'end' */
+    begin_func(parser, &finfo, &binfo);
+    finfo.proto->name = name;
+    if (ismethod) {
+        new_localvar(parser->finfo, be_newstr(parser->vm, "self"));
+    }
+    func_varlist(parser);
+    stmtlist(parser);
+    end_func(parser);
+    match_token(parser, KeyEnd); /* skip 'end' */
+    return finfo.proto;
+}
+
+/* anonymous function */
+static void anon_func(bparser *parser, bexpdesc *e)
+{
+    bproto *proto;
+    /* 'def' ID '(' varlist ')' block 'end' */
+    scan_next_token(parser); /* skip 'def' */
+    proto = funcbody(parser, be_newstr(parser->vm, ""), 0);
+    init_exp(e, ETPROTO, 0);
+    e->v.p = proto;
 }
 
 static void new_primtype(bparser *parser, const char *type, bexpdesc *e)
@@ -578,6 +645,9 @@ static void primary_expr(bparser *parser, bexpdesc *e)
     case OptLBR: /* map */
         map_expr(parser, e);
         break;
+    case KeyDef: /* anonymous function */
+        anon_func(parser, e);
+        break;
     default: /* unknow expr */
         return;
     }
@@ -616,6 +686,7 @@ static void simple_expr(bparser *parser, bexpdesc *e)
     case TokenString:
         init_exp(e, ETSTRING, 0);
         e->v.s = next_token(parser).u.s;
+        string_protect(parser, e->v.s);
         break;
     case KeyTrue:
         init_exp(e, ETBOOL, 1);
@@ -698,8 +769,10 @@ static void expr(bparser *parser, bexpdesc *e)
 
 static void expr_stmt(bparser *parser)
 {
+    size_t top = stack_save(parser);
     assign_expr(parser);
     parser->finfo->freereg = (bbyte)be_vector_count(parser->finfo->local);
+    stack_reset(parser, top);
 }
 
 static int block_follow(bparser *parser)
@@ -716,12 +789,14 @@ static int block_follow(bparser *parser)
 static int cond_stmt(bparser *parser)
 {
     bexpdesc e;
+    size_t top = stack_save(parser);
     /* (expr) */
     match_token(parser, OptLBK); /* skip '(' */
     match_notoken(parser, OptRBK);
     expr(parser, &e);
     match_token(parser, OptRBK); /* skip ')' */
     be_code_goiftrue(parser->finfo, &e);
+    stack_reset(parser, top);
     return e.f;
 }
 
@@ -797,6 +872,7 @@ static void for_init(bparser *parser, bexpdesc *v)
     bstring *s;
     bvm *vm = parser->vm;
     bfuncinfo *finfo = parser->finfo;
+    size_t top = stack_save(parser);
 
     /* $it = __iterator__(expr) */
     s = be_newstr(vm, "__iterator__");
@@ -809,6 +885,7 @@ static void for_init(bparser *parser, bexpdesc *v)
     init_exp(v, ETLOCAL, new_localvar(finfo, s));
     be_code_setvar(finfo, v, &e); /* code $it = __iterator__(expr) */
     be_code_freeregs(finfo, 2); /* free registers */
+    stack_reset(parser, top);
 }
 
 /*
@@ -923,57 +1000,15 @@ static bstring* func_name(bparser *parser, bexpdesc *e, int ismethod)
     return NULL;
 }
 
-static void func_varlist(bparser *parser)
-{
-    bexpdesc v;
-    /* '(' [ID {',' ID}] ')' */
-    match_token(parser, OptLBK); /* skip '(' */
-    if (next_token(parser).type == TokenId) {
-        bstring *str = next_token(parser).u.s;
-        new_var(parser, str, &v); /* new variable */
-        scan_next_token(parser);
-        while (next_token(parser).type == OptComma) {
-            scan_next_token(parser); /* skip ',' */
-            str = next_token(parser).u.s;
-            /* new local variable */
-            if (find_localvar(parser->finfo, str) == -1) {
-                new_var(parser, str, &v);
-            } else {
-                push_error(parser,
-                    "redefinition of '%s'", token2str(parser)));
-            }
-            scan_next_token(parser); /* skip ID */
-        }
-    }
-    match_token(parser, OptRBK); /* skip ')' */
-    parser->finfo->proto->argc = parser->finfo->freereg;
-}
-
-static bproto* funcbody(bparser *parser, bexpdesc *e, int ismethod)
-{
-    bstring *name;
-    bfuncinfo finfo;
-    bblockinfo binfo;
-
-    /* 'def' ID '(' varlist ')' block 'end' */
-    scan_next_token(parser); /* skip 'def' */
-    name = func_name(parser, e, ismethod);
-    begin_func(parser, &finfo, &binfo);
-    finfo.proto->name = name;
-    if (ismethod) {
-        new_localvar(parser->finfo, be_newstr(parser->vm, "self"));
-    }
-    func_varlist(parser);
-    stmtlist(parser);
-    end_func(parser);
-    match_token(parser, KeyEnd); /* skip 'end' */
-    return finfo.proto;
-}
-
 static void def_stmt(bparser *parser)
 {
     bexpdesc e;
-    bproto *proto = funcbody(parser, &e, 0);
+    bstring *name;
+    bproto *proto;
+    /* 'def' ID '(' varlist ')' block 'end' */
+    scan_next_token(parser); /* skip 'def' */
+    name = func_name(parser, &e, 0);
+    proto = funcbody(parser, name, 0);
     be_code_closure(parser->finfo, &e, proto);
 }
 
@@ -1014,7 +1049,12 @@ static void classvar_stmt(bparser *parser, bclass *c)
 static void classdef_stmt(bparser *parser, bclass *c)
 {
     bexpdesc e;
-    bproto *proto = funcbody(parser, &e, 1);
+    bstring *name;
+    bproto *proto;
+    /* 'def' ID '(' varlist ')' block 'end' */
+    scan_next_token(parser); /* skip 'def' */
+    name = func_name(parser, &e, 1);
+    proto = funcbody(parser, name, 1);
     be_method_bind(parser->vm, c, proto->name, proto);
 }
 
@@ -1087,8 +1127,10 @@ static void var_field(bparser *parser)
     /* ID ['=' expr] */
     bexpdesc e1, e2;
     bstring *name;
+    size_t top = stack_save(parser);
     name = next_token(parser).u.s;
     match_token(parser, TokenId); /* match and skip ID */
+    string_protect(parser, name);
     if (next_token(parser).type == OptAssign) { /* '=' */
         init_exp(&e2, ETVOID, 0);
         scan_next_token(parser); /* skip '=' */
@@ -1099,6 +1141,7 @@ static void var_field(bparser *parser)
     }
     new_var(parser, name, &e1);
     be_code_setvar(parser->finfo, &e1, &e2);
+    stack_reset(parser, top);
 }
 
 static void var_stmt(bparser *parser)
@@ -1114,6 +1157,7 @@ static void var_stmt(bparser *parser)
 
 static void statement(bparser *parser)
 {
+    size_t top = stack_save(parser);
     switch (next_token(parser).type) {
     case KeyIf: if_stmt(parser); break;
     case KeyWhile: while_stmt(parser); break;
@@ -1129,6 +1173,7 @@ static void statement(bparser *parser)
     case OptSemic: scan_next_token(parser); break; /* empty statement */
     default: expr_stmt(parser); break;
     }
+    stack_reset(parser, top);
 }
 
 static void stmtlist(bparser *parser)

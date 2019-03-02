@@ -297,6 +297,16 @@ static int code_suffix(bfuncinfo *finfo, bopcode op, bexpdesc *e, int dst)
     return dst;
 }
 
+static void code_closure(bfuncinfo *finfo, bproto *proto, int dst)
+{
+    int idx = be_vector_count(&finfo->pvec);
+    /* append proto to current function proto table */
+    be_vector_append(&finfo->pvec, &proto);
+    finfo->proto->ptab = be_vector_data(&finfo->pvec);
+    finfo->proto->nproto = be_vector_count(&finfo->pvec);
+    codeABx(finfo, OP_CLOSURE, dst, idx); /* load closure to register */
+}
+
 static int var2reg(bfuncinfo *finfo, bexpdesc *e, int dst)
 {
     switch (e->type) {
@@ -316,6 +326,9 @@ static int var2reg(bfuncinfo *finfo, bexpdesc *e, int dst)
     case ETREAL:
     case ETSTRING:
         return exp2const(finfo, e);
+    case ETPROTO:
+        code_closure(finfo, e->v.p, dst);
+        break;
     case ETGLOBAL:
         codeABx(finfo, OP_GETGBL, dst, e->v.idx);
         break;
@@ -550,13 +563,8 @@ void be_code_call(bfuncinfo *finfo, int base, int argc)
 
 void be_code_closure(bfuncinfo *finfo, bexpdesc *e, bproto *proto)
 {
-    int idx = be_vector_count(&finfo->pvec);
     int reg = e->type == ETGLOBAL ? finfo->freereg: e->v.idx;
-    /* append proto to current function proto table */
-    be_vector_append(&finfo->pvec, &proto);
-    finfo->proto->ptab = be_vector_data(&finfo->pvec);
-    finfo->proto->nproto = be_vector_count(&finfo->pvec);
-    codeABx(finfo, OP_CLOSURE, reg, idx); /* load closure to register */
+    code_closure(finfo, proto, reg);
     if (e->type == ETGLOBAL) { /* store to grobal R(A) -> G(Bx) */
         codeABx(finfo, OP_SETGBL, reg, e->v.idx);
     }
