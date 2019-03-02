@@ -130,6 +130,7 @@ static const char* concat2(bvm *vm)
     bstring *s1 = var_tostr(dst);
     bstring *s2 = var_tostr(dst + 1);
     bstring *s = be_strcat(vm, s1, s2);
+    dst = vm->top - 2; /* maybe GC (stack change) */
     var_setstr(dst, s);
     --vm->top;
     return str(s);
