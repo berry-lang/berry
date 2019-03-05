@@ -18,6 +18,7 @@
 #define setint(lex, v)      ((lex)->token.u.i = (v))
 #define setreal(lex, v)     ((lex)->token.u.r = (v))
 
+/* IMPORTANT: This must follow the enum found in be_lexer.h !!! */
 static const char* const kwords_tab[] = {
         "NONE", "EOS", "ID", "INT", "REAL", "STR",
         "=", "+", "-", "*", "/", "%", "<", "<=",
