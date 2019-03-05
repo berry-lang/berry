@@ -4,6 +4,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+static int l_assert(bvm *vm)
+{
+    int pass = be_tobool(vm, 1);
+
+    if (pass == bfalse) {
+        be_pusherror(vm, "Assert failed!");
+    }
+    be_return_nil(vm);
+}
+
 static int l_print(bvm *vm)
 {
     int i, n = be_top(vm);
@@ -137,6 +147,7 @@ static int l_length(bvm *vm)
 
 void be_load_baselib(bvm *vm)
 {
+    be_regcfunc(vm, "assert", l_assert);
     be_regcfunc(vm, "print", l_print);
     be_regcfunc(vm, "clock", l_clock);
     be_regcfunc(vm, "exit", l_exit);
