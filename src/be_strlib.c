@@ -119,8 +119,11 @@ void be_val2str(bvm *vm, int index)
 
 static void pushstr(bvm *vm, const char *s, size_t len)
 {
-    bvalue *reg = be_incrtop(vm);
+    /* to create a string and then update the top pointer,
+     * otherwise the GC may crash due to uninitialized values.
+     **/
     bstring *str = be_newstrn(vm, s, len);
+    bvalue *reg = be_incrtop(vm);
     var_setstr(reg, str);
 }
 

@@ -114,7 +114,7 @@ static void init_upvals(bntvclos *f)
     }
 }
 
-bntvclos* be_newprimclosure(bvm *vm, bntvfunc cf, int nupvals)
+bntvclos* be_newntvclosure(bvm *vm, bntvfunc cf, int nupvals)
 {
     size_t size = sizeof(bntvclos) + sizeof(bupval*) * nupvals;
     bgcobject *gco = be_newgcobj(vm, BE_NTVCLOS, size);

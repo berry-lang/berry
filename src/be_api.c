@@ -248,16 +248,22 @@ void be_pushreal(bvm *vm, breal r)
 
 void be_pushstring(bvm *vm, const char *str)
 {
-    bvalue *reg = be_incrtop(vm);
+    /* to create a string and then push the top registor,
+     * otherwise the GC may crash due to uninitialized values.
+     **/
     bstring *s = be_newstr(vm, str);
+    bvalue *reg = be_incrtop(vm);
     be_assert(reg < vm->stacktop);
     var_setstr(reg, s);
 }
 
 void be_pushnstring(bvm *vm, const char *str, size_t n)
 {
-    bvalue *reg = be_incrtop(vm);
+    /* to create a string and then push the top registor,
+     * otherwise the GC may crash due to uninitialized values.
+     **/
     bstring *s = be_newstrn(vm, str, n);
+    bvalue *reg = be_incrtop(vm);
     var_setstr(reg, s);
 }
 
@@ -280,8 +286,11 @@ void be_pushvalue(bvm *vm, int index)
 
 void be_pushntvclosure(bvm *vm, bntvfunc f, int nupvals)
 {
+    /* to create a native closure and then push the top registor,
+     * otherwise the GC may crash due to uninitialized values.
+     **/
+    bntvclos *cl = be_newntvclosure(vm, f, nupvals);
     bvalue *top = be_incrtop(vm);
-    bntvclos *cl = be_newprimclosure(vm, f, nupvals);
     var_setntvclos(top, cl);
 }
 
@@ -296,6 +305,7 @@ void be_pushclass(bvm *vm, const char *name, const bnfuncinfo *lib)
     bstring *s;
     bclass *c;
     bvalue *dst = be_incrtop(vm);
+    var_setnil(dst); /* prevent GC crashes */
     s = be_newstr(vm, name);
     var_setstr(dst, s);
     c = be_newclass(vm, s, NULL);
