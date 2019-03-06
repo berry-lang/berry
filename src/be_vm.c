@@ -86,7 +86,7 @@
     precall(_vm, _f, _ns, _t); \
     _vm->cf->ip = _vm->ip; \
     _vm->cf->status = NONE_FLAG; \
-	_vm->ip = cl->proto->code; \
+    _vm->ip = cl->proto->code; \
 }
 
 #define push_native(_vm, _f, _ns, _t) { \
@@ -129,9 +129,9 @@ static void precall(bvm *vm, bvalue *func, int nstack, int mode)
     bcallframe *cf;
     int expan = nstack + BE_STACK_FREE_MIN;
     if (vm->stacktop < func + expan) {
-		size_t fpos = func - vm->stack;
+        size_t fpos = func - vm->stack;
         be_stack_expansion(vm, expan);
-		func = vm->stack + fpos;
+        func = vm->stack + fpos;
     }
     be_stack_push(&vm->callstack, NULL);
     cf = be_stack_top(&vm->callstack);
@@ -435,14 +435,14 @@ static void i_jump(bvm *vm, binstruction ins)
 static void i_jumptrue(bvm *vm, binstruction ins)
 {
     if (var2bool(vm, RA(ins))) {
-		vm->ip += IGET_sBx(ins);
+        vm->ip += IGET_sBx(ins);
     }
 }
 
 static void i_jumpfalse(bvm *vm, binstruction ins)
 {
     if (!var2bool(vm, RA(ins))) {
-		vm->ip += IGET_sBx(ins);
+        vm->ip += IGET_sBx(ins);
     }
 }
 
@@ -458,7 +458,7 @@ static void i_return(bvm *vm, binstruction ins)
     }
     vm->reg = cf->reg;
     vm->top = cf->top;
-	vm->ip = cf->ip;
+    vm->ip = cf->ip;
     be_stack_pop(&vm->callstack); /* pop don't delete */
     if (cf->status & BASE_FRAME) { /* entrance function */
         vm->cf = NULL; /* mainfunction return */
@@ -680,7 +680,7 @@ bvm* be_vm_new(void)
     vm->stack = be_malloc(sizeof(bvalue) * BE_STACK_FREE_MIN);
     vm->stacktop = vm->stack + BE_STACK_FREE_MIN;
     vm->cf = NULL;
-	vm->ip = NULL;
+    vm->ip = NULL;
     vm->upvalist = NULL;
     vm->reg = vm->stack;
     vm->top = vm->reg;

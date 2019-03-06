@@ -29,7 +29,7 @@ struct bvm {
     bcallframe *cf; /* function call frame */
     bvalue *reg; /* function base register */
     bvalue *top; /* function top register */
-	binstruction *ip; /* function instruction pointer */
+    binstruction *ip; /* function instruction pointer */
     struct blongjmp *errjmp; /* error jump point */
     bstack refstack; /* object reference stack */
     struct bmodule *modulelist;

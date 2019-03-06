@@ -26,7 +26,7 @@
         ["'", "'"]
     ],
     "indentationRules": {
-		"increaseIndentPattern": "((^\\s*(class|def|while|for|if|elif|else)\\b((?!\\b(end|until)\\b).)*))$",
-		"decreaseIndentPattern": "^\\s*((\\b(elseif|else|end)\\b)|(\\)))"
-	}
+        "increaseIndentPattern": "((^\\s*(class|def|while|for|if|elif|else)\\b((?!\\b(end|until)\\b).)*))$",
+        "decreaseIndentPattern": "^\\s*((\\b(elseif|else|end)\\b)|(\\)))"
+    }
 }

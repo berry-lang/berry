@@ -148,7 +148,7 @@ static void update_callstack(bvm *vm, bvalue *oldstack)
 {
     bcallframe *cf = be_stack_top(&vm->callstack);
     bcallframe *base = be_stack_base(&vm->callstack);
-	bvalue *stack = vm->stack;
+    bvalue *stack = vm->stack;
     for (; cf >= base; --cf) {
         cf->func = stack + (cf->func - oldstack);
         cf->top = stack + (cf->top - oldstack);

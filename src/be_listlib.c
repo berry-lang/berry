@@ -33,7 +33,7 @@ static void push_element(bvm *vm)
 {
     if (be_isstring(vm, -1)) { /* Add '"' to strings */
         be_pushfstring(vm, "'%s'", be_tostring(vm, -1));
-		be_remove(vm, -2);
+        be_remove(vm, -2);
     } else {
         be_tostring(vm, -1);
     }

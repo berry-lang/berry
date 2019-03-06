@@ -1,40 +1,40 @@
 # this is berry language test
 class Base
-	var b
-	def init(a)
-		self.b = a * 1.5
-	end
+    var b
+    def init(a)
+        self.b = a * 1.5
+    end
 end
 class A : Base
     var test
     def init(a)
         self.test = a
-		super(self).init(a)
+        super(self).init(a)
     end
     def method(a, b)
         return self.test * a + b * self.b
     end
     def tostring()
-		l1 = "test: " + str(self.test) + "\n"
-		l2 = "super.b: " + str(super(self).b) + "\n"
-		l3 = "method: " + str(self.method)
-		return l1 + l2 + l3
+        l1 = "test: " + str(self.test) + "\n"
+        l2 = "super.b: " + str(super(self).b) + "\n"
+        l3 = "method: " + str(self.method)
+        return l1 + l2 + l3
     end
-	def +(other)
-		return self.test + other.test
-	end
-	def >(other)
-		return self.test > other.test
-	end
-	def tobool()
-		return self.test != 0
-	end
-	def item(index)
-		return index * index - 1000
-	end
-	def -*()
-		return -self.test
-	end
+        def +(other)
+        return self.test + other.test
+    end
+    def >(other)
+        return self.test > other.test
+    end
+    def tobool()
+        return self.test != 0
+    end
+    def item(index)
+        return index * index - 1000
+    end
+    def -*()
+        return -self.test
+    end
 end
 
 #-
@@ -64,8 +64,8 @@ l = [450 * 30, "hello", 666, l2, [4, 5, 6]]
 
 idx = -5
 while (idx <= 5)
-	l.append(idx * idx * idx)
-	idx = idx + 1
+    l.append(idx * idx * idx)
+    idx = idx + 1
 end
 
 print(.5)
