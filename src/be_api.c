@@ -19,9 +19,12 @@
 
 static bvalue* index2value(bvm *vm, int idx)
 {
-    if (idx > 0) { /* argument */
+    if (idx > 0) { /* absolute index */
+        be_assert(vm->reg + idx <= vm->top);
         return vm->reg + idx - 1;
     }
+    /* relative index */
+    be_assert(vm->top + idx >= vm->reg);
     return vm->top + idx;
 }
 
