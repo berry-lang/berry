@@ -582,7 +582,7 @@ int be_data_remove(bvm *vm, int index)
         }
         break;
     case BE_LIST:
-        if (!var_isint(k)) {
+        if (var_isint(k)) {
             blist *list = cast(blist*, var_toobj(o));
             return be_list_remove(list, var_toint(k));
         }
