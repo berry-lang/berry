@@ -138,7 +138,6 @@ void be_stackpush(bvm *vm)
 
 void be_stack_require(bvm *vm, int count)
 {
-    count += BE_STACK_FREE_MIN;
     if (vm->top + count >= vm->stacktop) {
         be_stack_expansion(vm, count);
     }
