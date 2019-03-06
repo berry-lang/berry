@@ -1157,7 +1157,6 @@ static void var_stmt(bparser *parser)
 
 static void statement(bparser *parser)
 {
-    size_t top = stack_save(parser);
     switch (next_token(parser).type) {
     case KeyIf: if_stmt(parser); break;
     case KeyWhile: while_stmt(parser); break;
@@ -1173,7 +1172,6 @@ static void statement(bparser *parser)
     case OptSemic: scan_next_token(parser); break; /* empty statement */
     default: expr_stmt(parser); break;
     }
-    stack_reset(parser, top);
 }
 
 static void stmtlist(bparser *parser)
