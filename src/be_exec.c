@@ -58,11 +58,12 @@ int be_execprotected(bvm *vm, bpfunc f, void *data)
 {
     struct blongjmp jmp;
     jmp.status = 0;
-    jmp.prev = vm->errjmp;
+    jmp.prev = vm->errjmp; /* save long jump position */
     vm->errjmp = &jmp;
     exec_try(vm->errjmp) {
         f(vm, data);
     }
+    vm->errjmp = jmp.prev; /* restore long jump position */
     return jmp.status;
 }
 
