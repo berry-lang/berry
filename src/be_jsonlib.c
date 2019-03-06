@@ -6,6 +6,7 @@
 
 #define MAX_INDENT      12
 #define INDENT_WIDTH    4
+#define INDENT_CHAR     ' '
 
 static const char* parser_value(bvm *vm, const char *json);
 static void json2str(bvm *vm, int *indent, int idx, int fmt);
@@ -293,7 +294,7 @@ static void make_indent(bvm *vm, int stridx, int indent)
     if (indent) {
         char buf[MAX_INDENT * INDENT_WIDTH + 1];
         indent = (indent < MAX_INDENT ? indent : MAX_INDENT) * INDENT_WIDTH;
-        memset(buf, ' ', indent);
+        memset(buf, INDENT_CHAR, indent);
         buf[indent] = '\0';
         stridx = be_absindex(vm, stridx);
         be_pushstring(vm, buf);
