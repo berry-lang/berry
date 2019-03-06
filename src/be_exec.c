@@ -132,15 +132,15 @@ bvalue* be_incrtop(bvm *vm)
 
 void be_stackpush(bvm *vm)
 {
-    be_stackcheck(vm, 1);
+    be_stack_require(vm, 1);
     be_incrtop(vm);
 }
 
-void be_stackcheck(bvm *vm, int need)
+void be_stack_require(bvm *vm, int count)
 {
-    need += BE_STACK_FREE_MIN;
-    if (vm->top + need >= vm->stacktop) {
-        be_stack_expansion(vm, need);
+    count += BE_STACK_FREE_MIN;
+    if (vm->top + count >= vm->stacktop) {
+        be_stack_expansion(vm, count);
     }
 }
 

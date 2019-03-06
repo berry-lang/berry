@@ -196,6 +196,7 @@ int be_iter_hasnext(bvm *vm, int index);
 int be_refcontains(bvm *vm, int index);
 void be_refpush(bvm *vm, int index);
 void be_refpop(bvm *vm);
+void be_stack_require(bvm *vm, int count);
 
 int be_returnvalue(bvm *vm);
 int be_returnnilvalue(bvm *vm);
