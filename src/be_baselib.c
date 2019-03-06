@@ -145,6 +145,19 @@ static int l_length(bvm *vm)
     be_return(vm);
 }
 
+static int l_compile(bvm *vm)
+{
+    if (be_top(vm) && be_isstring(vm, 1)) {
+        int len = be_strlen(vm, 1);
+        const char *src = be_tostring(vm, 1);
+        int res = be_loadbuffer(vm, "string", src, len);
+        if (res == BE_OK) {
+            be_return(vm);
+        }
+    }
+    be_return_nil(vm);
+}
+
 void be_load_baselib(bvm *vm)
 {
     be_regcfunc(vm, "assert", l_assert);
@@ -158,6 +171,7 @@ void be_load_baselib(bvm *vm)
     be_regcfunc(vm, "number", l_number);
     be_regcfunc(vm, "str", l_str);
     be_regcfunc(vm, "length", l_length);
+    be_regcfunc(vm, "compile", l_compile);
     be_regcfunc(vm, "__iterator__", l_iterator);
     be_regcfunc(vm, "__hasnext__", l_hasnext);
     be_regcfunc(vm, "__next__", l_next);
