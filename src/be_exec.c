@@ -7,6 +7,8 @@
 #include <setjmp.h>
 #include <stdlib.h>
 
+#define FILE_BUFFER_SIZE    256
+
 #define exec_try(j)         if (setjmp((j)->b) == 0)
 #define exec_throw(j)       longjmp((j)->b, 1)
 
@@ -32,6 +34,16 @@ struct pparser {
 struct pcall {
     bvalue *v;
     int argc;
+};
+
+struct strbuf {
+	size_t len;
+	const char *s;
+};
+
+struct filebuf {
+	FILE *fp;
+	char buf[FILE_BUFFER_SIZE];
 };
 
 void be_throw(bvm *vm, int errorcode)
@@ -93,16 +105,6 @@ int be_protectedparser(bvm *vm,
     return res;
 }
 
-struct strbuf {
-	size_t len;
-	const char *s;
-};
-
-struct filebuf {
-	FILE *fp;
-	char buf[32];
-};
-
 static const char* _sgets(void *data, size_t *size)
 {
 	struct strbuf *sb = data;
@@ -114,7 +116,7 @@ static const char* _sgets(void *data, size_t *size)
 	return NULL;
 }
 
-const char* _fgets(void *data, size_t *size)
+static const char* _fgets(void *data, size_t *size)
 {
 	struct filebuf *fb = data;
 	*size = fread(fb->buf, 1, sizeof(fb->buf), fb->fp);
@@ -136,14 +138,15 @@ int be_loadbuffer(bvm *vm,
 int be_loadfile(bvm *vm, const char *name)
 {
     int res = BE_IO_ERROR;
-    struct filebuf fbuf;
-    fbuf.fp = fopen(name, "r");
-    if (fbuf.fp) {
-        res = be_protectedparser(vm, name, _fgets, &fbuf);
-        fclose(fbuf.fp);
+    struct filebuf *fbuf = be_malloc(sizeof(struct filebuf));
+    fbuf->fp = fopen(name, "r");
+    if (fbuf->fp) {
+        res = be_protectedparser(vm, name, _fgets, fbuf);
+        fclose(fbuf->fp);
     } else {
         be_pushfstring(vm, "error: can not open file '%s'.", name);
     }
+    be_free(fbuf);
     return res;
 }
 

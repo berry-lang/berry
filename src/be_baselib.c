@@ -146,14 +146,40 @@ static int l_length(bvm *vm)
     be_return(vm);
 }
 
+static int m_compile_str(bvm *vm)
+{
+    int len = be_strlen(vm, 1);
+    const char *src = be_tostring(vm, 1);
+    int res = be_loadbuffer(vm, "string", src, len);
+    if (res == BE_OK) {
+        be_return(vm);
+    }
+    be_return_nil(vm);
+}
+
+static int m_compile_file(bvm *vm)
+{
+    const char *fname = be_tostring(vm, 1);
+    int res = be_loadfile(vm, fname);
+    if (res == BE_OK) {
+        be_return(vm);
+    }
+    be_return_nil(vm);
+}
+
 static int l_compile(bvm *vm)
 {
     if (be_top(vm) && be_isstring(vm, 1)) {
-        int len = be_strlen(vm, 1);
-        const char *src = be_tostring(vm, 1);
-        int res = be_loadbuffer(vm, "string", src, len);
-        if (res == BE_OK) {
-            be_return(vm);
+        if (be_top(vm) >= 2 && be_isstring(vm, 2)) {
+            const char *s = be_tostring(vm, 2);
+            if (!strcmp(s, "string")) {
+                return m_compile_str(vm);
+            }
+            if (!strcmp(s, "file")) {
+                return m_compile_file(vm);
+            }
+        } else {
+            return m_compile_str(vm);
         }
     }
     be_return_nil(vm);
