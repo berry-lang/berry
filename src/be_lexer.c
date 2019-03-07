@@ -11,7 +11,6 @@
 
 #define isvalid(lex)        ((lex)->cursor < (lex)->endbuf)
 #define next(lex)           (++(lex)->cursor)
-#define prev(lex)           (--(lex)->cursor)
 #define lgetc(lex)          (isvalid(lex) ? *(lex)->cursor : EOS)
 #define match(lex, pattern) while (pattern(lgetc(lex))) { next(lex); }
 #define setstr(lex, v)      ((lex)->token.u.s = (v))
@@ -276,14 +275,15 @@ static btokentype scan_numeral(blexer *lexer)
     } else {
         match(lexer, is_digit);
         if (lgetc(lexer) == '.') { /* '..' or real */
-            if (*next(lexer) == '.') { /* '..' */
-                prev(lexer); /* the token '..' will be left for the next scan */
-            } else { /* real */
-                match(lexer, is_digit);
+            if (*next(lexer) == '.') { /* token  '..' */
+                next(lexer); /*  skip the second '.' */
+                lexer->cacheType = OptRange;
+            } else {
+                match(lexer, is_digit); /* read numberic */
                 type = TokenReal;
             }
         }
-        if (scan_realexp(lexer)) {
+        if (!lexer->cacheType && scan_realexp(lexer)) {
             type = TokenReal;
         }
         if (type == TokenReal) {
@@ -413,6 +413,7 @@ void be_lexer_init(blexer *lexer, bvm *vm)
     lexer->endbuf = NULL;
     lexer->data = NULL;
     lexer->size = 0;
+    lexer->cacheType = TokenNone;
     keyword_registe(vm);
 }
 
@@ -437,6 +438,11 @@ int be_lexer_scan_next(blexer *lexer)
 {
     btokentype type;
 
+    if (lexer->cacheType != TokenNone) {
+        lexer->token.type = lexer->cacheType;
+        lexer->cacheType = TokenNone;
+        return 1;
+    }
     if (lgetc(lexer) == EOS) { /* clear lexer */
         be_free(lexer->data);
         lexer->data = NULL;

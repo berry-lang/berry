@@ -81,6 +81,7 @@ typedef struct blexer {
     int linenumber;
     int lastline;
     bvm *vm;
+    btokentype cacheType;
 } blexer;
 
 void be_lexer_init(blexer *lexer, bvm *vm);
