@@ -9,13 +9,14 @@
 #define SHORT_STR_LEN       32
 #define EOS                 '\0' /* end of source */
 
+#define lexbuf(lex)         ((lex)->buf.s)
 #define isvalid(lex)        ((lex)->cursor < (lex)->endbuf)
 #define next(lex)           (++(lex)->cursor)
 #define lgetc(lex)          (isvalid(lex) ? *(lex)->cursor : EOS)
-#define match(lex, pattern) while (pattern(lgetc(lex))) { next(lex); }
 #define setstr(lex, v)      ((lex)->token.u.s = (v))
 #define setint(lex, v)      ((lex)->token.u.i = (v))
 #define setreal(lex, v)     ((lex)->token.u.r = (v))
+#define match(lex, pattern) while (pattern(lgetc(lex))) { save(lex); }
 
 /* IMPORTANT: This must follow the enum found in be_lexer.h !!! */
 static const char* const kwords_tab[] = {
@@ -57,6 +58,30 @@ static void keyword_unregiste(bvm *vm)
     }
 }
 
+static void clear_buf(blexer *lexer)
+{
+    lexer->buf.len = 0;
+}
+
+/* save and next */
+static int save(blexer *lexer)
+{
+    int ch = lgetc(lexer);
+    struct blexerbuf *buf = &lexer->buf;
+    if (buf->len >= buf->size) {
+        buf->size <<= 1;
+        buf->s = be_realloc(buf->s, buf->size);
+    }
+    buf->s[buf->len++] = (char)ch;
+    return *next(lexer);
+}
+
+static bstring* buf_tostr(blexer *lexer)
+{
+    struct blexerbuf *buf = &lexer->buf;
+    return be_newstrn(lexer->vm, buf->s, buf->len);
+}
+
 static int is_newline(int c)
 {
     return c == '\r' || c == '\n';
@@ -84,20 +109,6 @@ static int check_next(blexer *lexer, int c)
         return 1;
     }
     return 0;
-}
-
-static char* lexer_resize_data(blexer *lexer, size_t len)
-{
-    size_t size = len > SHORT_STR_LEN ? len : SHORT_STR_LEN;
-
-    size += 1; /* include '\0' */
-    if (size > lexer->size) {
-        lexer->size = size;
-        /* don't use be_realloc() no need for copy. */
-        be_free(lexer->data);
-        lexer->data = be_malloc(size);
-    }
-    return lexer->data;
 }
 
 static int char2hex(int c)
@@ -141,9 +152,11 @@ static int read_oct(blexer *lexer, const char *src)
     return c;
 }
 
-static void tr_string(blexer *lexer, const char *src, const char *end)
+static void tr_string(blexer *lexer)
 {
-    char *dst = lexer_resize_data(lexer, end - src);
+    char *dst, *src, *end;
+    dst = src = lexbuf(lexer);
+    end = lexbuf(lexer) + lexer->buf.len;
     while (src < end) {
         int c = *src++;
         switch (c) {
@@ -219,9 +232,9 @@ static int scan_realexp(blexer *lexer)
     char c = lgetc(lexer);
 
     if (c == 'e' || c == 'E') {
-        c = *next(lexer);
+        c = save(lexer);
         if (c == '+' || c == '-') {
-            c = *next(lexer);
+            c = save(lexer);
         }
         if (!is_digit(c)) {
             be_lexerror(lexer, "number error.");
@@ -234,15 +247,14 @@ static int scan_realexp(blexer *lexer)
 
 static btokentype scan_dot_real(blexer *lexer)
 {
-    const char *begin = lexer->cursor;
-    if (*next(lexer) == '.') { /* is '..' */
+    if (save(lexer) == '.') { /* is '..' */
         next(lexer);
         return OptRange;
     }
     if (is_digit(lgetc(lexer))) {
         match(lexer, is_digit);
         scan_realexp(lexer);
-        setreal(lexer, be_str2real(begin, NULL));
+        setreal(lexer, be_str2real(lexbuf(lexer), NULL));
         return TokenReal;
     }
     return OptDot;
@@ -265,9 +277,8 @@ static int scan_hex(blexer *lexer)
 
 static btokentype scan_numeral(blexer *lexer)
 {
-    const char *begin = lexer->cursor;
     btokentype type = TokenInteger;
-    int c0 = lgetc(lexer), c1 = *next(lexer);
+    int c0 = lgetc(lexer), c1 = save(lexer);
     /* hex: 0[xX][0-9a-fA-F]+ */
     if (c0 == '0' && (c1 == 'x' || c1 == 'X')) {
         next(lexer);
@@ -275,7 +286,7 @@ static btokentype scan_numeral(blexer *lexer)
     } else {
         match(lexer, is_digit);
         if (lgetc(lexer) == '.') { /* '..' or real */
-            if (*next(lexer) == '.') { /* token  '..' */
+            if (save(lexer) == '.') { /* token  '..' */
                 next(lexer); /*  skip the second '.' */
                 lexer->cacheType = OptRange;
             } else {
@@ -287,9 +298,9 @@ static btokentype scan_numeral(blexer *lexer)
             type = TokenReal;
         }
         if (type == TokenReal) {
-            setreal(lexer, be_str2real(begin, NULL));
+            setreal(lexer, be_str2real(lexbuf(lexer), NULL));
         } else {
-            setint(lexer, be_str2int(begin, NULL));
+            setint(lexer, be_str2int(lexbuf(lexer), NULL));
         }
     }
     return type;
@@ -298,11 +309,9 @@ static btokentype scan_numeral(blexer *lexer)
 static btokentype scan_identifier(blexer *lexer)
 {
     bstring *s;
-    const char *begin = lexer->cursor;
-
-    next(lexer);
+    save(lexer);
     match(lexer, is_word);
-    s = be_newstrn(lexer->vm, begin, lexer->cursor - begin);
+    s = buf_tostr(lexer);
     if (str_extra(s) != 0) {
         lexer->token.type = (btokentype)str_extra(s);
         return lexer->token.type;
@@ -314,17 +323,16 @@ static btokentype scan_identifier(blexer *lexer)
 static btokentype scan_string(blexer *lexer)
 {
     char c, end = lgetc(lexer);
-    const char *begin = lexer->cursor + 1;
 
-    next(lexer);
+    next(lexer); /* skip '"' or '\'' */
     while ((c = lgetc(lexer)) != EOS && (c != end)) {
-        next(lexer);
+        save(lexer);
         if (c == '\\') {
-            next(lexer); /* skip '\\.' */
+            save(lexer); /* skip '\\.' */
         }
     }
-    tr_string(lexer, begin, lexer->cursor);
-    setstr(lexer, be_newstr(lexer->vm, lexer->data));
+    tr_string(lexer);
+    setstr(lexer, buf_tostr(lexer));
     next(lexer); /* skip '"' or '\'' */
     return TokenString;
 }
@@ -405,21 +413,27 @@ static btokentype lexer_next(blexer *lexer)
     }
 }
 
+static void lexerbuf_init(blexer *lexer)
+{
+    lexer->buf.size = SHORT_STR_LEN;
+    lexer->buf.s = be_malloc(SHORT_STR_LEN);
+    lexer->buf.len = 0;
+}
+
 void be_lexer_init(blexer *lexer, bvm *vm)
 {
     lexer->vm = vm;
     lexer->line = NULL;
     lexer->cursor = NULL;
     lexer->endbuf = NULL;
-    lexer->data = NULL;
-    lexer->size = 0;
     lexer->cacheType = TokenNone;
+    lexerbuf_init(lexer);
     keyword_registe(vm);
 }
 
 void be_lexer_deinit(blexer *lexer)
 {
-    be_free(lexer->data);
+    be_free(lexer->buf.s);
     keyword_unregiste(lexer->vm);
 }
 
@@ -444,14 +458,12 @@ int be_lexer_scan_next(blexer *lexer)
         return 1;
     }
     if (lgetc(lexer) == EOS) { /* clear lexer */
-        be_free(lexer->data);
-        lexer->data = NULL;
-        lexer->size = 0;
         lexer->token.type = TokenEOS;
         return 0;
     }
     lexer->lastline = lexer->linenumber;
     type = lexer_next(lexer);
+    clear_buf(lexer);
     if (type != TokenNone) {
         lexer->token.type = type;
     } else {

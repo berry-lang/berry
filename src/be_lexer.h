@@ -63,6 +63,11 @@ typedef enum {
     KeyAs           /* keyword as */
 } btokentype;
 
+struct blexerbuf {
+    char *s;
+    size_t len, size;
+};
+
 typedef struct btoken {
     btokentype type;
     union {
@@ -76,12 +81,11 @@ typedef struct blexer {
     const char *fname;
     const char *line, *cursor, *endbuf;
     btoken token;
-    size_t size;
-    char *data;
     int linenumber;
     int lastline;
     bvm *vm;
     btokentype cacheType;
+    struct blexerbuf buf;
 } blexer;
 
 void be_lexer_init(blexer *lexer, bvm *vm);
