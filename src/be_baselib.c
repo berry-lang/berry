@@ -6,10 +6,11 @@
 
 static int l_assert(bvm *vm)
 {
-    int pass = be_tobool(vm, 1);
-
-    if (pass == bfalse) {
-        be_pusherror(vm, "Assert failed!");
+    /* assertion fails when there is no argument
+     * or the first argument is nil or false. */
+    if (!be_top(vm) || be_isnil(vm, 1) ||
+        (be_isbool(vm, 1) && !be_tobool(vm, 1))) {
+        be_pusherror(vm, "assert failed!");
     }
     be_return_nil(vm);
 }
