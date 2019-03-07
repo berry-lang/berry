@@ -72,6 +72,6 @@ typedef struct bfuncinfo {
 } bfuncinfo;
 
 bclosure* be_parser_source(bvm *vm,
-    const char *fname, const char *text, size_t length);
+    const char *fname, breader reader, void *data);
 
 #endif

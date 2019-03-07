@@ -17,7 +17,7 @@ bvalue* be_incrtop(bvm *vm);
 void be_throw(bvm *vm, int errorcode);
 int be_execprotected(bvm *vm, bpfunc f, void *data);
 int be_protectedparser(bvm *vm,
-    const char *fname, const char *source, size_t length);
+    const char *fname, breader reader, void *data);
 int be_protectedcall(bvm *vm, bvalue *v, int argc);
 void be_stackpush(bvm *vm);
 void be_stack_expansion(bvm *vm, int n);

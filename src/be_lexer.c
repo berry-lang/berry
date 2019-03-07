@@ -11,8 +11,7 @@
 
 #define lexbuf(lex)         ((lex)->buf.s)
 #define isvalid(lex)        ((lex)->cursor < (lex)->endbuf)
-#define next(lex)           (++(lex)->cursor)
-#define lgetc(lex)          (isvalid(lex) ? *(lex)->cursor : EOS)
+#define lgetc(lex)          ((lex)->cursor)
 #define setstr(lex, v)      ((lex)->token.u.s = (v))
 #define setint(lex, v)      ((lex)->token.u.i = (v))
 #define setreal(lex, v)     ((lex)->token.u.r = (v))
@@ -58,6 +57,19 @@ static void keyword_unregiste(bvm *vm)
     }
 }
 
+int next(blexer *lexer)
+{
+    struct blexerreader *lr = &lexer->reader;
+	if (!(lr->len--)) {
+		static const char eos = EOS;
+		const char *s = lr->readf(lr->data, &lr->len);
+		lr->s = s ? s : &eos;
+		--lr->len;
+	}
+	lexer->cursor = *lr->s++;
+    return lexer->cursor;
+}
+
 static void clear_buf(blexer *lexer)
 {
     lexer->buf.len = 0;
@@ -73,7 +85,7 @@ static int save(blexer *lexer)
         buf->s = be_realloc(buf->s, buf->size);
     }
     buf->s[buf->len++] = (char)ch;
-    return *next(lexer);
+    return next(lexer);
 }
 
 static bstring* buf_tostr(blexer *lexer)
@@ -191,10 +203,10 @@ static void tr_string(blexer *lexer)
         }
         *dst++ = (char)c;
     }
-    *dst = '\0';
+    lexer->buf.len = dst - lexbuf(lexer);
 }
 
-static const char* skip_newline(blexer *lexer)
+static int skip_newline(blexer *lexer)
 {
     char lc = lgetc(lexer);
 
@@ -203,7 +215,7 @@ static const char* skip_newline(blexer *lexer)
         next(lexer); /* skip "\n\r" or "\r\n" */
     }
     lexer->linenumber++;
-    return lexer->line = lexer->cursor;
+    return lexer->cursor;
 }
 
 static void skip_comment(blexer *lexer)
@@ -214,10 +226,10 @@ static void skip_comment(blexer *lexer)
         do {
             mark = c == '-';
             if (is_newline(c)) {
-                c = *skip_newline(lexer);
+                c = skip_newline(lexer);
                 continue;
             }
-            c = *next(lexer);
+            c = next(lexer);
         } while (!(mark && c == '#') && c != EOS);
         next(lexer); /* skip '#' */
     } else { /* line comment */
@@ -322,8 +334,7 @@ static btokentype scan_identifier(blexer *lexer)
 
 static btokentype scan_string(blexer *lexer)
 {
-    char c, end = lgetc(lexer);
-
+    int c, end = lgetc(lexer);
     next(lexer); /* skip '"' or '\'' */
     while ((c = lgetc(lexer)) != EOS && (c != end)) {
         save(lexer);
@@ -420,32 +431,26 @@ static void lexerbuf_init(blexer *lexer)
     lexer->buf.len = 0;
 }
 
-void be_lexer_init(blexer *lexer, bvm *vm)
+void be_lexer_init(blexer *lexer, bvm *vm,
+    const char *fname, breader reader, void *data)
 {
     lexer->vm = vm;
-    lexer->line = NULL;
-    lexer->cursor = NULL;
-    lexer->endbuf = NULL;
     lexer->cacheType = TokenNone;
+    lexer->fname = fname;
+    lexer->linenumber = 1;
+    lexer->lastline = 1;
+    lexer->reader.readf = reader;
+    lexer->reader.data = data;
+    lexer->reader.len = 0;
     lexerbuf_init(lexer);
     keyword_registe(vm);
+    next(lexer); /* read the first character */
 }
 
 void be_lexer_deinit(blexer *lexer)
 {
     be_free(lexer->buf.s);
     keyword_unregiste(lexer->vm);
-}
-
-void be_lexer_set_source(blexer *lexer,
-    const char *fname, const char *text, size_t length)
-{
-    lexer->fname = fname;
-    lexer->line = text;
-    lexer->cursor = text;
-    lexer->endbuf = text + length;
-    lexer->linenumber = 1;
-    lexer->lastline = 1;
 }
 
 int be_lexer_scan_next(blexer *lexer)

@@ -72,52 +72,27 @@ static const char* get_line(const char *prompt)
 #endif
 }
 
-static char* readfile(FILE *fp, size_t *len)
-{
-    char *buffer;
-    fseek(fp,0L,SEEK_END);
-    *len = ftell(fp);
-    buffer = malloc(*len);
-    fseek(fp, 0L, SEEK_SET);
-    if (buffer) {
-        *len = fread(buffer, 1, *len, fp);
-    }
-    fclose(fp);
-    return buffer;
-}
-
 static int dofile(bvm *vm)
 {
     const char *name = be_tostring(vm, 1);
-    FILE *fp = fopen(name, "r");
-    if (fp) {
-        int res;
-        size_t len;
-        char *buffer = readfile(fp, &len);
-        if (buffer == NULL) {
-            printf("error: memory allocation failed.\n");
-            return 2;
-        }
-        res = be_loadbuffer(vm, name, buffer, len);
-        free(buffer);
-        res = res == BE_OK ? be_pcall(vm, 0) : res;
-        switch (res) {
-        case BE_OK:
-            return 0;
-        case BE_SYNTAX_ERROR: /* syntax error */
-        case BE_EXEC_ERROR: /* vm run error */
-            printf("%s\n", be_tostring(vm, -1));
-            return 1;
-        case BE_EXIT: /* return exit code */
-            return be_toint(vm, -1);
-        case BE_MALLOC_FAIL:
-            printf("error: malloc fail.\n");
-            return -1;
-        default: /* unkonw result */
-            return 2;
-        }
+    int res = be_loadfile(vm, name);
+    res = res == BE_OK ? be_pcall(vm, 0) : res;
+    switch (res) {
+    case BE_OK:
+        return 0;
+    case BE_IO_ERROR: /* IO error */
+    case BE_SYNTAX_ERROR: /* syntax error */
+    case BE_EXEC_ERROR: /* vm run error */
+        printf("%s\n", be_tostring(vm, -1));
+        return 1;
+    case BE_EXIT: /* return exit code */
+        return be_toint(vm, -1);
+    case BE_MALLOC_FAIL:
+        printf("error: malloc fail.\n");
+        return -1;
+    default: /* unkonw result */
+        return 2;
     }
-    printf("error: can not open file '%s'.\n", name);
     return 1;
 }
 

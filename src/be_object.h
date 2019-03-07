@@ -143,6 +143,8 @@ struct bntvclos {
     bntvfunc f;
 };
 
+typedef const char* (*breader)(void*, size_t*);
+
 #define cast(_T, _v)            ((_T)(_v))
 #define cast_int(_v)            cast(int, _v)
 #define cast_bool(_v)           cast(bbool, _v)

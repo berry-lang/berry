@@ -25,8 +25,8 @@ struct blongjmp {
 
 struct pparser {
     const char *fname;
-    const char *source;
-    size_t length;
+    breader reader;
+    void *data;
 };
 
 struct pcall {
@@ -70,25 +70,79 @@ int be_execprotected(bvm *vm, bpfunc f, void *data)
 static void m_parser(bvm *vm, void *data)
 {
     struct pparser *p = cast(struct pparser*, data);
-    bclosure *cl = be_parser_source(vm, p->fname, p->source, p->length);
+    bclosure *cl = be_parser_source(vm, p->fname, p->reader, p->data);
     var_setclosure(vm->top, cl);
     be_incrtop(vm);
 }
 
 int be_protectedparser(bvm *vm,
-    const char *fname, const char *source, size_t length)
+    const char *fname, breader reader, void *data)
 {
     int res;
     struct pparser s;
     int top = cast_int(vm->top - vm->stack);
     s.fname = fname;
-    s.source = source;
-    s.length = length;
+    s.reader = reader;
+    s.data = data;
     res = be_execprotected(vm, m_parser, &s);
     if (res) { /* recovery call stack */
         int idx = cast_int(vm->top - vm->reg);
         vm->top = vm->stack + top;
         be_pushvalue(vm, idx); /* copy error information */
+    }
+    return res;
+}
+
+struct strbuf {
+	size_t len;
+	const char *s;
+};
+
+struct filebuf {
+	FILE *fp;
+	char buf[32];
+};
+
+static const char* _sgets(void *data, size_t *size)
+{
+	struct strbuf *sb = data;
+	*size = sb->len;
+	if (sb->len) {
+		sb->len = 0;
+		return sb->s;
+	}
+	return NULL;
+}
+
+const char* _fgets(void *data, size_t *size)
+{
+	struct filebuf *fb = data;
+	*size = fread(fb->buf, 1, sizeof(fb->buf), fb->fp);
+	if (*size) {
+		return fb->buf;
+	}
+	return NULL;
+}
+
+int be_loadbuffer(bvm *vm,
+    const char *name, const char *buffer, size_t length)
+{
+    static struct strbuf sbuf;
+    sbuf.s = buffer;
+    sbuf.len = length;
+    return be_protectedparser(vm, name, _sgets, &sbuf);
+}
+
+int be_loadfile(bvm *vm, const char *name)
+{
+    int res = BE_IO_ERROR;
+    struct filebuf fbuf;
+    fbuf.fp = fopen(name, "r");
+    if (fbuf.fp) {
+        res = be_protectedparser(vm, name, _fgets, &fbuf);
+        fclose(fbuf.fp);
+    } else {
+        be_pushfstring(vm, "error: can not open file '%s'.", name);
     }
     return res;
 }

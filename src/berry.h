@@ -29,6 +29,7 @@ typedef enum {
 
 enum {
     BE_OK = 0,
+    BE_IO_ERROR,
     BE_SYNTAX_ERROR,
     BE_EXEC_ERROR,
     BE_EXIT,
@@ -213,6 +214,7 @@ void be_vm_delete(bvm *vm);
 
 int be_loadbuffer(bvm *vm,
     const char *name, const char *buffer, size_t length);
+int be_loadfile(bvm *vm, const char *name);
 void be_loadlibs(bvm *vm);
 
 #endif

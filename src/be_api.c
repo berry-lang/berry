@@ -750,17 +750,3 @@ int be_pcall(bvm *vm, int argc)
     int res = be_protectedcall(vm, f, argc);
     return res;
 }
-
-int be_loadbuffer(bvm *vm,
-    const char *name, const char *buffer, size_t length)
-{
-    int res = be_protectedparser(vm, name, buffer, length);
-#if 0
-    if (!res) {
-        be_writestring("bytecode:\n");
-        be_dprintcode(var_toobj(vm->top - 1));
-        be_writestring("bytecode end.\n");
-    }
-#endif
-    return res;
-}
