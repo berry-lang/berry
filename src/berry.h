@@ -156,7 +156,7 @@ int be_islist(bvm *vm, int index);
 int be_ismap(bvm *vm, int index);
 int be_iscomptr(bvm *vm, int index);
 
-int be_toint(bvm *vm, int index);
+bint be_toint(bvm *vm, int index);
 breal be_toreal(bvm *vm, int index);
 int be_tobool(bvm *vm, int index);
 const char* be_tostring(bvm *vm, int index);
@@ -164,7 +164,7 @@ void* be_tocomptr(bvm *vm, int index);
 void be_moveto(bvm *vm, int from, int to);
 void be_pushnil(bvm *vm);
 void be_pushbool(bvm *vm, int b);
-void be_pushint(bvm *vm, int i);
+void be_pushint(bvm *vm, bint i);
 void be_pushreal(bvm *vm, breal r);
 void be_pushstring(bvm *vm, const char *str);
 void be_pushnstring(bvm *vm, const char *str, size_t n);

@@ -178,7 +178,7 @@ int be_iscomptr(bvm *vm, int index)
     return var_istype(v, BE_COMPTR);
 }
 
-int be_toint(bvm *vm, int index)
+bint be_toint(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_toint(v);
@@ -237,10 +237,10 @@ void be_pushbool(bvm *vm, int b)
     var_setbool(reg, b != 0);
 }
 
-void be_pushint(bvm *vm, int i)
+void be_pushint(bvm *vm, bint i)
 {
     bvalue *reg = be_incrtop(vm);
-    var_setint(reg, cast(bint, i));
+    var_setint(reg, i);
 }
 
 void be_pushreal(bvm *vm, breal r)
