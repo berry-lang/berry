@@ -187,19 +187,19 @@ static int l_compile(bvm *vm)
 
 void be_load_baselib(bvm *vm)
 {
-    be_regcfunc(vm, "assert", l_assert);
-    be_regcfunc(vm, "print", l_print);
-    be_regcfunc(vm, "clock", l_clock);
-    be_regcfunc(vm, "exit", l_exit);
-    be_regcfunc(vm, "super", l_super);
-    be_regcfunc(vm, "memcount", l_memcount);
-    be_regcfunc(vm, "type", l_type);
-    be_regcfunc(vm, "classname", l_classname);
-    be_regcfunc(vm, "number", l_number);
-    be_regcfunc(vm, "str", l_str);
-    be_regcfunc(vm, "length", l_length);
-    be_regcfunc(vm, "compile", l_compile);
-    be_regcfunc(vm, "__iterator__", l_iterator);
-    be_regcfunc(vm, "__hasnext__", l_hasnext);
-    be_regcfunc(vm, "__next__", l_next);
+    be_regfunc(vm, "assert", l_assert);
+    be_regfunc(vm, "print", l_print);
+    be_regfunc(vm, "clock", l_clock);
+    be_regfunc(vm, "exit", l_exit);
+    be_regfunc(vm, "super", l_super);
+    be_regfunc(vm, "memcount", l_memcount);
+    be_regfunc(vm, "type", l_type);
+    be_regfunc(vm, "classname", l_classname);
+    be_regfunc(vm, "number", l_number);
+    be_regfunc(vm, "str", l_str);
+    be_regfunc(vm, "length", l_length);
+    be_regfunc(vm, "compile", l_compile);
+    be_regfunc(vm, "__iterator__", l_iterator);
+    be_regfunc(vm, "__hasnext__", l_hasnext);
+    be_regfunc(vm, "__next__", l_next);
 }

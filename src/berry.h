@@ -45,7 +45,7 @@ enum {
 #define BE_CMODULE              6
 
 typedef struct bvm bvm;
-typedef int (*bntvfunc)(bvm *vm);
+typedef int (*bntvfunc)(bvm*);
 
 typedef struct {
     const char *name;
@@ -206,7 +206,7 @@ int be_pcall(bvm *vm, int argc);
 void be_abort(void);
 void be_exit(bvm *vm, int status);
 
-void be_regcfunc(bvm *vm, const char *name, bntvfunc f);
+void be_regfunc(bvm *vm, const char *name, bntvfunc f);
 void be_regclass(bvm *vm, const char *name, const bnfuncinfo *lib);
 
 bvm* be_vm_new(void);

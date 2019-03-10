@@ -42,7 +42,7 @@ static void class_init(bvm *vm, bclass *c, const bnfuncinfo *lib)
     be_map_release(vm, c->members); /* clear space */
 }
 
-void be_regcfunc(bvm *vm, const char *name, bntvfunc f)
+void be_regfunc(bvm *vm, const char *name, bntvfunc f)
 {
     bstring *s = be_newstr(vm, name);
     int idx = be_globalvar_find(vm, s);
