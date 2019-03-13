@@ -93,14 +93,16 @@ int be_protectedparser(bvm *vm,
     int res;
     struct pparser s;
     int top = cast_int(vm->top - vm->stack);
+    int reg = cast_int(vm->reg - vm->stack);
     s.fname = fname;
     s.reader = reader;
     s.data = data;
     res = be_execprotected(vm, m_parser, &s);
     if (res) { /* recovery call stack */
         int idx = cast_int(vm->top - vm->reg);
-        vm->top = vm->stack + top;
-        be_pushvalue(vm, idx); /* copy error information */
+        vm->reg = vm->stack + reg;
+        be_moveto(vm, idx, top - reg + 1); /* copy error information */
+        vm->top = vm->stack + top + 1;
     }
     return res;
 }
@@ -168,11 +170,11 @@ int be_protectedcall(bvm *vm, bvalue *v, int argc)
     res = be_execprotected(vm, m_pcall, &s);
     if (res) { /* recovery call stack */
         int idx = cast_int(vm->top - (vm->stack + reg));
-        be_vector_resize(&vm->callstack, calldepth);
         vm->reg = vm->stack + reg;
-        vm->top = vm->stack + top;
+        be_moveto(vm, idx, top - reg + 1); /* copy error information */
+        vm->top = vm->stack + top + 1;
+        be_vector_resize(&vm->callstack, calldepth);
         vm->cf = be_stack_top(&vm->callstack);
-        be_pushvalue(vm, idx); /* copy error information */
     }
     return res;
 }

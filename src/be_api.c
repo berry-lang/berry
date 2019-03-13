@@ -191,9 +191,9 @@ breal be_toreal(bvm *vm, int index)
         return var_toreal(v);
     }
     if (var_isint(v)) {
-        return (breal)var_toint(v);
+        return cast(breal, var_toint(v));
     }
-    return (breal)0.0;
+    return cast(breal, 0.0);
 }
 
 int be_tobool(bvm *vm, int index)
