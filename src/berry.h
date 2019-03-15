@@ -27,13 +27,13 @@ typedef enum {
     btrue = 1
 } bbool;
 
-enum {
+enum berrorcode {
     BE_OK = 0,
     BE_IO_ERROR,
     BE_SYNTAX_ERROR,
     BE_EXEC_ERROR,
-    BE_EXIT,
-    BE_MALLOC_FAIL
+    BE_MALLOC_FAIL,
+    BE_EXIT
 };
 
 #define BE_CNIL                 0

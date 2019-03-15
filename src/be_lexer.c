@@ -309,6 +309,7 @@ static btokentype scan_numeral(blexer *lexer)
         if (!lexer->cacheType && scan_realexp(lexer)) {
             type = TokenReal;
         }
+        lexer->buf.s[lexer->buf.len] = '\0';
         if (type == TokenReal) {
             setreal(lexer, be_str2real(lexbuf(lexer), NULL));
         } else {

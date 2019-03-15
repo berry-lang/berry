@@ -191,7 +191,8 @@ bvalue* be_incrtop(bvm *vm)
 
 void be_stackpush(bvm *vm)
 {
-    be_stack_require(vm, 1);
+    /* make sure there is enough stack space */
+    be_stack_require(vm, 1 + BE_STACK_FREE_MIN);
     be_incrtop(vm);
 }
 
