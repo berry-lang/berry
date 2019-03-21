@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define READLINE_STEP       100
+
 static int l_assert(bvm *vm)
 {
     /* assertion fails when there is no argument
@@ -28,6 +30,35 @@ static int l_print(bvm *vm)
     }
     be_fwrite(stdout, "\n", 1);
     be_return_nil(vm);
+}
+
+static char* m_readline()
+{
+    size_t pos = 0, size = READLINE_STEP;
+    char *buffer = be_malloc(size);
+    char *res = be_fgets(stdin, buffer, (int)size);
+    while (res) {
+        pos += strlen(buffer + pos) - 1;
+        if (!pos || buffer[pos] == '\n') {
+            break;
+        }
+        size += READLINE_STEP;
+        buffer = be_realloc(buffer, size);
+        res = be_fgets(stdin, buffer + pos + 1, READLINE_STEP);
+    }
+    return buffer;
+}
+
+static int l_input(bvm *vm)
+{
+    char *line;
+    if (be_top(vm) && be_isstring(vm, 1)) { /* echo prompt */
+        be_writestring(be_tostring(vm, 1));
+    }
+    line = m_readline();
+    be_pushstring(vm, line);
+    be_free(line);
+    be_return(vm);
 }
 
 static int l_clock(bvm *vm)
@@ -189,6 +220,7 @@ void be_load_baselib(bvm *vm)
 {
     be_regfunc(vm, "assert", l_assert);
     be_regfunc(vm, "print", l_print);
+    be_regfunc(vm, "input", l_input);
     be_regfunc(vm, "clock", l_clock);
     be_regfunc(vm, "exit", l_exit);
     be_regfunc(vm, "super", l_super);

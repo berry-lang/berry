@@ -57,7 +57,6 @@
  * point you can use the import statement to import the module.
  * They will not compile related modules when they are false.
  **/
-#define BE_USE_IO_MODULE                1
 #define BE_USE_STRING_MODULE            1
 #define BE_USE_JSON_MODULE              1
 #define BE_USE_MATH_MODULE              1
