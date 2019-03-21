@@ -69,12 +69,6 @@ int be_top(bvm *vm)
     return cast_int(vm->top - vm->reg);
 }
 
-int be_type(bvm *vm, int index)
-{
-    bvalue *v = index2value(vm, index);
-    return var_type(v);
-}
-
 void be_pop(bvm *vm, int n)
 {
     be_stackpop(vm, n);
