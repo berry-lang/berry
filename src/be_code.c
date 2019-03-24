@@ -103,7 +103,7 @@ static int isjumpbool(bfuncinfo *finfo, int pc)
 
 static int get_jump(bfuncinfo *finfo, int pc)
 {
-    binstruction *i = be_vector_at(&finfo->code, (pc));
+    binstruction *i = be_vector_at(&finfo->code, pc);
     int offset = IGET_sBx(*i);
     return offset == NO_JUMP ? NO_JUMP : pc + 1 + offset;
 }

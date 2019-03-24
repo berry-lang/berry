@@ -63,7 +63,7 @@ static void print_inst(binstruction ins, int pc)
     }
 }
 
-void print_code(bproto *proto)
+static void print_code(bproto *proto)
 {
     int pc;
     binstruction *code = proto->code;
@@ -82,7 +82,7 @@ void print_code(bproto *proto)
     printf("\n");
 }
 
-void printproto(bproto *proto)
+static void printproto(bproto *proto)
 {
     int i;
     printf("function '%s':\n", str(proto->name));

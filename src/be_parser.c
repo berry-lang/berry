@@ -124,12 +124,12 @@ static void end_block(bparser *parser)
     bblockinfo *binfo = finfo->binfo;
     int nlocal = be_list_count(finfo->local);
 
+    be_code_close(finfo, 0); /* close upvalues */
     if (binfo->isloop) {
         be_code_jumpto(finfo, binfo->beginpc);
         be_code_patchjump(finfo, binfo->breaklist);
         be_code_patchlist(finfo, binfo->continuelist, binfo->beginpc);
     }
-    be_code_close(finfo, 0); /* close upvalues */
     be_list_resize(finfo->local, binfo->nactlocals);
     finfo->nlocal = (bbyte)max(finfo->nlocal, nlocal);
     finfo->freereg = binfo->nactlocals;
@@ -478,6 +478,7 @@ static void list_nextmember(bparser *parser, bexpdesc *l)
     base = be_code_nextreg(finfo, &v);
     be_code_getmethod(finfo);
     /* copy source value to next register */
+    init_exp(&e, ETVOID, 0);
     expr(parser, &e);
     check_var(parser, &e);
     be_code_nextreg(finfo, &e);
@@ -499,10 +500,12 @@ static void map_nextmember(bparser *parser, bexpdesc *l)
     base = be_code_nextreg(finfo, &v);
     be_code_getmethod(finfo);
     /* copy source value to next register */
+    init_exp(&e, ETVOID, 0);
     expr(parser, &e); /* key */
     check_var(parser, &e);
     be_code_nextreg(finfo, &e);
     match_token(parser, OptColon); /* ':' */
+    init_exp(&e, ETVOID, 0);
     expr(parser, &e); /* value */
     check_var(parser, &e);
     be_code_nextreg(finfo, &e);
@@ -874,23 +877,23 @@ static void for_init(bparser *parser, bexpdesc *v)
     bfuncinfo *finfo = parser->finfo;
     size_t top = stack_save(parser);
 
-    /* $it = __iterator__(expr) */
+    /* .it = __iterator__(expr) */
     s = be_newstr(vm, "__iterator__");
     init_exp(&e, ETGLOBAL, be_globalvar_find(vm, s));
     be_code_nextreg(finfo, &e); /* code function '__iterator__' */
     expr(parser, v);
     be_code_nextreg(finfo, v);
     be_code_call(finfo, e.v.idx, 1); /* call __iterator__(expr) */
-    s = be_newstr(vm, "$it");
+    s = be_newstr(vm, ".it");
     init_exp(v, ETLOCAL, new_localvar(finfo, s));
-    be_code_setvar(finfo, v, &e); /* code $it = __iterator__(expr) */
+    be_code_setvar(finfo, v, &e); /* code .it = __iterator__(expr) */
     be_code_freeregs(finfo, 2); /* free registers */
     stack_reset(parser, top);
 }
 
 /*
- * while (__hasnext__($it))
- *     var = __next__($it)
+ * while (__hasnext__(.it))
+ *     var = __next__(.it)
  *     stmtlist
  * end
  */
@@ -903,22 +906,22 @@ static void for_iter(bparser *parser, bexpdesc *v, bexpdesc *it)
     bfuncinfo *finfo = parser->finfo;
 
     blobk_setloop(finfo);
-    /* __hasnext__($it) */
+    /* __hasnext__(.it) */
     s = be_newstr(vm, "__hasnext__");
     init_exp(&e, ETGLOBAL, be_globalvar_find(vm, s));
     be_code_nextreg(finfo, &e); /* code function '__hasnext__' */
-    be_code_nextreg(finfo, it); /* code argv[0]: '$it' */
-    be_code_call(finfo, e.v.idx, 1); /* call __hasnext__($it) */
+    be_code_nextreg(finfo, it); /* code argv[0]: '.it' */
+    be_code_call(finfo, e.v.idx, 1); /* call __hasnext__(.it) */
     be_code_freeregs(finfo, 1); /* free registers */
     be_code_goiftrue(finfo, &e);
     brk = e.f;
-    /* var = __next__($it) */
+    /* var = __next__(.it) */
     s = be_newstr(vm, "__next__");
     init_exp(&e, ETGLOBAL, be_globalvar_find(vm, s));
     be_code_nextreg(finfo, &e); /* code function '__next__' */
-    be_code_nextreg(finfo, it); /* code argv[0]: '$it' */
-    be_code_call(finfo, e.v.idx, 1); /* call __next__($it) */
-    be_code_setvar(finfo, v, &e); /* code var = __next__($it) */
+    be_code_nextreg(finfo, it); /* code argv[0]: '.it' */
+    be_code_call(finfo, e.v.idx, 1); /* call __next__(.it) */
+    be_code_setvar(finfo, v, &e); /* code var = __next__(.it) */
     be_code_freeregs(finfo, 2); /* free registers */
     stmtlist(parser);
     end_block(parser);

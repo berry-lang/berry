@@ -71,6 +71,7 @@ int be_top(bvm *vm)
 
 void be_pop(bvm *vm, int n)
 {
+    be_assert(n <= vm->top - vm->reg);
     be_stackpop(vm, n);
 }
 
@@ -79,6 +80,7 @@ int be_absindex(bvm *vm, int index)
     if (index > 0) {
         return index;
     }
+    be_assert(vm->reg <= vm->top + index);
     return cast_int(vm->top + index - vm->reg + 1);
 }
 

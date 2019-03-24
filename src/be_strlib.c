@@ -300,7 +300,7 @@ const char* be_str2num(bvm *vm, const char *str)
 #define MAX_FORMAT_MODE     32
 #define FLAGES              "+- #0"
 
-const char* skip2dig(const char *s)
+static const char* skip2dig(const char *s)
 {
     if (is_digit(*s)) {
         ++s;
@@ -311,7 +311,7 @@ const char* skip2dig(const char *s)
     return s;
 }
 
-const char* get_mode(const char *str, char *buf)
+static const char* get_mode(const char *str, char *buf)
 {
     const char *p = str;
     while (*p && strchr(FLAGES, *p)) { /* skip flags */
@@ -327,7 +327,7 @@ const char* get_mode(const char *str, char *buf)
     return p;
 }
 
-int str_format(bvm *vm)
+static int str_format(bvm *vm)
 {
     int top = be_top(vm);
     if (top > 0 && be_isstring(vm, 1)) {
