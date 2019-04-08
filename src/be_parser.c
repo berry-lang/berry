@@ -17,7 +17,8 @@
 
 #define OP_NOT_BINARY           TokenNone
 #define OP_NOT_UNARY            TokenNone
-#define UNARY_OP_PRIO           8
+#define UNARY_OP_PRIO           3
+#define ASSIGN_OP_PRIO          15
 
 /* get binary operator priority */
 #define binary_op_prio(op)      (binary_op_prio_tab[cast_int(op) - OptAdd])
@@ -54,8 +55,9 @@ static void block(bparser *parser);
 static void expr(bparser *parser, bexpdesc *e);
 
 static const int binary_op_prio_tab[] = {
-    7, 7, 8, 8, 8, /* + - * / % */
-    5, 5, 5, 5, 5, 5, 6, 4, 3 /* < <= == != > >= .. && || */
+    5, 5, 4, 4, 4, /* + - * / % */
+    11, 11, 12, 12, 11, 11, /* < <= == != > >= */
+    10, 7, 9, 8, 6, 6, 13, 14 /*  .. & | ^ << >> && || */
 };
 
 static void match_token(bparser *parser, btokentype type)
@@ -236,8 +238,8 @@ static btokentype get_unary_op(bparser *parser)
 {
     btokentype op = next_token(parser).type;
 
-    if (op == OptAdd || op == OptSub || op == OptNot) {
-        return op; /* operator 'positive', 'negative' and 'not' */
+    if (op == OptSub || op == OptNot || op == OptFlip) {
+        return op; /* operator 'negative' 'not' and 'flip' */
     }
     return OP_NOT_UNARY;
 }
@@ -746,13 +748,13 @@ static void sub_expr(bparser *parser, bexpdesc *e, int prio)
         sub_expr(parser, e, UNARY_OP_PRIO);
         check_var(parser, e);
         if (be_code_unop(finfo, op, e)) { /* encode unary op */
-            parser_error(parser, "neg error");
+            parser_error(parser, "unop error");
         }
     } else {
         simple_expr(parser, e);
     }
     op = get_binop(parser);
-    while (op != OP_NOT_BINARY && binary_op_prio(op) > prio) {
+    while (op != OP_NOT_BINARY && prio > binary_op_prio(op)) {
         bexpdesc e2;
         init_exp(&e2, ETVOID, 0);
         scan_next_token(parser);
@@ -767,7 +769,7 @@ static void sub_expr(bparser *parser, bexpdesc *e, int prio)
 
 static void expr(bparser *parser, bexpdesc *e)
 {
-    sub_expr(parser, e, 2);
+    sub_expr(parser, e, ASSIGN_OP_PRIO);
 }
 
 static void expr_stmt(bparser *parser)

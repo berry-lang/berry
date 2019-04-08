@@ -64,7 +64,13 @@ typedef enum {
     OP_GT,        /*  A, B, C  |   R(A) <- RK(B) > RK(C) */
     OP_GE,        /*  A, B, C  |   R(A) <- RK(B) >= RK(C) */
     OP_RANGE,     /*  A, B, C  |   R(A) <- range(RK(B), RK(C)) */
+    OP_AND,       /*  A, B, C  |   R(A) <- RK(B) & RK(C) */
+    OP_OR,        /*  A, B, C  |   R(A) <- RK(B) | RK(C) */
+    OP_XOR,       /*  A, B, C  |   R(A) <- RK(B) ^ RK(C) */
+    OP_SHL,       /*  A, B, C  |   R(A) <- RK(B) << RK(C) */
+    OP_SHR,       /*  A, B, C  |   R(A) <- RK(B) >> RK(C) */
     OP_NEG,       /*  A, B     |   R(A) <- -RK(B) */
+    OP_NOT,       /*  A, B     |   R(A) <- ~RK(B) */
     OP_LDNIL,     /*  A        |   R(A) <- nil */
     OP_LDBOOL,    /*  A, B, C  |   R(A) <- cast_bool(B), if(C): pc++ */
     OP_LDINT,     /*  A, sBx   |   R(A) <- sBx */

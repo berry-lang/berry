@@ -26,10 +26,16 @@ typedef enum {
     OptGT,          /* operator, > */
     OptGE,          /* operator, >= */
     OptRange,       /* operator, .. */
+    OptBitAnd,      /* operatoe, &  */
+    OptBitOr,       /* operatoe, |  */
+    OptBitXor,      /* operatoe, ^  */
+    OptShiftL,      /* operatoe, <<  */
+    OptShiftR,      /* operatoe, >>  */
     OptAnd,         /* operator, && */
     OptOr,          /* operator, || */
     /* unary operator */
-    OptNot,        /* operator, ! */
+    OptNot,         /* operator, ! */
+    OptFlip,        /* operator, ~ */
     /* postfix operator or bracket */
     OptLBK,         /* operator, ( bracket */
     OptRBK,         /* operator, ) bracket */

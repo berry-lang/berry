@@ -21,12 +21,12 @@
 static const char* const kwords_tab[] = {
         "NONE", "EOS", "ID", "INT", "REAL", "STR",
         "=", "+", "-", "*", "/", "%", "<", "<=",
-        "==", "!=", ">", ">=", "..", "&&", "||", "!",
-        "(", ")", "[", "]", "{", "}", ".", ",", ";",
-        ":", "if", "elif", "else", "while", "for",
-        "def", "end", "class", "break", "continue",
-        "return", "true", "false", "nil", "var", "do",
-        "import", "as"
+        "==", "!=", ">", ">=", "..", "&", "|", "^",
+        "<<", ">>", "&&", "||", "!", "~", "(", ")",
+        "[", "]", "{", "}", ".", ",", ";", ":", "if",
+        "elif", "else", "while", "for", "def", "end",
+        "class", "break", "continue", "return", "true",
+        "false", "nil", "var", "do", "import", "as"
 };
 
 void be_lexerror(blexer *lexer, const char *msg)
@@ -349,22 +349,46 @@ static btokentype scan_string(blexer *lexer)
     return TokenString;
 }
 
-static btokentype opt_and(blexer *lexer)
+static btokentype scan_x26(blexer *lexer)
 {
     next(lexer);
     if (!check_next(lexer, '&')) {
-        be_lexerror(lexer, "operator '&&' spelling mistakes");
+        return OptBitAnd;
     }
     return OptAnd;
 }
 
-static btokentype opt_or(blexer *lexer)
+static btokentype scan_x7c(blexer *lexer)
 {
     next(lexer);
     if (!check_next(lexer, '|')) {
-        be_lexerror(lexer, "operator '||' spelling mistakes");
+        return OptBitOr;
     }
     return OptOr;
+}
+
+static btokentype scan_x3c(blexer *lexer)
+{
+    btokentype op;
+    switch (next(lexer)) {
+        case '=': op = OptLE; break;
+        case '<': op = OptShiftL; break;
+        default: return OptLT;
+    }
+    next(lexer);
+    return op;
+}
+
+static btokentype scan_x3e(blexer *lexer)
+{
+    btokentype op;
+    switch (next(lexer)) {
+        case '=': op = OptGE; break;
+        case '>': op = OptShiftR; break;
+        default: return OptGT;
+    }
+    next(lexer);
+    return op;
 }
 
 static btokentype lexer_next(blexer *lexer)
@@ -395,17 +419,15 @@ static btokentype lexer_next(blexer *lexer)
         case ',': next(lexer); return OptComma;
         case ';': next(lexer); return OptSemic;
         case ':': next(lexer); return OptColon;
-        case '&': return opt_and(lexer);
-        case '|': return opt_or(lexer);
-        case '<':
-            next(lexer);
-            return check_next(lexer, '=') ? OptLE : OptLT;
+        case '^': next(lexer); return OptBitXor;
+        case '~': next(lexer); return OptFlip;
+        case '&': return scan_x26(lexer);
+        case '|': return scan_x7c(lexer);
+        case '<': return scan_x3c(lexer);
+        case '>': return scan_x3e(lexer);
         case '=':
             next(lexer);
             return check_next(lexer, '=') ? OptEQ : OptAssign;
-        case '>':
-            next(lexer);
-            return check_next(lexer, '=') ? OptGE : OptGT;
         case '!':
             next(lexer);
             return check_next(lexer, '=') ? OptNE : OptNot;

@@ -80,6 +80,16 @@
         var_setbool(dst, 1 op 0); \
     }
 
+#define bitwise_block(op) \
+    bvalue *dst = RA(ins), *a = RKB(ins), *b = RKC(ins); \
+    if (var_isint(a) && var_isint(b)) { \
+        var_setint(dst, ibinop(op, a, b)); \
+    } else if (var_isinstance(a)) { \
+        object_binop(vm, #op, ins, a, b); \
+    } else { \
+        binop_error(vm, #op, a, b); \
+    }
+
 /* script closure call */
 #define push_closure(_vm, _f, _ns, _t) { \
     bclosure *cl = var_toobj(_f); \
@@ -405,12 +415,29 @@ static void i_neg(bvm *vm, binstruction ins)
     }
 }
 
+static void i_not(bvm *vm, binstruction ins)
+{
+    bvalue *dst = RA(ins), *a = RKB(ins);
+    if (var_isint(a)) {
+        var_setint(dst, -a->v.i);
+    } else if (var_isinstance(a)) {
+        object_unop(vm, "~", ins, a);
+    } else {
+        unop_error(vm, "~", a);
+    }
+}
+
 define_function(i_lt, relop_block(<))
 define_function(i_le, relop_block(<=))
 define_function(i_gt, relop_block(>))
 define_function(i_ge, relop_block(>=))
 define_function(i_eq, equal_block(==))
 define_function(i_ne, equal_block(!=))
+define_function(i_and, bitwise_block(&))
+define_function(i_or, bitwise_block(|))
+define_function(i_xor, bitwise_block(^))
+define_function(i_shl, bitwise_block(<<))
+define_function(i_shr, bitwise_block(>>))
 
 static void i_range(bvm *vm, binstruction ins)
 {
@@ -729,7 +756,13 @@ static void vm_exec(bvm *vm)
         case OP_GT: i_gt(vm, ins); break;
         case OP_GE: i_ge(vm, ins); break;
         case OP_RANGE: i_range(vm, ins); break;
+        case OP_AND: i_and(vm, ins); break;
+        case OP_OR: i_or(vm, ins); break;
+        case OP_XOR: i_xor(vm, ins); break;
+        case OP_SHL: i_shl(vm, ins); break;
+        case OP_SHR: i_shr(vm, ins); break;
         case OP_NEG: i_neg(vm, ins); break;
+        case OP_NOT: i_not(vm, ins); break;
         case OP_JMP: i_jump(vm, ins); break;
         case OP_JMPT: i_jumptrue(vm, ins); break;
         case OP_JMPF: i_jumpfalse(vm, ins); break;

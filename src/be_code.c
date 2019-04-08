@@ -431,6 +431,8 @@ void be_code_binop(bfuncinfo *finfo, int op, bexpdesc *e1, bexpdesc *e2)
     case OptAdd: case OptSub: case OptMul: case OptDiv:
     case OptMod: case OptLT: case OptLE: case OptEQ:
     case OptNE: case OptGT: case OptGE: case OptRange:
+    case OptBitAnd: case OptBitOr: case OptBitXor:
+    case OptShiftL: case OptShiftR:
         binryexp(finfo, (bopcode)(op - OptAdd), e1, e2);
         break;
     default: break;
@@ -455,6 +457,23 @@ static int code_neg(bfuncinfo *finfo, bexpdesc *e)
     return 0;
 }
 
+static int code_flip(bfuncinfo *finfo, bexpdesc *e)
+{
+    switch (e->type) {
+    case ETINT: e->v.i = ~e->v.i; break;
+    case ETREAL: case ETNIL: case ETBOOL: case ETSTRING:
+        return 1; /* error */
+    default: {
+        int src = exp2anyreg(finfo, e);
+        int dst = e->type == ETREG ? src : be_code_allocregs(finfo, 1);
+        codeABC(finfo, OP_NOT, dst, src, 0);
+        return 0;
+    }
+    }
+    exp2anyreg(finfo, e);
+    return 0;
+}
+
 int be_code_unop(bfuncinfo *finfo, int op, bexpdesc *e)
 {
     switch (op) {
@@ -465,8 +484,8 @@ int be_code_unop(bfuncinfo *finfo, int op, bexpdesc *e)
         e->not = !e->not;
         break;
     }
-    case OptAdd: /* do nothing */
-        break;
+    case OptFlip: /* do nothing */
+        return code_flip(finfo, e);
     case OptSub:
         return code_neg(finfo, e);
     default:
