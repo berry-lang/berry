@@ -3,11 +3,10 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 
 #include "berry_conf.h"
 
-#define BERRY_VERSION   "0.0.5"
+#define BERRY_VERSION   "0.0.6"
 
 #if BE_STACK_TOTAL_MAX < BE_STACK_FREE_MIN * 2
 #error "The value of the macro BE_STACK_TOTAL_MAX is too small."

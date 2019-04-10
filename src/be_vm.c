@@ -635,9 +635,12 @@ static void i_getindex(bvm *vm, binstruction ins)
         be_dofunc(vm, top, 2); /* call method 'item' */
         vm->top -= 3;
         *RA(ins) = *vm->top;   /* copy result to R(A) */
+    } else if (var_isstr(b)) {
+        bstring *s = be_strindex(vm, var_tostr(b), c);
+        var_setstr(RA(ins), s);
     } else {
         vm_error(vm,
-            "value '%s' does not support index operation",
+            "value '%s' does not support subscriptable",
             be_vtype2str(b));
     }
 }
@@ -657,7 +660,7 @@ static void i_setindex(bvm *vm, binstruction ins)
         vm->top -= 4;
     } else {
         vm_error(vm,
-            "value '%s' does not support index operation",
+            "value '%s' does not support index assignment",
             be_vtype2str(b));
     }
 }

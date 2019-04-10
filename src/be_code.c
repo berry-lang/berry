@@ -282,7 +282,7 @@ static void free_suffix(bfuncinfo *finfo, bexpdesc *e)
     if (!isK(idx) && idx > nlocal) {
         be_code_freeregs(finfo, 1);
     }
-    if (e->v.ss.tt == ETREG && e->v.ss.obj > nlocal) {
+    if (e->v.ss.tt == ETREG && (int)e->v.ss.obj > nlocal) {
         be_code_freeregs(finfo, 1);
     }
 }
@@ -620,16 +620,16 @@ void be_code_ret(bfuncinfo *finfo, bexpdesc *e)
 
 void be_code_member(bfuncinfo *finfo, bexpdesc *c, bexpdesc *k)
 {
-    c->v.ss.obj = (bbyte)exp2anyreg(finfo, c);
-    c->v.ss.idx = (short)exp2anyreg(finfo, k);
+    c->v.ss.obj = exp2anyreg(finfo, c);
+    c->v.ss.idx = exp2anyreg(finfo, k);
     c->v.ss.tt = c->type;
     c->type = ETMEMBER;
 }
 
 void be_code_index(bfuncinfo *finfo, bexpdesc *c, bexpdesc *k)
 {
-    c->v.ss.obj = (bbyte)exp2anyreg(finfo, c);
-    c->v.ss.idx = (short)exp2anyreg(finfo, k);
+    c->v.ss.obj = exp2anyreg(finfo, c);
+    c->v.ss.idx = exp2anyreg(finfo, k);
     c->v.ss.tt = c->type;
     c->type = ETINDEX;
 }

@@ -1,4 +1,5 @@
 #include "be_object.h"
+#include <string.h>
 
 #define list_check_data(vm, argc)                       \
     if (!be_islist(vm, -1) || be_top(vm) - 1 < argc) {  \

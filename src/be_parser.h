@@ -24,9 +24,9 @@ typedef enum {
 typedef struct {
     union {
         struct { /* for suffix */
-            short idx; /* suffix RK index */
-            bbyte obj; /* object index */
-            bbyte tt; /* object type */
+            unsigned int idx:9; /* suffix RK index */
+            unsigned int obj:9; /* object RK index */
+            unsigned int tt:5; /* object type */
         } ss;
         breal r;     /* for ETREAL */
         bint i;      /* for ETINT */

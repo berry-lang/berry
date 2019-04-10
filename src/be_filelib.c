@@ -1,5 +1,6 @@
 #include "be_object.h"
 #include "be_mem.h"
+#include <string.h>
 
 #define READLINE_STEP           100
 
