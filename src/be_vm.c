@@ -618,7 +618,7 @@ static void i_setmember(bvm *vm, binstruction ins)
                 str(be_instance_name(obj)), str(attr));
         }
     } else {
-        attribute_error(vm, b, c, "attribute");
+        attribute_error(vm, a, b, "writable attribute");
     }
 }
 
