@@ -295,6 +295,19 @@ const char* be_str2num(bvm *vm, const char *str)
     return sout;
 }
 
+bstring* be_strindex(bvm *vm, bstring *str, bvalue *idx)
+{
+    if (var_isint(idx)) {
+        int pos = var_toint(idx);
+        if (pos < str_len(str)) {
+            return be_newstrn(vm, str(str) + pos, 1);
+        }
+        be_pusherror(vm, "string index out of range");
+    }
+    be_pusherror(vm, "string indices must be integers");
+    return NULL;
+}
+
 #ifdef BE_USE_STRING_MODULE
 
 #define MAX_FORMAT_MODE     32

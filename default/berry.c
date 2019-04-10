@@ -2,6 +2,7 @@
 #include "be_repl.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #if defined(USE_READLINE_LIB)
     #include <readline/readline.h>

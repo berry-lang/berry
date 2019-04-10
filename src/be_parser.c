@@ -627,9 +627,44 @@ static void index_expr(bparser *parser, bexpdesc *e)
     /* [expr] */
     check_var(parser, e);
     scan_next_token(parser); /* skip '[' */
+    init_exp(&e1, ETVOID, 0);
     expr(parser, &e1);
+    check_var(parser, &e1);
     be_code_index(parser->finfo, e, &e1);
     match_token(parser, OptRSB); /* skip ']' */
+}
+
+static void simple_expr(bparser *parser, bexpdesc *e)
+{
+    switch (next_token(parser).type) {
+    case TokenInteger:
+        init_exp(e, ETINT, next_token(parser).u.i);
+        break;
+    case TokenReal:
+        init_exp(e, ETREAL, 0);
+        e->v.r = next_token(parser).u.r;
+        break;
+    case TokenString:
+        init_exp(e, ETSTRING, 0);
+        e->v.s = next_token(parser).u.s;
+        string_protect(parser, e->v.s);
+        break;
+    case TokenId:
+        singlevar(parser, e);
+        break;
+    case KeyTrue:
+        init_exp(e, ETBOOL, 1);
+        break;
+    case KeyFalse:
+        init_exp(e, ETBOOL, 0);
+        break;
+    case KeyNil:
+        init_exp(e, ETNIL, 0);
+        break;
+    default: /* unknow expr */
+        return;
+    }
+    scan_next_token(parser);
 }
 
 static void primary_expr(bparser *parser, bexpdesc *e)
@@ -640,10 +675,6 @@ static void primary_expr(bparser *parser, bexpdesc *e)
         expr(parser, e);
         match_token(parser, OptRBK); /* skip ')' */
         break;
-    case TokenId:
-        singlevar(parser, e);
-        scan_next_token(parser);
-        break;
     case OptLSB: /* list */
         list_expr(parser, e);
         break;
@@ -653,8 +684,9 @@ static void primary_expr(bparser *parser, bexpdesc *e)
     case KeyDef: /* anonymous function */
         anon_func(parser, e);
         break;
-    default: /* unknow expr */
-        return;
+    default: /* simple expr */
+        simple_expr(parser, e);
+        break;
     }
 }
 
@@ -676,37 +708,6 @@ static void suffix_expr(bparser *parser, bexpdesc *e)
             return;
         }
     }
-}
-
-static void simple_expr(bparser *parser, bexpdesc *e)
-{
-    switch (next_token(parser).type) {
-    case TokenInteger:
-        init_exp(e, ETINT, next_token(parser).u.i);
-        break;
-    case TokenReal:
-        init_exp(e, ETREAL, 0);
-        e->v.r = next_token(parser).u.r;
-        break;
-    case TokenString:
-        init_exp(e, ETSTRING, 0);
-        e->v.s = next_token(parser).u.s;
-        string_protect(parser, e->v.s);
-        break;
-    case KeyTrue:
-        init_exp(e, ETBOOL, 1);
-        break;
-    case KeyFalse:
-        init_exp(e, ETBOOL, 0);
-        break;
-    case KeyNil:
-        init_exp(e, ETNIL, 0);
-        break;
-    default:
-        suffix_expr(parser, e);
-        return;
-    }
-    scan_next_token(parser);
 }
 
 static void assign_expr(bparser *parser)
@@ -751,7 +752,7 @@ static void sub_expr(bparser *parser, bexpdesc *e, int prio)
             parser_error(parser, "unop error");
         }
     } else {
-        simple_expr(parser, e);
+        suffix_expr(parser, e);
     }
     op = get_binop(parser);
     while (op != OP_NOT_BINARY && prio > binary_op_prio(op)) {

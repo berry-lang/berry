@@ -282,7 +282,7 @@ static void free_suffix(bfuncinfo *finfo, bexpdesc *e)
     if (!isK(idx) && idx > nlocal) {
         be_code_freeregs(finfo, 1);
     }
-    if (e->v.ss.tt == ETREG && e->v.ss.obj > nlocal) {
+    if (e->v.ss.tt == ETREG && (int)e->v.ss.obj > nlocal) {
         be_code_freeregs(finfo, 1);
     }
 }
@@ -507,10 +507,15 @@ static void setsupvar(bfuncinfo *finfo, bopcode op, bexpdesc *e1, bexpdesc *e2)
 
 static void setsfxvar(bfuncinfo *finfo, bopcode op, bexpdesc *e1, bexpdesc *e2)
 {
+    int obj = e1->v.ss.obj;
     int src = exp2anyreg(finfo, e2);
     free_expreg(finfo, e2);
     free_suffix(finfo, e1);
-    codeABC(finfo, op, e1->v.ss.obj, e1->v.ss.idx, src);
+    if (isK(obj)) { /* move const to register */
+        code_move(finfo, finfo->freereg, obj);
+        obj = finfo->freereg;
+    }
+    codeABC(finfo, op, obj, e1->v.ss.idx, src);
 }
 
 int be_code_setvar(bfuncinfo *finfo, bexpdesc *e1, bexpdesc *e2)
@@ -620,16 +625,16 @@ void be_code_ret(bfuncinfo *finfo, bexpdesc *e)
 
 void be_code_member(bfuncinfo *finfo, bexpdesc *c, bexpdesc *k)
 {
-    c->v.ss.obj = (bbyte)exp2anyreg(finfo, c);
-    c->v.ss.idx = (short)exp2anyreg(finfo, k);
+    c->v.ss.obj = exp2anyreg(finfo, c);
+    c->v.ss.idx = exp2anyreg(finfo, k);
     c->v.ss.tt = c->type;
     c->type = ETMEMBER;
 }
 
 void be_code_index(bfuncinfo *finfo, bexpdesc *c, bexpdesc *k)
 {
-    c->v.ss.obj = (bbyte)exp2anyreg(finfo, c);
-    c->v.ss.idx = (short)exp2anyreg(finfo, k);
+    c->v.ss.obj = exp2anyreg(finfo, c);
+    c->v.ss.idx = exp2anyreg(finfo, k);
     c->v.ss.tt = c->type;
     c->type = ETINDEX;
 }
