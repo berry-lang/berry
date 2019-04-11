@@ -39,9 +39,9 @@
 
 /* Macro: BE_STACK_TOTAL_MAX
  * Set the maximum total stack size.
- * default: 200
+ * default: 2000
  **/
-#define BE_STACK_TOTAL_MAX              200
+#define BE_STACK_TOTAL_MAX              2000
 
 /* Macro: BE_STACK_FREE_MIN
  * Set the minimum free count of the stack. The stack idles will

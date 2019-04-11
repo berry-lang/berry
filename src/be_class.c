@@ -1,7 +1,8 @@
 #include "be_class.h"
+#include "be_string.h"
 #include "be_vector.h"
 #include "be_map.h"
-#include "be_string.h"
+#include "be_exec.h"
 #include "be_gc.h"
 #include "be_vm.h"
 #include "be_func.h"
@@ -11,6 +12,8 @@ bclass* be_newclass(bvm *vm, bstring *name, bclass *super)
 {
     bgcobject *gco = be_gcnew(vm, BE_CLASS, bclass);
     bclass *obj = cast_class(gco);
+    bvalue *buf = be_incrtop(vm); /* protect new objects from GC */
+    var_setclass(buf, obj);
     if (obj) {
         obj->super = super;
         obj->members = NULL; /* gc protection */
@@ -18,6 +21,7 @@ bclass* be_newclass(bvm *vm, bstring *name, bclass *super)
         obj->name = name;
         obj->members = be_map_new(vm);
     }
+    be_stackpop(vm, 1);
     return obj;
 }
 
@@ -59,22 +63,34 @@ binstance* instance_member(binstance *obj, bstring *name, bvalue *dst)
     return NULL;
 }
 
+static binstance* newobjself(bvm *vm, bclass *c)
+{
+    size_t size = sizeof(binstance) + sizeof(bvalue) * (c->nvar - 1);
+    bgcobject *gco = be_newgcobj(vm, BE_INSTANCE, size);
+    binstance *obj = cast_instance(gco);
+    be_assert(obj != NULL);
+    if (obj) { /* initialize members */
+        bvalue *v = obj->members, *end = v + c->nvar;
+        while (v < end) { var_setnil(v); ++v; }
+        obj->class = c;
+        obj->super = NULL;
+    }
+    return obj;
+}
+
 static binstance* newobject(bvm *vm, bclass *c)
 {
-    if (c) {
-        size_t size = sizeof(binstance) + sizeof(bvalue) * (c->nvar - 1);
-        bgcobject *gco = be_newgcobj(vm, BE_INSTANCE, size);
-        binstance *obj = cast_instance(gco);
-        if (obj) {
-            /* initialize members */
-            bvalue *v = obj->members, *end = v + c->nvar;
-            while (v < end) { var_setnil(v); ++v; }
-            obj->class = c;
-            obj->super = newobject(vm, c->super);
-            return obj;
-        }
+    binstance *obj, *prev;
+    bvalue *buf = be_incrtop(vm); /* protect new objects from GC */
+    be_assert(c != NULL);
+    obj = prev = newobjself(vm, c);
+    var_setinstance(buf, obj);
+    for (c = c->super; c; c = c->super) {
+        prev->super = newobjself(vm, c);
+        prev = prev->super;
     }
-    return NULL;
+    be_stackpop(vm, 1);
+    return obj;
 }
 
 int be_class_newobj(bvm *vm, bclass *c, bvalue *argv, int argc)

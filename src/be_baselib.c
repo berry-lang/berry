@@ -70,7 +70,7 @@ static int l_clock(bvm *vm)
 static int l_exit(bvm *vm)
 {
     int status = 0;
-    if (be_isint(vm, -1)) {
+    if (be_top(vm) && be_isint(vm, -1)) {
         status = be_toint(vm, -1);
     }
     be_exit(vm, status);
@@ -90,36 +90,44 @@ static int l_memcount(bvm *vm)
 
 static int l_super(bvm *vm)
 {
-    be_getsuper(vm, 1);
-    be_return(vm);
+    if (be_top(vm)) {
+        be_getsuper(vm, 1);
+        be_return(vm);
+    }
+    be_return_nil(vm);
 }
 
 static int l_type(bvm *vm)
 {
-    const char *t = be_typename(vm, 1);
-    be_pushstring(vm, t);
-    be_return(vm);
+    if (be_top(vm)) {
+        be_pushstring(vm, be_typename(vm, 1));
+        be_return(vm);
+    }
+    be_return_nil(vm);
 }
 
 static int l_classname(bvm *vm)
 {
-    const char *t = be_classname(vm, 1);
-    if (t) {
-        be_pushstring(vm, t);
-    } else {
-        be_pushnil(vm);
+    if (be_top(vm)) {
+        const char *t = be_classname(vm, 1);
+        if (t) {
+            be_pushstring(vm, t);
+            be_return(vm);
+        }
     }
-    be_return(vm);
+    be_return_nil(vm);
 }
 
 static int l_number(bvm *vm)
 {
-    if (be_isstring(vm, 1)) {
-        const char *str = be_tostring(vm, 1);
-        be_str2num(vm, str);
-        be_return(vm);
-    } else if (be_isnumber(vm, -1)) {
-        be_return(vm);
+    if (be_top(vm)) {
+        if (be_isstring(vm, 1)) {
+            be_str2num(vm, be_tostring(vm, 1));
+            be_return(vm);
+        } else if (be_isnumber(vm, 1)) {
+            be_pushvalue(vm, 1);
+            be_return(vm);
+        }
     }
     be_return_nil(vm);
 }
@@ -163,18 +171,21 @@ static int l_next(bvm *vm)
 
 static int l_str(bvm *vm)
 {
-    be_tostring(vm, 1);
+    if (be_top(vm)) {
+        be_tostring(vm, 1);
+    } else {
+        be_pushstring(vm, "");
+    }
     be_return(vm);
 }
 
 static int l_length(bvm *vm)
 {
-    if (be_isstring(vm, 1)) {
+    if (be_top(vm) && be_isstring(vm, 1)) {
         be_pushint(vm, be_strlen(vm, 1));
-    } else {
-        be_pushint(vm, 0);
+        be_return(vm);
     }
-    be_return(vm);
+    be_return_nil(vm);
 }
 
 static int m_compile_str(bvm *vm)

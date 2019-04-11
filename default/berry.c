@@ -141,7 +141,7 @@ static int analysis_args(bvm *vm)
     }
     if (be_top(vm) > 0) {
         int res = dofile(vm);
-        if (res) {
+        if (res && !(args & arg_i)) {
             return res;
         }
         be_pop(vm, be_top(vm));

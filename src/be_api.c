@@ -736,8 +736,9 @@ int be_returnnilvalue(bvm *vm)
 
 void be_call(bvm *vm, int argc)
 {
-    bvalue *f = vm->top - argc - 1;
-    be_dofunc(vm, f, argc);
+    bvalue *fval = vm->top - argc - 1;
+    be_assert(fval >= vm->reg);
+    be_dofunc(vm, fval, argc);
 }
 
 int be_pcall(bvm *vm, int argc)
