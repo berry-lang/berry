@@ -71,7 +71,7 @@ static int l_exit(bvm *vm)
 {
     int status = 0;
     if (be_top(vm) && be_isint(vm, -1)) {
-        status = be_toint(vm, -1);
+        status = be_toindex(vm, -1);
     }
     be_exit(vm, status);
     be_return_nil(vm);

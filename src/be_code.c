@@ -312,7 +312,7 @@ static int var2reg(bfuncinfo *finfo, bexpdesc *e, int dst)
     switch (e->type) {
     case ETINT:
         if (e->v.i >= IsBx_MIN && e->v.i <= IsBx_MAX) {
-            codeABx(finfo, OP_LDINT, dst, e->v.i + IsBx_MAX);
+            codeABx(finfo, OP_LDINT, dst, var_toidx(e) + IsBx_MAX);
         } else {
             return exp2const(finfo, e);
         }

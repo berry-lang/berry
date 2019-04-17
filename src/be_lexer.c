@@ -60,13 +60,13 @@ static void keyword_unregiste(bvm *vm)
 int next(blexer *lexer)
 {
     struct blexerreader *lr = &lexer->reader;
-	if (!(lr->len--)) {
-		static const char eos = EOS;
-		const char *s = lr->readf(lr->data, &lr->len);
-		lr->s = s ? s : &eos;
-		--lr->len;
-	}
-	lexer->cursor = *lr->s++;
+    if (!(lr->len--)) {
+        static const char eos = EOS;
+        const char *s = lr->readf(lr->data, &lr->len);
+        lr->s = s ? s : &eos;
+        --lr->len;
+    }
+    lexer->cursor = *lr->s++;
     return lexer->cursor;
 }
 
@@ -208,8 +208,7 @@ static void tr_string(blexer *lexer)
 
 static int skip_newline(blexer *lexer)
 {
-    char lc = lgetc(lexer);
-
+    int lc = lgetc(lexer);
     next(lexer);
     if (is_newline(lgetc(lexer)) && lgetc(lexer) != lc) {
         next(lexer); /* skip "\n\r" or "\r\n" */
@@ -241,8 +240,7 @@ static void skip_comment(blexer *lexer)
 
 static int scan_realexp(blexer *lexer)
 {
-    char c = lgetc(lexer);
-
+    int c = lgetc(lexer);
     if (c == 'e' || c == 'E') {
         c = save(lexer);
         if (c == '+' || c == '-') {
@@ -272,17 +270,13 @@ static btokentype scan_dot_real(blexer *lexer)
     return OptDot;
 }
 
-static int scan_hex(blexer *lexer)
+static bint scan_hex(blexer *lexer)
 {
-    int dig, res = 0, cnt = 0;
-
+    bint res = 0;
+    int dig;
     while ((dig = char2hex(lgetc(lexer))) >= 0) {
         res = (res << 4) + dig;
         next(lexer);
-        ++cnt;
-    }
-    if (cnt == 0 || cnt > 8) {
-        be_lexerror(lexer, "hexadecimal number error.");
     }
     return res;
 }

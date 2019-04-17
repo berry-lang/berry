@@ -40,7 +40,7 @@ bstring* be_num2str(bvm *vm, bvalue *v)
 {
     char buf[25];
     if (var_isint(v)) {
-        sprintf(buf, "%d", var_toint(v));
+        sprintf(buf, BE_INTFORMAT, var_toint(v));
     } else if (var_isreal(v)) {
         sprintf(buf, "%g", var_toreal(v));
     } else {
@@ -60,7 +60,7 @@ static void sim2str(bvm *vm, bvalue *v)
         strcpy(sbuf, var_tobool(v) ? "true" : "false");
         break;
     case BE_INT:
-        sprintf(sbuf, "%d", var_toint(v));
+        sprintf(sbuf, BE_INTFORMAT, var_toint(v));
         break;
     case BE_REAL:
         sprintf(sbuf, "%g", var_toreal(v));
@@ -209,7 +209,7 @@ const char* be_pushvfstr(bvm *vm, const char *format, va_list arg)
 bint be_str2int(const char *str, const char **endstr)
 {
     int c, sign;
-    int sum = 0;
+    bint sum = 0;
     skip_space(str);
     sign = c = *str++;
     if (c == '+' || c == '-') {
@@ -285,7 +285,7 @@ breal be_str2real(const char *str, const char **endstr)
 const char* be_str2num(bvm *vm, const char *str)
 {
     const char *sout; 
-    int c, vint = be_str2int(str, &sout);
+    bint c, vint = be_str2int(str, &sout);
     c = *sout;
     if (c == '.' || c == 'e' || c == 'E') {
         be_pushreal(vm, be_str2real(str, &sout));
@@ -298,7 +298,7 @@ const char* be_str2num(bvm *vm, const char *str)
 bstring* be_strindex(bvm *vm, bstring *str, bvalue *idx)
 {
     if (var_isint(idx)) {
-        int pos = var_toint(idx);
+        int pos = var_toidx(idx);
         if (pos < str_len(str)) {
             return be_newstrn(vm, str(str) + pos, 1);
         }

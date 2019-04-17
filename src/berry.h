@@ -12,8 +12,26 @@
 #error "The value of the macro BE_STACK_TOTAL_MAX is too small."
 #endif
 
+#if BE_INTGER_TYPE == 0
+  #define BE_INTEGER    int
+  #define BE_INTFORMAT  "%d"
+#elif BE_INTGER_TYPE == 1
+  #define BE_INTEGER    long
+  #define BE_INTFORMAT  "%ld"
+#elif BE_INTGER_TYPE == 2
+  #ifdef _WIN32
+    #define BE_INTEGER    __int64
+    #define BE_INTFORMAT  "%I64d"
+  #else
+    #define BE_INTEGER    long long
+    #define BE_INTFORMAT  "%lld"
+  #endif
+#else
+  #error "Unsupported integer type for `bint`."
+#endif
+
 typedef uint8_t         bbyte;
-typedef int             bint;
+typedef BE_INTEGER      bint;
 
 #if BE_SINGLE_FLOAT != 0
     typedef float       breal;
@@ -156,6 +174,7 @@ int be_iscomptr(bvm *vm, int index);
 
 bint be_toint(bvm *vm, int index);
 breal be_toreal(bvm *vm, int index);
+int be_toindex(bvm *vm, int index);
 int be_tobool(bvm *vm, int index);
 const char* be_tostring(bvm *vm, int index);
 void* be_tocomptr(bvm *vm, int index);

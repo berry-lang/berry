@@ -97,7 +97,7 @@ static int m_remove(bvm *vm)
 
 static int item_range(bvm *vm)
 {
-    int lower, upper;
+    bint lower, upper;
     int size = be_data_size(vm, -1); /* get source list size */
     /* get index range */
     be_getmember(vm, 2, "__lower__");
@@ -141,7 +141,7 @@ static int item_list(bvm *vm)
         be_pushint(vm, i);
         be_getindex(vm, -5);
         if (be_isint(vm, -1)) {
-            int idx = be_toint(vm, -1);
+            int idx = be_toindex(vm, -1);
             if (idx >= 0 && idx < srcsize) {
                 be_getindex(vm, -3);
             } else {

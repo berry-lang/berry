@@ -29,7 +29,7 @@ static int i_write(bvm *vm)
 static size_t readsize(bvm *vm, int argc, be_fhandle fh)
 {
     if (argc >=2 && be_isint(vm, 2)) {
-        return be_toint(vm, 2);
+        return be_toindex(vm, 2);
     }
     return be_fsize(fh) - be_ftell(fh);
 }
@@ -77,7 +77,7 @@ static int i_seek(bvm *vm)
     be_getmember(vm, 1, ".data");
     if (be_iscomptr(vm, -1) && be_isint(vm, 2)) {
         be_fhandle fh = be_tocomptr(vm, -1);
-        be_fseek(fh, be_toint(vm, 2));
+        be_fseek(fh, be_toindex(vm, 2));
     }
     be_return_nil(vm);
 }

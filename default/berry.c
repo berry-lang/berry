@@ -87,14 +87,13 @@ static int dofile(bvm *vm)
         printf("%s\n", be_tostring(vm, -1));
         return 1;
     case BE_EXIT: /* return exit code */
-        return be_toint(vm, -1);
+        return be_toindex(vm, -1);
     case BE_MALLOC_FAIL:
         printf("error: malloc fail.\n");
         return -1;
     default: /* unkonw result */
         return 2;
     }
-    return 1;
 }
 
 int check_args(bvm *vm)

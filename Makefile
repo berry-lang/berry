@@ -6,7 +6,9 @@ CC	 = gcc
 INCPATH	 = src default
 SRCPATH	 = src default
 
-ifneq ($(OS), Windows_NT) # not windows
+ifeq ($(OS), Windows_NT) # Windows
+    CFLAGS += -Wno-format # for "%I64d" warning
+else
     CFLAGS += -DUSE_READLINE_LIB
     LIBS += -lreadline
 endif

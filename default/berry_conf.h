@@ -21,6 +21,15 @@
  **/
 #define BE_SINGLE_FLOAT                 0
 
+/* Macro: BE_LONGLONG_INT
+ * Select integer length.
+ * If the value is 0, use an integer of type int, use a long
+ * integer type when the value is 1, and use a long long integer
+ * type when the value is 2.
+ * default: 2
+ */
+#define BE_INTGER_TYPE                  2
+
 /* Macro: BE_USE_PRECOMPILED_OBJECT
  * Use precompiled objects to avoid creating these objects at
  * runtime. Enable this macro can greatly optimize RAM usage.

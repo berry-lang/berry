@@ -69,7 +69,7 @@ int be_repl(bvm *vm, breadline getl)
                 be_pop(vm, 2);
                 break;
             case BE_EXIT:
-                return be_toint(vm, -1);
+                return be_toindex(vm, -1);
             case BE_MALLOC_FAIL:
                 return -1;
             default:

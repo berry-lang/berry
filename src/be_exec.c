@@ -37,13 +37,13 @@ struct pcall {
 };
 
 struct strbuf {
-	size_t len;
-	const char *s;
+    size_t len;
+    const char *s;
 };
 
 struct filebuf {
-	FILE *fp;
-	char buf[FILE_BUFFER_SIZE];
+    FILE *fp;
+    char buf[FILE_BUFFER_SIZE];
 };
 
 void be_throw(bvm *vm, int errorcode)
@@ -109,23 +109,23 @@ int be_protectedparser(bvm *vm,
 
 static const char* _sgets(void *data, size_t *size)
 {
-	struct strbuf *sb = data;
-	*size = sb->len;
-	if (sb->len) {
-		sb->len = 0;
-		return sb->s;
-	}
-	return NULL;
+    struct strbuf *sb = data;
+    *size = sb->len;
+    if (sb->len) {
+        sb->len = 0;
+        return sb->s;
+    }
+    return NULL;
 }
 
 static const char* _fgets(void *data, size_t *size)
 {
-	struct filebuf *fb = data;
-	*size = fread(fb->buf, 1, sizeof(fb->buf), fb->fp);
-	if (*size) {
-		return fb->buf;
-	}
-	return NULL;
+    struct filebuf *fb = data;
+    *size = fread(fb->buf, 1, sizeof(fb->buf), fb->fp);
+    if (*size) {
+        return fb->buf;
+    }
+    return NULL;
 }
 
 int be_loadbuffer(bvm *vm,

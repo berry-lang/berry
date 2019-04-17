@@ -244,7 +244,7 @@ static btokentype get_unary_op(bparser *parser)
     return OP_NOT_UNARY;
 }
 
-static void init_exp(bexpdesc *e, exptype_t type, int i)
+static void init_exp(bexpdesc *e, exptype_t type, bint i)
 {
     e->type = (bbyte)type;
     e->t = NO_JUMP;

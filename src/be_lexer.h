@@ -70,10 +70,10 @@ typedef enum {
 } btokentype;
 
 struct blexerreader {
-	const char *s;
-	size_t len;
-	void *data;
-	breader readf;
+    const char *s;
+    size_t len;
+    void *data;
+    breader readf;
 };
 
 struct blexerbuf {

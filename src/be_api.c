@@ -192,6 +192,12 @@ breal be_toreal(bvm *vm, int index)
     return cast(breal, 0.0);
 }
 
+int be_toindex(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    return var_toidx(v);
+}
+
 int be_tobool(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
@@ -444,7 +450,7 @@ void be_getindex(bvm *vm, int index)
     case BE_LIST:
         if (var_isint(k)) {
             blist *list = cast(blist*, var_toobj(o));
-            int idx = var_toint(k);
+            int idx = var_toidx(k);
             bvalue *src = be_list_index(list, idx);
             if (src) {
                 var_setval(dst, src);
@@ -477,7 +483,7 @@ void be_setindex(bvm *vm, int index)
     case BE_LIST:
         if (var_isint(k)) {
             blist *list = cast(blist*, var_toobj(o));
-            int idx = var_toint(k);
+            int idx = var_toidx(k);
             if (idx < be_list_count(list)) {
                 bvalue *dst = be_list_at(list, idx);
                 var_setval(dst, v);
@@ -560,7 +566,7 @@ int be_data_insert(bvm *vm, int index)
     case BE_LIST:
         if (var_isint(k)) {
             blist *list = cast(blist*, var_toobj(o));
-            return be_list_insert(list, var_toint(k), v) != NULL;
+            return be_list_insert(list, var_toidx(k), v) != NULL;
         }
         break;
     default:
@@ -583,7 +589,7 @@ int be_data_remove(bvm *vm, int index)
     case BE_LIST:
         if (var_isint(k)) {
             blist *list = cast(blist*, var_toobj(o));
-            return be_list_remove(list, var_toint(k));
+            return be_list_remove(list, var_toidx(k));
         }
         break;
     default:
@@ -599,7 +605,7 @@ void be_data_resize(bvm *vm, int index)
     if (var_islist(o)) {
         blist *list = var_toobj(o);
         if (var_isint(v)) {
-            be_list_resize(list, var_toint(v));
+            be_list_resize(list, var_toidx(v));
         }
     }
 }

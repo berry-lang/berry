@@ -24,7 +24,7 @@ int be_globalvar_find(bvm *vm, bstring *name)
 {
     bvalue *res = be_map_findstr(vm->gbldesc.idxtab, name);
     if (res) {
-        return res->v.i;
+        return var_toidx(res);
     }
     return -1; /* not found */
 }

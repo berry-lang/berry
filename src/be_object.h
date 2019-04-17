@@ -196,6 +196,7 @@ typedef const char* (*breader)(void*, size_t*);
 #define var_togc(_v)            ((_v)->v.gc)
 #define var_toobj(_v)           ((_v)->v.p)
 #define var_tontvfunc(_v)       ((_v)->v.nf)
+#define var_toidx(_v)           cast_int(var_toint(_v))
 
 const char* be_vtype2str(bvalue *v);
 
