@@ -132,6 +132,42 @@ static int l_number(bvm *vm)
     be_return_nil(vm);
 }
 
+static int l_int(bvm *vm)
+{
+    if (be_top(vm)) {
+        if (be_isstring(vm, 1)) {
+            const char *s = be_tostring(vm, 1);
+            be_pushint(vm, be_str2int(s, NULL));
+        } else if (be_isreal(vm, 1)) {
+            be_pushint(vm, (bint)be_toreal(vm, 1));
+        } else if (be_isint(vm, 1)) {
+            be_pushvalue(vm, 1);
+        } else {
+            be_return_nil(vm);
+        }
+        be_return(vm);
+    }
+    be_return_nil(vm);
+}
+
+static int l_real(bvm *vm)
+{
+    if (be_top(vm)) {
+        if (be_isstring(vm, 1)) {
+            const char *s = be_tostring(vm, 1);
+            be_pushreal(vm, be_str2real(s, NULL));
+        } else if (be_isint(vm, 1)) {
+            be_pushreal(vm, (breal)be_toint(vm, 1));
+        } else if (be_isreal(vm, 1)) {
+            be_pushvalue(vm, 1);
+        } else {
+            be_return_nil(vm);
+        }
+        be_return(vm);
+    }
+    be_return_nil(vm);
+}
+
 static int l_iterator(bvm *vm)
 {
     if (be_isinstance(vm, 1)) {
@@ -240,6 +276,8 @@ void be_load_baselib(bvm *vm)
     be_regfunc(vm, "classname", l_classname);
     be_regfunc(vm, "number", l_number);
     be_regfunc(vm, "str", l_str);
+    be_regfunc(vm, "int", l_int);
+    be_regfunc(vm, "real", l_real);
     be_regfunc(vm, "length", l_length);
     be_regfunc(vm, "compile", l_compile);
     be_regfunc(vm, "__iterator__", l_iterator);

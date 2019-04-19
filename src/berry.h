@@ -73,7 +73,7 @@ typedef const struct {
     const char *name;
     int type;
     union {
-        int i;
+        bint i;
         breal r;
         bbool b;
         bntvfunc f;
