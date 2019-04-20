@@ -868,7 +868,9 @@ static void for_itvar(bparser *parser, bexpdesc *e)
         init_exp(e, ETLOCAL, idx);
         scan_next_token(parser);
     } else {
-        parser_error(parser, "for error");
+        push_error(parser,
+            "missing iteration variable before '%s'",
+            token2str(parser)));
     }
 }
 
@@ -885,6 +887,7 @@ static void for_init(bparser *parser, bexpdesc *v)
     init_exp(&e, ETGLOBAL, be_globalvar_find(vm, s));
     be_code_nextreg(finfo, &e); /* code function '__iterator__' */
     expr(parser, v);
+    check_var(parser, v);
     be_code_nextreg(finfo, v);
     be_code_call(finfo, e.v.idx, 1); /* call __iterator__(expr) */
     s = be_newstr(vm, ".it");
