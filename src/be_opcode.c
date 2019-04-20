@@ -6,8 +6,8 @@ const char *be_opcode2str(bopcode op)
     static const char *opcode_tab[] = {
         "ADD", "SUB", "MUL", "DIV", "MOD",
         "LT", "LE", "EQ", "NE", "GT", "GE",
-        "RANGE", "AND", "OR", "XOR", "SHL",
-        "SHR", "NEG", "NOT", "LDNIL", "LDBOOL",
+        "AND", "OR", "XOR", "SHL", "SHR",
+        "RANGE", "NEG", "NOT", "LDNIL", "LDBOOL",
         "LDINT", "LDCONST", "MOVE", "GETGBL",
         "SETGBL", "GETUPV", "SETUPV", "JMP",
         "JMPT", "JMPF", "CALL", "RET", "CLOSURE",

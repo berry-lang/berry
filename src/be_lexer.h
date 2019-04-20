@@ -25,12 +25,12 @@ typedef enum {
     OptNE,          /* operator, != */
     OptGT,          /* operator, > */
     OptGE,          /* operator, >= */
-    OptRange,       /* operator, .. */
     OptBitAnd,      /* operatoe, &  */
     OptBitOr,       /* operatoe, |  */
     OptBitXor,      /* operatoe, ^  */
     OptShiftL,      /* operatoe, <<  */
     OptShiftR,      /* operatoe, >>  */
+    OptRange,       /* operator, .. */
     OptAnd,         /* operator, && */
     OptOr,          /* operator, || */
     /* unary operator */

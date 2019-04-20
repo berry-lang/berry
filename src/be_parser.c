@@ -53,11 +53,12 @@ typedef struct {
 static void stmtlist(bparser *parser);
 static void block(bparser *parser);
 static void expr(bparser *parser, bexpdesc *e);
+static void sub_expr(bparser *parser, bexpdesc *e, int prio);
 
 static const int binary_op_prio_tab[] = {
     5, 5, 4, 4, 4, /* + - * / % */
     11, 11, 12, 12, 11, 11, /* < <= == != > >= */
-    10, 7, 9, 8, 6, 6, 13, 14 /*  .. & | ^ << >> && || */
+    7, 9, 8, 6, 6, 10, 13, 14 /*  & | ^ << >> .. && || */
 };
 
 static void match_token(bparser *parser, btokentype type)
@@ -589,7 +590,6 @@ static void call_expr(bparser *parser, bexpdesc *e)
     if (ismember) {
         be_code_getmethod(finfo);
     }
-    init_exp(&args, ETVOID, 0);
     scan_next_token(parser); /* skip '(' */
     if (next_token(parser).type != OptRBK) {
         argc = exprlist(parser, &args);
@@ -672,7 +672,8 @@ static void primary_expr(bparser *parser, bexpdesc *e)
     switch (next_token(parser).type) {
     case OptLBK: /* '(' expr ')' */
         scan_next_token(parser); /* skip '(' */
-        expr(parser, e);
+        /* sub_expr() is more efficient because there is no need to initialize e. */
+        sub_expr(parser, e, ASSIGN_OP_PRIO);
         match_token(parser, OptRBK); /* skip ')' */
         break;
     case OptLSB: /* list */
@@ -714,13 +715,11 @@ static void assign_expr(bparser *parser)
 {
     int line;
     bexpdesc e;
-    init_exp(&e, ETVOID, 0);
     expr(parser, &e);
     check_symbol(parser, &e);
     line = parser->lexer.linenumber;
     if (next_token(parser).type == OptAssign) { /* '=' */
         bexpdesc e1;
-        init_exp(&e1, ETVOID, 0);
         scan_next_token(parser);
         expr(parser, &e1);
         check_var(parser, &e1);
@@ -757,10 +756,10 @@ static void sub_expr(bparser *parser, bexpdesc *e, int prio)
     op = get_binop(parser);
     while (op != OP_NOT_BINARY && prio > binary_op_prio(op)) {
         bexpdesc e2;
-        init_exp(&e2, ETVOID, 0);
-        scan_next_token(parser);
         check_var(parser, e);
+        scan_next_token(parser);
         be_code_prebinop(finfo, op, e); /* and or */
+        init_exp(&e2, ETVOID, 0);
         sub_expr(parser, &e2, binary_op_prio(op));
         check_var(parser, &e2);
         be_code_binop(finfo, op, e, &e2); /* encode binary op */
@@ -770,6 +769,7 @@ static void sub_expr(bparser *parser, bexpdesc *e, int prio)
 
 static void expr(bparser *parser, bexpdesc *e)
 {
+    init_exp(e, ETVOID, 0);
     sub_expr(parser, e, ASSIGN_OP_PRIO);
 }
 
@@ -991,10 +991,11 @@ static bstring* func_name(bparser *parser, bexpdesc *e, int ismethod)
         }
         scan_next_token(parser); /* skip name */
         return name;
-    } else if (ismethod && type >= OptAdd && type <= OptGE) {
+    } else if (ismethod && type >= OptAdd && type <= OptShiftR) {
         scan_next_token(parser); /* skip token */
         /* '-*' neg method */
-        if (type == OptSub && next_token(parser).type == OptMul) {
+        if (type == OptFlip || (type == OptSub
+            && next_token(parser).type == OptMul)) {
             scan_next_token(parser); /* skip '*' */
             return be_newstr(parser->vm, "-*");
         }
@@ -1068,7 +1069,6 @@ static void class_inherit(bparser *parser, bexpdesc *e)
 {
     if (next_token(parser).type == OptColon) { /* ':' */
         bexpdesc e1;
-        init_exp(&e1, ETVOID, 0);
         scan_next_token(parser); /* skip ':' */
         expr(parser, &e1);
         check_var(parser, &e1);
@@ -1138,7 +1138,6 @@ static void var_field(bparser *parser)
     match_token(parser, TokenId); /* match and skip ID */
     string_protect(parser, name);
     if (next_token(parser).type == OptAssign) { /* '=' */
-        init_exp(&e2, ETVOID, 0);
         scan_next_token(parser); /* skip '=' */
         expr(parser, &e2);
         check_var(parser, &e2);
