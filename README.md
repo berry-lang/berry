@@ -12,6 +12,8 @@ The implementation of Berry include a one pass compiler and register-based VM, a
 
 [https://github.com/Skiars/berry_doc](https://github.com/Skiars/berry_doc)
 
+[berry_rm_zh_cn.pdf](https://github.com/Skiars/berry_doc/releases/download/latest/berry_rm_zh_cn.pdf) (Simplified Chinese version of the Reference Manual)
+
 ## Features
 
 * Base Type
