@@ -2,6 +2,9 @@ CFLAGS	 = -Wall -Wextra -std=c99 -pedantic-errors -O2
 LIBS	 =  -lm
 TARGET	 = berry
 CC	 = gcc
+MAKE	= make
+MAP_BUILD	= tools/map_build/map_build
+STR_BUILD	= tools/str_build/str_build
 
 INCPATH	 = src default
 SRCPATH	 = src default
@@ -42,6 +45,22 @@ $(OBJS): %.o: %.c
 
 sinclude $(DEPS)
 
+$(OBJS): $(STR_BUILD)
+
+$(STR_BUILD): $(MAP_BUILD)
+	$(MSG) [Build string table]
+	$(Q) $(STR_BUILD) $(SRCS) generate
+
+$(MAP_BUILD): make_map_build
+	$(MSG) [Build Map]
+	$(Q) $(MAP_BUILD) $(SRCS) generate
+
+make_map_build:
+	$(MSG) [Make] map_build
+	@ $(MAKE) -C tools/map_build -s
+
+str_build:
+
 install:
 	cp $(TARGET) /usr/local/bin
 
@@ -51,4 +70,5 @@ uninstall:
 clean:
 	$(MSG) [Clean...]
 	$(Q) $(RM) $(OBJS) $(DEPS)
+	$(Q) $(MAKE) -C tools/map_build clean -s
 	$(MSG) done
