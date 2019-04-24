@@ -191,7 +191,7 @@ void be_load_maplib(bvm *vm)
 #else
 /* @const_object_info_begin
 class m_cl_map (scope: local, name: map) {
-    .data, int(0)
+    .data, var
     init, func(m_init)
     tostring, func(m_tostring)
     insert, func(m_insert)

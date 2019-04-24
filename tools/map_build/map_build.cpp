@@ -29,7 +29,7 @@ void map_build::parse_block(const std::string &str)
 
 std::map<std::string, std::string> map_build::parse_body(const std::string &str)
 {
-    std::regex reg("([\\.\\w]+)\\s*,\\s*([^\\n]+)");
+    std::regex reg("([\\.\\w]+)\\s*,\\s*([^\\n^\\r]+)");
     std::sregex_iterator it(str.begin(), str.end(), reg);
     std::sregex_iterator end;
     std::map<std::string, std::string> data;

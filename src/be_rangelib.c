@@ -123,8 +123,8 @@ void be_load_rangelib(bvm *vm)
 #else
 /* @const_object_info_begin
 class m_cl_range (scope: local, name: range) {
-    __lower__, int(0)
-    __upper__, int(0)
+    __lower__, var
+    __upper__, var
     init, func(m_init)
     tostring, func(m_tostring)
     lower, func(m_lower)

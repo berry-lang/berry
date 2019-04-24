@@ -276,7 +276,7 @@ void be_load_listlib(bvm *vm)
 #else
 /* @const_object_info_begin
 class m_cl_list (scope: local, name: list) {
-    .data, int(0)
+    .data, var
     init, func(m_init)
     tostring, func(m_tostring)
     append, func(m_append)

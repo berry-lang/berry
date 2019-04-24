@@ -46,33 +46,23 @@ void str_map::scan_file(const std::string &filename)
 #endif
 
 #ifndef _MSC_VER
-static int m_listdir(bvm *vm)
+static void listdir(str_map *map, const std::string &path)
 {
     DIR *dp;
     struct dirent *ep;
-    if (be_top(vm) >= 1 && be_isstring(vm, 1)) {
-        dp = opendir(be_tostring(vm, 1));
-    } else {
-        dp = opendir(".");
-    }
-    be_getglobal(vm, "list");
+    dp = opendir(path.data());
     if (dp != NULL) {
-        be_newlist(vm);
         while ((ep = readdir(dp)) != NULL) {
-            const char *fn = ep->d_name;
-            if (strcmp(fn, ".") && strcmp(fn, "..")) {
-                be_pushstring(vm, fn);
-                be_data_append(vm, -2);
-                be_pop(vm, 1);
+            std::string fname(ep->d_name);
+            size_t find = fname.find_last_of(".");
+            std::string subname(find < fname.size() ? fname.substr(find) : "");
+            if ((subname == ".c" || subname == ".h") &&
+                fname != "be_const_strtab_def.h" && fname != "be_const_strtab.h") {
+                map->scan_file(path + "/" + fname);
             }
         }
         closedir(dp);
-        be_call(vm, 1);
-        be_pop(vm, 1);
-    } else {
-        be_call(vm, 0);
     }
-    be_return(vm);
 }
 #else
 static void listdir(str_map *map, const std::string &path)
