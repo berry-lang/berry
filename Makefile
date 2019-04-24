@@ -76,7 +76,10 @@ install:
 uninstall:
 	$(RM) /usr/local/bin/$(TARGET)
 
-prebuild: generate/touch
+prebuild: $(STR_BUILD) $(MAP_BUILD)
+	$(MSG) [Prebuild] generate resources
+	$(Q) $(MAP_BUILD) $(SRCS) generate
+	$(Q) $(STR_BUILD) $(SRCS) generate
 	$(MSG) done
 
 clean:
