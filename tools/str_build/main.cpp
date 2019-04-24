@@ -13,10 +13,13 @@ public:
     std::map<std::string, int> data() { return m_map; }
 
 private:
+    std::string readfile(const std::string &filename);
+
+private:
     std::map<std::string, int> m_map;
 };
 
-static std::string readfile(const std::string &filename)
+std::string str_map::readfile(const std::string &filename)
 {
     std::ifstream in(filename);
     std::ostringstream tmp;

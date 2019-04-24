@@ -223,14 +223,14 @@ static void object_eqop(bvm *vm,
         be_stackpop(vm, 1);
         *RA(ins) = *vm->top; /* copy result to dst */
     } else { /* default implementation */
-        bbool opt = IGET_OP(ins) == OP_EQ; /* operator tyoe is '==' */
-        bbool eqv = var_toobj(a) == var_toobj(b); /* object address is equal */
+        int opt = IGET_OP(ins) == OP_EQ; /* operator is '==' */
+        int eqv = var_toobj(a) == var_toobj(b); /* are the same object */
         /* if the operator is the '==', the expression is equivalent to:
          *     RA(ins) = address(a) == address(b)
          * else the operator is the '!=', the expression is equivalent to:
          *     RA(ins) = address(a) != address(b)
          **/
-        var_setbool(RA(ins),  opt == eqv);
+        var_setbool(RA(ins), opt == eqv);
     }
 }
 

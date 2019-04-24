@@ -86,7 +86,7 @@ std::string build_map::build_table_def()
         }
     }
     ostr << std::endl;
-    ostr << "static const bstring* m_string_table[] = {" << std::endl;
+    ostr << "static const bstring* const m_string_table[] = {" << std::endl;
     size_t size = m_hashtable.size();
     for (size_t i = 0; i < size; ++i) {
         auto bucket = m_hashtable[i];
@@ -100,7 +100,7 @@ std::string build_map::build_table_def()
     }
     ostr << "};" << std::endl << std::endl;
     ostr <<
-        "const struct bconststrtab be_const_string_table = {\n"
+        "static const struct bconststrtab m_const_string_table = {\n"
         "    .size = " << size << ",\n" <<
         "    .count = " << m_count << ",\n" <<
         "    .table = m_string_table\n" <<

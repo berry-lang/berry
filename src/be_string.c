@@ -2,6 +2,7 @@
 #include "be_vm.h"
 #include "be_mem.h"
 #include "be_gc.h"
+#include "be_constobj.h"
 #include <string.h>
 
 #define next(_s)    cast(void*, cast(bstring*, (_s)->next))
@@ -9,13 +10,30 @@
 #define lstr(_s)    cast(char*, cast(blstring*, _s) + 1)
 #define cstr(_s)    (cast(bcstring*, s)->s)
 
+#define be_define_const_str(_name, _s, _hash, _extra, _len, _next) \
+const bcstring be_const_str_##_name = { \
+    .next = (bgcobject *)_next, \
+    .type = BE_STRING, \
+    .marked = GC_CONST, \
+    .extra = _extra, \
+    .slen = _len, \
+    .s = _s \
+}
+
 struct bstringtable {
     bstring **table;
     int count; /* string count */
     int size;
 };
 
-extern const struct bconststrtab be_const_string_table;
+/* const string table */
+struct bconststrtab {
+    const bstring* const *table;
+    int count; /* string count */
+    int size;
+};
+
+#include "../generate/be_const_strtab_def.h"
 
 int be_eqstr(bstring *s1, bstring *s2)
 {
@@ -116,7 +134,7 @@ bstring* createstrobj(bvm *vm, size_t len, int islong)
 
 static bstring* find_conststr(const char *str, size_t len)
 {
-    const struct bconststrtab *tab = &be_const_string_table;
+    const struct bconststrtab *tab = &m_const_string_table;
     uint32_t hash = be_strhash(str, len);
     bcstring *s = (bcstring*)tab->table[hash % tab->size];
     for (; s != NULL; s = next(s)) {

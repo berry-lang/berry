@@ -22,13 +22,6 @@ typedef struct {
     const char *s;
 } bcstring;
 
-/* const string table */
-struct bconststrtab {
-    const bstring **table;
-    int count; /* string count */
-    int size;
-};
-
 #define str_len(_s) \
     ((_s)->slen == 255 ? cast(blstring*, _s)->llen : (_s)->slen)
 
@@ -36,6 +29,8 @@ struct bconststrtab {
 #define str_extra(_s)       ((_s)->extra)
 #define str_setextra(_s, d) ((_s)->extra = (bbyte)(d))
 #define str_hash(_s)        be_strhash(str(_s), str_len(_s))
+
+#include "../generate/be_const_strtab.h"
 
 void be_string_init(bvm *vm);
 void be_string_deleteall(bvm *vm);

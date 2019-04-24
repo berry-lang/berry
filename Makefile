@@ -3,6 +3,7 @@ LIBS	 =  -lm
 TARGET	 = berry
 CC	 = gcc
 MAKE	 = make
+MKDIR	 = mkdir
 TOUCH	 = echo >>
 MAP_BUILD	= tools/map_build/map_build
 STR_BUILD	= tools/str_build/str_build
@@ -37,7 +38,7 @@ INCFLAGS = $(foreach dir, $(INCPATH), -I"$(dir)")
 all: $(TARGET)
 
 debug: CFLAGS += -O0 -g -DBE_DEBUG
-debug: $(TARGET)
+debug: all
 
 $(TARGET): generate/touch $(OBJS)
 	$(MSG) [Linking...]
@@ -60,15 +61,15 @@ generate/touch: $(STR_BUILD) $(MAP_BUILD) generate $(SRCS)
 	$(Q) $(TOUCH) generate/touch
 
 generate:
-	mkdir generate
+	$(Q) $(MKDIR) generate
 
 $(STR_BUILD):
 	$(MSG) [Make] str_build
-	@ $(MAKE) -C tools/str_build -s
+	$(Q) $(MAKE) -C tools/str_build -s
 
 $(MAP_BUILD):
 	$(MSG) [Make] map_build
-	@ $(MAKE) -C tools/map_build -s
+	$(Q) $(MAKE) -C tools/map_build -s
 
 install:
 	cp $(TARGET) /usr/local/bin
@@ -76,7 +77,7 @@ install:
 uninstall:
 	$(RM) /usr/local/bin/$(TARGET)
 
-prebuild: $(STR_BUILD) $(MAP_BUILD)
+prebuild: $(STR_BUILD) $(MAP_BUILD) generate
 	$(MSG) [Prebuild] generate resources
 	$(Q) $(MAP_BUILD) $(SRCS) generate
 	$(Q) $(STR_BUILD) $(SRCS) generate
