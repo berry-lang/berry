@@ -23,10 +23,11 @@ hash_map::~hash_map()
 
 uint32_t hash_map::hashcode(const std::string &string)
 {
-	const char *str = string.data();
-	uint32_t c, hash = 2166136261u;
-	while ((c = *str++) != '\0') {
-		hash = (hash ^ c) * 16777619u;
+    size_t len = string.size();
+	const char *str = string.c_str();
+	uint32_t hash = 2166136261u;
+	while (len--) {
+		hash = (hash ^ *str++) * 16777619u;
 	}
 	return hash;
 }

@@ -60,6 +60,14 @@
  **/
 #define BE_STACK_FREE_MIN               10
 
+/*
+ * Macro: BE_STACK_FREE_MIN
+ * The short string will hold the hash value when the value is
+ * true. It may be faster but requires more RAM.
+ * default: 0
+ **/
+#define BE_STR_HASH_CACHE               0
+
 /* Macro: BE_USE_XXX_MODULE
  * These macros control whether the related module is compiled.
  * When they are true, they will enable related modules. At this

@@ -3,7 +3,7 @@
 
 const char *be_opcode2str(bopcode op)
 {
-    static const char *opcode_tab[] = {
+    static const char* const opcode_tab[] = {
         "ADD", "SUB", "MUL", "DIV", "MOD",
         "LT", "LE", "EQ", "NE", "GT", "GE",
         "AND", "OR", "XOR", "SHL", "SHR",

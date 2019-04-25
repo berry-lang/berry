@@ -8,6 +8,9 @@
 
 typedef struct {
     bstring_header;
+#if BE_STR_HASH_CACHE
+    uint32_t hash;
+#endif
     /* char s[]; */
 } bsstring;
 
@@ -19,15 +22,9 @@ typedef struct {
 
 typedef struct {
     bstring_header;
+    uint32_t hash;
     const char *s;
 } bcstring;
-
-/* const string table */
-struct bconststrtab {
-    const bstring **table;
-    int count; /* string count */
-    int size;
-};
 
 #define str_len(_s) \
     ((_s)->slen == 255 ? cast(blstring*, _s)->llen : (_s)->slen)
@@ -35,15 +32,17 @@ struct bconststrtab {
 #define str(_s)             be_str2cstr(_s)
 #define str_extra(_s)       ((_s)->extra)
 #define str_setextra(_s, d) ((_s)->extra = (bbyte)(d))
-#define str_hash(_s)        be_strhash(str(_s), str_len(_s))
+
+#include "../generate/be_const_strtab.h"
 
 void be_string_init(bvm *vm);
 void be_string_deleteall(bvm *vm);
 int be_eqstr(bstring *s1, bstring *s2);
-uint32_t be_strhash(const char *str, size_t len);
+uint32_t str_hash(const char *str, size_t len);
 bstring* be_newstr(bvm *vm, const char *str);
 bstring* be_newstrn(bvm *vm, const char *str, size_t len);
 void be_gcstrtab(bvm *vm);
+uint32_t be_strhash(bstring *s);
 const char* be_str2cstr(bstring *s);
 
 #endif

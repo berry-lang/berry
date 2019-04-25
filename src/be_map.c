@@ -54,7 +54,7 @@ static uint32_t _hashcode_(int type, union bvaldata v)
     case BE_REAL:
         return (uint32_t)v.i; /* test */
     case BE_STRING:
-        return str_hash(v.s);
+        return be_strhash(v.s);
     default:
         return hashptr(v.p);
     }

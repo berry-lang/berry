@@ -5,7 +5,7 @@
 #include "be_gc.h"
 #include "be_map.h"
 #include "be_class.h"
-#include "be_cstrtab.h"
+#include "be_string.h"
 
 #define be_const_header(_t)  \
     .next = NULL,            \

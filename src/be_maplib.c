@@ -189,39 +189,24 @@ void be_load_maplib(bvm *vm)
     be_regclass(vm, "map", members);
 }
 #else
-#include "be_constobj.h"
-
-static const bmapnode __map_slots[] = {
-    { be_const_key(be_const_str_size, -1), be_const_func(m_size) },
-    { be_const_key(be_const_str_iter, -1), be_const_func(m_iter) },
-    { be_const_key(be_const_str_setitem, -1), be_const_func(m_setitem) },
-    { be_const_key(be_const_str_remove, -1), be_const_func(m_remove) },
-    { be_const_key(be_const_str_item, 1), be_const_func(m_item) },
-    { be_const_key(be_const_str_dot_data, 2), be_const_int(0) },
-    { be_const_key(be_const_str_init, -1), be_const_func(m_init) },
-    { be_const_key(be_const_str_tostring, -1), be_const_func(m_tostring) },
-    { be_const_key(be_const_str_insert, -1), be_const_func(m_insert) },
-};
-
-static const bmap __class_map = {
-    be_const_header_map(),
-    .slots = (bmapnode *)__map_slots,
-    .lastfree = (bmapnode *)&__map_slots[8],
-    .size = 9,
-    .count = 9
-};
-
-static const bclass __cl_map = {
-    be_const_header_class(),
-    .nvar = 1,
-    .super = NULL,
-    .members = (bmap *)&__class_map,
-    .name = (bstring *)&be_const_str_map
-};
+/* @const_object_info_begin
+class m_cl_map (scope: local, name: map) {
+    .data, var
+    init, func(m_init)
+    tostring, func(m_tostring)
+    insert, func(m_insert)
+    remove, func(m_remove)
+    item, func(m_item)
+    setitem, func(m_setitem)
+    size, func(m_size)
+    iter, func(m_iter)
+}
+@const_object_info_end */
+#include "../generate/be_fixed_m_cl_map.h"
 
 void be_load_maplib(bvm *vm)
 {
-    be_const_regclass(vm, &__cl_map);
+    be_const_regclass(vm, &m_cl_map);
 }
 
 #endif

@@ -131,7 +131,7 @@ static const char* _fgets(void *data, size_t *size)
 int be_loadbuffer(bvm *vm,
     const char *name, const char *buffer, size_t length)
 {
-    static struct strbuf sbuf;
+    struct strbuf sbuf;
     sbuf.s = buffer;
     sbuf.len = length;
     return be_protectedparser(vm, name, _sgets, &sbuf);
