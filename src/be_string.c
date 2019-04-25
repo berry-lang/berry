@@ -17,6 +17,7 @@ const bcstring be_const_str_##_name = { \
     .marked = GC_CONST, \
     .extra = _extra, \
     .slen = _len, \
+    .hash = _hash, \
     .s = _s \
 }
 
@@ -66,7 +67,7 @@ static void resize(bvm *vm, int size)
         tab->table[i] = NULL;
         while (p) { /* for each node in the list */
             bstring *hnext = next(p);
-            uint32_t hash = str_hash(p) & (size - 1);
+            uint32_t hash = be_strhash(p) & (size - 1);
             p->next = cast(void*, tab->table[hash]);
             tab->table[hash] = p;
             p = hnext;
@@ -79,7 +80,7 @@ static void resize(bvm *vm, int size)
 }
 
 /* FNV-1a Hash */
-uint32_t be_strhash(const char *str, size_t len)
+uint32_t str_hash(const char *str, size_t len)
 {
     uint32_t hash = 2166136261u;
     while (len--) {
@@ -135,7 +136,7 @@ bstring* createstrobj(bvm *vm, size_t len, int islong)
 static bstring* find_conststr(const char *str, size_t len)
 {
     const struct bconststrtab *tab = &m_const_string_table;
-    uint32_t hash = be_strhash(str, len);
+    uint32_t hash = str_hash(str, len);
     bcstring *s = (bcstring*)tab->table[hash % tab->size];
     for (; s != NULL; s = next(s)) {
         if (len == s->slen && !strncmp(str, s->s, len)) {
@@ -149,7 +150,7 @@ static bstring* newshortstr(bvm *vm, const char *str, size_t len)
 {
     bstring *s;
     int size = vm->strtab->size;
-    uint32_t hash = be_strhash(str, len);
+    uint32_t hash = str_hash(str, len);
     bstring **list = vm->strtab->table + (hash & (size - 1));
 
     for (s = *list; s != NULL; s = next(s)) {
@@ -161,6 +162,9 @@ static bstring* newshortstr(bvm *vm, const char *str, size_t len)
     strncpy(cast(char*, sstr(s)), str, len);
     s->extra = 0;
     s->next = cast(void*, *list);
+#if BE_STR_HASH_CACHE
+    cast(bsstring*, s)->hash = hash;
+#endif
     *list = s;
     vm->strtab->count++;
     if (vm->strtab->count > size << 2) {
@@ -221,6 +225,19 @@ void be_gcstrtab(bvm *vm)
     if (strtab->count < size >> 2 && size > 8) {
         resize(vm, size >> 1);
     }
+}
+
+uint32_t be_strhash(bstring *s)
+{
+    if (gc_isconst(s)) {
+        return cast(bcstring*, s)->hash;
+    }
+#if BE_STR_HASH_CACHE
+    if (s->slen != 255) {
+        return cast(bsstring*, s)->hash;
+    }
+#endif
+    return str_hash(str(s), str_len(s));
 }
 
 const char* be_str2cstr(bstring *s)

@@ -26,12 +26,13 @@ void build_map::build()
 
 uint32_t build_map::hashcode(const std::string &string)
 {
-    const char *str = string.data();
-    uint32_t c, hash = 2166136261u;
-    while ((c = *str++) != '\0') {
-        hash = (hash ^ c) * 16777619u;
-    }
-    return hash;
+    size_t len = string.size();
+	const char *str = string.c_str();
+	uint32_t hash = 2166136261u;
+	while (len--) {
+		hash = (hash ^ *str++) * 16777619u;
+	}
+	return hash;
 }
 
 void build_map::make_ceil(const std::string &string)
