@@ -284,3 +284,25 @@ void be_load_baselib(bvm *vm)
     be_regfunc(vm, "__hasnext__", l_hasnext);
     be_regfunc(vm, "__next__", l_next);
 }
+
+/*
+Used to generate compile-time strings:
+be_const_str_assert
+be_const_str_print
+be_const_str_input
+be_const_str_clock
+be_const_str_exit
+be_const_str_super
+be_const_str_memcount
+be_const_str_type
+be_const_str_classname
+be_const_str_number
+be_const_str_str
+be_const_str_int
+be_const_str_real
+be_const_str_length
+be_const_str_compile
+be_const_str___iterator__
+be_const_str___hasnext__
+be_const_str___next__
+*/

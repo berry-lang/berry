@@ -27,7 +27,7 @@ void build_map::build()
 uint32_t build_map::hashcode(const std::string &string)
 {
     size_t len = string.size();
-	const char *str = string.c_str();
+	const char *str = string.data();
 	uint32_t hash = 2166136261u;
 	while (len--) {
 		hash = (hash ^ *str++) * 16777619u;
@@ -38,7 +38,7 @@ uint32_t build_map::hashcode(const std::string &string)
 void build_map::make_ceil(const std::string &string)
 {
     str_info info;
-    info.hash = hashcode(string);
+    info.hash = hashcode(escdot(string));
     info.str = string;
     m_hashtable[info.hash % m_hashtable.size()].push_back(info);
 }
@@ -49,17 +49,6 @@ std::string build_map::escdot(const std::string &string)
         return "." + string.substr(4);
     }
     return string;
-}
-
-void build_map::print_table()
-{
-    for (auto i : m_hashtable) {
-        std::cout << "+ ";
-        for (auto j : i) {
-            std::cout << escdot(j.str) << ", ";
-        }
-        std::cout << std::endl;
-    }
 }
 
 void build_map::writefile(const std::string &filename, const std::string &text)

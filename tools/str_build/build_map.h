@@ -16,7 +16,6 @@ private:
     uint32_t hashcode(const std::string &string);
     void make_ceil(const std::string &string);
     std::string escdot(const std::string &string);
-    void print_table();
     std::string build_table_def();
     std::string build_table_ext();
     void writefile(const std::string &filename, const std::string &text);

@@ -18,13 +18,12 @@ hash_map::hash_map(std::map<std::string, std::string> map)
 
 hash_map::~hash_map()
 {
-
 }
 
 uint32_t hash_map::hashcode(const std::string &string)
 {
     size_t len = string.size();
-	const char *str = string.c_str();
+	const char *str = string.data();
 	uint32_t hash = 2166136261u;
 	while (len--) {
 		hash = (hash ^ *str++) * 16777619u;
