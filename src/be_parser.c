@@ -25,6 +25,7 @@
 
 #define scan_next_token(parser) (be_lexer_scan_next(&(parser)->lexer))
 #define next_token(parser)      ((parser)->lexer.token)
+#define next_type(parser)       (next_token(parser).type)
 #define max(a, b)               ((a) > (b) ? (a) : (b))
 #define token2str(parser)       be_token2str((parser)->vm, &next_token(parser))
 
@@ -63,7 +64,7 @@ static const int binary_op_prio_tab[] = {
 
 static void match_token(bparser *parser, btokentype type)
 {
-    if (next_token(parser).type != type) {
+    if (next_type(parser) != type) {
         btoken *token = &next_token(parser);
         const char *s1 = be_tokentype2str(type);
         const char *s2 = be_token2str(parser->vm, token);
@@ -74,7 +75,7 @@ static void match_token(bparser *parser, btokentype type)
 
 static void match_notoken(bparser *parser, btokentype type)
 {
-    if (next_token(parser).type == type) {
+    if (next_type(parser) == type) {
         push_error(parser,
             "expected statement before '%s'", token2str(parser)));
     }
@@ -228,7 +229,7 @@ static void end_func(bparser *parser)
 
 static btokentype get_binop(bparser *parser)
 {
-    btokentype op = next_token(parser).type;
+    btokentype op = next_type(parser);
     if (op >= OptAdd && op <= OptOr) {
         return op;
     }
@@ -237,7 +238,7 @@ static btokentype get_binop(bparser *parser)
 
 static btokentype get_unary_op(bparser *parser)
 {
-    btokentype op = next_token(parser).type;
+    btokentype op = next_type(parser);
 
     if (op == OptSub || op == OptNot || op == OptFlip) {
         return op; /* operator 'negative' 'not' and 'flip' */
@@ -404,11 +405,11 @@ static void func_varlist(bparser *parser)
     bexpdesc v;
     /* '(' [ID {',' ID}] ')' */
     match_token(parser, OptLBK); /* skip '(' */
-    if (next_token(parser).type == TokenId) {
+    if (next_type(parser) == TokenId) {
         bstring *str = next_token(parser).u.s;
         new_var(parser, str, &v); /* new variable */
         scan_next_token(parser);
-        while (next_token(parser).type == OptComma) {
+        while (next_type(parser) == OptComma) {
             scan_next_token(parser); /* skip ',' */
             str = next_token(parser).u.s;
             /* new local variable */
@@ -481,7 +482,6 @@ static void list_nextmember(bparser *parser, bexpdesc *l)
     base = be_code_nextreg(finfo, &v);
     be_code_getmethod(finfo);
     /* copy source value to next register */
-    init_exp(&e, ETVOID, 0);
     expr(parser, &e);
     check_var(parser, &e);
     be_code_nextreg(finfo, &e);
@@ -503,12 +503,10 @@ static void map_nextmember(bparser *parser, bexpdesc *l)
     base = be_code_nextreg(finfo, &v);
     be_code_getmethod(finfo);
     /* copy source value to next register */
-    init_exp(&e, ETVOID, 0);
     expr(parser, &e); /* key */
     check_var(parser, &e);
     be_code_nextreg(finfo, &e);
     match_token(parser, OptColon); /* ':' */
-    init_exp(&e, ETVOID, 0);
     expr(parser, &e); /* value */
     check_var(parser, &e);
     be_code_nextreg(finfo, &e);
@@ -516,45 +514,27 @@ static void map_nextmember(bparser *parser, bexpdesc *l)
     be_code_freeregs(finfo, finfo->freereg - reg);
 }
 
-static void list_members(bparser *parser, bexpdesc *l)
-{
-    /* expr {',' expr} */
-    list_nextmember(parser, l);
-    while (next_token(parser).type == OptComma) { /* ',' */
-        scan_next_token(parser);
-        list_nextmember(parser, l);
-    }
-}
-
-static void map_members(bparser *parser, bexpdesc *l)
-{
-    /* expr {',' expr} */
-    map_nextmember(parser, l);
-    while (next_token(parser).type == OptComma) { /* ',' */
-        scan_next_token(parser);
-        map_nextmember(parser, l);
-    }
-}
-
 static void list_expr(bparser *parser, bexpdesc *e)
 {
-    /* '[' [expr {',' expr}] ']' */
-    scan_next_token(parser); /* skip '[' */
+    /* '[' {expr ','} [expr] ']' */
     new_primtype(parser, "list", e); /* new list */
-    if (next_token(parser).type != OptRSB) { /* ']' */
-        list_members(parser, e);
-    }
+    do {
+        scan_next_token(parser); /* first '[' and ',' */
+        if (next_type(parser) == OptRSB) break; /* ']' */
+        list_nextmember(parser, e);
+    } while (next_type(parser) == OptComma);
     match_token(parser, OptRSB); /* skip ']' */
 }
 
 static void map_expr(bparser *parser, bexpdesc *e)
 {
-    /* '{' [expr ':' expr {',' expr ':' expr}] '}' */
-    scan_next_token(parser); /* skip '{' */
+    /* '{' {expr ':' expr ','} [expr ':' expr] '}' */
     new_primtype(parser, "map", e); /* new map */
-    if (next_token(parser).type != OptRBR) { /* '}' */
-        map_members(parser, e);
-    }
+    do {
+        scan_next_token(parser); /* first '{' and ',' */
+        if (next_type(parser) == OptRBR) break; /* '}' */
+        map_nextmember(parser, e);
+    } while (next_type(parser) == OptComma);
     match_token(parser, OptRBR); /* skip '}' */
 }
 
@@ -566,7 +546,7 @@ static int exprlist(bparser *parser, bexpdesc *e)
     expr(parser, e);
     check_var(parser, e);
     be_code_reg(finfo, e, reg++);
-    while (next_token(parser).type == OptComma) {
+    while (next_type(parser) == OptComma) {
         scan_next_token(parser); /* skip ',' */
         expr(parser, e);
         check_var(parser, e);
@@ -591,7 +571,7 @@ static void call_expr(bparser *parser, bexpdesc *e)
         be_code_getmethod(finfo);
     }
     scan_next_token(parser); /* skip '(' */
-    if (next_token(parser).type != OptRBK) {
+    if (next_type(parser) != OptRBK) {
         argc = exprlist(parser, &args);
     }
     match_token(parser, OptRBK); /* skip ')' */
@@ -609,7 +589,7 @@ static void member_expr(bparser *parser, bexpdesc *e)
     /* . ID */
     check_var(parser, e);
     scan_next_token(parser); /* skip '.' */
-    if (next_token(parser).type == TokenId) {
+    if (next_type(parser) == TokenId) {
         bexpdesc key;
         init_exp(&key, ETSTRING, 0);
         key.v.s = next_token(parser).u.s;
@@ -627,7 +607,6 @@ static void index_expr(bparser *parser, bexpdesc *e)
     /* [expr] */
     check_var(parser, e);
     scan_next_token(parser); /* skip '[' */
-    init_exp(&e1, ETVOID, 0);
     expr(parser, &e1);
     check_var(parser, &e1);
     be_code_index(parser->finfo, e, &e1);
@@ -636,7 +615,7 @@ static void index_expr(bparser *parser, bexpdesc *e)
 
 static void simple_expr(bparser *parser, bexpdesc *e)
 {
-    switch (next_token(parser).type) {
+    switch (next_type(parser)) {
     case TokenInteger:
         init_exp(e, ETINT, next_token(parser).u.i);
         break;
@@ -669,7 +648,7 @@ static void simple_expr(bparser *parser, bexpdesc *e)
 
 static void primary_expr(bparser *parser, bexpdesc *e)
 {
-    switch (next_token(parser).type) {
+    switch (next_type(parser)) {
     case OptLBK: /* '(' expr ')' */
         scan_next_token(parser); /* skip '(' */
         /* sub_expr() is more efficient because there is no need to initialize e. */
@@ -695,7 +674,7 @@ static void suffix_expr(bparser *parser, bexpdesc *e)
 {
     primary_expr(parser, e);
     for (;;) {
-        switch (next_token(parser).type) {
+        switch (next_type(parser)) {
         case OptLBK: /* '(' function call */
             call_expr(parser, e);
             break;
@@ -718,7 +697,7 @@ static void assign_expr(bparser *parser)
     expr(parser, &e);
     check_symbol(parser, &e);
     line = parser->lexer.linenumber;
-    if (next_token(parser).type == OptAssign) { /* '=' */
+    if (next_type(parser) == OptAssign) { /* '=' */
         bexpdesc e1;
         scan_next_token(parser);
         expr(parser, &e1);
@@ -783,7 +762,7 @@ static void expr_stmt(bparser *parser)
 
 static int block_follow(bparser *parser)
 {
-    switch (next_token(parser).type) {
+    switch (next_type(parser)) {
     case KeyElse: case KeyElif:
     case KeyEnd: case TokenEOS:
         return 0;
@@ -812,8 +791,8 @@ static void condition_block(bparser *parser, int *jmp)
     bfuncinfo *finfo = parser->finfo;
     int br = cond_stmt(parser);
     block(parser);
-    if (next_token(parser).type == KeyElif
-            || next_token(parser).type == KeyElse) {
+    if (next_type(parser) == KeyElif
+            || next_type(parser) == KeyElse) {
         be_code_conjump(finfo, jmp, be_code_jump(finfo)); /* connect jump */
     }
     be_code_patchjump(finfo, br);
@@ -825,11 +804,11 @@ static void if_stmt(bparser *parser)
     /* IF (expr) block {ELSEIF (expr) block}, [ELSE block], end */
     scan_next_token(parser); /* skip 'if' */
     condition_block(parser, &jl);
-    while (next_token(parser).type == KeyElif) {
+    while (next_type(parser) == KeyElif) {
         scan_next_token(parser);
         condition_block(parser, &jl);
     }
-    if (next_token(parser).type == KeyElse) {
+    if (next_type(parser) == KeyElse) {
         scan_next_token(parser);
         block(parser);
     }
@@ -862,7 +841,7 @@ static void while_stmt(bparser *parser)
 
 static void for_itvar(bparser *parser, bexpdesc *e)
 {
-    if (next_token(parser).type == TokenId) {
+    if (next_type(parser) == TokenId) {
         bstring *s = next_token(parser).u.s;
         int idx = new_localvar(parser->finfo, s);
         init_exp(e, ETLOCAL, idx);
@@ -986,7 +965,7 @@ static void continue_stmt(bparser *parser)
 
 static bstring* func_name(bparser *parser, bexpdesc *e, int ismethod)
 {
-    btokentype type = next_token(parser).type;
+    btokentype type = next_type(parser);
     if (type == TokenId) {
         bstring *name = next_token(parser).u.s;
         if (!ismethod) {
@@ -998,7 +977,7 @@ static bstring* func_name(bparser *parser, bexpdesc *e, int ismethod)
         scan_next_token(parser); /* skip token */
         /* '-*' neg method */
         if (type == OptFlip || (type == OptSub
-            && next_token(parser).type == OptMul)) {
+            && next_type(parser) == OptMul)) {
             scan_next_token(parser); /* skip '*' */
             return be_newstr(parser->vm, "-*");
         }
@@ -1027,7 +1006,6 @@ static void return_stmt(bparser *parser)
     bexpdesc e;
     /* 'return' expr */
     scan_next_token(parser); /* skip 'return' */
-    init_exp(&e, ETVOID, 0);
     expr(parser, &e);
     if (e.v.s) { /* expression is not empty */
         check_var(parser, &e);
@@ -1039,12 +1017,12 @@ static void classvar_stmt(bparser *parser, bclass *c)
 {
     /* 'var' ID {',' ID} */
     scan_next_token(parser); /* skip 'var' */
-    if (next_token(parser).type == TokenId) {
+    if (next_type(parser) == TokenId) {
         be_member_bind(c, next_token(parser).u.s);
         scan_next_token(parser);
-        while (next_token(parser).type == OptComma) {
+        while (next_type(parser) == OptComma) {
             scan_next_token(parser);
-            if (next_token(parser).type == TokenId) {
+            if (next_type(parser) == TokenId) {
                 be_member_bind(c, next_token(parser).u.s);
                 scan_next_token(parser);
             } else {
@@ -1070,7 +1048,7 @@ static void classdef_stmt(bparser *parser, bclass *c)
 
 static void class_inherit(bparser *parser, bexpdesc *e)
 {
-    if (next_token(parser).type == OptColon) { /* ':' */
+    if (next_type(parser) == OptColon) { /* ':' */
         bexpdesc e1;
         scan_next_token(parser); /* skip ':' */
         expr(parser, &e1);
@@ -1083,7 +1061,7 @@ static void class_block(bparser *parser, bclass *c)
 {
     /* { [;] } */
     while (block_follow(parser)) {
-        switch (next_token(parser).type) {
+        switch (next_type(parser)) {
         case KeyVar: classvar_stmt(parser, c); break;
         case KeyDef: classdef_stmt(parser, c); break;
         case OptSemic: scan_next_token(parser); break;
@@ -1097,7 +1075,7 @@ static void class_stmt(bparser *parser)
 {
     /* 'class' ID [':' ID] class_block 'end' */
     scan_next_token(parser); /* skip 'class' */
-    if (next_token(parser).type == TokenId) {
+    if (next_type(parser) == TokenId) {
         bexpdesc e;
         bstring *name = next_token(parser).u.s;
         bclass *c = be_newclass(parser->vm, name, NULL);
@@ -1122,7 +1100,7 @@ static void import_stmt(bparser *parser)
     match_token(parser, TokenId); /* match and skip ID */
     init_exp(&m, ETSTRING, 0);
     m.v.s = name;
-    if (next_token(parser).type == KeyAs) {
+    if (next_type(parser) == KeyAs) {
         scan_next_token(parser); /* skip 'as' */
         name = next_token(parser).u.s;
         match_token(parser, TokenId);  /* match and skip ID */
@@ -1140,7 +1118,7 @@ static void var_field(bparser *parser)
     name = next_token(parser).u.s;
     match_token(parser, TokenId); /* match and skip ID */
     string_protect(parser, name);
-    if (next_token(parser).type == OptAssign) { /* '=' */
+    if (next_type(parser) == OptAssign) { /* '=' */
         scan_next_token(parser); /* skip '=' */
         expr(parser, &e2);
         check_var(parser, &e2);
@@ -1157,7 +1135,7 @@ static void var_stmt(bparser *parser)
     /* 'var' ID ['=' expr] {',' ID ['=' expr]} */
     scan_next_token(parser); /* skip 'var' */
     var_field(parser);
-    while (next_token(parser).type == OptComma) {
+    while (next_type(parser) == OptComma) {
         scan_next_token(parser); /* skip ',' */
         var_field(parser);
     }
@@ -1165,7 +1143,7 @@ static void var_stmt(bparser *parser)
 
 static void statement(bparser *parser)
 {
-    switch (next_token(parser).type) {
+    switch (next_type(parser)) {
     case KeyIf: if_stmt(parser); break;
     case KeyWhile: while_stmt(parser); break;
     case KeyFor: for_stmt(parser); break;
