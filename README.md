@@ -2,9 +2,17 @@
 
 ## Introduction
 
-Berry is a ultra-lightweight dynamically typed embedded scripting language. Berry's design goals include running on very small memory devices, and so, Berry must be very streamlined. Its core language only supports a few types, but we still provide class and closure support.
+Berry is a ultra-lightweight dynamically typed embedded scripting language. Berry is designed to run on lower-performance embedded devices. The Berry interpreter-core's code size is less than 40KiB and can run on less than 4KiB heap (on ARM Cortex M4 CPU, Thumb ISA and ARMCC compiler).
 
-The implementation of Berry include a one pass compiler and register-based VM, all the code is written in ANSI C. In Berry not every type is a class object. Some simple value types, such as int, real, boolean and string are not class object, but list, map and range are class object. This is a consideration about performance. Register-based VM is also based on this consideration.
+The interpreter of Berry include a one-pass compiler and register-based VM, all the code is written in ANSI C99. In Berry not every type is a class object. Some simple value types, such as int, real, boolean and string are not class object, but list, map and range are class object. This is a consideration about performance. Register-based VM is also based on this consideration.
+
+Berry has the following advantages:
+
+* Lightweight: smaller than mainstream scripting languages, ideal for use on microcontrollers.
+* Fast: optimized one-pass bytecode compiler and register-based virtual machine.
+* Powerful: supports imperative programming, object-oriented programming, functional programming.
+* Flexible: Berry is a dynamic type script, and it's intended for embedding in applications. It can provide good dynamic scalability for the host system.
+* Simple: simple and natural syntax, support garbage collection, and easy to use FFI (foreign function interface).
 
 ## Documents
 
@@ -28,8 +36,9 @@ The implementation of Berry include a one pass compiler and register-based VM, a
   * Relational operator: `<`, `<=`, `==`, `!=`, `>`, `>=`
   * Logic operator: `&&`, `||`, `!`
   * Arithmetic operator: `+`, `-`, `*`, `/`, `%`
+  * Bitwise operator: `&`, `|`, `~`, `^`, `<<`, `>>`
   * Field operator: `.`
-  * Index operator: `[]`
+  * Subscript operator: `[]`
   * Connect string operator: `+`
   * Brackets: `()`
 * Control Structure
@@ -41,6 +50,7 @@ The implementation of Berry include a one pass compiler and register-based VM, a
   * Return statement
   * Nested functions definition
   * Closure based on Upvalue
+  * Anonymous function
 * Class
   * Inheritance (only public single inheritance)
   * Method and Operator Overload
