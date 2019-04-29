@@ -8,7 +8,6 @@
 void be_globalvar_init(bvm *vm)
 {
     vm->gbldesc.idxtab = be_map_new(vm);
-    vm->gbldesc.nglobal = 0;
     be_vector_init(&vm->gbldesc.gvalist, sizeof(bvalue));
     be_gc_fix(vm, gc_object(vm->gbldesc.idxtab));
 }
@@ -16,7 +15,6 @@ void be_globalvar_init(bvm *vm)
 void be_globalvar_deinit(bvm *vm)
 {
     vm->gbldesc.idxtab = NULL;
-    vm->gbldesc.nglobal = 0;
     be_vector_delete(&vm->gbldesc.gvalist);
 }
 
@@ -39,9 +37,8 @@ int be_globalvar_new(bvm *vm, bstring *name)
         desc = be_map_insertstr(gd->idxtab, name, NULL);
         var_setint(desc, idx);
         be_vector_resize(&gd->gvalist, idx + 1);
-        vm->global = be_vector_data(&gd->gvalist);
-        var_setnil(vm->global + gd->nglobal); /* set the new variable to nil */
-        gd->nglobal++;
+        /* set the new variable to nil */
+        var_setnil((bvalue*)(gd->gvalist.end));
     }
     return idx;
 }
@@ -51,5 +48,4 @@ void be_globalvar_release_space(bvm *vm)
     bglobaldesc *gd = &vm->gbldesc;
     be_map_release(vm, gd->idxtab);
     be_vector_release(&gd->gvalist);
-    vm->global = be_vector_data(&gd->gvalist);
 }
