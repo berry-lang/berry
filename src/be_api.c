@@ -201,7 +201,7 @@ int be_toindex(bvm *vm, int index)
 int be_tobool(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
-    return var_tobool(v) != bfalse;
+    return be_value2bool(vm, v);
 }
 
 const char* be_tostring(bvm *vm, int index)

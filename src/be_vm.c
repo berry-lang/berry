@@ -167,13 +167,13 @@ static bbool obj2bool(bvm *vm, bvalue *obj)
     return btrue;
 }
 
-static bbool var2bool(bvm *vm, bvalue *v)
+bbool be_value2bool(bvm *vm, bvalue *v)
 {
     switch (var_basetype(v)) {
     case BE_NIL:
         return bfalse;
     case BE_BOOL:
-        return v->v.b;
+        return var_tobool(v);
     case BE_INT:
         return val2bool(v->v.i);
     case BE_REAL:
@@ -461,14 +461,14 @@ static void i_jump(bvm *vm, binstruction ins)
 
 static void i_jumptrue(bvm *vm, binstruction ins)
 {
-    if (var2bool(vm, RA(ins))) {
+    if (be_value2bool(vm, RA(ins))) {
         vm->ip += IGET_sBx(ins);
     }
 }
 
 static void i_jumpfalse(bvm *vm, binstruction ins)
 {
-    if (!var2bool(vm, RA(ins))) {
+    if (!be_value2bool(vm, RA(ins))) {
         vm->ip += IGET_sBx(ins);
     }
 }

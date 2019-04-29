@@ -43,5 +43,6 @@ struct bvm {
 #define curcl(_vm)          var2cl((_vm)->cf->func)
 
 void be_dofunc(bvm *vm, bvalue *v, int argc);
+bbool be_value2bool(bvm *vm, bvalue *v);
 
 #endif
