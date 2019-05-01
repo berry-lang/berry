@@ -377,18 +377,16 @@ static btokentype scan_or(blexer *lexer)
 
 static btokentype scan_le(blexer *lexer)
 {
-    btokentype op;
     switch (next(lexer)) {
     case '=':
         next(lexer);
         return OptLE;
     case '<':
+        next(lexer);
         return check_next(lexer, '=') ? OptLsfAssign : OptShiftL;
     default:
         return OptLT;
     }
-    next(lexer);
-    return op;
 }
 
 static btokentype scan_ge(blexer *lexer)
@@ -398,6 +396,7 @@ static btokentype scan_ge(blexer *lexer)
         next(lexer);
         return OptGE;
     case '>':
+        next(lexer);
         return check_next(lexer, '=') ? OptRsfAssign : OptShiftR;
     default:
         return OptGT;
@@ -455,6 +454,8 @@ static btokentype lexer_next(blexer *lexer)
             if (is_letter(lgetc(lexer))) {
                 return scan_identifier(lexer);;
             }
+            be_lexerror(lexer, be_pushfstring(lexer->vm,
+                "stray '\\%d' in program", (unsigned char)lgetc(lexer)));
             return TokenNone; /* error */
         }
     }

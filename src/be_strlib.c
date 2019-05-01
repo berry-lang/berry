@@ -40,7 +40,7 @@ bstring* be_num2str(bvm *vm, bvalue *v)
 {
     char buf[25];
     if (var_isint(v)) {
-        sprintf(buf, BE_INTFORMAT, var_toint(v));
+        sprintf(buf, BE_INT_FORMAT, var_toint(v));
     } else if (var_isreal(v)) {
         sprintf(buf, "%g", var_toreal(v));
     } else {
@@ -60,7 +60,7 @@ static void sim2str(bvm *vm, bvalue *v)
         strcpy(sbuf, var_tobool(v) ? "true" : "false");
         break;
     case BE_INT:
-        sprintf(sbuf, BE_INTFORMAT, var_toint(v));
+        sprintf(sbuf, BE_INT_FORMAT, var_toint(v));
         break;
     case BE_REAL:
         sprintf(sbuf, "%g", var_toreal(v));
@@ -340,6 +340,15 @@ static const char* get_mode(const char *str, char *buf)
     return p;
 }
 
+static void mode_fixlen(char *mode, const char *lenmode)
+{
+    size_t l = strlen(mode), lm = strlen(lenmode);
+    char spec = mode[l - 1];
+    strcpy(mode + l - 1, lenmode);
+    mode[l + lm - 1] = spec;
+    mode[l + lm] = '\0';
+}
+
 static int str_format(bvm *vm)
 {
     int top = be_top(vm);
@@ -358,38 +367,41 @@ static int str_format(bvm *vm)
             concat2(vm);
             p = get_mode(p + 1, mode);
             buf[0] = '\0';
-            if (index <= top) {
-                switch (*p) {
-                case 'd': case 'i': case 'o':
-                case 'u': case 'x': case 'X':
-                    if (be_isint(vm, index)) {
-                        sprintf(buf, mode, be_toint(vm, index));
-                    }
-                    be_pushstring(vm, buf);
-                    break;
-                case 'e': case 'E':
-                case 'f': case 'g': case 'G':
-                    if (be_isnumber(vm, index)) {
-                        sprintf(buf, mode, be_toreal(vm, index));
-                    }
-                    be_pushstring(vm, buf);
-                    break;
-                case 's': {
-                    const char *s = be_tostring(vm, index);
-                    int len = be_strlen(vm, 2);
-                    if (len > 100 && strlen(mode) == 2) {
-                        be_pushvalue(vm, index);
-                    } else {
-                        sprintf(buf, mode, s);
-                        be_pushstring(vm, buf);
-                    }
-                    break;
+            if (index > top) {
+                be_pusherror(vm, be_pushfstring(vm,
+                    "bad argument #%d to 'format': no value", index));
+            }
+            switch (*p) {
+            case 'd': case 'i': case 'o':
+            case 'u': case 'x': case 'X':
+                if (be_isint(vm, index)) {
+                    mode_fixlen(mode, BE_INT_FMTLEN);
+                    sprintf(buf, mode, be_toint(vm, index));
                 }
-                default: /* error */
-                    break;
+                be_pushstring(vm, buf);
+                break;
+            case 'e': case 'E':
+            case 'f': case 'g': case 'G':
+                if (be_isnumber(vm, index)) {
+                    sprintf(buf, mode, be_toreal(vm, index));
                 }
-            } else {
-                be_pushstring(vm, "nil");
+                be_pushstring(vm, buf);
+                break;
+            case 's': {
+                const char *s = be_tostring(vm, index);
+                int len = be_strlen(vm, 2);
+                if (len > 100 && strlen(mode) == 2) {
+                    be_pushvalue(vm, index);
+                } else {
+                    sprintf(buf, mode, s);
+                    be_pushstring(vm, buf);
+                }
+                break;
+            }
+            default: /* error */
+                be_pusherror(vm, be_pushfstring(vm,
+                    "invalid option '%%%c' to 'format'", *p));
+                break;
             }
             concat2(vm);
             format = p + 1;

@@ -13,30 +13,31 @@
 #endif
 
 #if BE_INTGER_TYPE == 0
-  #define BE_INTEGER    int
-  #define BE_INTFORMAT  "%d"
+  #define BE_INTEGER        int
+  #define BE_INT_FMTLEN     ""
 #elif BE_INTGER_TYPE == 1
-  #define BE_INTEGER    long
-  #define BE_INTFORMAT  "%ld"
+  #define BE_INTEGER        long
+  #define BE_INT_FMTLEN     "l"
 #elif BE_INTGER_TYPE == 2
   #ifdef _WIN32
-    #define BE_INTEGER    __int64
-    #define BE_INTFORMAT  "%I64d"
+    #define BE_INTEGER      __int64
+    #define BE_INT_FMTLEN   "I64"
   #else
-    #define BE_INTEGER    long long
-    #define BE_INTFORMAT  "%lld"
+    #define BE_INTEGER      long long
+    #define BE_INT_FMTLEN   "ll"
   #endif
 #else
   #error "Unsupported integer type for `bint`."
 #endif
+#define BE_INT_FORMAT       "%"BE_INT_FMTLEN"d"
 
-typedef uint8_t         bbyte;
-typedef BE_INTEGER      bint;
+typedef uint8_t             bbyte;
+typedef BE_INTEGER          bint;
 
 #if BE_SINGLE_FLOAT != 0
-    typedef float       breal;
+    typedef float           breal;
 #else
-    typedef double      breal;
+    typedef double          breal;
 #endif
 
 typedef enum {

@@ -42,7 +42,7 @@
 #define parser_error(p, msg)    be_lexerror(&(p)->lexer, msg)
 
 #define push_error(parser, ...) \
-    parser_error(parser, be_pushfstring(parser->vm, __VA_ARGS__)
+    parser_error(parser, be_pushfstring(parser->vm, __VA_ARGS__))
 
 typedef struct {
     blexer lexer;
@@ -69,7 +69,7 @@ static void match_token(bparser *parser, btokentype type)
         btoken *token = &next_token(parser);
         const char *s1 = be_tokentype2str(type);
         const char *s2 = be_token2str(parser->vm, token);
-        push_error(parser, "expected '%s' before '%s'", s1, s2));
+        push_error(parser, "expected '%s' before '%s'", s1, s2);
     }
     scan_next_token(parser);
 }
@@ -78,7 +78,7 @@ static void match_notoken(bparser *parser, btokentype type)
 {
     if (next_type(parser) == type) {
         push_error(parser,
-            "expected statement before '%s'", token2str(parser)));
+            "expected statement before '%s'", token2str(parser));
     }
 }
 
@@ -86,7 +86,7 @@ static void check_symbol(bparser *parser, bexpdesc *e)
 {
     if (e->type == ETVOID && e->v.s == NULL) {
         push_error(parser,
-                "unexpected symbol near '%s'", token2str(parser)));
+                "unexpected symbol near '%s'", token2str(parser));
     }
 }
 
@@ -96,7 +96,7 @@ static void check_var(bparser *parser, bexpdesc *e)
     if (e->type == ETVOID) {
         bstring *s = e->v.s;
         push_error(parser,
-            "'%s' undeclared (first use in this function)", str(s)));
+            "'%s' undeclared (first use in this function)", str(s));
     }
 }
 
@@ -426,7 +426,7 @@ static void func_varlist(bparser *parser)
                 new_var(parser, str, &v);
             } else {
                 push_error(parser,
-                    "redefinition of '%s'", token2str(parser)));
+                    "redefinition of '%s'", token2str(parser));
             }
             scan_next_token(parser); /* skip ID */
         }
@@ -606,7 +606,7 @@ static void member_expr(bparser *parser, bexpdesc *e)
         scan_next_token(parser); /* skip ID */
     } else {
         push_error(parser, "invalid syntax near '%s'",
-            be_token2str(parser->vm, &next_token(parser))));
+            be_token2str(parser->vm, &next_token(parser)));
     }
 }
 
@@ -877,7 +877,7 @@ static void for_itvar(bparser *parser, bexpdesc *e)
     } else {
         push_error(parser,
             "missing iteration variable before '%s'",
-            token2str(parser)));
+            token2str(parser));
     }
 }
 
@@ -1013,7 +1013,7 @@ static bstring* func_name(bparser *parser, bexpdesc *e, int ismethod)
     }
     push_error(parser,
         "the token '%s' is not a valid function name.",
-        token2str(parser)));
+        token2str(parser));
     return NULL;
 }
 
@@ -1094,7 +1094,7 @@ static void class_block(bparser *parser, bclass *c)
         case KeyDef: classdef_stmt(parser, c); break;
         case OptSemic: scan_next_token(parser); break;
         default: push_error(parser,
-                    "unexpected token '%s'", token2str(parser)));
+                    "unexpected token '%s'", token2str(parser));
         }
     }
 }
