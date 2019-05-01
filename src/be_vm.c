@@ -167,13 +167,13 @@ static bbool obj2bool(bvm *vm, bvalue *obj)
     return btrue;
 }
 
-static bbool var2bool(bvm *vm, bvalue *v)
+bbool be_value2bool(bvm *vm, bvalue *v)
 {
     switch (var_basetype(v)) {
     case BE_NIL:
         return bfalse;
     case BE_BOOL:
-        return v->v.b;
+        return var_tobool(v);
     case BE_INT:
         return val2bool(v->v.i);
     case BE_REAL:
@@ -283,14 +283,14 @@ static void i_getglobal(bvm *vm, binstruction ins)
 {
     bvalue *v = RA(ins);
     int idx = IGET_Bx(ins);
-    *v = vm->global[idx];
+    *v = *be_globalvar(vm, idx);
 }
 
 static void i_setglobal(bvm *vm, binstruction ins)
 {
     bvalue *v = RA(ins);
     int idx = IGET_Bx(ins);
-    vm->global[idx] = *v;
+    *be_globalvar(vm, idx) = *v;
 }
 
 static void i_getupval(bvm *vm, binstruction ins)
@@ -445,7 +445,7 @@ static void i_range(bvm *vm, binstruction ins)
     bvalue *top = vm->top;
     /* get method 'item' */
     int idx = be_globalvar_find(vm, be_newstr(vm, "range"));
-    top[0] = vm->global[idx];
+    top[0] = *be_globalvar(vm, idx);
     top[1] = *b; /* move lower to argv[0] */
     top[2] = *c; /* move upper to argv[1] */
     vm->top += 3; /* prevent collection results */
@@ -461,14 +461,14 @@ static void i_jump(bvm *vm, binstruction ins)
 
 static void i_jumptrue(bvm *vm, binstruction ins)
 {
-    if (var2bool(vm, RA(ins))) {
+    if (be_value2bool(vm, RA(ins))) {
         vm->ip += IGET_sBx(ins);
     }
 }
 
 static void i_jumpfalse(bvm *vm, binstruction ins)
 {
-    if (!var2bool(vm, RA(ins))) {
+    if (!be_value2bool(vm, RA(ins))) {
         vm->ip += IGET_sBx(ins);
     }
 }

@@ -6,7 +6,6 @@
 typedef struct bglobaldesc {
     bmap *idxtab; /* global variable index table */
     bvector gvalist; /* global variable list */
-    int nglobal; /* global variable count */
 } bglobaldesc;
 
 typedef struct {
@@ -20,7 +19,6 @@ typedef struct {
 struct bvm {
     bstringtable *strtab;
     bgc *gc;
-    bvalue *global; /* global variable vector */
     bglobaldesc gbldesc; /* global description */
     bvalue *stack; /* stack space */
     bvalue *stacktop; /* stack top register */
@@ -43,5 +41,6 @@ struct bvm {
 #define curcl(_vm)          var2cl((_vm)->cf->func)
 
 void be_dofunc(bvm *vm, bvalue *v, int argc);
+bbool be_value2bool(bvm *vm, bvalue *v);
 
 #endif

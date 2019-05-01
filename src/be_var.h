@@ -3,8 +3,8 @@
 
 #include "be_object.h"
 
-#define be_globalvar(vm, idx)   ((idx) + (vm)->global)
-#define be_globalvar_count(vm)  ((vm)->gbldesc.nglobal)
+#define be_globalvar(vm, idx)   ((bvalue*)(vm)->gbldesc.gvalist.data + (idx))
+#define be_globalvar_count(vm)  ((vm)->gbldesc.gvalist.count)
 
 void be_globalvar_init(bvm *vm);
 void be_globalvar_deinit(bvm *vm);
