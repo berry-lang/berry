@@ -20,8 +20,10 @@ import_stmt = 'import' ID ['as' ID];
 (* variable define statement *)
 var_stmt = 'var' ID ['=' expr] {',' ID ['=' expr]};
 (* expression define *)
-expr_stmt = expr ['=' expr];
+expr_stmt = expr [assign_op expr];
 expr = suffix_expr | unop expr | expr binop expr;
+assign_op = '=' | '+=' | '-=' | '*=' | '/=' |
+            '%=' | '&=' | '|=' | '^=' | '<<=' | '>>=';
 binop = '..' | '<' | '<=' | '==' | '!=' | '>' | '>=' | '||' | '&&' |
         '<<' | '>>' | '&' | '|' | '^' | '+' | '-' | '*' | '/' | '%';
 unop = '-' | '!' | '~';
