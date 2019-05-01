@@ -20,13 +20,15 @@
 /* IMPORTANT: This must follow the enum found in be_lexer.h !!! */
 static const char* const kwords_tab[] = {
         "NONE", "EOS", "ID", "INT", "REAL", "STR",
-        "=", "+", "-", "*", "/", "%", "<", "<=",
-        "==", "!=", ">", ">=", "&", "|", "^", "<<",
-        ">>", "..", "&&", "||", "!", "~", "(", ")",
-        "[", "]", "{", "}", ".", ",", ";", ":", "if",
-        "elif", "else", "while", "for", "def", "end",
-        "class", "break", "continue", "return", "true",
-        "false", "nil", "var", "do", "import", "as"
+        "=", "+=","-=", "*=", "/=", "%=", "&=", "|=",
+        "^=", "<<=", ">>=", "+", "-", "*", "/", "%",
+        "<", "<=", "==", "!=", ">", ">=", "&", "|",
+        "^", "<<", ">>", "..", "&&", "||", "!", "~",
+        "(", ")", "[", "]", "{", "}", ".", ",", ";",
+        ":", "if", "elif", "else", "while", "for",
+        "def", "end", "class", "break", "continue",
+        "return", "true", "false", "nil", "var", "do",
+        "import", "as"
 };
 
 void be_lexerror(blexer *lexer, const char *msg)
@@ -343,46 +345,63 @@ static btokentype scan_string(blexer *lexer)
     return TokenString;
 }
 
-static btokentype scan_x26(blexer *lexer)
+static btokentype scan_assign(blexer *lexer, btokentype is, btokentype not)
 {
     next(lexer);
-    if (!check_next(lexer, '&')) {
-        return OptBitAnd;
-    }
-    return OptAnd;
+    return check_next(lexer, '=') ? is : not;
 }
 
-static btokentype scan_x7c(blexer *lexer)
-{
-    next(lexer);
-    if (!check_next(lexer, '|')) {
-        return OptBitOr;
-    }
-    return OptOr;
-}
-
-static btokentype scan_x3c(blexer *lexer)
+static btokentype scan_and(blexer *lexer)
 {
     btokentype op;
     switch (next(lexer)) {
-        case '=': op = OptLE; break;
-        case '<': op = OptShiftL; break;
-        default: return OptLT;
+        case '&': op = OptAnd; break;
+        case '=': op = OptAndAssign; break;
+        default: return OptBitAnd;
     }
     next(lexer);
     return op;
 }
 
-static btokentype scan_x3e(blexer *lexer)
+static btokentype scan_or(blexer *lexer)
 {
     btokentype op;
     switch (next(lexer)) {
-        case '=': op = OptGE; break;
-        case '>': op = OptShiftR; break;
-        default: return OptGT;
+        case '|': op = OptOr; break;
+        case '=': op = OptOrAssign; break;
+        default: return OptBitOr;
     }
     next(lexer);
     return op;
+}
+
+static btokentype scan_le(blexer *lexer)
+{
+    btokentype op;
+    switch (next(lexer)) {
+    case '=':
+        next(lexer);
+        return OptLE;
+    case '<':
+        return check_next(lexer, '=') ? OptLsfAssign : OptShiftL;
+    default:
+        return OptLT;
+    }
+    next(lexer);
+    return op;
+}
+
+static btokentype scan_ge(blexer *lexer)
+{
+    switch (next(lexer)) {
+    case '=':
+        next(lexer);
+        return OptGE;
+    case '>':
+        return check_next(lexer, '=') ? OptRsfAssign : OptShiftR;
+    default:
+        return OptGT;
+    }
 }
 
 static btokentype lexer_next(blexer *lexer)
@@ -399,11 +418,11 @@ static btokentype lexer_next(blexer *lexer)
             skip_comment(lexer);
             break;
         /* operator */
-        case '+': next(lexer); return OptAdd;
-        case '-': next(lexer); return OptSub;
-        case '*': next(lexer); return OptMul;
-        case '/': next(lexer); return OptDiv;
-        case '%': next(lexer); return OptMod;
+        case '+': return scan_assign(lexer, OptAddAssign, OptAdd);
+        case '-': return scan_assign(lexer, OptSubAssign, OptSub);
+        case '*': return scan_assign(lexer, OptMulAssign, OptMul);
+        case '/': return scan_assign(lexer, OptDivAssign, OptDiv);
+        case '%': return scan_assign(lexer, OptModAssign, OptMod);
         case '(': next(lexer); return OptLBK;
         case ')': next(lexer); return OptRBK;
         case '[': next(lexer); return OptLSB;
@@ -413,12 +432,12 @@ static btokentype lexer_next(blexer *lexer)
         case ',': next(lexer); return OptComma;
         case ';': next(lexer); return OptSemic;
         case ':': next(lexer); return OptColon;
-        case '^': next(lexer); return OptBitXor;
+        case '^': return scan_assign(lexer, OptXorAssign, OptBitXor);
         case '~': next(lexer); return OptFlip;
-        case '&': return scan_x26(lexer);
-        case '|': return scan_x7c(lexer);
-        case '<': return scan_x3c(lexer);
-        case '>': return scan_x3e(lexer);
+        case '&': return scan_and(lexer);
+        case '|': return scan_or(lexer);
+        case '<': return scan_le(lexer);
+        case '>': return scan_ge(lexer);
         case '=':
             next(lexer);
             return check_next(lexer, '=') ? OptEQ : OptAssign;

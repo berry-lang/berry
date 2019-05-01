@@ -17,6 +17,7 @@
 
 #define OP_NOT_BINARY           TokenNone
 #define OP_NOT_UNARY            TokenNone
+#define OP_NOT_ASSIGN           TokenNone
 #define UNARY_OP_PRIO           3
 #define ASSIGN_OP_PRIO          15
 
@@ -239,11 +240,19 @@ static btokentype get_binop(bparser *parser)
 static btokentype get_unary_op(bparser *parser)
 {
     btokentype op = next_type(parser);
-
     if (op == OptSub || op == OptNot || op == OptFlip) {
         return op; /* operator 'negative' 'not' and 'flip' */
     }
     return OP_NOT_UNARY;
+}
+
+static btokentype get_assign_op(bparser *parser)
+{
+    btokentype op = next_type(parser);
+    if (op >= OptAssign && op <= OptRsfAssign) {
+        return op;
+    }
+    return OP_NOT_ASSIGN;
 }
 
 static void init_exp(bexpdesc *e, exptype_t type, bint i)
@@ -690,18 +699,37 @@ static void suffix_expr(bparser *parser, bexpdesc *e)
     }
 }
 
+/* compound assignment */
+static void compound_assign(bparser *parser,
+        btokentype op, bexpdesc *l, bexpdesc *r)
+{
+    if (op != OptAssign) { /* check left variable */
+        check_var(parser, l);
+    }
+    expr(parser, r); /* right expression */
+    check_var(parser, r);
+    if (op != OptAssign) { /* compound assignment */
+        bexpdesc e = *l;
+        op = op < OptAndAssign ? op - OptAddAssign + OptAdd
+                : op - OptAndAssign + OptBitAnd;
+        be_code_binop(parser->finfo, op, &e, r); /* coding operation */
+        *r = e;
+    }
+}
+
 static void assign_expr(bparser *parser)
 {
     int line;
     bexpdesc e;
-    expr(parser, &e);
+    btokentype op;
+    expr(parser, &e); /* left expression */
     check_symbol(parser, &e);
     line = parser->lexer.linenumber;
-    if (next_type(parser) == OptAssign) { /* '=' */
+    op = get_assign_op(parser);
+    if (op != OP_NOT_ASSIGN) { /* assign operator */
         bexpdesc e1;
         scan_next_token(parser);
-        expr(parser, &e1);
-        check_var(parser, &e1);
+        compound_assign(parser, op, &e, &e1);
         if (e.type == ETVOID) { /* new variable */
             new_var(parser, e.v.s, &e);
         }

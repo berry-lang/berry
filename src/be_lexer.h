@@ -13,6 +13,16 @@ typedef enum {
     /* operator, don't change order */
     /* assign operator */
     OptAssign,      /* operator, = */
+    OptAddAssign,   /* operator, += */
+    OptSubAssign,   /* operator, -= */
+    OptMulAssign,   /* operator, *= */
+    OptDivAssign,   /* operator, /= */
+    OptModAssign,   /* operator, %= */
+    OptAndAssign,   /* operator, &= */
+    OptOrAssign,    /* operator, |= */
+    OptXorAssign,   /* operator, ^= */
+    OptLsfAssign,   /* operator, <<= */
+    OptRsfAssign,   /* operator, >>= */
     /* binary operator */
     OptAdd,         /* operator, + */
     OptSub,         /* operator, - */
