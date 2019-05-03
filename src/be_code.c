@@ -546,20 +546,6 @@ int be_code_setvar(bfuncinfo *finfo, bexpdesc *e1, bexpdesc *e2)
     return 0;
 }
 
-void be_code_reg(bfuncinfo *finfo, bexpdesc *e, int dst)
-{
-    int isnew = dst == finfo->freereg;
-    int src = exp2anyreg(finfo, e); /* get variable register index */
-    if (src != dst) {
-        code_move(finfo, dst, src);
-    }
-    if (isnew) { /* move to new register */
-        e->type = ETREG;
-        e->v.idx = dst;
-        be_code_allocregs(finfo, isnew);
-    }
-}
-
 int be_code_nextreg(bfuncinfo *finfo, bexpdesc *e)
 {
     int dst = finfo->freereg;
@@ -577,12 +563,13 @@ void be_code_getmethod(bfuncinfo *finfo)
 {
     binstruction *p = be_vector_end(&finfo->code);
     *p = (*p & IAx_MASK) | ISET_OP(OP_GETMET);
-    be_code_allocregs(finfo, 1);
+    be_code_allocregs(finfo, 1); /* method [object] args */
 }
 
 void be_code_call(bfuncinfo *finfo, int base, int argc)
 {
     codeABC(finfo, OP_CALL, base, argc, 0);
+    be_code_freeregs(finfo, argc);
 }
 
 void be_code_closure(bfuncinfo *finfo, bexpdesc *e, bproto *proto)

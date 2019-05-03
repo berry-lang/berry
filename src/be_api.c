@@ -753,3 +753,11 @@ int be_pcall(bvm *vm, int argc)
     int res = be_protectedcall(vm, f, argc);
     return res;
 }
+
+void be_codedump(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    if (var_isclosure(v)) {
+        be_dprintcode(var_toobj(v));
+    }
+}

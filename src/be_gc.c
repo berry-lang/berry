@@ -62,13 +62,24 @@ void be_gc_setpause(bvm *vm, int pause)
     vm->gc->pause = (bbyte)pause;
 }
 
+static bgcobject* gc_malloc(bvm *vm, size_t size)
+{
+    bgcobject *obj;
+    be_gc_auto(vm); /* first: auto gc */
+    obj = be_malloc(size);
+    if (obj == NULL) { /* no free space */
+        be_gc_collect(vm);
+        obj = be_malloc(size);
+    }
+    return obj;
+}
+
 bgcobject* be_newgcobj(bvm *vm, int type, size_t size)
 {
     bgcobject *obj;
     bgc *gc = vm->gc;
 
-    be_gc_auto(vm); /* first: auto gc */
-    obj = be_malloc(size);
+    obj = gc_malloc(vm, size);
     var_settype(obj, (bbyte)type);
     obj->marked = GC_WHITE; /* default gc object type is white */
     obj->next = gc->list; /* insert to head */
@@ -83,8 +94,7 @@ bgcobject* be_gc_newstr(bvm *vm, size_t size, int islong)
     if (islong) {
         return be_newgcobj(vm, BE_STRING, size);
     }
-    be_gc_auto(vm); /* first: auto gc */
-    obj = be_malloc(size);
+    obj = gc_malloc(vm, size);
     var_settype(obj, BE_STRING);
     obj->marked = GC_WHITE; /* default string type is white */
     return obj;

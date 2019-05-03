@@ -262,6 +262,14 @@ static int l_compile(bvm *vm)
     be_return_nil(vm);
 }
 
+static int l_codedump(bvm *vm)
+{
+    if (be_top(vm) >= 1) {
+        be_codedump(vm, 1);
+    }
+    be_return_nil(vm);
+}
+
 void be_load_baselib(bvm *vm)
 {
     be_regfunc(vm, "assert", l_assert);
@@ -279,6 +287,7 @@ void be_load_baselib(bvm *vm)
     be_regfunc(vm, "real", l_real);
     be_regfunc(vm, "length", l_length);
     be_regfunc(vm, "compile", l_compile);
+    be_regfunc(vm, "codedump", l_codedump);
     be_regfunc(vm, "__iterator__", l_iterator);
     be_regfunc(vm, "__hasnext__", l_hasnext);
     be_regfunc(vm, "__next__", l_next);

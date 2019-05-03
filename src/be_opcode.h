@@ -87,7 +87,7 @@ typedef enum {
     OP_RET,       /*  A, B     |   if (R(A)) R(-1) <- RK(B) else R(-1) <- nil */
     OP_CLOSURE,   /*  A, Bx    |   R(A) <- CLOSURE(proto_table[Bx])*/
     OP_GETMBR,    /*  A, B, C  |   R(A) <- RK(B).RK(C) */
-    OP_GETMET,    /*  A, B, C  |   R(A) <- RK(B).RK(C) */
+    OP_GETMET,    /*  A, B, C  |   R(A) <- RK(B).RK(C), R(A+1) <- RK(B) */
     OP_SETMBR,    /*  A, B, C  |   R(A).RK(B) <- RK(C) */
     OP_GETIDX,    /*  A, B, C  |   R(A) <- RK(B)[RK(C)] */
     OP_SETIDX,    /*  A, B, C  |   R(A)[RK(B)] <- RK(C) */

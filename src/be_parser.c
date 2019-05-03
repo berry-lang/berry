@@ -481,12 +481,12 @@ static void list_nextmember(bparser *parser, bexpdesc *l)
 {
     bexpdesc e, key, v = *l;
     bfuncinfo *finfo = parser->finfo;
-    int base, reg = finfo->freereg;
+    int base;
 
     init_exp(&key, ETSTRING, 0);
     key.v.s = be_newstr(parser->vm, "append");
     /* copy list object to next register */
-    be_code_reg(finfo, &v, reg);
+    be_code_nextreg(finfo, &v);
     be_code_member(finfo, &v, &key);
     base = be_code_nextreg(finfo, &v);
     be_code_getmethod(finfo);
@@ -495,19 +495,19 @@ static void list_nextmember(bparser *parser, bexpdesc *l)
     check_var(parser, &e);
     be_code_nextreg(finfo, &e);
     be_code_call(finfo, base, 2);
-    be_code_freeregs(finfo, finfo->freereg - reg);
+    be_code_freeregs(finfo, 1); /* free return value */
 }
 
 static void map_nextmember(bparser *parser, bexpdesc *l)
 {
     bexpdesc e, key, v = *l;
     bfuncinfo *finfo = parser->finfo;
-    int base, reg = finfo->freereg;
+    int base;
 
     init_exp(&key, ETSTRING, 0);
     key.v.s = be_newstr(parser->vm, "insert");
     /* copy list object to next register */
-    be_code_reg(finfo, &v, reg);
+    be_code_nextreg(finfo, &v);
     be_code_member(finfo, &v, &key);
     base = be_code_nextreg(finfo, &v);
     be_code_getmethod(finfo);
@@ -520,7 +520,7 @@ static void map_nextmember(bparser *parser, bexpdesc *l)
     check_var(parser, &e);
     be_code_nextreg(finfo, &e);
     be_code_call(finfo, base, 3);
-    be_code_freeregs(finfo, finfo->freereg - reg);
+    be_code_freeregs(finfo, 1); /* free return value */
 }
 
 static void list_expr(bparser *parser, bexpdesc *e)
@@ -550,16 +550,16 @@ static void map_expr(bparser *parser, bexpdesc *e)
 static int exprlist(bparser *parser, bexpdesc *e)
 {
     bfuncinfo *finfo = parser->finfo;
-    int n = 1, reg = finfo->freereg;
+    int n = 1;
     /* expr { ',' expr } */
     expr(parser, e);
     check_var(parser, e);
-    be_code_reg(finfo, e, reg++);
+    be_code_nextreg(finfo, e);
     while (next_type(parser) == OptComma) {
         scan_next_token(parser); /* skip ',' */
         expr(parser, e);
         check_var(parser, e);
-        be_code_reg(finfo, e, reg++);
+        be_code_nextreg(finfo, e);
         ++n;
     }
     return n;
@@ -572,7 +572,7 @@ static void call_expr(bparser *parser, bexpdesc *e)
     int argc = 0, base = finfo->freereg;
     int ismember = e->type == ETMEMBER;
 
-    /* '(' [exprlist] ')' */
+    /* func '(' [exprlist] ')' */
     check_var(parser, e);
     /* code function index to next register */
     base = be_code_nextreg(finfo, e);
@@ -585,7 +585,6 @@ static void call_expr(bparser *parser, bexpdesc *e)
     }
     match_token(parser, OptRBK); /* skip ')' */
     argc += ismember;
-    be_code_freeregs(finfo, argc);
     be_code_call(finfo, base, argc);
     if (e->type != ETREG) {
         e->type = ETREG;
@@ -900,7 +899,7 @@ static void for_init(bparser *parser, bexpdesc *v)
     s = be_newstr(vm, ".it");
     init_exp(v, ETLOCAL, new_localvar(finfo, s));
     be_code_setvar(finfo, v, &e); /* code .it = __iterator__(expr) */
-    be_code_freeregs(finfo, 2); /* free registers */
+    be_code_freeregs(finfo, 1); /* free register of e */
     stack_reset(parser, top);
 }
 
@@ -925,7 +924,6 @@ static void for_iter(bparser *parser, bexpdesc *v, bexpdesc *it)
     be_code_nextreg(finfo, &e); /* code function '__hasnext__' */
     be_code_nextreg(finfo, it); /* code argv[0]: '.it' */
     be_code_call(finfo, e.v.idx, 1); /* call __hasnext__(.it) */
-    be_code_freeregs(finfo, 1); /* free registers */
     be_code_goiftrue(finfo, &e);
     brk = e.f;
     /* var = __next__(.it) */
@@ -935,7 +933,7 @@ static void for_iter(bparser *parser, bexpdesc *v, bexpdesc *it)
     be_code_nextreg(finfo, it); /* code argv[0]: '.it' */
     be_code_call(finfo, e.v.idx, 1); /* call __next__(.it) */
     be_code_setvar(finfo, v, &e); /* code var = __next__(.it) */
-    be_code_freeregs(finfo, 2); /* free registers */
+    be_code_freeregs(finfo, 1); /* free registers */
     stmtlist(parser);
     end_block(parser);
     be_code_patchjump(finfo, brk);

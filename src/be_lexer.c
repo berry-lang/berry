@@ -416,6 +416,7 @@ static btokentype lexer_next(blexer *lexer)
         case '#': /* comment */
             skip_comment(lexer);
             break;
+        case EOS: return TokenEOS; /* end of source stream */
         /* operator */
         case '+': return scan_assign(lexer, OptAddAssign, OptAdd);
         case '-': return scan_assign(lexer, OptSubAssign, OptSub);

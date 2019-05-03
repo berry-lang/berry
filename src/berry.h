@@ -6,7 +6,7 @@
 
 #include "berry_conf.h"
 
-#define BERRY_VERSION   "0.0.6"
+#define BERRY_VERSION   "0.0.7"
 
 #if BE_STACK_TOTAL_MAX < BE_STACK_FREE_MIN * 2
 #error "The value of the macro BE_STACK_TOTAL_MAX is too small."
@@ -234,5 +234,6 @@ int be_loadbuffer(bvm *vm,
     const char *name, const char *buffer, size_t length);
 int be_loadfile(bvm *vm, const char *name);
 void be_loadlibs(bvm *vm);
+void be_codedump(bvm *vm, int index);
 
 #endif
