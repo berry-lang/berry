@@ -19,7 +19,7 @@ void be_code_jumpbool(bfuncinfo *finfo, bexpdesc *e, int jumptrue);
 void be_code_conjump(bfuncinfo *finfo, int *list, int jmp);
 void be_code_patchlist(bfuncinfo *finfo, int list, int dst);
 void be_code_patchjump(bfuncinfo *finfo, int jmp);
-void be_code_getmethod(bfuncinfo *finfo);
+int be_code_getmethod(bfuncinfo *finfo, bexpdesc *e);
 void be_code_call(bfuncinfo *finfo, int base, int argc);
 void be_code_closure(bfuncinfo *finfo, bexpdesc *e, bproto *proto);
 void be_code_close(bfuncinfo *finfo, int isret);

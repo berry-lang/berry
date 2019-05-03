@@ -559,11 +559,13 @@ int be_code_nextreg(bfuncinfo *finfo, bexpdesc *e)
     return dst;
 }
 
-void be_code_getmethod(bfuncinfo *finfo)
+int be_code_getmethod(bfuncinfo *finfo, bexpdesc *e)
 {
-    binstruction *p = be_vector_end(&finfo->code);
-    *p = (*p & IAx_MASK) | ISET_OP(OP_GETMET);
-    be_code_allocregs(finfo, 1); /* method [object] args */
+    int dst = finfo->freereg;
+    be_assert(e->type == ETMEMBER);
+    codeABC(finfo, OP_GETMET, dst, e->v.ss.obj, e->v.ss.idx);
+    be_code_allocregs(finfo, 2); /* method [object] args */
+    return dst;
 }
 
 void be_code_call(bfuncinfo *finfo, int base, int argc)

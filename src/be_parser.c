@@ -485,11 +485,8 @@ static void list_nextmember(bparser *parser, bexpdesc *l)
 
     init_exp(&key, ETSTRING, 0);
     key.v.s = be_newstr(parser->vm, "append");
-    /* copy list object to next register */
-    be_code_nextreg(finfo, &v);
     be_code_member(finfo, &v, &key);
-    base = be_code_nextreg(finfo, &v);
-    be_code_getmethod(finfo);
+    base = be_code_getmethod(finfo, &v);
     /* copy source value to next register */
     expr(parser, &e);
     check_var(parser, &e);
@@ -506,11 +503,8 @@ static void map_nextmember(bparser *parser, bexpdesc *l)
 
     init_exp(&key, ETSTRING, 0);
     key.v.s = be_newstr(parser->vm, "insert");
-    /* copy list object to next register */
-    be_code_nextreg(finfo, &v);
     be_code_member(finfo, &v, &key);
-    base = be_code_nextreg(finfo, &v);
-    be_code_getmethod(finfo);
+    base = be_code_getmethod(finfo, &v);
     /* copy source value to next register */
     expr(parser, &e); /* key */
     check_var(parser, &e);
@@ -575,9 +569,11 @@ static void call_expr(bparser *parser, bexpdesc *e)
     /* func '(' [exprlist] ')' */
     check_var(parser, e);
     /* code function index to next register */
-    base = be_code_nextreg(finfo, e);
+    
     if (ismember) {
-        be_code_getmethod(finfo);
+        base = be_code_getmethod(finfo, e);
+    } else {
+        base = be_code_nextreg(finfo, e);
     }
     scan_next_token(parser); /* skip '(' */
     if (next_type(parser) != OptRBK) {
