@@ -32,7 +32,7 @@ Berry has the following advantages:
   * Map: Hash Map, like `{ 'a': 1, 2: 3, 'map': {} }`
   * Range: include a lower and a upper integer value, like `0..5`
 * Operator and Expression
-  * Assign operator: `=`, `+=`, `-=`, `*=`, `/=`, `&=`, `|=`, `^=`, `<<=`, `>>=`
+  * Assign operator: `=`, `+=`, `-=`, `*=`, `/=`, `%=`, `&=`, `|=`, `^=`, `<<=`, `>>=`
   * Relational operator: `<`, `<=`, `==`, `!=`, `>`, `>=`
   * Logic operator: `&&`, `||`, `!`
   * Arithmetic operator: `+`, `-`, `*`, `/`, `%`
