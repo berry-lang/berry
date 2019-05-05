@@ -402,6 +402,7 @@ static void singlevar(bparser *parser, bexpdesc *var)
     case ETGLOBAL:
         init_exp(var, ETGLOBAL, 0);
         var->v.idx = be_global_find(parser->vm, varname);
+        var->extra = varname;
         break;
     default:
         break;
@@ -470,7 +471,7 @@ static void new_primtype(bparser *parser, const char *type, bexpdesc *e)
     bvm *vm = parser->vm;
     bfuncinfo *finfo = parser->finfo;
 
-    idx = be_global_find(vm, be_newstr(vm, type));
+    idx = be_builtin_find(vm, be_newstr(vm, type));
     init_exp(e, ETGLOBAL, idx);
     idx = be_code_nextreg(finfo, e);
     be_code_call(finfo, idx, 0);
@@ -712,6 +713,18 @@ static void compound_assign(bparser *parser,
     }
 }
 
+static int check_newvar(bparser *parser, bexpdesc *e)
+{
+    if (e->type == ETGLOBAL) {
+        if (e->v.idx < be_builtin_count(parser->vm)) {
+            e->v.s = e->extra;
+            return btrue;
+        }
+        return bfalse;
+    }
+    return e->type == ETVOID;
+}
+
 static void assign_expr(bparser *parser)
 {
     int line;
@@ -725,7 +738,7 @@ static void assign_expr(bparser *parser)
         bexpdesc e1;
         scan_next_token(parser);
         compound_assign(parser, op, &e, &e1);
-        if (e.type == ETVOID) { /* new variable */
+        if (check_newvar(parser, &e)) { /* new variable */
             new_var(parser, e.v.s, &e);
         }
         if (be_code_setvar(parser->finfo, &e, &e1)) {
@@ -886,7 +899,7 @@ static void for_init(bparser *parser, bexpdesc *v)
 
     /* .it = __iterator__(expr) */
     s = be_newstr(vm, "__iterator__");
-    init_exp(&e, ETGLOBAL, be_global_find(vm, s));
+    init_exp(&e, ETGLOBAL, be_builtin_find(vm, s));
     be_code_nextreg(finfo, &e); /* code function '__iterator__' */
     expr(parser, v);
     check_var(parser, v);
@@ -916,7 +929,7 @@ static void for_iter(bparser *parser, bexpdesc *v, bexpdesc *it)
     blobk_setloop(finfo);
     /* __hasnext__(.it) */
     s = be_newstr(vm, "__hasnext__");
-    init_exp(&e, ETGLOBAL, be_global_find(vm, s));
+    init_exp(&e, ETGLOBAL, be_builtin_find(vm, s));
     be_code_nextreg(finfo, &e); /* code function '__hasnext__' */
     be_code_nextreg(finfo, it); /* code argv[0]: '.it' */
     be_code_call(finfo, e.v.idx, 1); /* call __hasnext__(.it) */
@@ -924,7 +937,7 @@ static void for_iter(bparser *parser, bexpdesc *v, bexpdesc *it)
     brk = e.f;
     /* var = __next__(.it) */
     s = be_newstr(vm, "__next__");
-    init_exp(&e, ETGLOBAL, be_global_find(vm, s));
+    init_exp(&e, ETGLOBAL, be_builtin_find(vm, s));
     be_code_nextreg(finfo, &e); /* code function '__next__' */
     be_code_nextreg(finfo, it); /* code argv[0]: '.it' */
     be_code_call(finfo, e.v.idx, 1); /* call __next__(.it) */

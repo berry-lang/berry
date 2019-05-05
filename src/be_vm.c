@@ -444,7 +444,7 @@ static void i_range(bvm *vm, binstruction ins)
     bvalue *b = RKB(ins), *c = RKC(ins);
     bvalue *top = vm->top;
     /* get method 'item' */
-    int idx = be_global_find(vm, be_newstr(vm, "range"));
+    int idx = be_builtin_find(vm, be_newstr(vm, "range"));
     top[0] = *be_global_var(vm, idx);
     top[1] = *b; /* move lower to argv[0] */
     top[2] = *c; /* move upper to argv[1] */

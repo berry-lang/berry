@@ -119,7 +119,7 @@ static int m_listdir(bvm *vm)
     } else {
         dp = opendir(".");
     }
-    be_getglobal(vm, "list");
+    be_getbuiltin(vm, "list");
     if (dp != NULL) {
         be_newlist(vm);
         while ((ep = readdir (dp)) != NULL) {
@@ -149,7 +149,7 @@ static int m_listdir(bvm *vm)
     } else {
         find = FindFirstFile("./*", &data);
     }
-    be_getglobal(vm, "list");
+    be_getbuiltin(vm, "list");
     if (find != INVALID_HANDLE_VALUE) {
         be_newlist(vm);
         do {
@@ -221,7 +221,7 @@ static int m_splitext(bvm *vm)
             }
         }
         dot = dot == str ? ptr : dot;
-        be_getglobal(vm, "list");
+        be_getbuiltin(vm, "list");
         be_pushnstring(vm, str, dot - str);
         be_pushstring(vm, dot);
         be_call(vm, 2);

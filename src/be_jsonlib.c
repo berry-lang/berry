@@ -63,7 +63,7 @@ static int json_strlen(const char *json)
 
 static void json2berry(bvm *vm, const char *class)
 {
-    be_getglobal(vm, class);
+    be_getbuiltin(vm, class);
     be_pushvalue(vm, -2);
     be_call(vm, 1);
     be_moveto(vm, -2, -3);

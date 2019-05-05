@@ -415,8 +415,14 @@ void be_getglobal(bvm *vm, const char *name)
 {
     bvalue *top = be_incrtop(vm);
     int idx = be_global_find(vm, be_newstr(vm, name));
-    bvalue *gbl = be_global_var(vm, idx);
-    *top = *gbl;
+    *top = *be_global_var(vm, idx);
+}
+
+void be_getbuiltin(bvm *vm, const char *name)
+{
+    bvalue *top = be_incrtop(vm);
+    int idx = be_builtin_find(vm, be_newstr(vm, name));
+    *top = *be_global_var(vm, idx);
 }
 
 void be_setmember(bvm *vm, int index, const char *k)

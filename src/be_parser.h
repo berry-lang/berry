@@ -34,6 +34,7 @@ typedef struct {
         bproto *p;  /* for ETPROTO */
         int idx;     /* variable index */
     } v;
+    void *extra;
     int t; /* patch list of 'exit when true' */
     int f; /* patch list of 'exit when false' */
     bbyte not; /* not mark */

@@ -198,6 +198,7 @@ void be_pusherror(bvm *vm, const char *msg);
 void be_newlist(bvm *vm);
 void be_newmap(bvm *vm);
 void be_getglobal(bvm *vm, const char *name);
+void be_getbuiltin(bvm *vm, const char *name);
 void be_setmember(bvm *vm, int index, const char *k);
 void be_getmember(bvm *vm, int index, const char *k);
 void be_getindex(bvm *vm, int index);

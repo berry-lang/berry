@@ -35,13 +35,19 @@ int be_builtin_find(bvm *vm, bstring *name)
     return -1; /* not found */
 }
 
-int be_global_find(bvm *vm, bstring *name)
+static int global_find(bvm *vm, bstring *name)
 {
     bvalue *res = be_map_findstr(global(vm).vtab, name);
     if (res) {
         return var_toidx(res) + be_builtin_count(vm);
     }
-    return be_builtin_find(vm, name);
+    return -1; /* not found */
+}
+
+int be_global_find(bvm *vm, bstring *name)
+{
+    int res = global_find(vm, name);
+    return res != -1 ? res : be_builtin_find(vm, name);
 }
 
 int be_builtin_new(bvm *vm, bstring *name)
@@ -61,7 +67,7 @@ int be_builtin_new(bvm *vm, bstring *name)
 
 int be_global_new(bvm *vm, bstring *name)
 {
-    int idx = be_global_find(vm, name);
+    int idx = global_find(vm, name);
     if (idx == -1) {
         bvalue *desc;
         idx = be_map_count(global(vm).vtab);
