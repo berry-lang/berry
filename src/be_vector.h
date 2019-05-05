@@ -29,6 +29,6 @@ void be_vector_remove_end(bvector *vector);
 void be_vector_resize(bvector *vector, int count);
 void be_vector_clear(bvector *vector);
 void* be_vector_release(bvector *vector);
-int be_nextpow(int v);
+int be_nextsize(int value);
 
 #endif

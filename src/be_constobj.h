@@ -19,8 +19,7 @@
 { \
     .v.s = (bstring *)&(_str), \
     .type = BE_STRING, \
-    .extra = 0, \
-    .next = (uint16_t)(_next) \
+    .next = (uint32_t)(_next) & 0xFFFFFF \
 }
 
 #define be_const_func(_func) \

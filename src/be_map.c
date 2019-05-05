@@ -1,5 +1,6 @@
 #include "be_map.h"
 #include "be_string.h"
+#include "be_vector.h"
 #include "be_mem.h"
 #include "be_gc.h"
 
@@ -16,24 +17,15 @@
 #define setkey(node, _v)    { (node)->key.type = (bbyte)(_v)->type; \
                               (node)->key.v = (_v)->v; }
 
-#define LASTNODE            65535
+#define LASTNODE            ((1 << 24) - 1)
 
-static const uint16_t hashtab_size[] = {
-    0, 2, 4, 6, 8, 10, 12, /* + 2 */
-    16, 20, 25, 32, 39, 48, 61, 76, /* * 1.25 */
-    96, 128, 170, 226, 300, 400, 531, 707, 940, 1250, /* * 1.33 */
-    1875, 2812, 4218, 6328, 9492, 14238, 21357, 32036, 48054 /* * 1.5 */
-};
-
-static int get_nextsize(int size)
+static int map_nextsize(int size)
 {
-    size_t i;
-    for (i = 0; i < array_count(hashtab_size); ++i) {
-        if (hashtab_size[i] > size) {
-            return hashtab_size[i];
-        }
+    be_assert(size < LASTNODE);
+    if (size < LASTNODE) {
+        return be_nextsize(size);
     }
-    return LASTNODE;
+    return LASTNODE + 1;
 }
 
 uint32_t hashptr(void *p)
@@ -213,7 +205,7 @@ bvalue* be_map_insert(bmap *map, bvalue *key, bvalue *value)
     bmapnode *entry = find(map, key, hash);
     if (!entry) { /* new entry */
         if (map->count >= map->size) {
-            resize(map, get_nextsize(map->size));
+            resize(map, map_nextsize(map->size));
         }
         entry = insert(map, key, hash);
         ++map->count;

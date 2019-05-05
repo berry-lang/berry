@@ -4,15 +4,13 @@
 #include "be_vm.h"
 #include "be_vector.h"
 
-#define DEF_LIST_CAP    4
-
 blist* be_list_new(bvm *vm)
 {
     bgcobject *gco = be_gcnew(vm, BE_LIST, blist);
     blist *list = cast_list(gco);
     if (list) {
         list->count = 0;
-        list->capacity = DEF_LIST_CAP;
+        list->capacity = 2;
         list->data = be_malloc(sizeof(bvalue) * list->capacity);
     }
     return list;
@@ -39,7 +37,7 @@ bvalue* be_list_append(blist *list, bvalue *value)
 {
     bvalue *slot;
     if (list->count >= list->capacity) {
-        list->capacity <<= 1; /* capacity *= 2 */
+        list->capacity = be_nextsize(list->capacity);
         list->data = be_realloc(list->data, list->capacity * sizeof(bvalue));
     }
     slot = list->data + list->count++;
@@ -95,7 +93,7 @@ int be_list_remove(blist *list, int index)
 void be_list_resize(blist *list, int count)
 {
     if (count != list->count) {
-        int newcap = be_nextpow(count);
+        int newcap = be_nextsize(count);
         int oldcount = list->count;
         list->count = count;
         if (newcap > list->capacity) {
