@@ -283,14 +283,14 @@ static void i_getglobal(bvm *vm, binstruction ins)
 {
     bvalue *v = RA(ins);
     int idx = IGET_Bx(ins);
-    *v = *be_globalvar(vm, idx);
+    *v = *be_global_var(vm, idx);
 }
 
 static void i_setglobal(bvm *vm, binstruction ins)
 {
     bvalue *v = RA(ins);
     int idx = IGET_Bx(ins);
-    *be_globalvar(vm, idx) = *v;
+    *be_global_var(vm, idx) = *v;
 }
 
 static void i_getupval(bvm *vm, binstruction ins)
@@ -444,8 +444,8 @@ static void i_range(bvm *vm, binstruction ins)
     bvalue *b = RKB(ins), *c = RKC(ins);
     bvalue *top = vm->top;
     /* get method 'item' */
-    int idx = be_globalvar_find(vm, be_newstr(vm, "range"));
-    top[0] = *be_globalvar(vm, idx);
+    int idx = be_global_find(vm, be_newstr(vm, "range"));
+    top[0] = *be_global_var(vm, idx);
     top[1] = *b; /* move lower to argv[0] */
     top[2] = *c; /* move upper to argv[1] */
     vm->top += 3; /* prevent collection results */

@@ -321,8 +321,16 @@ static void free_object(bvm *vm, bgcobject *obj)
 
 static void premark_global(bvm *vm)
 {
-    bvalue *v = be_globalvar(vm, 0);
-    bvalue *end = v + be_globalvar_count(vm);
+    bvalue *v = vm->gbldesc.global.vlist.data;
+    bvalue *end = v + be_global_count(vm);
+    while (v < end) {
+        if (be_isgcobj(v)) {
+            gc_setgray(var_togc(v));
+        }
+        ++v;
+    }
+    v = vm->gbldesc.builtin.vlist.data;
+    end = v + be_builtin_count(vm);
     while (v < end) {
         if (be_isgcobj(v)) {
             gc_setgray(var_togc(v));

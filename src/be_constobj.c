@@ -4,7 +4,7 @@
 
 void be_const_regclass(bvm *vm, const bclass *c)
 {
-    int idx = be_globalvar_new(vm, c->name);
-    bvalue *var = be_globalvar(vm, idx);
+    int idx = be_builtin_new(vm, c->name);
+    bvalue *var = be_global_var(vm, idx);
     var_setclass(var, (bclass *)c);
 }

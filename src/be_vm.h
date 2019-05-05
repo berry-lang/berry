@@ -4,8 +4,14 @@
 #include "be_object.h"
 
 typedef struct bglobaldesc {
-    bmap *idxtab; /* global variable index table */
-    bvector gvalist; /* global variable list */
+    struct {
+        bmap *vtab; /* global variable index table */
+        bvector vlist; /* global variable list */
+    } global;
+    struct {
+        bmap *vtab; /* built-in variable index table */
+        bvector vlist; /* built-in variable list */
+    } builtin;
 } bglobaldesc;
 
 typedef struct {

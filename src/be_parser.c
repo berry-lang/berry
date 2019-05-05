@@ -336,7 +336,7 @@ static void new_var(bparser *parser, bstring *name, bexpdesc *var)
     bfuncinfo *finfo = parser->finfo;
     if (finfo->prev == NULL && finfo->binfo->prev == NULL) {
         init_exp(var, ETGLOBAL, 0);
-        var->v.idx = be_globalvar_new(parser->vm, name);
+        var->v.idx = be_global_new(parser->vm, name);
     } else {
         init_exp(var, ETLOCAL, 0);
         var->v.idx = new_localvar(finfo, name);
@@ -350,8 +350,8 @@ static void new_class(bparser *parser, bstring *name, bclass *c, bexpdesc *e)
 
     if (finfo->prev == NULL && finfo->binfo->prev == NULL) {
         init_exp(e, ETGLOBAL, 0);
-        e->v.idx = be_globalvar_new(parser->vm, name);
-        var = be_globalvar(parser->vm, e->v.idx);
+        e->v.idx = be_global_new(parser->vm, name);
+        var = be_global_var(parser->vm, e->v.idx);
     } else {
         init_exp(e, ETLOCAL, 0);
         e->v.idx = new_localvar(finfo, name);
@@ -378,7 +378,7 @@ static int singlevaraux(bvm *vm, bfuncinfo *finfo, bstring *s, bexpdesc *var)
                 int res = singlevaraux(vm, finfo->prev, s, var);
                 if (res == ETUPVAL || res == ETLOCAL) {
                     idx = new_upval(finfo, s, var); /* new upvalue */
-                } else if (be_globalvar_find(vm, s) >= 0) {
+                } else if (be_global_find(vm, s) >= 0) {
                     return ETGLOBAL; /* global variable */
                 } else {
                     return ETVOID; /* unknow (new variable or error) */
@@ -401,7 +401,7 @@ static void singlevar(bparser *parser, bexpdesc *var)
         break;
     case ETGLOBAL:
         init_exp(var, ETGLOBAL, 0);
-        var->v.idx = be_globalvar_find(parser->vm, varname);
+        var->v.idx = be_global_find(parser->vm, varname);
         break;
     default:
         break;
@@ -470,7 +470,7 @@ static void new_primtype(bparser *parser, const char *type, bexpdesc *e)
     bvm *vm = parser->vm;
     bfuncinfo *finfo = parser->finfo;
 
-    idx = be_globalvar_find(vm, be_newstr(vm, type));
+    idx = be_global_find(vm, be_newstr(vm, type));
     init_exp(e, ETGLOBAL, idx);
     idx = be_code_nextreg(finfo, e);
     be_code_call(finfo, idx, 0);
@@ -886,7 +886,7 @@ static void for_init(bparser *parser, bexpdesc *v)
 
     /* .it = __iterator__(expr) */
     s = be_newstr(vm, "__iterator__");
-    init_exp(&e, ETGLOBAL, be_globalvar_find(vm, s));
+    init_exp(&e, ETGLOBAL, be_global_find(vm, s));
     be_code_nextreg(finfo, &e); /* code function '__iterator__' */
     expr(parser, v);
     check_var(parser, v);
@@ -916,7 +916,7 @@ static void for_iter(bparser *parser, bexpdesc *v, bexpdesc *it)
     blobk_setloop(finfo);
     /* __hasnext__(.it) */
     s = be_newstr(vm, "__hasnext__");
-    init_exp(&e, ETGLOBAL, be_globalvar_find(vm, s));
+    init_exp(&e, ETGLOBAL, be_global_find(vm, s));
     be_code_nextreg(finfo, &e); /* code function '__hasnext__' */
     be_code_nextreg(finfo, it); /* code argv[0]: '.it' */
     be_code_call(finfo, e.v.idx, 1); /* call __hasnext__(.it) */
@@ -924,7 +924,7 @@ static void for_iter(bparser *parser, bexpdesc *v, bexpdesc *it)
     brk = e.f;
     /* var = __next__(.it) */
     s = be_newstr(vm, "__next__");
-    init_exp(&e, ETGLOBAL, be_globalvar_find(vm, s));
+    init_exp(&e, ETGLOBAL, be_global_find(vm, s));
     be_code_nextreg(finfo, &e); /* code function '__next__' */
     be_code_nextreg(finfo, it); /* code argv[0]: '.it' */
     be_code_call(finfo, e.v.idx, 1); /* call __next__(.it) */
@@ -1228,6 +1228,6 @@ bclosure* be_parser_source(bvm *vm,
     be_stackpop(vm, 1);
     scan_next_token(&parser); /* clear lexer */
     be_lexer_deinit(&parser.lexer);
-    be_globalvar_release_space(vm); /* clear global space */
+    be_global_release_space(vm); /* clear global space */
     return cl;
 }

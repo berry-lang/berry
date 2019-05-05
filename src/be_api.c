@@ -45,11 +45,11 @@ static void class_init(bvm *vm, bclass *c, const bnfuncinfo *lib)
 void be_regfunc(bvm *vm, const char *name, bntvfunc f)
 {
     bstring *s = be_newstr(vm, name);
-    int idx = be_globalvar_find(vm, s);
+    int idx = be_builtin_find(vm, s);
     if (idx == -1) { /* new function */
         bvalue *var;
-        idx = be_globalvar_new(vm, s);
-        var = be_globalvar(vm, idx);
+        idx = be_builtin_new(vm, s);
+        var = be_global_var(vm, idx);
         var_setntvfunc(var, f);
     } /* else error */
 }
@@ -57,9 +57,9 @@ void be_regfunc(bvm *vm, const char *name, bntvfunc f)
 void be_regclass(bvm *vm, const char *name, const bnfuncinfo *lib)
 {
     bstring *s = be_newstr(vm, name); /* immediate reference must be made, prevent GC. */
-    int idx = be_globalvar_new(vm, s);   /* because relloc is possible, index must first figure out. */
+    int idx = be_builtin_new(vm, s);   /* because relloc is possible, index must first figure out. */
     bclass *c = be_newclass(vm, s, NULL);
-    bvalue *var = be_globalvar(vm, idx); /* attention evaluation order. */
+    bvalue *var = be_global_var(vm, idx); /* attention evaluation order. */
     var_setclass(var, c);
     class_init(vm, c, lib); /* bind members */
 }
@@ -414,8 +414,8 @@ void be_newmap(bvm *vm)
 void be_getglobal(bvm *vm, const char *name)
 {
     bvalue *top = be_incrtop(vm);
-    int idx = be_globalvar_find(vm, be_newstr(vm, name));
-    bvalue *gbl = be_globalvar(vm, idx);
+    int idx = be_global_find(vm, be_newstr(vm, name));
+    bvalue *gbl = be_global_var(vm, idx);
     *top = *gbl;
 }
 
