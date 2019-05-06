@@ -576,8 +576,9 @@ int be_code_getmethod(bfuncinfo *finfo, bexpdesc *e)
 {
     int dst = finfo->freereg;
     be_assert(e->type == ETMEMBER);
-    codeABC(finfo, OP_GETMET, dst, e->v.ss.obj, e->v.ss.idx);
-    be_code_allocregs(finfo, 2); /* method [object] args */
+    dst = code_suffix(finfo, OP_GETMET, e, dst);
+    /* method [object] args */
+    be_code_allocregs(finfo, dst == finfo->freereg ? 2 : 1);
     return dst;
 }
 
