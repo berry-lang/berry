@@ -64,13 +64,15 @@ static void print_inst(binstruction ins, int pc)
     }
 }
 
-static void print_code(bproto *proto)
+void be_dumpcode(bclosure *cl)
 {
     int pc;
+    bproto *proto = cl->proto;
     binstruction *code = proto->code;
 #if BE_RUNTIME_DEBUG_INFO
     blineinfo *lineinfo = proto->lineinfo;
 #endif
+    printf("function '%s':\n", str(proto->name));
     for (pc = 0; pc < proto->codesize; pc++) {
 #if BE_RUNTIME_DEBUG_INFO
         if (pc == lineinfo->endpc) {
@@ -81,21 +83,6 @@ static void print_code(bproto *proto)
         print_inst(*code++, pc);
     }
     printf("\n");
-}
-
-static void printproto(bproto *proto)
-{
-    int i;
-    printf("function '%s':\n", str(proto->name));
-    print_code(proto); /* print this proto */
-    for (i = 0; i < proto->nproto; ++i) {
-        printproto(proto->ptab[i]);
-    }
-}
-
-void be_dprintcode(bclosure *cl)
-{
-    printproto(cl->proto);
 }
 
 static const char* sourceinfo(bvm *vm, char *buf, int deepth)

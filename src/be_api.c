@@ -762,6 +762,6 @@ void be_codedump(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     if (var_isclosure(v)) {
-        be_dprintcode(var_toobj(v));
+        be_dumpcode(var_toobj(v));
     }
 }

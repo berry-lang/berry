@@ -66,6 +66,7 @@ typedef struct bfuncinfo {
     bbyte nlocal; /* local variable count */
     bbyte nstack; /* stack usage */
     bbyte freereg; /* first free register */
+    bbyte flag; /* anonymous function */
 #if BE_RUNTIME_DEBUG_INFO /* debug information */
     struct blexer *lexer;
     bvector linevec;

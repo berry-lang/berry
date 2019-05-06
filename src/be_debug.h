@@ -3,7 +3,7 @@
 
 #include "be_object.h"
 
-void be_dprintcode(bclosure *cl);
+void be_dumpcode(bclosure *cl);
 void be_debug_ins_info(bvm *vm);
 
 #endif

@@ -716,6 +716,7 @@ bvm* be_vm_new(void)
     vm->top = vm->reg;
     vm->errjmp = NULL;
     vm->modulelist = NULL;
+    be_gc_setpause(vm, 1);
     return vm;
 }
 
@@ -834,7 +835,6 @@ static void do_class(bvm *vm, bvalue *reg, int argc)
 
 void be_dofunc(bvm *vm, bvalue *v, int argc)
 {
-    be_gc_setpause(vm, 1);
     switch (var_type(v)) {
     case BE_CLASS: do_class(vm, v, argc); break;
     case BE_CLOSURE: do_closure(vm, v, argc); break;
