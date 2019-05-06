@@ -55,10 +55,18 @@ std::map<std::string, std::string> map_build::parse_attr(const std::string &str)
 
 void map_build::writefile(const std::string &filename, const std::string &text)
 {
-    std::ofstream fout;
     std::string pathname(m_outpath + "/" + filename);
-	fout.open(pathname, std::ios::out);
-	fout << "#include \"be_constobj.h\"\n\n" << text;
+	std::string otext("#include \"be_constobj.h\"\n\n" + text);
+
+    std::ostringstream buf;
+	std::ifstream fin(pathname);
+    buf << fin.rdbuf();
+	if (buf.str() != otext) {
+    	std::ofstream fout;
+		fout.open(pathname, std::ios::out);
+		fout << otext;
+		fout.close();
+	}
 }
 
 std::string map_build::block_tostring(const block &block)

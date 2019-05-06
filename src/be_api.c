@@ -307,11 +307,9 @@ void be_pushntvfunction(bvm *vm, bntvfunc f)
 
 void be_pushclass(bvm *vm, const char *name, const bnfuncinfo *lib)
 {
-    bstring *s;
     bclass *c;
+    bstring *s = be_newstr(vm, name);
     bvalue *dst = be_incrtop(vm);
-    var_setnil(dst); /* prevent GC crashes */
-    s = be_newstr(vm, name);
     var_setstr(dst, s);
     c = be_newclass(vm, s, NULL);
     var_setclass(dst, c);

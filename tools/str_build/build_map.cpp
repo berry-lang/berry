@@ -53,10 +53,15 @@ std::string build_map::escdot(const std::string &string)
 
 void build_map::writefile(const std::string &filename, const std::string &text)
 {
-    std::ofstream fout;
-    std::string pathname(filename);
-    fout.open(pathname, std::ios::out);
-    fout << text;
+    std::ostringstream buf;
+	std::ifstream fin(filename);
+    buf << fin.rdbuf();
+	if (buf.str() != text) {
+    	std::ofstream fout;
+		fout.open(filename, std::ios::out);
+		fout << text;
+		fout.close();
+	}
 }
 
 std::string build_map::build_table_def()
