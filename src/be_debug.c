@@ -21,13 +21,14 @@ static void print_inst(binstruction ins, int pc)
     case OP_MOD: case OP_LT: case OP_LE: case OP_EQ:
     case OP_NE:  case OP_GT:  case OP_GE:
     case OP_GETMBR: case OP_SETMBR:  case OP_GETMET:
-    case OP_GETIDX: case OP_SETIDX:
+    case OP_GETIDX: case OP_SETIDX: case OP_AND:
+    case OP_OR: case OP_XOR: case OP_SHL: case OP_SHR:
         printf("%s\tR%d\tR%d\tR%d\n", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins), IGET_RKC(ins));
         break;
     case OP_GETGBL: case OP_SETGBL:
         printf("%s\tR%d\tG:%d\n", be_opcode2str(op), IGET_RA(ins), IGET_Bx(ins));
         break;
-    case OP_MOVE: case OP_SETSUPER: case OP_NEG: case OP_IMPORT:
+    case OP_MOVE: case OP_SETSUPER: case OP_NEG: case OP_FLIP: case OP_IMPORT:
         printf("%s\tR%d\tR%d\n", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins));
         break;
     case OP_JMP:
@@ -49,7 +50,7 @@ static void print_inst(binstruction ins, int pc)
         printf("%s\tR%d\tU:%d\n", be_opcode2str(op), IGET_RA(ins), IGET_Bx(ins));
         break;
     case OP_CALL:
-        printf("%s\tR%d\t%d\t%d\n", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins), IGET_RKC(ins));
+        printf("%s\tR%d\t%d\n", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins));
         break;
     case OP_CLOSURE:
         printf("%s\tR%d\tP:%d\n", be_opcode2str(op), IGET_RA(ins), IGET_Bx(ins));

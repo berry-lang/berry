@@ -7,7 +7,7 @@ const char *be_opcode2str(bopcode op)
         "ADD", "SUB", "MUL", "DIV", "MOD",
         "LT", "LE", "EQ", "NE", "GT", "GE",
         "AND", "OR", "XOR", "SHL", "SHR",
-        "RANGE", "NEG", "NOT", "LDNIL", "LDBOOL",
+        "RANGE", "NEG", "FLIP", "LDNIL", "LDBOOL",
         "LDINT", "LDCONST", "MOVE", "GETGBL",
         "SETGBL", "GETUPV", "SETUPV", "JMP",
         "JMPT", "JMPF", "CALL", "RET", "CLOSURE",

@@ -759,11 +759,16 @@ static void sub_expr(bparser *parser, bexpdesc *e, int prio)
     bfuncinfo *finfo = parser->finfo;
     btokentype op = get_unary_op(parser);
     if (op != OP_NOT_UNARY) {
+        int line, res;
         scan_next_token(parser);
+        line = parser->lexer.linenumber;
         sub_expr(parser, e, UNARY_OP_PRIO);
         check_var(parser, e);
-        if (be_code_unop(finfo, op, e)) { /* encode unary op */
-            parser_error(parser, "unop error");
+        res = be_code_unop(finfo, op, e);
+        if (res) { /* encode unary op */
+            parser->lexer.linenumber = line;
+            push_error(parser, "wrong type argument to unary '%s'",
+                res == 1 ? "negative" : "bit-flip");
         }
     } else {
         suffix_expr(parser, e);

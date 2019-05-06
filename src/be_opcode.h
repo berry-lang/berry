@@ -70,7 +70,7 @@ typedef enum {
     OP_SHR,       /*  A, B, C  |   R(A) <- RK(B) >> RK(C) */
     OP_RANGE,     /*  A, B, C  |   R(A) <- range(RK(B), RK(C)) */
     OP_NEG,       /*  A, B     |   R(A) <- -RK(B) */
-    OP_NOT,       /*  A, B     |   R(A) <- ~RK(B) */
+    OP_FLIP,      /*  A, B     |   R(A) <- ~RK(B) */
     OP_LDNIL,     /*  A        |   R(A) <- nil */
     OP_LDBOOL,    /*  A, B, C  |   R(A) <- cast_bool(B), if(C): pc++ */
     OP_LDINT,     /*  A, sBx   |   R(A) <- sBx */

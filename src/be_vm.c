@@ -415,7 +415,7 @@ static void i_neg(bvm *vm, binstruction ins)
     }
 }
 
-static void i_not(bvm *vm, binstruction ins)
+static void i_flip(bvm *vm, binstruction ins)
 {
     bvalue *dst = RA(ins), *a = RKB(ins);
     if (var_isint(a)) {
@@ -765,7 +765,7 @@ static void vm_exec(bvm *vm)
         case OP_SHL: i_shl(vm, ins); break;
         case OP_SHR: i_shr(vm, ins); break;
         case OP_NEG: i_neg(vm, ins); break;
-        case OP_NOT: i_not(vm, ins); break;
+        case OP_FLIP: i_flip(vm, ins); break;
         case OP_JMP: i_jump(vm, ins); break;
         case OP_JMPT: i_jumptrue(vm, ins); break;
         case OP_JMPF: i_jumpfalse(vm, ins); break;

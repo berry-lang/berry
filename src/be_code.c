@@ -411,6 +411,7 @@ void be_code_prebinop(bfuncinfo *finfo, int op, bexpdesc *e)
         be_code_jumpbool(finfo, e, btrue);
         break;
     default:
+        exp2anyreg(finfo, e);
         break;
     }
 }
@@ -439,6 +440,25 @@ void be_code_binop(bfuncinfo *finfo, int op, bexpdesc *e1, bexpdesc *e2)
     }
 }
 
+static void code_not(bexpdesc *e)
+{
+    switch (e->type) {
+    case ETINT: e->v.i = e->v.i == 0; break;
+    case ETREAL: e->v.i = e->v.r == cast(breal, 0); break;
+    case ETNIL: e->v.i = 1; break;
+    case ETBOOL: e->v.i = !e->v.i; break;
+    case ETSTRING: e->v.i = 0; break;
+    default: {
+        int temp = e->t;
+        e->t = e->f;
+        e->f = temp;
+        e->not = !e->not;
+        return;
+    }
+    }
+    e->type = ETBOOL;
+}
+
 static int code_neg(bfuncinfo *finfo, bexpdesc *e)
 {
     switch (e->type) {
@@ -450,10 +470,8 @@ static int code_neg(bfuncinfo *finfo, bexpdesc *e)
         int src = exp2anyreg(finfo, e);
         int dst = e->type == ETREG ? src : be_code_allocregs(finfo, 1);
         codeABC(finfo, OP_NEG, dst, src, 0);
-        return 0;
     }
     }
-    exp2anyreg(finfo, e);
     return 0;
 }
 
@@ -462,15 +480,13 @@ static int code_flip(bfuncinfo *finfo, bexpdesc *e)
     switch (e->type) {
     case ETINT: e->v.i = ~e->v.i; break;
     case ETREAL: case ETNIL: case ETBOOL: case ETSTRING:
-        return 1; /* error */
+        return 2; /* error */
     default: {
         int src = exp2anyreg(finfo, e);
         int dst = e->type == ETREG ? src : be_code_allocregs(finfo, 1);
-        codeABC(finfo, OP_NOT, dst, src, 0);
-        return 0;
+        codeABC(finfo, OP_FLIP, dst, src, 0);
     }
     }
-    exp2anyreg(finfo, e);
     return 0;
 }
 
@@ -478,10 +494,7 @@ int be_code_unop(bfuncinfo *finfo, int op, bexpdesc *e)
 {
     switch (op) {
     case OptNot: {
-        int temp = e->t;
-        e->t = e->f;
-        e->f = temp;
-        e->not = !e->not;
+        code_not(e);
         break;
     }
     case OptFlip: /* do nothing */

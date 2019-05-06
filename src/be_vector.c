@@ -86,27 +86,27 @@ void* be_vector_release(bvector *vector)
     return vector->data;
 }
 
-static int binaryfind(int value)
+static int binarysearch(int value)
 {
     static const uint16_t tab[] = {
         0, 2, 4, 6, 8, 10, 12, 14, 16,
         20, 24, 28, 32, 40, 48, 64, 96, 128,
         192, 256, 384, 512, 768, 1024
     };
-    const uint16_t *p = tab;
-    const uint16_t *q = p + (int)array_count(tab);
-    while (p <= q) {
-        const uint16_t *m = p + ((q - p) >> 1);
-        if (*m == value) {
-            return m[1];
+    const uint16_t *low = tab;
+    const uint16_t *high = low + (int)array_count(tab);
+    while (low <= high) {
+        const uint16_t *mid = low + ((high - low) >> 1);
+        if (*mid == value) {
+            return mid[1];
         }
-        if (*m < value) {
-            p = m + 1;
+        if (*mid < value) {
+            low = mid + 1;
         } else {
-            q = m - 1;
+            high = mid - 1;
         }
     }
-    return *p;
+    return *low;
 }
 
 static int nextpow(int value)
@@ -122,7 +122,7 @@ static int nextpow(int value)
 int be_nextsize(int size)
 {
     if (size < 1024) {
-        return binaryfind(size);
+        return binarysearch(size);
     }
     return nextpow(size);
 }
