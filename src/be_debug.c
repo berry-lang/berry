@@ -64,13 +64,14 @@ static void print_inst(binstruction ins, int pc)
     }
 }
 
-void be_dumpcode(bclosure *cl)
+void be_dumpclosure(bclosure *cl)
 {
     int pc;
     bproto *proto = cl->proto;
     binstruction *code = proto->code;
 #if BE_RUNTIME_DEBUG_INFO
     blineinfo *lineinfo = proto->lineinfo;
+    printf("source '%s', ", str(proto->source));
 #endif
     printf("function '%s':\n", str(proto->name));
     for (pc = 0; pc < proto->codesize; pc++) {
@@ -82,7 +83,6 @@ void be_dumpcode(bclosure *cl)
 #endif
         print_inst(*code++, pc);
     }
-    printf("\n");
 }
 
 static const char* sourceinfo(bvm *vm, char *buf, int deepth)

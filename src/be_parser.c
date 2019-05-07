@@ -100,6 +100,15 @@ static void check_var(bparser *parser, bexpdesc *e)
     }
 }
 
+static int match_skip(bparser *parser, btokentype type)
+{
+    if (next_type(parser) == type) {
+        scan_next_token(parser);
+        return btrue;
+    }
+    return bfalse;
+}
+
 static void begin_block(bfuncinfo *finfo, bblockinfo *binfo, int isloop)
 {
     binfo->prev = finfo->binfo;
@@ -467,6 +476,7 @@ static void new_primtype(bparser *parser, const char *type, bexpdesc *e)
     bvm *vm = parser->vm;
     bfuncinfo *finfo = parser->finfo;
 
+    scan_next_token(parser);
     idx = be_builtin_find(vm, be_newstr(vm, type));
     init_exp(e, ETGLOBAL, idx);
     idx = be_code_nextreg(finfo, e);
@@ -518,11 +528,12 @@ static void list_expr(bparser *parser, bexpdesc *e)
 {
     /* '[' {expr ','} [expr] ']' */
     new_primtype(parser, "list", e); /* new list */
-    do {
-        scan_next_token(parser); /* first '[' and ',' */
-        if (next_type(parser) == OptRSB) break; /* ']' */
+    while (next_type(parser) != OptRSB) {
         list_nextmember(parser, e);
-    } while (next_type(parser) == OptComma);
+        if (!match_skip(parser, OptComma)) { /* ',' */
+            break;
+        }
+    }
     match_token(parser, OptRSB); /* skip ']' */
 }
 
@@ -530,11 +541,12 @@ static void map_expr(bparser *parser, bexpdesc *e)
 {
     /* '{' {expr ':' expr ','} [expr ':' expr] '}' */
     new_primtype(parser, "map", e); /* new map */
-    do {
-        scan_next_token(parser); /* first '{' and ',' */
-        if (next_type(parser) == OptRBR) break; /* '}' */
+    while (next_type(parser) != OptRBR) {
         map_nextmember(parser, e);
-    } while (next_type(parser) == OptComma);
+        if (!match_skip(parser, OptComma)) { /* ',' */
+            break;
+        }
+    }
     match_token(parser, OptRBR); /* skip '}' */
 }
 
