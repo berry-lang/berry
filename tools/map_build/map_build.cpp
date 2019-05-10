@@ -77,6 +77,8 @@ std::string map_build::block_tostring(const block &block)
 		ostr << map_tostring(block, block.name);
 	} else if (block.type == "class") {
 		ostr << class_tostring(block);
+	} else if (block.type == "vartab") {
+		ostr << vartab_tostring(block);
 	}
 	writefile("be_fixed_" + block.name + ".h", ostr.str());
 	return ostr.str();
@@ -122,6 +124,38 @@ std::string map_build::map_tostring(const block &block, const std::string &name,
 		 << "    .size = " << list.size() << ",\n"
 		 << "    .count = " << list.size() << "\n"
 		 << "};\n";
+	return ostr.str();
+}
+
+std::string map_build::vartab_tostring(const block &block)
+{
+	std::ostringstream ostr;
+	struct block idxblk;
+	std::vector<std::string> varvec;
+	int index = 0;
+
+	idxblk = block;
+	idxblk.data.clear();
+	for (auto it : block.data) {
+		varvec.push_back(it.second);
+		it.second = "int(" + std::to_string(index++) + ")";
+		idxblk.data.insert(it);
+	}
+
+	ostr << map_tostring(idxblk, block.name + "_map", true) << std::endl;
+	ostr << "static const bvalue __vlist_array[] = {\n";
+	for (auto it : varvec) {
+		ostr << "    be_const_" << it << "," << std::endl;
+	}
+	ostr << "};\n\n";
+
+	ostr << "static const bvector " << block.name << "_vector = {\n"
+			"    .count = " << varvec.size() <<
+			", .capacity = " << varvec.size() <<
+			", .size = sizeof(bvalue),\n" <<
+			"    .data = (void*)__vlist_array,\n" <<
+			"    .end = (void*)(__vlist_array + " << varvec.size() - 1 << ")\n" <<
+			"};" << std::endl;
 	return ostr.str();
 }
 

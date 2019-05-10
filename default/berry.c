@@ -155,7 +155,6 @@ int main(int argc, char *argv[])
 {
     int i = 0, res;
     bvm *vm = be_vm_new();
-    be_loadlibs(vm);
     for (i = 1; i < argc; ++i) {
         be_pushstring(vm, argv[i]);
     }

@@ -190,7 +190,7 @@ void be_load_maplib(bvm *vm)
 }
 #else
 /* @const_object_info_begin
-class m_cl_map (scope: local, name: map) {
+class be_class_map (scope: global, name: map) {
     .data, var
     init, func(m_init)
     tostring, func(m_tostring)
@@ -202,11 +202,5 @@ class m_cl_map (scope: local, name: map) {
     iter, func(m_iter)
 }
 @const_object_info_end */
-#include "../generate/be_fixed_m_cl_map.h"
-
-void be_load_maplib(bvm *vm)
-{
-    be_const_regclass(vm, &m_cl_map);
-}
-
+#include "../generate/be_fixed_be_class_map.h"
 #endif

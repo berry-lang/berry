@@ -34,6 +34,10 @@
     .type = BE_INT \
 }
 
-void be_const_regclass(bvm *vm, const bclass *c);
+#define be_const_class(_class) \
+{ \
+    .v.p = (bclass *)&(_class), \
+    .type = BE_CLASS \
+}
 
 #endif

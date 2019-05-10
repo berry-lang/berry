@@ -42,6 +42,7 @@ static void class_init(bvm *vm, bclass *c, const bnfuncinfo *lib)
     be_map_release(vm, c->members); /* clear space */
 }
 
+#if !BE_USE_PRECOMPILED_OBJECT
 void be_regfunc(bvm *vm, const char *name, bntvfunc f)
 {
     bstring *s = be_newstr(vm, name);
@@ -63,6 +64,7 @@ void be_regclass(bvm *vm, const char *name, const bnfuncinfo *lib)
     var_setclass(var, c);
     class_init(vm, c, lib); /* bind members */
 }
+#endif
 
 int be_top(bvm *vm)
 {

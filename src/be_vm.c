@@ -12,6 +12,7 @@
 #include "be_gc.h"
 #include "be_exec.h"
 #include "be_debug.h"
+#include "be_libs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -717,6 +718,7 @@ bvm* be_vm_new(void)
     vm->errjmp = NULL;
     vm->modulelist = NULL;
     be_gc_setpause(vm, 1);
+    be_loadlibs(vm);
     return vm;
 }
 

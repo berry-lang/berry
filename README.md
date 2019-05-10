@@ -63,23 +63,23 @@ Berry has the following advantages:
 
 1. install the readline library (Linux or MacOS)
 
-``` bash
-sudo apt install libreadline-dev # Ubuntu
-brew install readline            # MacOS
-```
+   ``` bash
+   sudo apt install libreadline-dev # Ubuntu
+   brew install readline            # MacOS
+   ```
 
 2. Build:
 
-```
-make
-```
+   ```
+   make
+   ```
 
 3. Run:
 
-``` bash
-./berry # Bash or PowerShell
-berry   # Windows CMD
-```
+   ``` bash
+   ./berry # Bash or PowerShell
+   berry   # Windows CMD
+   ```
 
 ## Editor pulgins
 

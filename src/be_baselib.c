@@ -270,6 +270,7 @@ static int l_codedump(bvm *vm)
     be_return_nil(vm);
 }
 
+#if !BE_USE_PRECOMPILED_OBJECT
 void be_load_baselib(bvm *vm)
 {
     be_regfunc(vm, "assert", l_assert);
@@ -292,25 +293,43 @@ void be_load_baselib(bvm *vm)
     be_regfunc(vm, "__hasnext__", l_hasnext);
     be_regfunc(vm, "__next__", l_next);
 }
+#else
+extern const bclass be_class_list;
+extern const bclass be_class_map;
+extern const bclass be_class_range;
+extern int be_nfunc_open(bvm *vm);
+/* @const_object_info_begin
+vartab m_builtin (scope: local, name: map) {
+    assert, func(l_assert)
+    print, func(l_print)
+    input, func(l_input)
+    clock, func(l_clock)
+    exit, func(l_exit)
+    super, func(l_super)
+    memcount, func(l_memcount)
+    type, func(l_type)
+    classname, func(l_classname)
+    number, func(l_number)
+    str, func(l_str)
+    int, func(l_int)
+    real, func(l_real)
+    length, func(l_length)
+    compile, func(l_compile)
+    codedump, func(l_codedump)
+    __iterator__, func(l_iterator)
+    __hasnext__, func(l_hasnext)
+    __next__, func(l_next)
+    open, func(be_nfunc_open)
+    list, class(be_class_list)
+    map, class(be_class_map)
+    range, class(be_class_range)
+}
+@const_object_info_end */
+#include "../generate/be_fixed_m_builtin.h"
+#include "be_var.h"
 
-/*
-Used to generate compile-time strings:
-be_const_str_assert
-be_const_str_print
-be_const_str_input
-be_const_str_clock
-be_const_str_exit
-be_const_str_super
-be_const_str_memcount
-be_const_str_type
-be_const_str_classname
-be_const_str_number
-be_const_str_str
-be_const_str_int
-be_const_str_real
-be_const_str_length
-be_const_str_compile
-be_const_str___iterator__
-be_const_str___hasnext__
-be_const_str___next__
-*/
+void be_load_baselib(bvm *vm)
+{
+    be_const_builtin_set(vm, &m_builtin_map, &m_builtin_vector);
+}
+#endif

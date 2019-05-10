@@ -128,7 +128,11 @@ static int i_close(bvm *vm)
     be_return_nil(vm);
 }
 
+#if !BE_USE_PRECOMPILED_OBJECT
 static int m_open(bvm *vm)
+#else
+int be_nfunc_open(bvm *vm)
+#endif
 {
     int argc = be_top(vm);
     const char *fname, *mode;
@@ -163,7 +167,9 @@ static int m_open(bvm *vm)
     be_return_nil(vm);
 }
 
+#if !BE_USE_PRECOMPILED_OBJECT
 void be_load_filelib(bvm *vm)
 {
     be_regfunc(vm, "open", m_open);
 }
+#endif
