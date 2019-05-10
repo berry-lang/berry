@@ -534,6 +534,7 @@ static void list_expr(bparser *parser, bexpdesc *e)
             break;
         }
     }
+    e->type = ETREG;
     match_token(parser, OptRSB); /* skip ']' */
 }
 
@@ -547,6 +548,7 @@ static void map_expr(bparser *parser, bexpdesc *e)
             break;
         }
     }
+    e->type = ETREG;
     match_token(parser, OptRBR); /* skip '}' */
 }
 
