@@ -1,5 +1,7 @@
+import time
 import math
 
+math.srand(time.time())
 res = math.rand() % 100
 max_test = 7
 test = -1
