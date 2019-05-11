@@ -51,7 +51,9 @@
         int res = be_strcmp(s1, s2); \
         var_setbool(dst, res op 0); \
     } else if (var_isinstance(a)) { \
+        binstance *obj = var_toobj(a); \
         object_binop(vm, #op, ins, a, b); \
+        check_bool(vm, obj, #op); \
     } else { \
         binop_error(vm, #op, a, b); \
     }
@@ -135,6 +137,16 @@ static void unop_error(bvm *vm, const char *op, bvalue *a)
         op, be_vtype2str(a));
 }
 
+static void check_bool(bvm *vm, binstance *obj, const char *method)
+{
+    if (!var_isbool(vm->top)) {
+        const char *name = str(be_instance_name(obj));
+        be_pusherror(vm, be_pushfstring(vm,
+            "`%s::%s` return value error, the expected type is 'bool'",
+            strlen(name) ? name : "<anonymous>", method));
+    }
+}
+
 static void precall(bvm *vm, bvalue *func, int nstack, int mode)
 {
     bcallframe *cf;
@@ -163,12 +175,7 @@ static bbool obj2bool(bvm *vm, bvalue *var)
         vm->top[1] = *var; /* move self to argv[0] */
         be_dofunc(vm, vm->top, 1); /* call method 'tobool' */
         /* check the return value */
-        if (!var_isbool(vm->top)) {
-            const char *name = str(be_instance_name(obj));
-            be_pusherror(vm, be_pushfstring(vm,
-                "`%s::tobool` return value error, the expected type is 'bool'",
-                strlen(name) ? name : "<anonymous>"));
-        }
+        check_bool(vm, obj, "tobool");
         return var_tobool(vm->top);
     }
     return btrue;
@@ -229,6 +236,7 @@ static void object_eqop(bvm *vm,
         be_dofunc(vm, top, 2); /* call method 'item' */
         be_stackpop(vm, 1);
         *RA(ins) = *vm->top; /* copy result to dst */
+        check_bool(vm, obj, op); /* check return value */
     } else { /* default implementation */
         int opt = IGET_OP(ins) == OP_EQ; /* operator is '==' */
         int eqv = var_toobj(a) == var_toobj(b); /* are the same object */
