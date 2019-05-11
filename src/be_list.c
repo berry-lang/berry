@@ -58,11 +58,11 @@ bvalue* be_list_insert(blist *list, int index, bvalue *value)
         return NULL;
     }
     if (list->count >= list->capacity) {
-        list->capacity <<= 1; /* capacity *= 2 */
+        list->capacity = be_nextsize(list->capacity);
         list->data = be_realloc(list->data, list->capacity * sizeof(bvalue));
     }
     data = list->data;
-    for (i = ++list->count; i > index; --i) {
+    for (i = list->count++; i > index; --i) {
         data[i] = data[i - 1];
     }
     data = list->data + index;
