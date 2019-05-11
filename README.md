@@ -2,13 +2,14 @@
 
 ## Introduction
 
-Berry is a ultra-lightweight dynamically typed embedded scripting language. Berry is designed to run on lower-performance embedded devices. The Berry interpreter-core's code size is less than 40KiB and can run on less than 4KiB heap (on ARM Cortex M4 CPU, Thumb ISA and ARMCC compiler).
+Berry is a ultra-lightweight dynamically typed embedded scripting language. It is designed for lower-performance embedded devices. The Berry interpreter-core's code size is less than 40KiB and can run on less than 4KiB heap (on ARM Cortex M4 CPU, Thumb ISA and ARMCC compiler).
 
-The interpreter of Berry include a one-pass compiler and register-based VM, all the code is written in ANSI C99. In Berry not every type is a class object. Some simple value types, such as int, real, boolean and string are not class object, but list, map and range are class object. This is a consideration about performance. Register-based VM is also based on this consideration.
+The interpreter of Berry include a one-pass compiler and register-based VM, all the code is written in ANSI C99. In Berry not every type is a class object. Some simple value types, such as int, real, boolean and string are not class object, but list, map and range are class object. This is a consideration about performance. 
+Register-based VM is the same meaning as above.
 
 Berry has the following advantages:
 
-* Lightweight: smaller than mainstream scripting languages, ideal for use on microcontrollers.
+* Lightweight: A well-optimized interpreter with very little resources. Ideal for use in microprocessors.
 * Fast: optimized one-pass bytecode compiler and register-based virtual machine.
 * Powerful: supports imperative programming, object-oriented programming, functional programming.
 * Flexible: Berry is a dynamic type script, and it's intended for embedding in applications. It can provide good dynamic scalability for the host system.

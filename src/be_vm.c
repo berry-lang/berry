@@ -154,16 +154,22 @@ static void precall(bvm *vm, bvalue *func, int nstack, int mode)
     vm->cf = cf;
 }
 
-static bbool obj2bool(bvm *vm, bvalue *obj)
+static bbool obj2bool(bvm *vm, bvalue *var)
 {
-    bvalue *top = vm->top;
+    binstance *obj = var_toobj(var);
     bstring *tobool = be_newstr(vm, "tobool");
     /* get operator method */
-    if (be_instance_member(obj->v.p, tobool, top)) {
-        top[1] = *obj; /* move self to argv[0] */
-        be_dofunc(vm, top, 1); /* call method 'tobool' */
-        top = vm->top;
-        return var_isbool(top) ? var_tobool(top) : btrue;
+    if (be_instance_member(obj, tobool, vm->top)) {
+        vm->top[1] = *var; /* move self to argv[0] */
+        be_dofunc(vm, vm->top, 1); /* call method 'tobool' */
+        /* check the return value */
+        if (!var_isbool(vm->top)) {
+            const char *name = str(be_instance_name(obj));
+            be_pusherror(vm, be_pushfstring(vm,
+                "`%s::tobool` return value error, the expected type is 'bool'",
+                strlen(name) ? name : "<anonymous>"));
+        }
+        return var_tobool(vm->top);
     }
     return btrue;
 }

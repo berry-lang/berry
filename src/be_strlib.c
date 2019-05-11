@@ -103,6 +103,13 @@ static void ins2str(bvm *vm, int idx)
         be_dofunc(vm, top, 1);
         vm->top -= 2;
         var_setval(vm->reg + idx, vm->top);
+        /* check the return value */
+        if (!var_isstr(vm->top)) {
+            const char *name = str(be_instance_name(obj));
+            be_pusherror(vm, be_pushfstring(vm,
+                "`%s::tostring` return value error, the expected type is 'string'",
+                strlen(name) ? name : "<anonymous>"));
+        }
     }
 }
 
