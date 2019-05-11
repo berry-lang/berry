@@ -1,13 +1,12 @@
-import io
+import math
 
-res = random() % 100
+res = math.rand() % 100
 max_test = 7
 test = -1
 idx = 1
 print('Guess a number between 0 and 99. You have', max_test, 'chances.')
 while (test != res && idx <= max_test)
-    print(idx, ': enter the number you guessed.')
-    test = number(io.input())
+    test = number(input(str(idx) + ': enter the number you guessed: '))
     if (type(test) != 'int')
         print('This is not an integer. Continue!')
         continue
