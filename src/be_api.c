@@ -42,29 +42,47 @@ static void class_init(bvm *vm, bclass *c, const bnfuncinfo *lib)
     be_map_release(vm, c->members); /* clear space */
 }
 
-#if !BE_USE_PRECOMPILED_OBJECT
 void be_regfunc(bvm *vm, const char *name, bntvfunc f)
 {
+    bvalue *var;
     bstring *s = be_newstr(vm, name);
+#if !BE_USE_PRECOMPILED_OBJECT
     int idx = be_builtin_find(vm, s);
+    be_assert(idx == -1);
     if (idx == -1) { /* new function */
-        bvalue *var;
         idx = be_builtin_new(vm, s);
+#else
+    int idx = be_global_find(vm, s);
+    be_assert(idx < be_builtin_count(vm));
+    if (idx < be_builtin_count(vm)) { /* new function */
+        idx = be_global_new(vm, s);
+#endif
         var = be_global_var(vm, idx);
         var_setntvfunc(var, f);
-    } /* else error */
+    } /* error case, do nothing */
 }
 
 void be_regclass(bvm *vm, const char *name, const bnfuncinfo *lib)
 {
-    bstring *s = be_newstr(vm, name); /* immediate reference must be made, prevent GC. */
-    int idx = be_builtin_new(vm, s);   /* because relloc is possible, index must first figure out. */
-    bclass *c = be_newclass(vm, s, NULL);
-    bvalue *var = be_global_var(vm, idx); /* attention evaluation order. */
-    var_setclass(var, c);
-    class_init(vm, c, lib); /* bind members */
-}
+    bvalue *var;
+    bstring *s = be_newstr(vm, name);
+#if !BE_USE_PRECOMPILED_OBJECT
+    int idx = be_builtin_find(vm, s);
+    be_assert(idx == -1);
+    if (idx == -1) { /* new function */
+        idx = be_builtin_new(vm, s);
+#else
+    int idx = be_global_find(vm, s);
+    be_assert(idx < be_builtin_count(vm));
+    if (idx < be_builtin_count(vm)) { /* new function */
+        idx = be_global_new(vm, s);
 #endif
+        var = be_global_var(vm, idx);
+        bclass *c = be_newclass(vm, s, NULL);
+        var_setclass(var, c);
+        class_init(vm, c, lib); /* bind members */
+    } /* error case, do nothing */
+}
 
 int be_top(bvm *vm)
 {
