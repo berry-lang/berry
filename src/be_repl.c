@@ -38,7 +38,7 @@ static int compile(bvm *vm, const char *line, breadline getl)
             }
             be_pop(vm, 1); /* pop error message */
             line = getl(">> "); /* read a new input line */
-            be_pushfstring(vm, " %s", line);
+            be_pushfstring(vm, "\n%s", line);
             be_strconcat(vm, -2);
             be_pop(vm, 1); /* pop new line */
         }

@@ -67,6 +67,7 @@ static const char* get_line(const char *prompt)
     fputs(prompt, stdout);
     fflush(stdout);
     if (fgets(buffer, sizeof(buffer), stdin)) {
+        buffer[strlen(buffer) - 1] = '\0';
         return buffer;
     }
     return NULL;

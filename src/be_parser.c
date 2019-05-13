@@ -86,7 +86,7 @@ static void check_symbol(bparser *parser, bexpdesc *e)
 {
     if (e->type == ETVOID && e->v.s == NULL) {
         push_error(parser,
-                "unexpected symbol near '%s'", token2str(parser));
+            "unexpected symbol near '%s'", token2str(parser));
     }
 }
 
@@ -736,12 +736,11 @@ static int check_newvar(bparser *parser, bexpdesc *e)
 
 static void assign_expr(bparser *parser)
 {
-    int line;
     bexpdesc e;
     btokentype op;
+    int line = parser->lexer.linenumber;
     expr(parser, &e); /* left expression */
     check_symbol(parser, &e);
-    line = parser->lexer.linenumber;
     op = get_assign_op(parser);
     if (op != OP_NOT_ASSIGN) { /* assign operator */
         bexpdesc e1;
@@ -755,7 +754,9 @@ static void assign_expr(bparser *parser)
             parser_error(parser,
                 "try to assign constant expressions.");
         }
-    } else { /* not assign expression */
+    } else if (e.type == ETVOID) { /* not assign expression */
+        /* undeclared symbol */
+        parser->lexer.linenumber = line;
         check_var(parser, &e);
     }
 }
