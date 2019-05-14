@@ -409,14 +409,12 @@ be_native_module_attr_table(attr_table) {
 be_define_native_module(json, attr_table);
 #else
 /* @const_object_info_begin
-module m_jsonlib (scope: local) {
+module json (scope: global) {
     load, func(m_json_load)
     dump, func(m_json_dump)
 }
 @const_object_info_end */
-#include "../generate/be_fixed_m_jsonlib.h"
-
-be_define_const_module(json, &m_jsonlib);
+#include "../generate/be_fixed_json.h"
 #endif
 
 #endif /* BE_USE_JSON_MODULE */

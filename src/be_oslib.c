@@ -263,29 +263,27 @@ be_native_module_attr_table(os_attr) {
 be_define_native_module(os, os_attr);
 #else
 /* @const_object_info_begin
-module m_pathlib (scope: local) {
+module path (scope: local) {
     isdir, func(m_isdir)
     isfile, func(m_isfile)
     exists, func(m_exists)
     splitext, func(m_splitext)
 }
 @const_object_info_end */
-#include "../generate/be_fixed_m_pathlib.h"
+#include "../generate/be_fixed_path.h"
 
 /* @const_object_info_begin
-module m_oslib (scope: local) {
+module os (scope: global) {
     getcwd, func(m_getcwd)
     chdir, func(m_chdir)
     mkdir, func(m_mkdir)
     remove, func(m_remove)
     listdir, func(m_listdir)
     system, func(m_system)
-    path, module(m_pathlib)
+    path, module(m_libpath)
 }
 @const_object_info_end */
-#include "../generate/be_fixed_m_oslib.h"
-
-be_define_const_module(os, &m_oslib);
+#include "../generate/be_fixed_os.h"
 #endif
 
 #endif /* BE_USE_OS_MODULE */

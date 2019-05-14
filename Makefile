@@ -7,9 +7,10 @@ MKDIR     = mkdir
 
 INCPATH   = src default
 SRCPATH   = src default
-GENERATE  = generate/be_const_strtab.h
+GENERATE  = generate
 MAP_BUILD = tools/map_build/map_build
 STR_BUILD = tools/str_build/str_build
+CONST_TAB = $(GENERATE)/be_const_strtab.h
 
 ifeq ($(OS), Windows_NT) # Windows
     CFLAGS += -Wno-format # for "%I64d" warning
@@ -52,15 +53,15 @@ $(OBJS): %.o: %.c
 
 sinclude $(DEPS)
 
-$(OBJS): $(GENERATE)
+$(OBJS): $(CONST_TAB)
 
-$(GENERATE): $(STR_BUILD) $(MAP_BUILD) generate $(SRCS)
+$(CONST_TAB): $(STR_BUILD) $(MAP_BUILD) $(GENERATE) $(SRCS)
 	$(MSG) [Prebuild] generate resources
-	$(Q) $(MAP_BUILD) generate $(SRCPATH)
-	$(Q) $(STR_BUILD) generate $(SRCPATH) generate
+	$(Q) $(MAP_BUILD) $(GENERATE) $(SRCPATH)
+	$(Q) $(STR_BUILD) $(GENERATE) $(SRCPATH) $(GENERATE)
 
-generate:
-	$(Q) $(MKDIR) generate
+$(GENERATE):
+	$(Q) $(MKDIR) $(GENERATE)
 
 $(STR_BUILD):
 	$(MSG) [Make] str_build
@@ -76,14 +77,14 @@ install:
 uninstall:
 	$(RM) /usr/local/bin/$(TARGET)
 
-prebuild: $(STR_BUILD) $(MAP_BUILD) generate
+prebuild: $(STR_BUILD) $(MAP_BUILD) $(GENERATE)
 	$(MSG) [Prebuild] generate resources
-	$(Q) $(MAP_BUILD) $(SRCS) generate
-	$(Q) $(STR_BUILD) $(SRCS) generate
+	$(Q) $(MAP_BUILD) $(GENERATE) $(SRCPATH)
+	$(Q) $(STR_BUILD) $(GENERATE) $(SRCPATH) $(GENERATE)
 	$(MSG) done
 
 clean:
 	$(MSG) [Clean...]
 	$(Q) $(RM) $(OBJS) $(DEPS)
-	$(Q) $(RM) generate/*
+	$(Q) $(RM) $(GENERATE)/*
 	$(MSG) done

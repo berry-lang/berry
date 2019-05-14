@@ -429,13 +429,11 @@ be_native_module_attr_table(str_attr) {
 be_define_native_module(string, str_attr);
 #else
 /* @const_object_info_begin
-module m_strlib (scope: local) {
+module string (scope: global) {
     format, func(str_format)
 }
 @const_object_info_end */
-#include "../generate/be_fixed_m_strlib.h"
-
-be_define_const_module(string, &m_strlib);
+#include "../generate/be_fixed_string.h"
 #endif
 
 #endif /* BE_USE_STRING_MODULE */

@@ -268,7 +268,7 @@ be_native_module_attr_table(attr_table) {
 be_define_native_module(math, attr_table);
 #else
 /* @const_object_info_begin
-module m_mathlib (scope: local) {
+module math (scope: global) {
     abs, func(m_abs)
     ceil, func(m_ceil)
     floor, func(m_floor)
@@ -293,9 +293,7 @@ module m_mathlib (scope: local) {
     pi, real(M_PI)
 }
 @const_object_info_end */
-#include "../generate/be_fixed_m_mathlib.h"
-
-be_define_const_module(math, &m_mathlib);
+#include "../generate/be_fixed_math.h"
 #endif
 
 #endif /* BE_USE_MATH_MODULE */

@@ -48,14 +48,12 @@ be_native_module_attr_table(time_attr) {
 be_define_native_module(time, time_attr);
 #else
 /* @const_object_info_begin
-module m_timelib (scope: local) {
+module time (scope: global) {
     time, func(m_time)
     dump, func(m_dump)
 }
 @const_object_info_end */
-#include "../generate/be_fixed_m_timelib.h"
-
-be_define_const_module(time, &m_timelib);
+#include "../generate/be_fixed_time.h"
 #endif
 
 #endif /* BE_USE_TIME_MODULE */

@@ -169,15 +169,20 @@ std::string map_build::module_tostring(const block &block)
 {
 	std::ostringstream ostr;
 	hash_map map(block.data);
-	std::string map_name(block.name + "_map");
+	std::string name("m_lib" + block.name);
+	std::string map_name(name + "_map");
 
+	ostr << (scope(block).empty() ? "extern" : "static")
+         << " bntvmodule be_native_module(" << block.name << ");\n"
+         << std::endl;
 	ostr << map_tostring(block, map_name, true) << std::endl;
-	ostr << scope(block) << "const bmodule " << block.name << " = {\n"
+	ostr << "static const bmodule " << name << " = {\n"
 		 << "    be_const_header_module(),\n"
-		 << "    .native = NULL,\n"
+		 << "    .native = &be_native_module(" << block.name << "),\n"
 		 << "    .table = (bmap*)&" << map_name << ",\n"
 		 << "    .mnext = NULL\n"
-		 << "};" << std::endl;
+		 << "};\n" << std::endl;
+    ostr << scope(block) << "be_define_const_module(" << block.name << ");" << std::endl;
 	return ostr.str();
 }
 
