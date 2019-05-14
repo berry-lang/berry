@@ -400,11 +400,23 @@ static int m_json_dump(bvm *vm)
     be_return(vm);
 }
 
+#if !BE_USE_PRECOMPILED_OBJECT
 be_native_module_attr_table(attr_table) {
     be_native_module_function("load", m_json_load),
     be_native_module_function("dump", m_json_dump)
 };
 
 be_define_native_module(json, attr_table);
+#else
+/* @const_object_info_begin
+module m_jsonlib (scope: local) {
+    load, func(m_json_load)
+    dump, func(m_json_dump)
+}
+@const_object_info_end */
+#include "../generate/be_fixed_m_jsonlib.h"
+
+be_define_const_module(json, &m_jsonlib);
+#endif
 
 #endif /* BE_USE_JSON_MODULE */

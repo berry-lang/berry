@@ -80,6 +80,8 @@ std::string map_build::block_tostring(const block &block)
 		ostr << class_tostring(block);
 	} else if (block.type == "vartab") {
 		ostr << vartab_tostring(block);
+	} else if (block.type == "module") {
+		ostr << module_tostring(block);
 	}
 	writefile("be_fixed_" + block.name + ".h", ostr.str());
 	return ostr.str();
@@ -89,13 +91,14 @@ std::string map_build::class_tostring(const block &block)
 {
 	std::ostringstream ostr;
 	hash_map map(block.data);
+	std::string map_name(block.name + "_map");
 
-	ostr << map_tostring(block, "__class_map", true) << std::endl;
-	ostr << scope(block) << "const bclass " + block.name + " = {\n"
+	ostr << map_tostring(block, map_name, true) << std::endl;
+	ostr << scope(block) << "const bclass " << block.name << " = {\n"
 		 << "    be_const_header_class(),\n"
 		 << "    .nvar = " << map.var_count() << ",\n"
 		 << "    .super = " << super(block) << ",\n"
-		 << "    .members = (bmap *)&__class_map,\n"
+		 << "    .members = (bmap *)&" << map_name << ",\n"
 		 << "    .name = (bstring *)&be_const_str_" << name(block) << "\n"
 		 << "};\n";
 	return ostr.str();
@@ -105,9 +108,10 @@ std::string map_build::map_tostring(const block &block, const std::string &name,
 {
 	std::ostringstream ostr;
 	hash_map map(block.data);
+	std::string map_name(name + "_slots");
 
 	hash_map::entry_table list = map.entry_list();
-	ostr << "static const bmapnode __map_slots[] = {\n";
+	ostr << "static const bmapnode " << map_name << "[] = {\n";
 	for (auto it : list) {
 		int next = it.next;
 		std::string key = it.key;
@@ -120,8 +124,9 @@ std::string map_build::map_tostring(const block &block, const std::string &name,
 	ostr << (local ? "static " : scope(block))
 		 << "const bmap " + name + " = {\n"
 		 << "    be_const_header_map(),\n"
-		 << "    .slots = (bmapnode *)__map_slots,\n"
-		 << "    .lastfree = (bmapnode *)&__map_slots[" << list.size() - 1 << "],\n"
+		 << "    .slots = (bmapnode *)" << map_name << ",\n"
+		 << "    .lastfree = (bmapnode *)&" << map_name <<
+		 			"[" << list.size() - 1 << "],\n"
 		 << "    .size = " << list.size() << ",\n"
 		 << "    .count = " << list.size() << "\n"
 		 << "};\n";
@@ -157,6 +162,22 @@ std::string map_build::vartab_tostring(const block &block)
 			"    .data = (void*)__vlist_array,\n" <<
 			"    .end = (void*)(__vlist_array + " << varvec.size() - 1 << ")\n" <<
 			"};" << std::endl;
+	return ostr.str();
+}
+
+std::string map_build::module_tostring(const block &block)
+{
+	std::ostringstream ostr;
+	hash_map map(block.data);
+	std::string map_name(block.name + "_map");
+
+	ostr << map_tostring(block, map_name, true) << std::endl;
+	ostr << scope(block) << "const bmodule " << block.name << " = {\n"
+		 << "    be_const_header_module(),\n"
+		 << "    .native = NULL,\n"
+		 << "    .table = (bmap*)&" << map_name << ",\n"
+		 << "    .mnext = NULL\n"
+		 << "};" << std::endl;
 	return ostr.str();
 }
 

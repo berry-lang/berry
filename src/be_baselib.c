@@ -299,7 +299,7 @@ extern const bclass be_class_map;
 extern const bclass be_class_range;
 extern int be_nfunc_open(bvm *vm);
 /* @const_object_info_begin
-vartab m_builtin (scope: local, name: map) {
+vartab m_builtin (scope: local) {
     assert, func(l_assert)
     print, func(l_print)
     input, func(l_input)

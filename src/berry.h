@@ -6,7 +6,7 @@
 
 #include "berry_conf.h"
 
-#define BERRY_VERSION   "0.0.8"
+#define BERRY_VERSION   "0.0.9"
 
 #if BE_STACK_TOTAL_MAX < BE_STACK_FREE_MIN * 2
 #error "The value of the macro BE_STACK_TOTAL_MAX is too small."
@@ -87,6 +87,7 @@ typedef const struct bntvmodule {
     const char *name;
     bntvmodule_obj *table;
     size_t size;
+    const struct bmodule *module;
 } bntvmodule;
 
 #define be_native_module_nil(_name)                 \
@@ -122,7 +123,8 @@ typedef const struct bntvmodule {
 bntvmodule be_native_module(_name) = {              \
     .name = #_name,                                 \
     .table = (_attrs),                              \
-    .size = (sizeof(_attrs) / sizeof((_attrs)[0]))  \
+    .size = (sizeof(_attrs) / sizeof((_attrs)[0])), \
+    .module = NULL                                  \
 }
 
 #if !BE_DEBUG

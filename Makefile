@@ -56,8 +56,8 @@ $(OBJS): $(GENERATE)
 
 $(GENERATE): $(STR_BUILD) $(MAP_BUILD) generate $(SRCS)
 	$(MSG) [Prebuild] generate resources
-	$(Q) $(MAP_BUILD) $(SRCS) generate
-	$(Q) $(STR_BUILD) $(SRCS) generate
+	$(Q) $(MAP_BUILD) generate $(SRCPATH)
+	$(Q) $(STR_BUILD) generate $(SRCPATH) generate
 
 generate:
 	$(Q) $(MKDIR) generate

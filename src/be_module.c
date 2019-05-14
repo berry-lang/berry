@@ -86,7 +86,12 @@ static bmodule* new_module(bvm *vm, bntvmodule *nm, bvalue *dst)
 static bmodule* load_module(bvm *vm, bntvmodule *nm, bvalue *dst)
 {
     if (nm) {
-        bmodule *obj = find_existed(vm, nm);
+        bmodule *obj;
+        if (nm->module) {
+            obj = (bmodule *)nm->module;
+        } else {
+            obj = find_existed(vm, nm);
+        }
         if (obj) { /* existed module */
             var_setmodule(dst, obj);
         } else { /* new module */

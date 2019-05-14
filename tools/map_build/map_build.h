@@ -24,6 +24,7 @@ private:
 	std::string block_tostring(const block &block);
 	std::string class_tostring(const block &block);
 	std::string vartab_tostring(const block &block);
+	std::string module_tostring(const block &block);
 	std::string map_tostring(const block &block, const std::string &name, bool local = false);
 	void writefile(const std::string &filename, const std::string &text);
     std::string scope(const block &block);

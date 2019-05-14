@@ -240,6 +240,7 @@ static int m_exists(bvm *vm)
     be_return(vm);
 }
 
+#if !BE_USE_PRECOMPILED_OBJECT
 be_native_module_attr_table(path_attr) {
     be_native_module_function("isdir", m_isdir),
     be_native_module_function("isfile", m_isfile),
@@ -260,5 +261,31 @@ be_native_module_attr_table(os_attr) {
 };
 
 be_define_native_module(os, os_attr);
+#else
+/* @const_object_info_begin
+module m_pathlib (scope: local) {
+    isdir, func(m_isdir)
+    isfile, func(m_isfile)
+    exists, func(m_exists)
+    splitext, func(m_splitext)
+}
+@const_object_info_end */
+#include "../generate/be_fixed_m_pathlib.h"
+
+/* @const_object_info_begin
+module m_oslib (scope: local) {
+    getcwd, func(m_getcwd)
+    chdir, func(m_chdir)
+    mkdir, func(m_mkdir)
+    remove, func(m_remove)
+    listdir, func(m_listdir)
+    system, func(m_system)
+    path, module(m_pathlib)
+}
+@const_object_info_end */
+#include "../generate/be_fixed_m_oslib.h"
+
+be_define_const_module(os, &m_oslib);
+#endif
 
 #endif /* BE_USE_OS_MODULE */

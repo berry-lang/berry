@@ -239,6 +239,7 @@ static int m_rand(bvm *vm)
     be_return(vm);
 }
 
+#if !BE_USE_PRECOMPILED_OBJECT
 be_native_module_attr_table(attr_table) {
     be_native_module_function("abs", m_abs),
     be_native_module_function("ceil", m_ceil),
@@ -265,5 +266,36 @@ be_native_module_attr_table(attr_table) {
 };
 
 be_define_native_module(math, attr_table);
+#else
+/* @const_object_info_begin
+module m_mathlib (scope: local) {
+    abs, func(m_abs)
+    ceil, func(m_ceil)
+    floor, func(m_floor)
+    sin, func(m_sin)
+    cos, func(m_cos)
+    tan, func(m_tan)
+    asin, func(m_asin)
+    acos, func(m_acos)
+    atan, func(m_atan)
+    sinh, func(m_sinh)
+    cosh, func(m_cosh)
+    tanh, func(m_tanh)
+    sqrt, func(m_sqrt)
+    exp, func(m_exp)
+    log, func(m_log)
+    log10, func(m_log10)
+    deg, func(m_deg)
+    rad, func(m_rad)
+    pow, func(m_pow)
+    srand, func(m_srand)
+    rand, func(m_rand)
+    pi, real(M_PI)
+}
+@const_object_info_end */
+#include "../generate/be_fixed_m_mathlib.h"
+
+be_define_const_module(math, &m_mathlib);
+#endif
 
 #endif /* BE_USE_MATH_MODULE */

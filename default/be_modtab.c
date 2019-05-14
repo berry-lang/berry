@@ -1,7 +1,6 @@
 #include "berry.h"
 
 /* default modules declare */
-be_extern_native_module(io);
 be_extern_native_module(string);
 be_extern_native_module(json);
 be_extern_native_module(math);

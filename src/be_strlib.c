@@ -421,10 +421,21 @@ static int str_format(bvm *vm)
     be_return_nil(vm);
 }
 
+#if !BE_USE_PRECOMPILED_OBJECT
 be_native_module_attr_table(str_attr) {
     be_native_module_function("format", str_format)
 };
 
 be_define_native_module(string, str_attr);
+#else
+/* @const_object_info_begin
+module m_strlib (scope: local) {
+    format, func(str_format)
+}
+@const_object_info_end */
+#include "../generate/be_fixed_m_strlib.h"
+
+be_define_const_module(string, &m_strlib);
+#endif
 
 #endif /* BE_USE_STRING_MODULE */

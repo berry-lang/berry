@@ -39,11 +39,23 @@ static int m_dump(bvm *vm)
     be_return_nil(vm);
 }
 
+#if !BE_USE_PRECOMPILED_OBJECT
 be_native_module_attr_table(time_attr) {
     be_native_module_function("time", m_time),
     be_native_module_function("dump", m_dump)
 };
 
 be_define_native_module(time, time_attr);
+#else
+/* @const_object_info_begin
+module m_timelib (scope: local) {
+    time, func(m_time)
+    dump, func(m_dump)
+}
+@const_object_info_end */
+#include "../generate/be_fixed_m_timelib.h"
+
+be_define_const_module(time, &m_timelib);
+#endif
 
 #endif /* BE_USE_TIME_MODULE */

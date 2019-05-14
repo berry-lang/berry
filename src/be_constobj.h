@@ -6,6 +6,7 @@
 #include "be_map.h"
 #include "be_class.h"
 #include "be_string.h"
+#include "be_module.h"
 
 #define be_const_header(_t)  \
     .next = NULL,            \
@@ -14,6 +15,7 @@
 
 #define be_const_header_map()       be_const_header(BE_MAP)
 #define be_const_header_class()     be_const_header(BE_CLASS)
+#define be_const_header_module()    be_const_header(BE_MODULE)
 
 #define be_const_key(_str, _next)   \
 { \
@@ -34,10 +36,31 @@
     .type = BE_INT \
 }
 
+#define be_const_real(_val) \
+{ \
+    .v.r = (_val), \
+    .type = BE_REAL \
+}
+
 #define be_const_class(_class) \
 { \
     .v.p = (bclass *)&(_class), \
     .type = BE_CLASS \
 }
+
+#define be_const_module(_module) \
+{ \
+    .v.p = (bmodule *)&(_module), \
+    .type = BE_MODULE \
+}
+
+#define be_define_const_module(_name, _module)      \
+bntvmodule be_native_module(_name) = {              \
+    .name = #_name,                                 \
+    .table = NULL,                                  \
+    .size = 0,                                      \
+    .module = (bmodule *)(_module)                  \
+}
+
 
 #endif

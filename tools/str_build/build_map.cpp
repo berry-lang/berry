@@ -3,7 +3,7 @@
 #include <sstream>
 #include <fstream>
 
-build_map::build_map(std::map<std::string, int> map)
+build_map::build_map(std::map<std::string, int> map, const std::string &path)
 {
     size_t size = map.size() / 2;
     m_count = map.size();
@@ -12,17 +12,18 @@ build_map::build_map(std::map<std::string, int> map)
         make_ceil(it.first);
     }
     keywords();
-    build();
+    build(path);
 }
 
 build_map::~build_map()
 {
 }
 
-void build_map::build()
+void build_map::build(const std::string &path)
 {
-    writefile("generate/be_const_strtab_def.h", build_table_def());
-    writefile("generate/be_const_strtab.h", build_table_ext());
+    std::string prefix(path + "/be_const_strtab");
+    writefile(prefix + "_def.h", build_table_def());
+    writefile(prefix + ".h", build_table_ext());
 }
 
 void build_map::keywords()

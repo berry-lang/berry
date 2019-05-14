@@ -90,9 +90,12 @@ static void listdir(str_map *map, const std::string &path)
 
 int main(int argc, char *argv[])
 {
-    str_map smap;
-    listdir(&smap, "src");
-    listdir(&smap, "generate");
-    build_map(smap.data());
+    if (argc > 1) {
+        str_map smap;
+        for (int i = 2; i < argc; ++i) {
+            listdir(&smap, argv[i]);
+        }
+        build_map(smap.data(), argv[1]);
+    }
     return 0;
 }
