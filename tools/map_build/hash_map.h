@@ -30,7 +30,8 @@ private:
 	hash_map::entry* findprev(entry *list, entry *slot);
 	void resize(size_t size);
 	void insert_p(const std::string &key, const std::string value);
-	static uint32_t hashcode(const std::string &string);
+	uint32_t hashcode(const std::string &string);
+    void escape_str(std::string &string);
 	hash_map::entry entry_modify(entry entry, int *var_count);
 
 private:

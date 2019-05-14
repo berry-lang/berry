@@ -103,13 +103,17 @@ bgcobject* be_gc_newstr(bvm *vm, size_t size, int islong)
 void be_gc_fix(bvm *vm, bgcobject *obj)
 {
     (void)vm;
-    gc_setfixed(obj);
+    if (!gc_isconst(obj)) {
+        gc_setfixed(obj);
+    }
 }
 
 void be_gc_unfix(bvm *vm, bgcobject *obj)
 {
     (void)vm;
-    gc_clearfixed(obj);
+    if (!gc_isconst(obj)) {
+        gc_clearfixed(obj);
+    }
 }
 
 static void mark_map(bvm *vm, bgcobject *obj)

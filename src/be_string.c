@@ -34,7 +34,9 @@ struct bconststrtab {
     int size;
 };
 
+#if BE_USE_PRECOMPILED_OBJECT
 #include "../generate/be_const_strtab_def.h"
+#endif
 
 int be_eqstr(bstring *s1, bstring *s2)
 {
@@ -133,6 +135,7 @@ bstring* createstrobj(bvm *vm, size_t len, int islong)
     return s;
 }
 
+#if BE_USE_PRECOMPILED_OBJECT
 static bstring* find_conststr(const char *str, size_t len)
 {
     const struct bconststrtab *tab = &m_const_string_table;
@@ -145,6 +148,7 @@ static bstring* find_conststr(const char *str, size_t len)
     }
     return NULL;
 }
+#endif
 
 static bstring* newshortstr(bvm *vm, const char *str, size_t len)
 {
@@ -193,8 +197,12 @@ bstring* be_newstr(bvm *vm, const char *str)
 bstring* be_newstrn(bvm *vm, const char *str, size_t len)
 {
     if (len <= SHORT_STR_MAX_LEN) {
+#if BE_USE_PRECOMPILED_OBJECT
         bstring *s = find_conststr(str, len);
         return s ? s : newshortstr(vm, str, len);
+#else
+        return newshortstr(vm, str, len);
+#endif
     }
     return newlongstr(vm, str, len); /* long string */
 }
@@ -249,4 +257,11 @@ const char* be_str2cstr(bstring *s)
         return lstr(s);
     }
     return sstr(s);
+}
+
+void be_str_setextra(bstring *s, int extra)
+{
+    if (!gc_isconst(s)) {
+        s->extra = cast(bbyte, extra);
+    }
 }

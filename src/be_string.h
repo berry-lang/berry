@@ -31,9 +31,10 @@ typedef struct {
 
 #define str(_s)             be_str2cstr(_s)
 #define str_extra(_s)       ((_s)->extra)
-#define str_setextra(_s, d) ((_s)->extra = (bbyte)(d))
 
+#if BE_USE_PRECOMPILED_OBJECT
 #include "../generate/be_const_strtab.h"
+#endif
 
 void be_string_init(bvm *vm);
 void be_string_deleteall(bvm *vm);
@@ -44,5 +45,6 @@ bstring* be_newstrn(bvm *vm, const char *str, size_t len);
 void be_gcstrtab(bvm *vm);
 uint32_t be_strhash(bstring *s);
 const char* be_str2cstr(bstring *s);
+void be_str_setextra(bstring *s, int extra);
 
 #endif

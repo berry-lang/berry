@@ -46,7 +46,7 @@ static void keyword_registe(bvm *vm)
     for (i = KeyIf; i < n; ++i) {
         bstring *s = be_newstr(vm, kwords_tab[i]);
         be_gc_fix(vm, gc_object(s));
-        str_setextra(s, i);
+        be_str_setextra(s, i);
     }
 }
 
