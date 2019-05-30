@@ -277,11 +277,11 @@ static void init_exp(bexpdesc *e, exptype_t type, bint i)
     e->v.i = i;
 }
 
-static int find_localvar(bfuncinfo *finfo, bstring *s)
+static int find_localvar(bfuncinfo *finfo, bstring *s, int begin)
 {
     int i, count = be_list_count(finfo->local);
     bvalue *var = be_list_data(finfo->local);
-    for (i = 0; i < count; i++) {
+    for (i = begin; i < count; i++) {
         if (be_eqstr(var[i].v.s, s)) {
             return i;
         }
@@ -291,7 +291,7 @@ static int find_localvar(bfuncinfo *finfo, bstring *s)
 
 static int new_localvar(bfuncinfo *finfo, bstring *s)
 {
-    int reg = find_localvar(finfo, s);
+    int reg = find_localvar(finfo, s, finfo->binfo->nactlocals);
     if (reg == -1) {
         bvalue *var;
         reg = be_list_count(finfo->local); /* new local index */
@@ -370,7 +370,7 @@ static int singlevaraux(bvm *vm, bfuncinfo *finfo, bstring *s, bexpdesc *var)
     if (finfo == NULL) {
         return ETVOID;
     } else {
-        int idx = find_localvar(finfo, s);
+        int idx = find_localvar(finfo, s, 0);
         if (idx >= 0) { /* local variable */
             init_exp(var, ETLOCAL, 0);
             var->v.idx = idx;
@@ -426,7 +426,7 @@ static void func_varlist(bparser *parser)
             scan_next_token(parser); /* skip ',' */
             str = next_token(parser).u.s;
             /* new local variable */
-            if (find_localvar(parser->finfo, str) == -1) {
+            if (find_localvar(parser->finfo, str, 0) == -1) {
                 new_var(parser, str, &v);
             } else {
                 push_error(parser,
@@ -915,10 +915,9 @@ static void for_init(bparser *parser, bexpdesc *v)
     check_var(parser, v);
     be_code_nextreg(finfo, v);
     be_code_call(finfo, e.v.idx, 1); /* call __iterator__(expr) */
+    be_code_freeregs(finfo, 1); /* free register of __iterator__ */
     s = be_newstr(vm, ".it");
     init_exp(v, ETLOCAL, new_localvar(finfo, s));
-    be_code_setvar(finfo, v, &e); /* code .it = __iterator__(expr) */
-    be_code_freeregs(finfo, 1); /* free register of e */
 }
 
 /*
