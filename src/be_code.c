@@ -391,7 +391,7 @@ static int codedestreg(bfuncinfo *finfo, bexpdesc *e1, bexpdesc *e2)
     return dst;
 }
 
-static void binryexp(bfuncinfo *finfo, bopcode op, bexpdesc *e1, bexpdesc *e2)
+static void binaryexp(bfuncinfo *finfo, bopcode op, bexpdesc *e1, bexpdesc *e2)
 {
     int src1 = exp2anyreg(finfo, e1);
     int src2 = exp2anyreg(finfo, e2);
@@ -434,10 +434,19 @@ void be_code_binop(bfuncinfo *finfo, int op, bexpdesc *e1, bexpdesc *e2)
     case OptNE: case OptGT: case OptGE: case OptRange:
     case OptBitAnd: case OptBitOr: case OptBitXor:
     case OptShiftL: case OptShiftR:
-        binryexp(finfo, (bopcode)(op - OptAdd), e1, e2);
+        binaryexp(finfo, (bopcode)(op - OptAdd), e1, e2);
         break;
     default: break;
     }
+}
+
+static void unaryexp(bfuncinfo *finfo, int op, bexpdesc *e)
+{
+    int src = exp2anyreg(finfo, e);
+    int dst = e->type == ETREG ? src : be_code_allocregs(finfo, 1);
+    codeABC(finfo, op, dst, src, 0);
+    e->type = ETREG;
+    e->v.idx = dst;
 }
 
 static void code_not(bexpdesc *e)
@@ -466,11 +475,8 @@ static int code_neg(bfuncinfo *finfo, bexpdesc *e)
     case ETREAL: e->v.r = -e->v.r; break;
     case ETNIL: case ETBOOL: case ETSTRING:
         return 1; /* error */
-    default: {
-        int src = exp2anyreg(finfo, e);
-        int dst = e->type == ETREG ? src : be_code_allocregs(finfo, 1);
-        codeABC(finfo, OP_NEG, dst, src, 0);
-    }
+    default:
+        unaryexp(finfo, OP_NEG, e);
     }
     return 0;
 }
@@ -481,11 +487,8 @@ static int code_flip(bfuncinfo *finfo, bexpdesc *e)
     case ETINT: e->v.i = ~e->v.i; break;
     case ETREAL: case ETNIL: case ETBOOL: case ETSTRING:
         return 2; /* error */
-    default: {
-        int src = exp2anyreg(finfo, e);
-        int dst = e->type == ETREG ? src : be_code_allocregs(finfo, 1);
-        codeABC(finfo, OP_FLIP, dst, src, 0);
-    }
+    default:
+        unaryexp(finfo, OP_FLIP, e);
     }
     return 0;
 }
@@ -493,10 +496,8 @@ static int code_flip(bfuncinfo *finfo, bexpdesc *e)
 int be_code_unop(bfuncinfo *finfo, int op, bexpdesc *e)
 {
     switch (op) {
-    case OptNot: {
-        code_not(e);
-        break;
-    }
+    case OptNot:
+        code_not(e); break;
     case OptFlip: /* do nothing */
         return code_flip(finfo, e);
     case OptSub:

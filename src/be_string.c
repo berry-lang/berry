@@ -150,6 +150,12 @@ static bstring* find_conststr(const char *str, size_t len)
 }
 #endif
 
+static void strcopy(char *dst, const char *src, size_t len)
+{
+    memcpy(dst, src, len);
+    dst[len] = '\0';
+}
+
 static bstring* newshortstr(bvm *vm, const char *str, size_t len)
 {
     bstring *s;
@@ -163,7 +169,7 @@ static bstring* newshortstr(bvm *vm, const char *str, size_t len)
         }
     }
     s = createstrobj(vm, len, 0);
-    strncpy(cast(char*, sstr(s)), str, len);
+    strcopy(cast(char*, sstr(s)), str, len);
     s->extra = 0;
     s->next = cast(void*, *list);
 #if BE_STR_HASH_CACHE
@@ -185,7 +191,7 @@ static bstring* newlongstr(bvm *vm, const char *str, size_t len)
     ls = cast(blstring*, s);
     s->extra = 0;
     ls->llen = cast_int(len);
-    strncpy(cast(char*, lstr(s)), str, len);
+    strcopy(cast(char*, lstr(s)), str, len);
     return s;
 }
 
