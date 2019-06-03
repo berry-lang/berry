@@ -281,7 +281,7 @@ static int find_localvar(bfuncinfo *finfo, bstring *s, int begin)
 {
     int i, count = be_list_count(finfo->local);
     bvalue *var = be_list_data(finfo->local);
-    for (i = begin; i < count; i++) {
+    for (i = count - 1; i >= begin; --i) {
         if (be_eqstr(var[i].v.s, s)) {
             return i;
         }
