@@ -86,18 +86,4 @@
  **/
 #define be_assert(expr)                 assert(expr)
 
-/* File operation interface.
- * Modify these macros to port file system support.
- **/
-#define be_fhandle                      FILE *
-#define be_fopen(fname, mode)           fopen(fname, mode)
-#define be_fclose(fp)                   fclose(fp)
-#define be_fwrite(fp, buffer, len)      fwrite(buffer, 1, len, fp)
-#define be_fread(fp, buffer, len)       fread(buffer, 1, len, fp)
-#define be_fgets(fp, buffer, max)       fgets(buffer, max, fp)
-#define be_fseek(fp, pos)               fseek(fp, pos, SEEK_SET)
-#define be_ftell(fp)                    ftell(fp)
-#define be_fflush(fp)                   fflush(fp)
-/* #define be_fsize */
-
 #endif

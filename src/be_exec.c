@@ -141,10 +141,10 @@ int be_loadfile(bvm *vm, const char *name)
 {
     int res = BE_IO_ERROR;
     struct filebuf *fbuf = be_malloc(sizeof(struct filebuf));
-    fbuf->fp = fopen(name, "r");
+    fbuf->fp = be_fopen(name, "r");
     if (fbuf->fp) {
         res = be_protectedparser(vm, name, _fgets, fbuf);
-        fclose(fbuf->fp);
+        be_fclose(fbuf->fp);
     } else {
         be_pushfstring(vm, "error: can not open file '%s'.", name);
     }

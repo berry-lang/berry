@@ -1,3 +1,5 @@
+/* this file contains the declaration of the module table. */
+
 #include "berry.h"
 
 /* default modules declare */
@@ -11,6 +13,7 @@ be_extern_native_module(os);
 
 /* user-defined modules declare end */
 
+/* module list declaration */
 bntvmodule* const be_module_table[] = {
     /* default modules register */
 #if BE_USE_STRING_MODULE

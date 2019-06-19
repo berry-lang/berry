@@ -238,4 +238,15 @@ int be_loadbuffer(bvm *vm,
 int be_loadfile(bvm *vm, const char *name);
 void be_codedump(bvm *vm, int index);
 
+/* file system operation functions */
+FILE* be_fopen(const char *filename, const char *modes);
+int be_fclose(FILE *hfile);
+size_t be_fwrite(FILE *hfile, const void *buffer, size_t length);
+size_t be_fread(FILE *hfile, void *buffer, size_t length);
+char *be_fgets(FILE *hfile, void *buffer, size_t size);
+int be_fseek(FILE *hfile, size_t offset);
+long int be_ftell(FILE *hfile);
+long int be_fflush(FILE *hfile);
+size_t be_fsize(FILE *hfile);
+
 #endif
