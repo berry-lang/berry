@@ -66,6 +66,12 @@ typedef struct bvm bvm;
 typedef int (*bntvfunc)(bvm*);
 
 typedef struct {
+    void *dir;
+    void *file;
+    const char *name;
+} bdirinfo;
+
+typedef struct {
     const char *name;
     bntvfunc function;
 } bnfuncinfo;
@@ -243,10 +249,20 @@ FILE* be_fopen(const char *filename, const char *modes);
 int be_fclose(FILE *hfile);
 size_t be_fwrite(FILE *hfile, const void *buffer, size_t length);
 size_t be_fread(FILE *hfile, void *buffer, size_t length);
-char *be_fgets(FILE *hfile, void *buffer, size_t size);
-int be_fseek(FILE *hfile, size_t offset);
+char *be_fgets(FILE *hfile, void *buffer, int size);
+int be_fseek(FILE *hfile, long offset);
 long int be_ftell(FILE *hfile);
 long int be_fflush(FILE *hfile);
 size_t be_fsize(FILE *hfile);
+int be_isdir(const char *path);
+int be_isfile(const char *path);
+int be_isexist(const char *path);
+char* be_getcwd(char *buf, size_t size);
+int be_chdir(const char *path);
+int be_mkdir(const char *path);
+int be_unlink(const char *filename);
+int be_dirfirst(bdirinfo *info, const char *path);
+int be_dirnext(bdirinfo *info);
+int be_dirclose(bdirinfo *info);
 
 #endif

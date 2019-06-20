@@ -68,6 +68,15 @@
  **/
 #define BE_STR_HASH_CACHE               0
 
+/*
+ * Macro: BE_USE_FILE_SYSTEM
+ * The file system interface will be used when this macro is true
+ * or when using the OS module. Otherwise the file system interface
+ * will not be used.
+ * default: 1
+ **/
+#define BE_USE_FILE_SYSTEM              1
+
 /* Macro: BE_USE_XXX_MODULE
  * These macros control whether the related module is compiled.
  * When they are true, they will enable related modules. At this
