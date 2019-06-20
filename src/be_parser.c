@@ -447,7 +447,7 @@ static bproto* funcbody(bparser *parser, bstring *name, int type)
     /* '(' varlist ')' block 'end' */
     begin_func(parser, &finfo, &binfo);
     finfo.proto->name = name;
-    finfo.flag = type;
+    finfo.flag = (bbyte)type;
     if (type & FUNC_METHOD) {
         new_localvar(parser->finfo, be_newstr(parser->vm, "self"));
     }

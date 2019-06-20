@@ -232,6 +232,8 @@ int be_dirclose(bdirinfo *info)
 
 #elif defined(_MSC_VER) /* MSVC*/
 
+#include <windows.h>
+#include <direct.h>
 #include <io.h>
 
 int be_isdir(const char *path)
@@ -255,7 +257,7 @@ int be_isexist(const char *path)
 
 char *be_getcwd(char *buf, size_t size)
 {
-    return _getcwd(buf, size);
+    return _getcwd(buf, (int)size);
 }
 
 int be_chdir(const char *path)

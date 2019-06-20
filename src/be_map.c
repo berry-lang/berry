@@ -55,7 +55,7 @@ static uint32_t _hashcode_(int type, union bvaldata v)
 static int eqnode(bmapnode *node, bvalue *key, uint32_t hash)
 {
     bmapkey *k = key(node);
-    if (hashcode(key(node)) == hash && k->type == key->type) {
+    if (hashcode(key(node)) == hash && (int)k->type == key->type) {
         switch (key->type) {
         case BE_NIL:
             return 0;
