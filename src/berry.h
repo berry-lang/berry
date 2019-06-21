@@ -249,7 +249,7 @@ FILE* be_fopen(const char *filename, const char *modes);
 int be_fclose(FILE *hfile);
 size_t be_fwrite(FILE *hfile, const void *buffer, size_t length);
 size_t be_fread(FILE *hfile, void *buffer, size_t length);
-char *be_fgets(FILE *hfile, void *buffer, int size);
+char* be_fgets(FILE *hfile, void *buffer, int size);
 int be_fseek(FILE *hfile, long offset);
 long int be_ftell(FILE *hfile);
 long int be_fflush(FILE *hfile);

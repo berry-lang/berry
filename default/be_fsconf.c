@@ -27,7 +27,7 @@ size_t be_fread(FILE *hfile, void *buffer, size_t length)
     return fread(buffer, 1, length, hfile);
 }
 
-char *be_fgets(FILE *hfile, void *buffer, int size)
+char* be_fgets(FILE *hfile, void *buffer, int size)
 {
     return fgets(buffer, size, hfile);
 }
@@ -123,7 +123,7 @@ size_t be_fread(FILE *hfile, void *buffer, size_t length)
     return br;
 }
 
-char *be_fgets(FILE *hfile, void *buffer, int size)
+char* be_fgets(FILE *hfile, void *buffer, int size)
 {
     if (hfile == stdout || hfile == stderr || hfile == stdin) {
         return fgets(buffer, size, hfile);
@@ -176,7 +176,7 @@ int be_isexist(const char *path)
     return f_stat(path, &fno) == FR_OK;
 }
 
-char *be_getcwd(char *buf, size_t size)
+char* be_getcwd(char *buf, size_t size)
 {
     FRESULT fr = f_getcwd(buf, (UINT)size);
     return fr == FR_OK ? buf : NULL;
@@ -255,7 +255,7 @@ int be_isexist(const char *path)
     return GetFileAttributes(path) != INVALID_FILE_ATTRIBUTES;
 }
 
-char *be_getcwd(char *buf, size_t size)
+char* be_getcwd(char *buf, size_t size)
 {
     return _getcwd(buf, (int)size);
 }
@@ -305,7 +305,7 @@ int be_dirclose(bdirinfo *info)
     return _findclose((intptr_t)info->dir) != 0;
 }
 
-#elif defined(__GNUC__) /* POSIX */
+#else /* must be POSIX */
 
 #include <dirent.h>
 #include <unistd.h>
@@ -331,7 +331,7 @@ int be_isexist(const char *path)
     return stat(path, &path_stat) == 0;
 }
 
-char *be_getcwd(char *buf, size_t size)
+char* be_getcwd(char *buf, size_t size)
 {
     return getcwd(buf, size);
 }

@@ -5,15 +5,17 @@
 
 typedef struct bmodule {
     bcommon_header;
-    bntvmodule *native;
     bmap *table;
+    union {
+        bntvmodule *native;
+        const char *name;
+    } info;
     struct bmodule *mnext;
 } bmodule;
-
-#define be_module_name(module)  ((module)->native->name)
 
 bmodule* be_module_load(bvm *vm, bstring *path, bvalue *dst);
 void be_module_delete(bvm *vm, bmodule *module);
 bvalue* be_module_attr(bmodule *module, bstring *attr);
+const char* be_module_name(bmodule *module);
 
 #endif

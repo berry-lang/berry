@@ -73,9 +73,9 @@
  * The file system interface will be used when this macro is true
  * or when using the OS module. Otherwise the file system interface
  * will not be used.
- * default: 1
+ * default: 0
  **/
-#define BE_USE_FILE_SYSTEM              1
+#define BE_USE_FILE_SYSTEM              0
 
 /* Macro: BE_USE_XXX_MODULE
  * These macros control whether the related module is compiled.

@@ -24,7 +24,7 @@ static bntvmodule* find_native(bstring *path)
 static bmodule* find_existed(bvm *vm, bntvmodule *nm)
 {
     bmodule *node  = vm->modulelist;
-    while (node && node->native != nm) {
+    while (node && node->info.native != nm) {
         node = node->mnext;
     }
     return node;
@@ -72,7 +72,7 @@ static bmodule* new_module(bvm *vm, bntvmodule *nm, bvalue *dst)
     bmodule *obj = cast_module(gco);
     if (obj) {
         var_setmodule(dst, obj);
-        obj->native = nm;
+        obj->info.native = nm;
         obj->table = NULL; /* gc protection */
         obj->table = be_map_new(vm);
         insert_attrs(vm, obj->table, nm);
@@ -130,4 +130,12 @@ void be_module_delete(bvm *vm, bmodule *module)
 bvalue* be_module_attr(bmodule *module, bstring *attr)
 {
     return be_map_findstr(module->table, attr);
+}
+
+const char *be_module_name(bmodule *module)
+{
+    if (gc_isconst(module)) {
+        return module->info.name;
+    }
+    return module->info.native->name;
 }
