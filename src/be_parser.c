@@ -65,18 +65,18 @@ static const int binary_op_prio_tab[] = {
 
 static void match_token(bparser *parser, btokentype type)
 {
-    if (next_type(parser) != type) {
+    if (next_type(parser) != type) { /* error when token is no match */
         btoken *token = &next_token(parser);
         const char *s1 = be_tokentype2str(type);
         const char *s2 = be_token2str(parser->vm, token);
         push_error(parser, "expected '%s' before '%s'", s1, s2);
     }
-    scan_next_token(parser);
+    scan_next_token(parser); /* skip this token */
 }
 
 static void match_notoken(bparser *parser, btokentype type)
 {
-    if (next_type(parser) == type) {
+    if (next_type(parser) == type) { /* error when token is match */
         push_error(parser,
             "expected statement before '%s'", token2str(parser));
     }
@@ -84,7 +84,7 @@ static void match_notoken(bparser *parser, btokentype type)
 
 static void check_symbol(bparser *parser, bexpdesc *e)
 {
-    if (e->type == ETVOID && e->v.s == NULL) {
+    if (e->type == ETVOID && e->v.s == NULL) { /* error when token is not a symbol */
         push_error(parser,
             "unexpected symbol near '%s'", token2str(parser));
     }
@@ -92,8 +92,8 @@ static void check_symbol(bparser *parser, bexpdesc *e)
 
 static void check_var(bparser *parser, bexpdesc *e)
 {
-    check_symbol(parser, e);
-    if (e->type == ETVOID) {
+    check_symbol(parser, e); /* check the token is a symbol */
+    if (e->type == ETVOID) { /* error when symbol is undefined */
         bstring *s = e->v.s;
         push_error(parser,
             "'%s' undeclared (first use in this function)", str(s));
@@ -102,8 +102,8 @@ static void check_var(bparser *parser, bexpdesc *e)
 
 static int match_skip(bparser *parser, btokentype type)
 {
-    if (next_type(parser) == type) {
-        scan_next_token(parser);
+    if (next_type(parser) == type) { /* match */
+        scan_next_token(parser); /* skip this token */
         return btrue;
     }
     return bfalse;
@@ -123,7 +123,7 @@ static void begin_block(bfuncinfo *finfo, bblockinfo *binfo, int isloop)
     }
 }
 
-static void blobk_setloop(bfuncinfo *finfo)
+static void block_setloop(bfuncinfo *finfo)
 {
     bblockinfo *binfo = finfo->binfo;
     binfo->isloop = 1;
@@ -762,7 +762,7 @@ static void assign_expr(bparser *parser)
 }
 
 /* binary operator: + - * / % && || < <= == != > >=
- * unary operator: + - ! 
+ * unary operator: + - !
  */
 static void sub_expr(bparser *parser, bexpdesc *e, int prio)
 {
@@ -934,7 +934,7 @@ static void for_iter(bparser *parser, bexpdesc *v, bexpdesc *it)
     bvm *vm = parser->vm;
     bfuncinfo *finfo = parser->finfo;
 
-    blobk_setloop(finfo);
+    block_setloop(finfo);
     /* __hasnext__(.it) */
     s = be_newstr(vm, "__hasnext__");
     init_exp(&e, ETGLOBAL, be_builtin_find(vm, s));

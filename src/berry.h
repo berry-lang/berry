@@ -6,12 +6,14 @@
 
 #include "berry_conf.h"
 
-#define BERRY_VERSION   "0.0.9"
+/* do not modify the version number! */
+#define BERRY_VERSION   "0.1.0"
 
 #if BE_STACK_TOTAL_MAX < BE_STACK_FREE_MIN * 2
 #error "The value of the macro BE_STACK_TOTAL_MAX is too small."
 #endif
 
+/* basic type definition */
 #if BE_INTGER_TYPE == 0
   #define BE_INTEGER        int
   #define BE_INT_FMTLEN     ""
@@ -45,6 +47,7 @@ typedef enum {
     btrue = 1
 } bbool;
 
+/* error code definition */
 enum berrorcode {
     BE_OK = 0,
     BE_IO_ERROR,
@@ -54,6 +57,7 @@ enum berrorcode {
     BE_EXIT
 };
 
+/* native-module member type specifier */
 #define BE_CNIL                 0
 #define BE_CINT                 1
 #define BE_CREAL                2
@@ -62,20 +66,23 @@ enum berrorcode {
 #define BE_CSTRING              5
 #define BE_CMODULE              6
 
-typedef struct bvm bvm;
-typedef int (*bntvfunc)(bvm*);
+typedef struct bvm bvm;        /* virtual machine structure */
+typedef int (*bntvfunc)(bvm*); /* native function pointer */
 
+/* directory information for directory traversal */
 typedef struct {
     void *dir;
     void *file;
     const char *name;
 } bdirinfo;
 
+/* native function information */
 typedef struct {
     const char *name;
     bntvfunc function;
 } bnfuncinfo;
 
+/* native module object node */
 typedef const struct {
     const char *name;
     int type;
@@ -89,6 +96,7 @@ typedef const struct {
     } u;
 } bntvmodule_obj;
 
+/* native module object */
 typedef const struct bntvmodule {
     const char *name;
     bntvmodule_obj *table;
@@ -96,6 +104,7 @@ typedef const struct bntvmodule {
     const struct bmodule *module;
 } bntvmodule;
 
+/* native module node definition macro */
 #define be_native_module_nil(_name)                 \
     { .name = (_name), .type = BE_CNIL, .u.i = 0 }
 
@@ -122,9 +131,11 @@ typedef const struct bntvmodule {
 #define be_native_module_attr_table(name)           \
     static bntvmodule_obj name[] =
 
+/* native module declaration macro */
 #define be_extern_native_module(name)               \
     extern bntvmodule be_native_module(name)
 
+/* native module definition macro */
 #define be_define_native_module(_name, _attrs)      \
 bntvmodule be_native_module(_name) = {              \
     .name = #_name,                                 \
@@ -140,6 +151,7 @@ bntvmodule be_native_module(_name) = {              \
   #define be_assert(expr)       ((void)0)
 #endif
 
+/* FFI functions */
 #define be_writestring(s)       be_fwrite(stdout, s, strlen(s))
 #define be_writenewline()       be_fwrite(stdout, "\n", 1)
 

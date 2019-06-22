@@ -16,7 +16,7 @@ static int is_multline(bvm *vm)
 {
     const char *msg = be_tostring(vm, -1);
     size_t len = strlen(msg);
-    if (len > 5) {
+    if (len > 5) { /* multi-line text if the error message is 'EOS' at the end */
         return !strcmp(msg + len - 5, "'EOS'");
     }
     return 0;
@@ -54,10 +54,10 @@ int be_repl(bvm *vm, breadline getl)
             be_writestring(be_tostring(vm, -1)); /* some error */
             be_writenewline();
             be_pop(vm, 1);
-        } else {
-            switch (be_pcall(vm, 0)) {
-            case BE_OK:
-                if (!be_isnil(vm, -1)) {
+        } else { /* compiled successfully */
+            switch (be_pcall(vm, 0)) { /* call the main function */
+            case BE_OK: /* execution succeed */
+                if (!be_isnil(vm, -1)) { /* output return value when it is not nil */
                     be_writestring(be_tostring(vm, -1));
                     be_writenewline();
                 }
