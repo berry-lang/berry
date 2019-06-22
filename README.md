@@ -14,6 +14,7 @@ Berry has the following advantages:
 * Powerful: supports imperative programming, object-oriented programming, functional programming.
 * Flexible: Berry is a dynamic type script, and it's intended for embedding in applications. It can provide good dynamic scalability for the host system.
 * Simple: simple and natural syntax, support garbage collection, and easy to use FFI (foreign function interface).
+* RAM saving: With compile-time object construction, most of the constant objects are stored in read-only code data segments, so the RAM usage of the interpreter is very low when it starts.
 
 ## Documents
 
@@ -45,7 +46,7 @@ Berry has the following advantages:
 * Control Structure
   * Conditional statement: `if-else`
   * Iteration statement: `while` and `for`
-  * Jump statement: `break`
+  * Jump statement: `break` and `continue`
 * Function
   * Local variable and block scope
   * Return statement
@@ -56,9 +57,12 @@ Berry has the following advantages:
   * Inheritance (only public single inheritance)
   * Method and Operator Overload
   * Constructor method
+  * Destructive method
 * Module Management
-  * Statically allocated memory: no RAM used before import.
-  * Module nesting.
+  * Statically allocated memory: no RAM used before import
+  * Module nesting
+* GC (Garbage collection)
+  * Mark-Sweep GC
 
 ## Build
 
@@ -110,33 +114,16 @@ Hello world!
 You can copy this code to the REPL:
 
 ```ruby
-def list_iter(list)
-    index = 0
-    def it()
-        value = list[index]
-        index = index + 1
-        return value
+def fib(x)
+    if (x <= 1)
+        return x
     end
-    return it
+    return fib(x - 1) + fib(x - 2)
 end
-l = [0, 1, 2, 3, 4, 5]
-lout = []
-it = list_iter(l)
-v = it()
-while (v != nil)
-    lout.append(v)
-    v = it()
-end
-print(lout)
+fib(10)
 ```
 
-This examples is a simple list iterator. Let's look at the output:
-
-```
-[0, 1, 2, 3, 4, 5]
-```
-
-You can save the above code to a file (eg test.be) and run:
+This example code will output the result `55`, and you can save the above code to a plain text file (eg test.be) and run this command:
 
 ``` bash
 ./berry test.be
