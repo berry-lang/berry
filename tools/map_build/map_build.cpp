@@ -177,9 +177,10 @@ std::string map_build::module_tostring(const block &block)
          << "    .table = (bmap*)&" << map_name << ",\n"
          << "    .info.name = \"" << block.name << "\",\n"
          << "    .mnext = NULL\n"
-         << "};\n"
-         << std::endl;
-    ostr << scope(block) << "be_define_const_module(" << block.name << ");" << std::endl;
+         << "};" << std::endl;
+	if (scope(block).empty()) { /* extern */
+		ostr << "\nbe_define_const_module(" << block.name << ");" << std::endl;
+	}
 	return ostr.str();
 }
 
