@@ -121,7 +121,7 @@ static const char* _sgets(void *data, size_t *size)
 static const char* _fgets(void *data, size_t *size)
 {
     struct filebuf *fb = data;
-    *size = fread(fb->buf, 1, sizeof(fb->buf), fb->fp);
+    *size = be_fread(fb->fp, fb->buf, sizeof(fb->buf));
     if (*size) {
         return fb->buf;
     }

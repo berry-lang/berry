@@ -70,9 +70,9 @@ static const char* get_line(const char *prompt)
     return line;
 #else
     static char buffer[1000];
-    fputs(prompt, stdout);
-    fflush(stdout);
-    if (fgets(buffer, sizeof(buffer), stdin)) {
+    be_writestring(prompt);
+    be_fflush(stdout);
+    if (be_readstring(buffer, sizeof(buffer))) {
         buffer[strlen(buffer) - 1] = '\0';
         return buffer;
     }
@@ -92,12 +92,13 @@ static int dofile(bvm *vm)
     case BE_IO_ERROR: /* IO error */
     case BE_SYNTAX_ERROR: /* syntax error */
     case BE_EXEC_ERROR: /* VM runtime error */
-        printf("%s\n", be_tostring(vm, -1)); /* print the error message */
+        be_writestring(be_tostring(vm, -1)); /* print the error message */
+        be_writenewline();
         return 1;
     case BE_EXIT: /* return exit code */
         return be_toindex(vm, -1);
     case BE_MALLOC_FAIL:
-        printf("error: memory allocation failed.\n");
+        be_writestring("error: memory allocation failed.\n");
         return -1;
     default: /* unkonw result */
         return 2;

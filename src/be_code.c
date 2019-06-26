@@ -440,7 +440,7 @@ void be_code_binop(bfuncinfo *finfo, int op, bexpdesc *e1, bexpdesc *e2)
     }
 }
 
-static void unaryexp(bfuncinfo *finfo, int op, bexpdesc *e)
+static void unaryexp(bfuncinfo *finfo, bopcode op, bexpdesc *e)
 {
     int src = exp2anyreg(finfo, e);
     int dst = e->type == ETREG ? src : be_code_allocregs(finfo, 1);

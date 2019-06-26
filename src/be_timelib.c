@@ -1,7 +1,7 @@
 #include "berry.h"
 #include <time.h>
 
-#ifdef BE_USE_TIME_MODULE
+#if BE_USE_TIME_MODULE
 
 static int m_time(bvm *vm)
 {
@@ -39,10 +39,17 @@ static int m_dump(bvm *vm)
     be_return_nil(vm);
 }
 
+static int m_clock(bvm *vm)
+{
+    be_pushreal(vm, clock() / (breal)CLOCKS_PER_SEC);
+    be_return(vm);
+}
+
 #if !BE_USE_PRECOMPILED_OBJECT
 be_native_module_attr_table(time_attr) {
     be_native_module_function("time", m_time),
-    be_native_module_function("dump", m_dump)
+    be_native_module_function("dump", m_dump),
+    be_native_module_function("clock", m_clock)
 };
 
 be_define_native_module(time, time_attr);
@@ -51,6 +58,7 @@ be_define_native_module(time, time_attr);
 module time (scope: global) {
     time, func(m_time)
     dump, func(m_dump)
+    clock, func(m_clock)
 }
 @const_object_info_end */
 #include "../generate/be_fixed_time.h"

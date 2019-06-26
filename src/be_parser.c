@@ -705,8 +705,7 @@ static void suffix_expr(bparser *parser, bexpdesc *e)
 }
 
 /* compound assignment */
-static void compound_assign(bparser *parser,
-        btokentype op, bexpdesc *l, bexpdesc *r)
+static void compound_assign(bparser *parser, int op, bexpdesc *l, bexpdesc *r)
 {
     if (op != OptAssign) { /* check left variable */
         check_var(parser, l);

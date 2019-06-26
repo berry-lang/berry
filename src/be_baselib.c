@@ -1,6 +1,5 @@
 #include "be_object.h"
 #include "be_mem.h"
-#include <time.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -22,12 +21,12 @@ static int l_print(bvm *vm)
     for (i = 1; i <= n; ++i) {
         const char *str = be_tostring(vm, i);
         size_t len = be_strlen(vm, i);
-        be_fwrite(stdout, str, len);
+        be_writebuffer(str, len);
         if (i < n) {
-            be_fwrite(stdout, " ", 1);
+            be_writebuffer(" ", 1);
         }
     }
-    be_fwrite(stdout, "\n", 1);
+    be_writenewline();
     be_return_nil(vm);
 }
 
@@ -35,7 +34,7 @@ static char* m_readline()
 {
     size_t pos = 0, size = READLINE_STEP;
     char *buffer = be_malloc(size);
-    char *res = be_fgets(stdin, buffer, (int)size);
+    char *res = be_readstring(buffer, (int)size);
     while (res) {
         pos += strlen(buffer + pos) - 1;
         if (!pos || buffer[pos] == '\n') {
@@ -43,7 +42,7 @@ static char* m_readline()
         }
         size += READLINE_STEP;
         buffer = be_realloc(buffer, size);
-        res = be_fgets(stdin, buffer + pos + 1, READLINE_STEP);
+        res = be_readstring(buffer + pos + 1, READLINE_STEP);
     }
     return buffer;
 }
@@ -57,12 +56,6 @@ static int l_input(bvm *vm)
     line = m_readline();
     be_pushstring(vm, line);
     be_free(line);
-    be_return(vm);
-}
-
-static int l_clock(bvm *vm)
-{
-    be_pushreal(vm, clock() / (breal)CLOCKS_PER_SEC);
     be_return(vm);
 }
 
@@ -276,7 +269,6 @@ void be_load_baselib(bvm *vm)
     be_regfunc(vm, "assert", l_assert);
     be_regfunc(vm, "print", l_print);
     be_regfunc(vm, "input", l_input);
-    be_regfunc(vm, "clock", l_clock);
     be_regfunc(vm, "exit", l_exit);
     be_regfunc(vm, "super", l_super);
     be_regfunc(vm, "memcount", l_memcount);
@@ -303,7 +295,6 @@ vartab m_builtin (scope: local) {
     assert, func(l_assert)
     print, func(l_print)
     input, func(l_input)
-    clock, func(l_clock)
     exit, func(l_exit)
     super, func(l_super)
     memcount, func(l_memcount)

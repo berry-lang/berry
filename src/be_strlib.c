@@ -315,7 +315,7 @@ bstring* be_strindex(bvm *vm, bstring *str, bvalue *idx)
     return NULL;
 }
 
-#ifdef BE_USE_STRING_MODULE
+#if BE_USE_STRING_MODULE
 
 #define MAX_FORMAT_MODE     32
 #define FLAGES              "+- #0"

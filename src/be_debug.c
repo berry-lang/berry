@@ -11,11 +11,26 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifndef INST_BUF_SIZE
+#define INST_BUF_SIZE   96
+#endif
+
+#define logbuf(...)     snprintf(__lbuf, sizeof(__lbuf), __VA_ARGS__)
+
+#define logfmt(...)                     \
+    do {                                \
+        char __lbuf[INST_BUF_SIZE];     \
+        logbuf(__VA_ARGS__);            \
+        be_writestring(__lbuf);         \
+    } while (0)
+
 static void print_inst(binstruction ins, int pc)
 {
+    char __lbuf[INST_BUF_SIZE];
     bopcode op = IGET_OP(ins);
 
-    printf("%4d: ", pc);
+    logbuf("%4d: ", pc);
+    be_writestring(__lbuf);
     switch (op) {
     case OP_ADD: case OP_SUB: case OP_MUL: case OP_DIV:
     case OP_MOD: case OP_LT: case OP_LE: case OP_EQ:
@@ -23,45 +38,47 @@ static void print_inst(binstruction ins, int pc)
     case OP_GETMBR: case OP_SETMBR:  case OP_GETMET:
     case OP_GETIDX: case OP_SETIDX: case OP_AND:
     case OP_OR: case OP_XOR: case OP_SHL: case OP_SHR:
-        printf("%s\tR%d\tR%d\tR%d\n", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins), IGET_RKC(ins));
+        logbuf("%s\tR%d\tR%d\tR%d", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins), IGET_RKC(ins));
         break;
     case OP_GETGBL: case OP_SETGBL:
-        printf("%s\tR%d\tG:%d\n", be_opcode2str(op), IGET_RA(ins), IGET_Bx(ins));
+        logbuf("%s\tR%d\tG:%d", be_opcode2str(op), IGET_RA(ins), IGET_Bx(ins));
         break;
     case OP_MOVE: case OP_SETSUPER: case OP_NEG: case OP_FLIP: case OP_IMPORT:
-        printf("%s\tR%d\tR%d\n", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins));
+        logbuf("%s\tR%d\tR%d", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins));
         break;
     case OP_JMP:
-        printf("%s\t\t[%d]\n", be_opcode2str(op), IGET_sBx(ins) + pc + 1);
+        logbuf("%s\t\t[%d]", be_opcode2str(op), IGET_sBx(ins) + pc + 1);
         break;
     case OP_JMPT: case OP_JMPF:
-        printf("%s\tR%d\t[%d]\n", be_opcode2str(op), IGET_RA(ins), IGET_sBx(ins) + pc + 1);
+        logbuf("%s\tR%d\t[%d]", be_opcode2str(op), IGET_RA(ins), IGET_sBx(ins) + pc + 1);
         break;
     case OP_LDINT:
-        printf("%s\tR%d\t%d\n", be_opcode2str(op), IGET_RA(ins), IGET_sBx(ins));
+        logbuf("%s\tR%d\t%d", be_opcode2str(op), IGET_RA(ins), IGET_sBx(ins));
         break;
     case OP_LDBOOL:
-        printf("%s\tR%d\t%d\t%d\n", be_opcode2str(op),  IGET_RA(ins), IGET_RKB(ins), IGET_RKC(ins));
+        logbuf("%s\tR%d\t%d\t%d", be_opcode2str(op),  IGET_RA(ins), IGET_RKB(ins), IGET_RKC(ins));
         break;
     case OP_RET:
-        printf("%s\t%d\tR%d\n", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins));
+        logbuf("%s\t%d\tR%d", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins));
         break;
     case OP_GETUPV: case OP_SETUPV:
-        printf("%s\tR%d\tU:%d\n", be_opcode2str(op), IGET_RA(ins), IGET_Bx(ins));
+        logbuf("%s\tR%d\tU:%d", be_opcode2str(op), IGET_RA(ins), IGET_Bx(ins));
         break;
     case OP_CALL:
-        printf("%s\tR%d\t%d\n", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins));
+        logbuf("%s\tR%d\t%d", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins));
         break;
     case OP_CLOSURE:
-        printf("%s\tR%d\tP:%d\n", be_opcode2str(op), IGET_RA(ins), IGET_Bx(ins));
+        logbuf("%s\tR%d\tP:%d", be_opcode2str(op), IGET_RA(ins), IGET_Bx(ins));
         break;
     case OP_CLOSE:
-        printf("%s\t%d\n", be_opcode2str(op), IGET_RA(ins));
+        logbuf("%s\t%d", be_opcode2str(op), IGET_RA(ins));
         break;
     default:
-        printf("%s\n", be_opcode2str(op));
+        logbuf("%s", be_opcode2str(op));
         break;
     }
+    be_writestring(__lbuf);
+    be_writenewline();
 }
 
 void be_dumpclosure(bclosure *cl)
@@ -71,13 +88,13 @@ void be_dumpclosure(bclosure *cl)
     binstruction *code = proto->code;
 #if BE_RUNTIME_DEBUG_INFO
     blineinfo *lineinfo = proto->lineinfo;
-    printf("source '%s', ", str(proto->source));
+    logfmt("source '%s', ", str(proto->source));
 #endif
-    printf("function '%s':\n", str(proto->name));
+    logfmt("function '%s':\n", str(proto->name));
     for (pc = 0; pc < proto->codesize; pc++) {
 #if BE_RUNTIME_DEBUG_INFO
         if (pc == lineinfo->endpc) {
-            printf("; line: %d\n", lineinfo->linenumber);
+            logfmt("; line: %d\n", lineinfo->linenumber);
             ++lineinfo;
         }
 #endif
@@ -119,9 +136,9 @@ void be_debug_ins_info(bvm *vm)
     int pc = cast_int(vm->ip - proto->code);
     const char *srcinfo = sourceinfo(vm, buf, -1);
     size_t len = strlen(srcinfo) + strlen(str(proto->name)) + 1;
-    printf("%s %s", srcinfo, str(proto->name));
+    logfmt("%s %s", srcinfo, str(proto->name));
     for (; len < 40 ; len += 8) {
-        printf("\t");
+        be_writestring("\t");
     }
     print_inst(*vm->ip, pc);
 }

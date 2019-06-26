@@ -152,8 +152,8 @@ bntvmodule be_native_module(_name) = {              \
 #endif
 
 /* FFI functions */
-#define be_writestring(s)       be_fwrite(stdout, s, strlen(s))
-#define be_writenewline()       be_fwrite(stdout, "\n", 1)
+#define be_writestring(s)       be_writebuffer((s), strlen(s))
+#define be_writenewline()       be_writebuffer("\n", 1)
 
 #define be_return(vm)           return be_returnvalue(vm)
 #define be_return_nil(vm)       return be_returnnilvalue(vm)
@@ -257,6 +257,8 @@ int be_loadfile(bvm *vm, const char *name);
 void be_codedump(bvm *vm, int index);
 
 /* file system operation functions */
+void be_writebuffer(const char *buffer, size_t length);
+char* be_readstring(char* buffer, size_t size);
 FILE* be_fopen(const char *filename, const char *modes);
 int be_fclose(FILE *hfile);
 size_t be_fwrite(FILE *hfile, const void *buffer, size_t length);
