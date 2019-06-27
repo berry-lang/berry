@@ -3,8 +3,6 @@
 #include "be_mem.h"
 #include "be_gc.h"
 #include "be_exec.h"
-#include <string.h>
-#include <stdlib.h>
 
 #define SHORT_STR_LEN       32
 #define EOS                 '\0' /* end of source */

@@ -5,7 +5,6 @@
 #include "be_module.h"
 #include "be_exec.h"
 #include <string.h>
-#include <stdlib.h>
 #include <stdio.h>
 
 #define is_space(c)     ((c) == ' ' || (c) == '\t' || (c) == '\r' || (c) == '\n')

@@ -13,8 +13,6 @@
 #include "be_exec.h"
 #include "be_debug.h"
 #include "be_libs.h"
-
-#include <stdio.h>
 #include <string.h>
 
 #define NOT_METHOD      BE_NONE

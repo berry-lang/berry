@@ -1,8 +1,8 @@
 #include "be_object.h"
 #include "be_mem.h"
+#include "be_sys.h"
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 #define FNAME_BUF_SIZE 512
 

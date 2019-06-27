@@ -4,6 +4,7 @@
 #include "be_gc.h"
 #include "be_mem.h"
 #include "be_vm.h"
+#include <string.h>
 
 extern bntvmodule* const be_module_table[];
 

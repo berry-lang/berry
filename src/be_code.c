@@ -5,7 +5,6 @@
 #include "be_vector.h"
 #include "be_list.h"
 #include "be_var.h"
-#include <stdio.h>
 
 #define min(a, b)               ((a) < (b) ? (a) : (b))
 #define exp2anyreg(f, e)        exp2reg(f, e, (f)->freereg)

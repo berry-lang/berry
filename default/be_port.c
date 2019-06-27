@@ -1,9 +1,22 @@
 /* this file contains configuration for the file system. */
 
 #include "berry.h"
+#include "be_mem.h"
+#include "be_sys.h"
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+
+/* standard input and output */
+
+void be_writebuffer(const char *buffer, size_t length)
+{
+    be_fwrite(stdout, buffer, length);
+}
+
+char* be_readstring(char* buffer, size_t size)
+{
+    return be_fgets(stdin, buffer, (int)size);
+}
 
 /* use the standard library implementation file API. */
 #if !defined(USE_FATFS)
@@ -72,7 +85,7 @@ size_t be_fsize(void *hfile)
 void* be_fopen(const char *filename, const char *modes)
 {
     BYTE mode = 0;
-    FIL *fp = malloc(sizeof(FIL));
+    FIL *fp = be_malloc(sizeof(FIL));
 
     switch (modes[0]) {
     case 'r': mode |= FA_READ; break;
@@ -93,14 +106,14 @@ void* be_fopen(const char *filename, const char *modes)
     if (fp && f_open(fp, filename, mode) == FR_OK) {
         return fp;
     }
-    free(fp);
+    be_free(fp);
     return NULL;
 }
 
 int be_fclose(void *hfile)
 {
     int res = f_close(hfile) != FR_OK;
-    free(hfile);
+    be_free(hfile);
     return res;
 }
 
@@ -200,14 +213,14 @@ int be_unlink(const char *filename)
 
 int be_dirfirst(bdirinfo *info, const char *path)
 {
-    info->dir = malloc(sizeof(DIR));
-    info->file = malloc(sizeof(FILINFO));
+    info->dir = be_malloc(sizeof(DIR));
+    info->file = be_malloc(sizeof(FILINFO));
     if (info->dir && info->file) {
         FRESULT fr = f_opendir(info->dir, path);
         return fr == FR_OK ? be_dirnext(info) : 1;
     }
-    free(info->dir);
-    free(info->file);
+    be_free(info->dir);
+    be_free(info->file);
     info->dir = NULL;
     info->file = NULL;
     return 1;
@@ -224,8 +237,8 @@ int be_dirclose(bdirinfo *info)
 {
     if (info->dir) {
         int res = f_closedir(info->dir) != FR_OK;
-        free(info->dir);
-        free(info->file);
+        be_free(info->dir);
+        be_free(info->file);
         return res;
     }
     return 1;
@@ -278,17 +291,17 @@ int be_unlink(const char *filename)
 
 int be_dirfirst(bdirinfo *info, const char *path)
 {
-    char *buf = malloc(strlen(path) + 3);
-    info->file = malloc(sizeof(struct _finddata_t));
+    char *buf = be_malloc(strlen(path) + 3);
+    info->file = be_malloc(sizeof(struct _finddata_t));
     if (buf && info->file) {
         struct _finddata_t *cfile = info->file;
         strcat(strcpy(buf, path), "/*");
         info->dir = (void *)_findfirst(buf, cfile);
         info->name = cfile->name;
-        free(buf);
+        be_free(buf);
         return (intptr_t)info->dir == -1;
     }
-    free(buf);
+    be_free(buf);
     return 1;
 }
 
@@ -302,7 +315,7 @@ int be_dirnext(bdirinfo *info)
 
 int be_dirclose(bdirinfo *info)
 {
-    free(info->file);
+    be_free(info->file);
     return _findclose((intptr_t)info->dir) != 0;
 }
 

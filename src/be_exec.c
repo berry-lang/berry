@@ -3,6 +3,7 @@
 #include "be_vm.h"
 #include "be_vector.h"
 #include "be_mem.h"
+#include "be_sys.h"
 #include "be_debug.h"
 #include <setjmp.h>
 #include <stdlib.h>

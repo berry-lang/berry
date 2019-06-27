@@ -1,4 +1,3 @@
-#include "be_api.h"
 #include "be_vm.h"
 #include "be_func.h"
 #include "be_class.h"
@@ -11,9 +10,7 @@
 #include "be_debug.h"
 #include "be_exec.h"
 #include "be_strlib.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
+#include <string.h>
 
 #define retreg(vm)      ((vm)->cf->func)
 

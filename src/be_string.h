@@ -2,7 +2,6 @@
 #define BE_STRING_H
 
 #include "be_object.h"
-#include <string.h>
 
 #define SHORT_STR_MAX_LEN   64
 

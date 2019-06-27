@@ -3,7 +3,6 @@
 #include "be_opcode.h"
 #include "be_string.h"
 #include "be_class.h"
-#include "be_api.h"
 #include "be_vm.h"
 #include "be_vector.h"
 #include "be_strlib.h"
