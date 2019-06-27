@@ -6,6 +6,18 @@
 #define addr_region(a, s)       addr_pos((a), sizeof(s), +)
 #define addr_base(a, s)         addr_pos((a), sizeof(s), -)
 
+#ifdef BE_EXPLICIT_MALLOC
+  #define malloc                (BE_EXPLICIT_MALLOC)
+#endif
+
+#ifdef BE_EXPLICIT_FREE
+  #define free                  (BE_EXPLICIT_FREE)
+#endif
+
+#ifdef BE_EXPLICIT_REALLOC
+  #define realloc               (BE_EXPLICIT_REALLOC)
+#endif
+
 typedef struct {
     size_t use;
 } memlist;
@@ -14,15 +26,11 @@ typedef struct {
     size_t size;
 } mdesc;
 
-extern void* be_os_malloc(size_t size);
-extern void be_os_free(void *ptr);
-extern void* be_os_realloc(void *ptr, size_t size);
-
 static memlist mlist = { .use = 0 };
 
 void* be_malloc(size_t size)
 {
-    mdesc *obj = be_os_malloc(size + sizeof(mdesc));
+    mdesc *obj = malloc(size + sizeof(mdesc));
 
     if (obj != NULL) {
         obj->size = size;
@@ -37,7 +45,7 @@ void be_free(void *ptr)
     if (ptr != NULL) {
         mdesc *obj = addr_base(ptr, mdesc);
         mlist.use -= obj->size;
-        be_os_free(obj);
+        free(obj);
     }
 }
 
@@ -46,12 +54,12 @@ void* be_realloc(void *ptr, size_t size)
     if (ptr != NULL) {
         mdesc *obj, *old = addr_base(ptr, mdesc);
         mlist.use = mlist.use + size - old->size;
-        obj = (mdesc*)be_os_realloc(old, size + sizeof(mdesc));
+        obj = (mdesc*)realloc(old, size + sizeof(mdesc));
         if (obj != NULL) {
             obj->size = size;
             return addr_region(obj, mdesc);
         }
-        be_os_free(old);
+        free(old);
         return NULL;
     }
     return be_malloc(size);

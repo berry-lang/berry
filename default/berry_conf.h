@@ -1,7 +1,6 @@
 #ifndef BERRY_CONF_H
 #define BERRY_CONF_H
 
-#include <stdio.h>
 #include <assert.h>
 
 /* Macro: BE_DEBUG
@@ -88,6 +87,18 @@
 #define BE_USE_MATH_MODULE              1
 #define BE_USE_TIME_MODULE              1
 #define BE_USE_OS_MODULE                1
+
+/* Macro: BE_EXPLICIT_XXX
+ * If these macros are defined, the corresponding function will
+ * use the version defined by these macros. These macro definitions
+ * are not required.
+ * The default is to use the functions in the standard library.
+ */
+#define BE_EXPLICIT_ABORT               abort
+#define BE_EXPLICIT_EXIT                exit
+#define BE_EXPLICIT_MALLOC              malloc
+#define BE_EXPLICIT_FREE                free
+#define BE_EXPLICIT_REALLOC             realloc
 
 /* Macro: be_assert
  * Berry debug assertion. Only enabled when BE_DEBUG is active.

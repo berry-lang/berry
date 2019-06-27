@@ -1,53 +1,54 @@
 /* this file contains configuration for the file system. */
 
 #include "berry.h"
-#include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* use the standard library implementation file API. */
 #if !defined(USE_FATFS)
 
-FILE* be_fopen(const char *filename, const char *modes)
+void* be_fopen(const char *filename, const char *modes)
 {
     return fopen(filename, modes);
 }
 
-int be_fclose(FILE *hfile)
+int be_fclose(void *hfile)
 {
     return fclose(hfile);
 }
 
-size_t be_fwrite(FILE *hfile, const void *buffer, size_t length)
+size_t be_fwrite(void *hfile, const void *buffer, size_t length)
 {
     return fwrite(buffer, 1, length, hfile);
 }
 
-size_t be_fread(FILE *hfile, void *buffer, size_t length)
+size_t be_fread(void *hfile, void *buffer, size_t length)
 {
     return fread(buffer, 1, length, hfile);
 }
 
-char* be_fgets(FILE *hfile, void *buffer, int size)
+char* be_fgets(void *hfile, void *buffer, int size)
 {
     return fgets(buffer, size, hfile);
 }
 
-int be_fseek(FILE *hfile, long offset)
+int be_fseek(void *hfile, long offset)
 {
     return fseek(hfile, offset, SEEK_SET);
 }
 
-long int be_ftell(FILE *hfile)
+long int be_ftell(void *hfile)
 {
     return ftell(hfile);
 }
 
-long int be_fflush(FILE *hfile)
+long int be_fflush(void *hfile)
 {
     return fflush(hfile);
 }
 
-size_t be_fsize(FILE *hfile)
+size_t be_fsize(void *hfile)
 {
     long int size, offset = be_ftell(hfile);
     fseek(hfile, 0L, SEEK_END);
@@ -68,7 +69,7 @@ size_t be_fsize(FILE *hfile)
   #error FatFs check (FF_USE_STRFUNC >= 1) failed.
 #endif
 
-FILE* be_fopen(const char *filename, const char *modes)
+void* be_fopen(const char *filename, const char *modes)
 {
     BYTE mode = 0;
     FIL *fp = malloc(sizeof(FIL));
@@ -90,65 +91,65 @@ FILE* be_fopen(const char *filename, const char *modes)
         mode |= FA_READ | FA_WRITE;
     }
     if (fp && f_open(fp, filename, mode) == FR_OK) {
-        return (FILE *)fp;
+        return fp;
     }
     free(fp);
     return NULL;
 }
 
-int be_fclose(FILE *hfile)
+int be_fclose(void *hfile)
 {
-    int res = f_close((FIL *)hfile) != FR_OK;
+    int res = f_close(hfile) != FR_OK;
     free(hfile);
     return res;
 }
 
-size_t be_fwrite(FILE *hfile, const void *buffer, size_t length)
+size_t be_fwrite(void *hfile, const void *buffer, size_t length)
 {
     UINT bw;
     if (hfile == stdout || hfile == stderr || hfile == stdin) {
         return fwrite(buffer, 1, length, hfile);
     }
-    f_write((FIL *)hfile, buffer, (UINT)length, &bw);
+    f_write(hfile, buffer, (UINT)length, &bw);
     return bw;
 }
 
-size_t be_fread(FILE *hfile, void *buffer, size_t length)
+size_t be_fread(void *hfile, void *buffer, size_t length)
 {
     UINT br;
     if (hfile == stdout || hfile == stderr || hfile == stdin) {
         return fread(buffer, 1, length, hfile);
     }
-    f_read((FIL *)hfile, buffer, (UINT)length, &br);
+    f_read(hfile, buffer, (UINT)length, &br);
     return br;
 }
 
-char* be_fgets(FILE *hfile, void *buffer, int size)
+char* be_fgets(void *hfile, void *buffer, int size)
 {
     if (hfile == stdout || hfile == stderr || hfile == stdin) {
         return fgets(buffer, size, hfile);
     }
-    return f_gets(buffer, size, (FIL *)hfile);
+    return f_gets(buffer, size, hfile);
 }
 
-int be_fseek(FILE *hfile, long offset)
+int be_fseek(void *hfile, long offset)
 {
-    return f_lseek((FIL *)hfile, (FSIZE_t)offset);
+    return f_lseek(hfile, (FSIZE_t)offset);
 }
 
-long int be_ftell(FILE *hfile)
+long int be_ftell(void *hfile)
 {
-    return f_tell((FIL *)hfile);
+    return f_tell(hfile);
 }
 
-long int be_fflush(FILE *hfile)
+long int be_fflush(void *hfile)
 {
-    return f_sync((FIL *)hfile);
+    return f_sync(hfile);
 }
 
-size_t be_fsize(FILE *hfile)
+size_t be_fsize(void *hfile)
 {
-    return f_size((FIL *)hfile);
+    return f_size(hfile);
 }
 
 #endif /* !defined(USE_FATFS) */

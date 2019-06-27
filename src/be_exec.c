@@ -17,6 +17,14 @@
 #define STACK_OVER_MSG(n) \
     "stack overflow (maximum stack size is " STR(n) ")"
 
+#ifdef BE_EXPLICIT_ABORT
+  #define abort             (BE_EXPLICIT_ABORT)
+#endif
+
+#ifdef BE_EXPLICIT_EXIT
+  #define exit              (BE_EXPLICIT_EXIT)
+#endif
+
 typedef jmp_buf bjmpbuf;
 
 struct blongjmp {
@@ -42,7 +50,7 @@ struct strbuf {
 };
 
 struct filebuf {
-    FILE *fp;
+    void *fp;
     char buf[FILE_BUFFER_SIZE];
 };
 
