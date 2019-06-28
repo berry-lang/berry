@@ -4,6 +4,8 @@
 #include "be_vm.h"
 #include "be_vector.h"
 
+#define datasize(data)          ((data) * sizeof(bvalue))
+
 blist* be_list_new(bvm *vm)
 {
     bgcobject *gco = be_gcnew(vm, BE_LIST, blist);
@@ -11,15 +13,15 @@ blist* be_list_new(bvm *vm)
     if (list) {
         list->count = 0;
         list->capacity = 2;
-        list->data = be_malloc(sizeof(bvalue) * list->capacity);
+        list->data = be_malloc(datasize(list->capacity));
     }
     return list;
 }
 
-void be_list_delete(blist *list)
+void be_list_delete(bvm *vm, blist *list)
 {
-    be_free(list->data);
-    be_free(list);
+    be_gcalloc(vm, list->data, datasize(list->capacity), 0);
+    be_gcalloc(vm, list, sizeof(blist), 0);
 }
 
 bvalue* be_list_index(blist *list, int index)
@@ -33,12 +35,14 @@ bvalue* be_list_index(blist *list, int index)
     return be_list_at(list, index);
 }
 
-bvalue* be_list_append(blist *list, bvalue *value)
+bvalue* be_list_append(bvm *vm, blist *list, bvalue *value)
 {
     bvalue *slot;
     if (list->count >= list->capacity) {
-        list->capacity = be_nextsize(list->capacity);
-        list->data = be_realloc(list->data, list->capacity * sizeof(bvalue));
+        size_t newcap = be_nextsize(list->capacity);
+        list->data = be_gcalloc(vm, list->data,
+            datasize(list->capacity), datasize(newcap));
+        list->capacity = newcap;
     }
     slot = list->data + list->count++;
     if (value != NULL) {
@@ -47,7 +51,7 @@ bvalue* be_list_append(blist *list, bvalue *value)
     return slot;
 }
 
-bvalue* be_list_insert(blist *list, int index, bvalue *value)
+bvalue* be_list_insert(bvm *vm, blist *list, int index, bvalue *value)
 {
     int i;
     bvalue *data;
@@ -58,8 +62,10 @@ bvalue* be_list_insert(blist *list, int index, bvalue *value)
         return NULL;
     }
     if (list->count >= list->capacity) {
-        list->capacity = be_nextsize(list->capacity);
-        list->data = be_realloc(list->data, list->capacity * sizeof(bvalue));
+        size_t newcap = be_nextsize(list->capacity);
+        list->data = be_gcalloc(vm, list->data,
+            datasize(list->capacity), datasize(newcap));
+        list->capacity = newcap;
     }
     data = list->data;
     for (i = list->count++; i > index; --i) {
@@ -72,10 +78,11 @@ bvalue* be_list_insert(blist *list, int index, bvalue *value)
     return data;
 }
 
-int be_list_remove(blist *list, int index)
+int be_list_remove(bvm *vm, blist *list, int index)
 {
     int i;
     bvalue *data;
+    (void)vm;
     if (index < 0) {
         index = list->count + index;
     }
@@ -90,7 +97,7 @@ int be_list_remove(blist *list, int index)
     return btrue;
 }
 
-void be_list_resize(blist *list, int count)
+void be_list_resize(bvm *vm, blist *list, int count)
 {
     if (count != list->count) {
         int newcap = be_nextsize(count);
@@ -99,7 +106,9 @@ void be_list_resize(blist *list, int count)
         if (newcap > list->capacity) {
             bvalue *v, *end;
             list->capacity = newcap;
-            list->data = be_realloc(list->data, newcap * sizeof(bvalue));
+            list->data = be_gcalloc(vm, list->data,
+                datasize(list->capacity), datasize(newcap));
+            list->capacity = newcap;
             v = list->data + oldcount;
             end = list->data + list->count;
             while (v < end) {

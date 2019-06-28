@@ -144,7 +144,7 @@ static void end_block(bparser *parser)
         be_code_patchjump(finfo, binfo->breaklist);
         be_code_patchlist(finfo, binfo->continuelist, binfo->beginpc);
     }
-    be_list_resize(finfo->local, binfo->nactlocals);
+    be_list_resize(parser->vm, finfo->local, binfo->nactlocals);
     finfo->nlocal = (bbyte)max(finfo->nlocal, nlocal);
     finfo->freereg = binfo->nactlocals;
     finfo->binfo = binfo->prev;
@@ -289,13 +289,14 @@ static int find_localvar(bfuncinfo *finfo, bstring *s, int begin)
     return -1; /* not found */
 }
 
-static int new_localvar(bfuncinfo *finfo, bstring *s)
+static int new_localvar(bparser *parser, bstring *s)
 {
+    bfuncinfo *finfo = parser->finfo;
     int reg = find_localvar(finfo, s, finfo->binfo->nactlocals);
     if (reg == -1) {
         bvalue *var;
         reg = be_list_count(finfo->local); /* new local index */
-        var = be_list_append(finfo->local, NULL);
+        var = be_list_append(parser->vm, finfo->local, NULL);
         var_setstr(var, s);
         be_code_allocregs(finfo, 1); /* use a register */
     }
@@ -338,12 +339,12 @@ static int new_upval(bfuncinfo *finfo, bstring *name, bexpdesc *var)
 static void new_var(bparser *parser, bstring *name, bexpdesc *var)
 {
     bfuncinfo *finfo = parser->finfo;
-    if (finfo->prev == NULL && finfo->binfo->prev == NULL) {
+    if (finfo->prev || finfo->binfo->prev) {
+        init_exp(var, ETLOCAL, 0);
+        var->v.idx = new_localvar(parser, name);
+    } else {
         init_exp(var, ETGLOBAL, 0);
         var->v.idx = be_global_new(parser->vm, name);
-    } else {
-        init_exp(var, ETLOCAL, 0);
-        var->v.idx = new_localvar(finfo, name);
     }
 }
 
@@ -351,15 +352,14 @@ static void new_class(bparser *parser, bstring *name, bclass *c, bexpdesc *e)
 {
     bvalue *var;
     bfuncinfo *finfo = parser->finfo;
-
-    if (finfo->prev == NULL && finfo->binfo->prev == NULL) {
+    if (finfo->prev || finfo->binfo->prev) {
+        init_exp(e, ETLOCAL, 0);
+        e->v.idx = new_localvar(parser, name);
+        var = be_code_localobject(finfo, e->v.idx);
+    } else {
         init_exp(e, ETGLOBAL, 0);
         e->v.idx = be_global_new(parser->vm, name);
         var = be_global_var(parser->vm, e->v.idx);
-    } else {
-        init_exp(e, ETLOCAL, 0);
-        e->v.idx = new_localvar(finfo, name);
-        var = be_code_localobject(finfo, e->v.idx);
     }
     var_settype(var, BE_CLASS);
     var->v.p = c;
@@ -449,7 +449,7 @@ static bproto* funcbody(bparser *parser, bstring *name, int type)
     finfo.proto->name = name;
     finfo.flag = (bbyte)type;
     if (type & FUNC_METHOD) {
-        new_localvar(parser->finfo, be_newstr(parser->vm, "self"));
+        new_localvar(parser, be_newstr(parser->vm, "self"));
     }
     func_varlist(parser);
     stmtlist(parser);
@@ -890,7 +890,7 @@ static void for_itvar(bparser *parser, bexpdesc *e)
 {
     if (next_type(parser) == TokenId) {
         bstring *s = next_token(parser).u.s;
-        int idx = new_localvar(parser->finfo, s);
+        int idx = new_localvar(parser, s);
         init_exp(e, ETLOCAL, idx);
         scan_next_token(parser);
     } else {
@@ -917,7 +917,7 @@ static void for_init(bparser *parser, bexpdesc *v)
     be_code_call(finfo, e.v.idx, 1); /* call __iterator__(expr) */
     be_code_freeregs(finfo, 1); /* free register of __iterator__ */
     s = be_newstr(vm, ".it");
-    init_exp(v, ETLOCAL, new_localvar(finfo, s));
+    init_exp(v, ETLOCAL, new_localvar(parser, s));
 }
 
 /*

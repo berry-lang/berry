@@ -568,7 +568,7 @@ void be_data_append(bvm *vm, int index)
     bvalue *v = index2value(vm, -1);
     if (var_islist(o)) {
         blist *list = var_toobj(o);
-        be_list_append(list, v);
+        be_list_append(vm, list, v);
     }
 }
 
@@ -587,7 +587,7 @@ int be_data_insert(bvm *vm, int index)
     case BE_LIST:
         if (var_isint(k)) {
             blist *list = cast(blist*, var_toobj(o));
-            return be_list_insert(list, var_toidx(k), v) != NULL;
+            return be_list_insert(vm, list, var_toidx(k), v) != NULL;
         }
         break;
     default:
@@ -610,7 +610,7 @@ int be_data_remove(bvm *vm, int index)
     case BE_LIST:
         if (var_isint(k)) {
             blist *list = cast(blist*, var_toobj(o));
-            return be_list_remove(list, var_toidx(k));
+            return be_list_remove(vm, list, var_toidx(k));
         }
         break;
     default:
@@ -626,7 +626,7 @@ void be_data_resize(bvm *vm, int index)
     if (var_islist(o)) {
         blist *list = var_toobj(o);
         if (var_isint(v)) {
-            be_list_resize(list, var_toidx(v));
+            be_list_resize(vm, list, var_toidx(v));
         }
     }
 }

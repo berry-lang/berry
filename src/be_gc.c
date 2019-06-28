@@ -16,7 +16,7 @@ struct bgc {
     bgcobject *list;
     bgcobject *gray;
     bgcobject *fixed;
-    size_t mcount;
+    size_t mcount, usage;
     bbyte steprate;
     bbyte pause;
 };
@@ -31,6 +31,7 @@ void be_gc_init(bvm *vm)
     gc->list = NULL;
     gc->gray = NULL;
     gc->fixed = NULL;
+    gc->usage = 0;
     gc->mcount = be_mcount();
     gc->steprate = 150;
     gc->pause = 0;
@@ -62,6 +63,22 @@ void be_gc_setpause(bvm *vm, int pause)
     vm->gc->pause = (bbyte)pause;
 }
 
+void* be_gcalloc(bvm *vm, void *ptr, size_t old_size, size_t new_size)
+{
+    bgc *gc = vm->gc;
+    gc->usage = gc->usage + new_size - old_size;
+    if (ptr && new_size) {
+        return be_realloc(ptr, new_size);
+    }
+    if (new_size) {
+        be_assert(ptr == NULL && old_size == 0);
+        return be_malloc(new_size);
+    }
+    be_assert(new_size == 0);
+    be_free(ptr);
+    return NULL;
+}
+
 static bgcobject* gc_malloc(bvm *vm, size_t size)
 {
     bgcobject *obj;
@@ -70,6 +87,9 @@ static bgcobject* gc_malloc(bvm *vm, size_t size)
     if (obj == NULL) { /* no free space */
         be_gc_collect(vm);
         obj = be_malloc(size);
+    }
+    if (obj) {
+        vm->gc->usage += size;
     }
     return obj;
 }
@@ -312,7 +332,7 @@ static void free_object(bvm *vm, bgcobject *obj)
     case BE_CLASS: be_free(obj); break;
     case BE_INSTANCE: be_free(obj); break;
     case BE_MAP: be_map_delete(cast_map(obj)); break;
-    case BE_LIST: be_list_delete(cast_list(obj)); break;
+    case BE_LIST: be_list_delete(vm, cast_list(obj)); break;
     case BE_CLOSURE: free_closure(obj); break;
     case BE_NTVCLOS: free_ntvclos(obj); break;
     case BE_PROTO: free_proto(obj); break;
