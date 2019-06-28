@@ -667,6 +667,7 @@ static void primary_expr(bparser *parser, bexpdesc *e)
         scan_next_token(parser); /* skip '(' */
         /* sub_expr() is more efficient because there is no need to initialize e. */
         sub_expr(parser, e, ASSIGN_OP_PRIO);
+        check_var(parser, e);
         match_token(parser, OptRBK); /* skip ')' */
         break;
     case OptLSB: /* list */

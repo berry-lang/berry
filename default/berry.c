@@ -1,7 +1,6 @@
 #include "berry.h"
 #include "be_repl.h"
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 /* using GNU/readline library */
@@ -70,8 +69,8 @@ static const char* get_line(const char *prompt)
     return line;
 #else
     static char buffer[1000];
-    be_writestring(prompt);
-    be_fflush(stdout);
+    fputs(prompt, stdout);
+    fflush(stdout);
     if (be_readstring(buffer, sizeof(buffer))) {
         buffer[strlen(buffer) - 1] = '\0';
         return buffer;

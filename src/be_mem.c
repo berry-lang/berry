@@ -7,15 +7,15 @@
 #define addr_base(a, s)         addr_pos((a), sizeof(s), -)
 
 #ifdef BE_EXPLICIT_MALLOC
-  #define malloc                (BE_EXPLICIT_MALLOC)
+  #define malloc                BE_EXPLICIT_MALLOC
 #endif
 
 #ifdef BE_EXPLICIT_FREE
-  #define free                  (BE_EXPLICIT_FREE)
+  #define free                  BE_EXPLICIT_FREE
 #endif
 
 #ifdef BE_EXPLICIT_REALLOC
-  #define realloc               (BE_EXPLICIT_REALLOC)
+  #define realloc               BE_EXPLICIT_REALLOC
 #endif
 
 typedef struct {
