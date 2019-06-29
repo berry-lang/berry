@@ -40,6 +40,9 @@ if (!gc_isconst(o)) { \
 #define be_isgcobj(o)       be_isgctype(var_type(o))
 #define be_gcnew(v, t, s)   be_newgcobj((v), (t), sizeof(s))
 
+#define be_gc_malloc(vm, size)       be_gc_realloc((vm), NULL, 0, (size))
+#define be_gc_free(vm, ptr, size)    be_gc_realloc((vm), (ptr), (size), 0)
+
 typedef enum {
     GC_WHITE = 0x00, /* unreachable object */
     GC_GRAY = 0x01,  /* unscanned object */
@@ -52,7 +55,7 @@ void be_gc_init(bvm *vm);
 void be_gc_deleteall(bvm *vm);
 void be_gc_setsteprate(bvm *vm, int rate);
 void be_gc_setpause(bvm *vm, int pause);
-void *be_gcalloc(bvm *vm, void *ptr, size_t old_size, size_t new_size);
+void *be_gc_realloc(bvm *vm, void *ptr, size_t old_size, size_t new_size);
 bgcobject *be_newgcobj(bvm *vm, int type, size_t size);
 bgcobject* be_gc_newstr(bvm *vm, size_t size, int islong);
 void be_gc_fix(bvm *vm, bgcobject *obj);

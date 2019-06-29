@@ -63,7 +63,7 @@ void be_gc_setpause(bvm *vm, int pause)
     vm->gc->pause = (bbyte)pause;
 }
 
-void* be_gcalloc(bvm *vm, void *ptr, size_t old_size, size_t new_size)
+void* be_gc_realloc(bvm *vm, void *ptr, size_t old_size, size_t new_size)
 {
     bgc *gc = vm->gc;
     gc->usage = gc->usage + new_size - old_size;
@@ -331,7 +331,7 @@ static void free_object(bvm *vm, bgcobject *obj)
     case BE_STRING: be_free(obj); break; /* long string */
     case BE_CLASS: be_free(obj); break;
     case BE_INSTANCE: be_free(obj); break;
-    case BE_MAP: be_map_delete(cast_map(obj)); break;
+    case BE_MAP: be_map_delete(vm, cast_map(obj)); break;
     case BE_LIST: be_list_delete(vm, cast_list(obj)); break;
     case BE_CLOSURE: free_closure(obj); break;
     case BE_NTVCLOS: free_ntvclos(obj); break;

@@ -30,9 +30,9 @@ static void class_init(bvm *vm, bclass *c, const bnfuncinfo *lib)
     while (lib->name) {
         bstring *s = be_newstr(vm, lib->name);
         if (lib->function) { /* method */
-            be_prim_method_bind(c, s, lib->function);
+            be_prim_method_bind(vm, c, s, lib->function);
         } else {
-            be_member_bind(c, s); /* member */
+            be_member_bind(vm, c, s); /* member */
         }
         ++lib;
     }
@@ -581,7 +581,7 @@ int be_data_insert(bvm *vm, int index)
     case BE_MAP:
         if (!var_isnil(k)) {
             bmap *map = cast(bmap*, var_toobj(o));
-            return be_map_insert(map, k, v) != NULL;
+            return be_map_insert(vm, map, k, v) != NULL;
         }
         break;
     case BE_LIST:

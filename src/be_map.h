@@ -29,12 +29,12 @@ typedef bmapnode *bmapiter;
 #define be_map_size(map)    (map->size)
 
 bmap* be_map_new(bvm *vm);
-void be_map_delete(bmap *map);
+void be_map_delete(bvm *vm, bmap *map);
 bvalue* be_map_find(bmap *map, bvalue *key);
-bvalue* be_map_insert(bmap *map, bvalue *key, bvalue *value);
+bvalue* be_map_insert(bvm *vm, bmap *map, bvalue *key, bvalue *value);
 int be_map_remove(bmap *map, bvalue *key);
 bvalue* be_map_findstr(bmap *map, bstring *key);
-bvalue* be_map_insertstr(bmap *map, bstring *key, bvalue *value);
+bvalue* be_map_insertstr(bvm *vm, bmap *map, bstring *key, bvalue *value);
 void be_map_removestr(bmap *map, bstring *key);
 bmapnode* be_map_next(bmap *map, bmapiter *iter);
 bvalue be_map_key2value(bmapnode *node);

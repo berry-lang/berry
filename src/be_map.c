@@ -17,6 +17,8 @@
 #define setkey(node, _v)    { (node)->key.type = (bbyte)(_v)->type; \
                               (node)->key.v = (_v)->v; }
 
+#define datasize(size)      ((size) * sizeof(bmapnode))
+
 #define LASTNODE            ((1 << 24) - 1)
 
 static int map_nextsize(int size)
@@ -143,7 +145,7 @@ static bmapnode* find(bmap *map, bvalue *key, uint32_t hash)
     return slot;
 }
 
-static void resize(bmap *map, int size)
+static void resize(bvm *vm, bmap *map, int size)
 {
     int i, oldsize;
     bmapnode *slots, *oldslots;
@@ -152,7 +154,7 @@ static void resize(bmap *map, int size)
     }
     oldsize = map->size;
     oldslots = map->slots;
-    slots = be_malloc(sizeof(bmapnode) * size);
+    slots = be_gc_malloc(vm, datasize(size));
     for (i = 0; i < size; ++i) {
         setnil(slots + i);
     }
@@ -171,7 +173,7 @@ static void resize(bmap *map, int size)
             newslot->value = node->value;
         }
     }
-    be_free(oldslots);
+    be_gc_free(vm, oldslots, datasize(oldsize));
 }
 
 bmap* be_map_new(bvm *vm)
@@ -182,15 +184,15 @@ bmap* be_map_new(bvm *vm)
         map->size = 0;
         map->count = 0;
         map->slots = NULL;
-        resize(map, 2);
+        resize(vm, map, 2);
     }
     return map;
 }
 
-void be_map_delete(bmap *map)
+void be_map_delete(bvm *vm, bmap *map)
 {
-    be_free(map->slots);
-    be_free(map);
+    be_gc_free(vm, map->slots, datasize(map->size));
+    be_gc_free(vm, map, sizeof(bmap));
 }
 
 bvalue* be_map_find(bmap *map, bvalue *key)
@@ -199,13 +201,13 @@ bvalue* be_map_find(bmap *map, bvalue *key)
     return entry ? value(entry) : NULL;
 }
 
-bvalue* be_map_insert(bmap *map, bvalue *key, bvalue *value)
+bvalue* be_map_insert(bvm *vm, bmap *map, bvalue *key, bvalue *value)
 {
     uint32_t hash = hashcode(key);
     bmapnode *entry = find(map, key, hash);
     if (!entry) { /* new entry */
         if (map->count >= map->size) {
-            resize(map, map_nextsize(map->size));
+            resize(vm, map, map_nextsize(map->size));
         }
         entry = insert(map, key, hash);
         ++map->count;
@@ -260,11 +262,11 @@ bvalue* be_map_findstr(bmap *map, bstring *key)
     return be_map_find(map, &v);
 }
 
-bvalue* be_map_insertstr(bmap *map, bstring *key, bvalue *value)
+bvalue* be_map_insertstr(bvm *vm, bmap *map, bstring *key, bvalue *value)
 {
     bvalue v;
     var_setstr(&v, key);
-    return be_map_insert(map, &v, value);
+    return be_map_insert(vm, map, &v, value);
 }
 
 void be_map_removestr(bmap *map, bstring *key)
@@ -295,5 +297,5 @@ bvalue be_map_key2value(bmapnode *node)
 void be_map_release(bvm *vm, bmap *map)
 {
     (void)vm;
-    resize(map, map->count ? map->count : 1);
+    resize(vm, map, map->count ? map->count : 1);
 }

@@ -37,7 +37,7 @@ static void insert_attrs(bvm *vm, bmap *table, bntvmodule *nm)
     for (i = 0; i < nm->size; ++i) {
         bntvmodule_obj *node = nm->table + i;
         bstring *name = be_newstr(vm, node->name);
-        bvalue *v = be_map_insertstr(table, name, NULL);
+        bvalue *v = be_map_insertstr(vm, table, name, NULL);
         be_assert(node->type <= BE_CMODULE);
         switch (node->type) {
         case BE_CNIL:

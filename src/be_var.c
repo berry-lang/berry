@@ -51,7 +51,7 @@ int be_global_new(bvm *vm, bstring *name)
     if (idx == -1) {
         bvalue *desc;
         idx = be_map_count(global(vm).vtab);
-        desc = be_map_insertstr(global(vm).vtab, name, NULL);
+        desc = be_map_insertstr(vm, global(vm).vtab, name, NULL);
         var_setint(desc, idx);
         be_vector_resize(&global(vm).vlist, idx + 1);
         /* set the new variable to nil */

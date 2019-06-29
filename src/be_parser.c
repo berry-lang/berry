@@ -321,7 +321,7 @@ static void mark_upval(bfuncinfo *finfo, int level)
     binfo->hasupval = 1;
 }
 
-static int new_upval(bfuncinfo *finfo, bstring *name, bexpdesc *var)
+static int new_upval(bvm *vm, bfuncinfo *finfo, bstring *name, bexpdesc *var)
 {
     int index;
     bvalue *desc;
@@ -331,7 +331,7 @@ static int new_upval(bfuncinfo *finfo, bstring *name, bexpdesc *var)
         mark_upval(finfo, target);
     }
     index = be_map_count(finfo->upval);
-    desc = be_map_insertstr(finfo->upval, name, NULL);
+    desc = be_map_insertstr(vm, finfo->upval, name, NULL);
     var_setint(desc, upval_desc(index, target, instack));
     return index;
 }
@@ -381,7 +381,7 @@ static int singlevaraux(bvm *vm, bfuncinfo *finfo, bstring *s, bexpdesc *var)
                 /* find the previous scope  */
                 int res = singlevaraux(vm, finfo->prev, s, var);
                 if (res == ETUPVAL || res == ETLOCAL) {
-                    idx = new_upval(finfo, s, var); /* new upvalue */
+                    idx = new_upval(vm, finfo, s, var); /* new upvalue */
                 } else if (be_global_find(vm, s) >= 0) {
                     return ETGLOBAL; /* global variable */
                 } else {
@@ -1060,12 +1060,12 @@ static void classvar_stmt(bparser *parser, bclass *c)
     /* 'var' ID {',' ID} */
     scan_next_token(parser); /* skip 'var' */
     if (next_type(parser) == TokenId) {
-        be_member_bind(c, next_token(parser).u.s);
+        be_member_bind(parser->vm, c, next_token(parser).u.s);
         scan_next_token(parser);
         while (next_type(parser) == OptComma) {
             scan_next_token(parser);
             if (next_type(parser) == TokenId) {
-                be_member_bind(c, next_token(parser).u.s);
+                be_member_bind(parser->vm, c, next_token(parser).u.s);
                 scan_next_token(parser);
             } else {
                 parser_error(parser, "class var error");

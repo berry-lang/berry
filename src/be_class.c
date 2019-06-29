@@ -25,26 +25,26 @@ bclass* be_newclass(bvm *vm, bstring *name, bclass *super)
     return obj;
 }
 
-void be_member_bind(bclass *c, bstring *name)
+void be_member_bind(bvm *vm, bclass *c, bstring *name)
 {
     bmap *map = c->members;
-    bvalue *v = be_map_insertstr(map, name, NULL);
+    bvalue *v = be_map_insertstr(vm, map, name, NULL);
     v->v.i = c->nvar++;
     v->type = MT_VARIABLE;
 }
 
 void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p)
 {
-    bvalue *m = be_map_insertstr(c->members, name, NULL);
+    bvalue *m = be_map_insertstr(vm, c->members, name, NULL);
     bclosure *cl = be_newclosure(vm, 0);
     cl->proto = p;
     m->v.p = cl;
     m->type = MT_METHOD;
 }
 
-void be_prim_method_bind(bclass *c, bstring *name, bntvfunc f)
+void be_prim_method_bind(bvm *vm, bclass *c, bstring *name, bntvfunc f)
 {
-    bvalue *m = be_map_insertstr(c->members, name, NULL);
+    bvalue *m = be_map_insertstr(vm, c->members, name, NULL);
     m->v.nf = f;
     m->type = MT_PRIMMETHOD;
 }
