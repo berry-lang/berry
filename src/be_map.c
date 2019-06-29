@@ -3,6 +3,8 @@
 #include "be_vector.h"
 #include "be_mem.h"
 #include "be_gc.h"
+#include "be_vm.h"
+#include "be_exec.h"
 
 #define key(node)           (&(node)->key)
 #define value(node)         (&(node)->value)
@@ -184,7 +186,10 @@ bmap* be_map_new(bvm *vm)
         map->size = 0;
         map->count = 0;
         map->slots = NULL;
+        var_setmap(vm->top, map);
+        be_stackpush(vm);
         resize(vm, map, 2);
+        be_stackpop(vm, 1);
     }
     return map;
 }

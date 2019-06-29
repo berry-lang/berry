@@ -11,8 +11,8 @@
 void be_globalvar_init(bvm *vm)
 {
     global(vm).vtab = be_map_new(vm);
-    be_vector_init(&global(vm).vlist, sizeof(bvalue));
     be_gc_fix(vm, gc_object(global(vm).vtab));
+    be_vector_init(&global(vm).vlist, sizeof(bvalue));
 #if !BE_USE_PRECOMPILED_OBJECT
     builtin(vm).vtab = be_map_new(vm);
     be_vector_init(&builtin(vm).vlist, sizeof(bvalue));

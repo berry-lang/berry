@@ -63,10 +63,8 @@ void be_gc_setpause(bvm *vm, int pause)
     vm->gc->pause = (bbyte)pause;
 }
 
-void* be_gc_realloc(bvm *vm, void *ptr, size_t old_size, size_t new_size)
+static void* _realloc(void *ptr, size_t old_size, size_t new_size)
 {
-    bgc *gc = vm->gc;
-    gc->usage = gc->usage + new_size - old_size;
     if (ptr && new_size) {
         return be_realloc(ptr, new_size);
     }
@@ -79,18 +77,20 @@ void* be_gc_realloc(bvm *vm, void *ptr, size_t old_size, size_t new_size)
     return NULL;
 }
 
-static bgcobject* gc_malloc(bvm *vm, size_t size)
+void* be_gc_realloc(bvm *vm, void *ptr, size_t old_size, size_t new_size)
 {
-    bgcobject *obj;
-    be_gc_auto(vm); /* first: auto gc */
-    obj = be_malloc(size);
-    if (obj == NULL) { /* no free space */
+    bgc *gc = vm->gc;
+    void *obj = _realloc(ptr, old_size, new_size);
+    if (!obj && new_size) {
         be_gc_collect(vm);
-        obj = be_malloc(size);
+        obj = _realloc(ptr, old_size, new_size);
+        if (!obj) {
+            be_throw(vm, BE_MALLOC_FAIL);
+        }
+    } else if (new_size) { /* not free */
+        be_gc_auto(vm);
     }
-    if (obj) {
-        vm->gc->usage += size;
-    }
+    gc->usage = gc->usage + new_size - old_size;
     return obj;
 }
 
@@ -99,7 +99,7 @@ bgcobject* be_newgcobj(bvm *vm, int type, size_t size)
     bgcobject *obj;
     bgc *gc = vm->gc;
 
-    obj = gc_malloc(vm, size);
+    obj = be_gc_malloc(vm, size);
     var_settype(obj, (bbyte)type);
     obj->marked = GC_WHITE; /* default gc object type is white */
     obj->next = gc->list; /* insert to head */
@@ -114,7 +114,7 @@ bgcobject* be_gc_newstr(bvm *vm, size_t size, int islong)
     if (islong) {
         return be_newgcobj(vm, BE_STRING, size);
     }
-    obj = gc_malloc(vm, size);
+    obj = be_gc_malloc(vm, size);
     var_settype(obj, BE_STRING);
     obj->marked = GC_WHITE; /* default string type is white */
     return obj;

@@ -1218,7 +1218,7 @@ static void mainfunc(bparser *parser, bclosure *cl)
     finfo.proto->argc = 0; /* args */
     finfo.proto->name = be_newstr(parser->vm, "main");
     cl->proto = finfo.proto;
-    be_stackpop(parser->vm, 1); /* pop proto from stack */
+    be_remove(parser->vm, -3);  /* pop proto from stack */
     stmtlist(parser);
     end_func(parser);
     match_token(parser, TokenEOS); /* skip EOS */

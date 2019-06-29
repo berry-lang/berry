@@ -717,7 +717,6 @@ bvm* be_vm_new(void)
     bvm *vm = be_malloc(sizeof(bvm));
     be_gc_init(vm);
     be_string_init(vm);
-    be_globalvar_init(vm);
     be_stack_init(&vm->callstack, sizeof(bcallframe));
     be_stack_init(&vm->refstack, sizeof(binstance*));
     vm->stack = be_malloc(sizeof(bvalue) * BE_STACK_FREE_MIN);
@@ -729,6 +728,7 @@ bvm* be_vm_new(void)
     vm->top = vm->reg;
     vm->errjmp = NULL;
     vm->modulelist = NULL;
+    be_globalvar_init(vm);
     be_gc_setpause(vm, 1);
     be_loadlibs(vm);
     return vm;

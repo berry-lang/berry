@@ -3,6 +3,7 @@
 #include "be_gc.h"
 #include "be_vm.h"
 #include "be_vector.h"
+#include "be_exec.h"
 
 #define datasize(size)          ((size) * sizeof(bvalue))
 
@@ -13,7 +14,10 @@ blist* be_list_new(bvm *vm)
     if (list) {
         list->count = 0;
         list->capacity = 2;
+        var_setlist(vm->top, list);
+        be_stackpush(vm);
         list->data = be_gc_malloc(vm, datasize(list->capacity));
+        be_stackpop(vm, 1);
     }
     return list;
 }
@@ -101,19 +105,17 @@ void be_list_resize(bvm *vm, blist *list, int count)
 {
     if (count != list->count) {
         int newcap = be_nextsize(count);
-        int oldcount = list->count;
-        list->count = count;
         if (newcap > list->capacity) {
             bvalue *v, *end;
-            list->capacity = newcap;
             list->data = be_gc_realloc(vm, list->data,
                 datasize(list->capacity), datasize(newcap));
             list->capacity = newcap;
-            v = list->data + oldcount;
-            end = list->data + list->count;
+            v = list->data + list->count;
+            end = list->data + count;
             while (v < end) {
                 var_setnil(v++);
             }
         }
+        list->count = count;
     }
 }
