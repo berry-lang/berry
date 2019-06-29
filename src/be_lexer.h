@@ -108,6 +108,7 @@ typedef struct blexer {
     btokentype cacheType;
     struct blexerbuf buf;
     struct blexerreader reader;
+    bmap *strtab;
     bvm *vm;
     int cursor;
 } blexer;
@@ -117,7 +118,8 @@ void be_lexer_init(blexer *lexer, bvm *vm,
 void be_lexer_deinit(blexer *lexer);
 void be_lexerror(blexer *lexer, const char *msg);
 int be_lexer_scan_next(blexer *lexer);
-const char* be_token2str(bvm *vm, btoken *token);
+bstring* be_lexer_newstr(blexer *lexer, const char *str);
+const char *be_token2str(bvm *vm, btoken *token);
 const char* be_tokentype2str(btokentype type);
 
 #endif

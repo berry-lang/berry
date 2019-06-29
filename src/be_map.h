@@ -38,6 +38,7 @@ bvalue* be_map_insertstr(bvm *vm, bmap *map, bstring *key, bvalue *value);
 void be_map_removestr(bmap *map, bstring *key);
 bmapnode* be_map_next(bmap *map, bmapiter *iter);
 bvalue be_map_key2value(bmapnode *node);
+bmapnode* be_map_val2node(bvalue *value);
 void be_map_release(bvm *vm, bmap *map);
 
 #endif

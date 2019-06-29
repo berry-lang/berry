@@ -294,6 +294,11 @@ bvalue be_map_key2value(bmapnode *node)
     return v;
 }
 
+bmapnode* be_map_val2node(bvalue *value)
+{
+    return (bmapnode *)((size_t)value - sizeof(bmapkey));
+}
+
 void be_map_release(bvm *vm, bmap *map)
 {
     (void)vm;

@@ -39,6 +39,8 @@
 #define upval_desc(i, t, s)     (((i) & 0xFF) | (((t) & 0xFF) << 8) \
                                 | (((s) != 0) << 16))
 
+#define parser_newstr(p, str)   be_lexer_newstr(&(p)->lexer, (str))
+
 #define parser_error(p, msg)    be_lexerror(&(p)->lexer, msg)
 
 #define push_error(parser, ...) \
@@ -154,12 +156,18 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
 {
     bvm *vm = parser->vm;
     bproto *proto = be_newproto(vm);
+    var_setproto(vm->top, proto);
+    be_stackpush(vm);
     be_vector_init(&finfo->code, sizeof(binstruction));
     be_vector_init(&finfo->kvec, sizeof(bvalue));
     be_vector_init(&finfo->pvec, sizeof(bproto*));
-    finfo->prev = parser->finfo;
     finfo->local = be_list_new(vm);
+    var_setlist(vm->top, finfo->local);
+    be_stackpush(vm);
     finfo->upval = be_map_new(vm);
+    var_setmap(vm->top, finfo->upval);
+    be_stackpush(vm);
+    finfo->prev = parser->finfo;
     finfo->proto = proto;
     finfo->global = parser->global;
     finfo->freereg = 0;
@@ -180,12 +188,6 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     finfo->lexer = &parser->lexer;
 #endif
     begin_block(finfo, binfo, 0);
-    var_setproto(vm->top, finfo->proto);
-    be_stackpush(vm);
-    var_setlist(vm->top, finfo->local);
-    be_stackpush(vm);
-    var_setmap(vm->top, finfo->upval);
-    be_stackpush(vm);
 }
 
 static void setupvals(bfuncinfo *finfo)
@@ -205,9 +207,6 @@ static void setupvals(bfuncinfo *finfo)
         }
         proto->upvals = upvals;
         proto->nupvals = (bbyte)nupvals;
-    } else {
-        proto->upvals = NULL;
-        proto->nupvals = 0;
     }
 }
 
@@ -233,11 +232,6 @@ static void end_func(bparser *parser)
 #endif
     parser->finfo = parser->finfo->prev;
     be_stackpop(vm, 2); /* pop upval and local */
-    if (!(finfo->flag & FUNC_ANONYMOUS)) {
-        be_gc_collect(vm);
-    }
-    /* proto still needs to be used. */
-    be_stackpop(vm, 1); /* pop proto */
 }
 
 static btokentype get_binop(bparser *parser)
@@ -448,7 +442,7 @@ static bproto* funcbody(bparser *parser, bstring *name, int type)
     finfo.proto->name = name;
     finfo.flag = (bbyte)type;
     if (type & FUNC_METHOD) {
-        new_localvar(parser, be_newstr(parser->vm, "self"));
+        new_localvar(parser, parser_newstr(parser, "self"));
     }
     func_varlist(parser);
     stmtlist(parser);
@@ -461,12 +455,14 @@ static bproto* funcbody(bparser *parser, bstring *name, int type)
 static void anon_func(bparser *parser, bexpdesc *e)
 {
     bproto *proto;
-    bstring *name = be_newstr(parser->vm, "<anonymous>");
+    bstring *name = parser_newstr(parser, "<anonymous>");
     /* 'def' ID '(' varlist ')' block 'end' */
     scan_next_token(parser); /* skip 'def' */
     proto = funcbody(parser, name, FUNC_ANONYMOUS);
     init_exp(e, ETPROTO, 0);
     e->v.p = proto;
+    be_code_nextreg(parser->finfo, e);
+    be_stackpop(parser->vm, 1);
 }
 
 static void new_primtype(bparser *parser, const char *type, bexpdesc *e)
@@ -476,7 +472,7 @@ static void new_primtype(bparser *parser, const char *type, bexpdesc *e)
     bfuncinfo *finfo = parser->finfo;
 
     scan_next_token(parser);
-    idx = be_builtin_find(vm, be_newstr(vm, type));
+    idx = be_builtin_find(vm, parser_newstr(parser, type));
     init_exp(e, ETGLOBAL, idx);
     idx = be_code_nextreg(finfo, e);
     be_code_call(finfo, idx, 0);
@@ -490,7 +486,7 @@ static void list_nextmember(bparser *parser, bexpdesc *l)
     int base;
 
     init_exp(&key, ETSTRING, 0);
-    key.v.s = be_newstr(parser->vm, "append");
+    key.v.s = parser_newstr(parser, "append");
     be_code_member(finfo, &v, &key);
     base = be_code_getmethod(finfo, &v);
     /* copy source value to next register */
@@ -508,7 +504,7 @@ static void map_nextmember(bparser *parser, bexpdesc *l)
     int base;
 
     init_exp(&key, ETSTRING, 0);
-    key.v.s = be_newstr(parser->vm, "insert");
+    key.v.s = parser_newstr(parser, "insert");
     be_code_member(finfo, &v, &key);
     base = be_code_getmethod(finfo, &v);
     /* copy source value to next register */
@@ -903,19 +899,18 @@ static void for_init(bparser *parser, bexpdesc *v)
 {
     bexpdesc e;
     bstring *s;
-    bvm *vm = parser->vm;
     bfuncinfo *finfo = parser->finfo;
 
     /* .it = __iterator__(expr) */
-    s = be_newstr(vm, "__iterator__");
-    init_exp(&e, ETGLOBAL, be_builtin_find(vm, s));
+    s = parser_newstr(parser, "__iterator__");
+    init_exp(&e, ETGLOBAL, be_builtin_find(parser->vm, s));
     be_code_nextreg(finfo, &e); /* code function '__iterator__' */
     expr(parser, v);
     check_var(parser, v);
     be_code_nextreg(finfo, v);
     be_code_call(finfo, e.v.idx, 1); /* call __iterator__(expr) */
     be_code_freeregs(finfo, 1); /* free register of __iterator__ */
-    s = be_newstr(vm, ".it");
+    s = parser_newstr(parser, ".it");
     init_exp(v, ETLOCAL, new_localvar(parser, s));
 }
 
@@ -930,21 +925,20 @@ static void for_iter(bparser *parser, bexpdesc *v, bexpdesc *it)
     bexpdesc e;
     bstring *s;
     int brk;
-    bvm *vm = parser->vm;
     bfuncinfo *finfo = parser->finfo;
 
     block_setloop(finfo);
     /* __hasnext__(.it) */
-    s = be_newstr(vm, "__hasnext__");
-    init_exp(&e, ETGLOBAL, be_builtin_find(vm, s));
+    s = parser_newstr(parser, "__hasnext__");
+    init_exp(&e, ETGLOBAL, be_builtin_find(parser->vm, s));
     be_code_nextreg(finfo, &e); /* code function '__hasnext__' */
     be_code_nextreg(finfo, it); /* code argv[0]: '.it' */
     be_code_call(finfo, e.v.idx, 1); /* call __hasnext__(.it) */
     be_code_goiftrue(finfo, &e);
     brk = e.f;
     /* var = __next__(.it) */
-    s = be_newstr(vm, "__next__");
-    init_exp(&e, ETGLOBAL, be_builtin_find(vm, s));
+    s = parser_newstr(parser, "__next__");
+    init_exp(&e, ETGLOBAL, be_builtin_find(parser->vm, s));
     be_code_nextreg(finfo, &e); /* code function '__next__' */
     be_code_nextreg(finfo, it); /* code argv[0]: '.it' */
     be_code_call(finfo, e.v.idx, 1); /* call __next__(.it) */
@@ -1021,9 +1015,9 @@ static bstring* func_name(bparser *parser, bexpdesc *e, int ismethod)
         if (type == OptFlip || (type == OptSub
             && next_type(parser) == OptMul)) {
             scan_next_token(parser); /* skip '*' */
-            return be_newstr(parser->vm, "-*");
+            return parser_newstr(parser, "-*");
         }
-        return be_newstr(parser->vm, be_tokentype2str(type));
+        return parser_newstr(parser, be_tokentype2str(type));
     }
     push_error(parser,
         "the token '%s' is not a valid function name.",
@@ -1041,6 +1035,7 @@ static void def_stmt(bparser *parser)
     name = func_name(parser, &e, 0);
     proto = funcbody(parser, name, 0);
     be_code_closure(parser->finfo, &e, proto);
+    be_stackpop(parser->vm, 1);
 }
 
 static void return_stmt(bparser *parser)
@@ -1086,6 +1081,7 @@ static void classdef_stmt(bparser *parser, bclass *c)
     name = func_name(parser, &e, 1);
     proto = funcbody(parser, name, FUNC_METHOD);
     be_method_bind(parser->vm, c, proto->name, proto);
+    be_stackpop(parser->vm, 1);
 }
 
 static void class_inherit(bparser *parser, bexpdesc *e)
@@ -1222,6 +1218,7 @@ static void mainfunc(bparser *parser, bclosure *cl)
     finfo.proto->argc = 0; /* args */
     finfo.proto->name = be_newstr(parser->vm, "main");
     cl->proto = finfo.proto;
+    be_stackpop(parser->vm, 1); /* pop proto from stack */
     stmtlist(parser);
     end_func(parser);
     match_token(parser, TokenEOS); /* skip EOS */
@@ -1238,14 +1235,12 @@ bclosure* be_parser_source(bvm *vm,
     parser.cl = cl;
     var_setclosure(vm->top, cl);
     be_stackpush(vm);
-    be_gc_setpause(vm, 0); /* stop auto gc */
     be_lexer_init(&parser.lexer, vm, fname, reader, data);
     scan_next_token(&parser); /* scan first token */
     mainfunc(&parser, cl);
-    be_stackpop(vm, 1);
-    scan_next_token(&parser); /* clear lexer */
     be_lexer_deinit(&parser.lexer);
     be_global_release_space(vm); /* clear global space */
-    be_gc_setpause(vm, 1); /* restore automatic GC */
+    be_stackpop(vm, 1);
+    scan_next_token(&parser); /* clear lexer */
     return cl;
 }

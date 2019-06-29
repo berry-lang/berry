@@ -3,6 +3,8 @@
 #include "be_mem.h"
 #include "be_gc.h"
 #include "be_exec.h"
+#include "be_map.h"
+#include "be_vm.h"
 
 #define SHORT_STR_LEN       32
 #define EOS                 '\0' /* end of source */
@@ -57,7 +59,29 @@ static void keyword_unregiste(bvm *vm)
     }
 }
 
-int next(blexer *lexer)
+static bstring* cache_string(blexer *lexer, bstring *s)
+{
+    bvalue *res;
+    bvm *vm = lexer->vm;
+    var_setstr(vm->top, s);
+    be_stackpush(vm); /* cache string to stack */
+    res = be_map_findstr(lexer->strtab, s);
+    if (res) {
+        s = var_tostr(&be_map_val2node(res)->key);
+    } else {
+        res = be_map_insertstr(vm, lexer->strtab, s, NULL);
+        var_setnil(res);
+    }
+    be_stackpop(vm, 1); /* pop string frome stack */
+    return s;
+}
+
+static bstring* lexer_newstrn(blexer *lexer, const char *str, size_t len)
+{
+    return cache_string(lexer, be_newstrn(lexer->vm, str, len));
+}
+
+static int next(blexer *lexer)
 {
     struct blexerreader *lr = &lexer->reader;
     if (!(lr->len--)) {
@@ -91,7 +115,7 @@ static int save(blexer *lexer)
 static bstring* buf_tostr(blexer *lexer)
 {
     struct blexerbuf *buf = &lexer->buf;
-    return be_newstrn(lexer->vm, buf->s, buf->len);
+    return lexer_newstrn(lexer, buf->s, buf->len);
 }
 
 static int is_newline(int c)
@@ -480,6 +504,9 @@ void be_lexer_init(blexer *lexer, bvm *vm,
     lexer->reader.len = 0;
     lexerbuf_init(lexer);
     keyword_registe(vm);
+    lexer->strtab = be_map_new(vm);
+    var_setmap(vm->top, lexer->strtab);
+    be_stackpush(vm); /* save string to cache */
     next(lexer); /* read the first character */
 }
 
@@ -487,6 +514,7 @@ void be_lexer_deinit(blexer *lexer)
 {
     be_free(lexer->buf.s);
     keyword_unregiste(lexer->vm);
+    be_stackpop(lexer->vm, 1); /* pop strtab */
 }
 
 int be_lexer_scan_next(blexer *lexer)
@@ -512,6 +540,11 @@ int be_lexer_scan_next(blexer *lexer)
         return 0;
     }
     return 1;
+}
+
+bstring* be_lexer_newstr(blexer *lexer, const char *str)
+{
+    return cache_string(lexer, be_newstr(lexer->vm, str));
 }
 
 const char* be_token2str(bvm *vm, btoken *token)

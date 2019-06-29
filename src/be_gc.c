@@ -33,7 +33,7 @@ void be_gc_init(bvm *vm)
     gc->fixed = NULL;
     gc->usage = 0;
     gc->mcount = be_mcount();
-    gc->steprate = 150;
+    gc->steprate = 200;
     gc->pause = 0;
     vm->gc = gc;
 }
@@ -179,9 +179,13 @@ static void mark_proto(bvm *vm, bgcobject *obj)
         for (count = p->nproto; count--; ++ptab) {
             mark_object(vm, gc_object(*ptab), BE_PROTO);
         }
-        gc_setdark(gc_object(p->name));
+        if (p->name) {
+            gc_setdark(gc_object(p->name));
+        }
 #if BE_RUNTIME_DEBUG_INFO
-        gc_setdark(gc_object(p->source));
+        if (p->source) {
+            gc_setdark(gc_object(p->source));
+        }
 #endif
     }
 }
