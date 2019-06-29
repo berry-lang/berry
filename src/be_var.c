@@ -86,6 +86,18 @@ int be_builtin_find(bvm *vm, bstring *name)
     return -1; /* not found */
 }
 
+bstring* be_builtin_name(bvm *vm, int index)
+{
+    bmap *map = builtin(vm).vtab;
+    bmapnode *end, *node = map->slots;
+    for (end = node + map->size; node < end; ++node) {
+        if (var_isstr(&node->key) && node->value.v.i == index) {
+            return node->key.v.s;
+        }
+    }
+    return NULL;
+}
+
 #if !BE_USE_PRECOMPILED_OBJECT
 int be_builtin_new(bvm *vm, bstring *name)
 {

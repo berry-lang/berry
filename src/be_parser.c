@@ -406,7 +406,6 @@ static void singlevar(bparser *parser, bexpdesc *var)
     case ETGLOBAL:
         init_exp(var, ETGLOBAL, 0);
         var->v.idx = be_global_find(parser->vm, varname);
-        var->extra = varname;
         break;
     default:
         break;
@@ -726,7 +725,7 @@ static int check_newvar(bparser *parser, bexpdesc *e)
 {
     if (e->type == ETGLOBAL) {
         if (e->v.idx < be_builtin_count(parser->vm)) {
-            e->v.s = e->extra;
+            e->v.s = be_builtin_name(parser->vm, e->v.idx);
             return btrue;
         }
         return bfalse;
@@ -806,7 +805,7 @@ static void expr(bparser *parser, bexpdesc *e)
 static void expr_stmt(bparser *parser)
 {
     assign_expr(parser);
-    parser->finfo->freereg = (bbyte)be_vector_count(parser->finfo->local);
+    parser->finfo->freereg = (bbyte)be_list_count(parser->finfo->local);
 }
 
 static int block_follow(bparser *parser)

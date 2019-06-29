@@ -6,7 +6,6 @@
 void be_vector_init(bvector *vector, int size)
 {
     vector->capacity = 2;
-    vector->count = 0;
     vector->size = size;
     vector->data = be_malloc((size_t)vector->capacity * size);
     vector->end = (char*)vector->data - size;
@@ -17,6 +16,19 @@ void be_vector_delete(bvector *vector)
     be_free(vector->data);
 }
 
+int be_vector_count(bvector *vector)
+{
+    size_t size = vector->size;
+    return vector->data ?
+        cast_int(((size_t)vector->end + size - (size_t)vector->data) / size)
+        : 0;
+}
+
+bbool be_vector_isempty(bvector *vector)
+{
+    return vector->data && vector->data > vector->end;
+}
+
 void* be_vector_at(bvector *vector, int index)
 {
     char *pv = (char*)vector->data;
@@ -25,16 +37,16 @@ void* be_vector_at(bvector *vector, int index)
 
 void be_vector_append(bvector *vector, void *data)
 {
-    int capacity = vector->capacity;
     size_t size = vector->size;
-    if (vector->count >= capacity) {
+    size_t capacity = vector->capacity;
+    size_t count = be_vector_count(vector);
+    if (count >= capacity) {
         vector->capacity = be_nextsize(capacity);
         vector->data = be_realloc(vector->data, vector->capacity * size);
-        vector->end = (char*)vector->data + vector->count * size;
+        vector->end = (char*)vector->data + count * size;
     } else {
         vector->end = (char*)vector->end + size;
     }
-    ++vector->count;
     if (data != NULL) {
         memcpy(vector->end, data, size);
     }
@@ -42,18 +54,14 @@ void be_vector_append(bvector *vector, void *data)
 
 void be_vector_remove_end(bvector *vector)
 {
-    if (vector->count > 0) {
-        --vector->count;
-        vector->end = (char*)vector->end - vector->size;
-    }
+    vector->end = (char*)vector->end - vector->size;
 }
 
 void be_vector_resize(bvector *vector, int count)
 {
     size_t size = vector->size;
     int newcap = be_nextsize(count);
-    if (count != vector->count) {
-        vector->count = count;
+    if (count != be_vector_count(vector)) {
         if (newcap > vector->capacity) {
             vector->capacity = newcap;
             vector->data = be_realloc(vector->data, newcap * size);
@@ -64,24 +72,23 @@ void be_vector_resize(bvector *vector, int count)
 
 void be_vector_clear(bvector *vector)
 {
-    vector->count = 0;
     vector->end = (char*)vector->data - vector->size;
 }
 
 /* free not used */
 void* be_vector_release(bvector *vector)
 {
-    if (vector->count == 0) {
+    int count = be_vector_count(vector);
+    if (count == 0) {
         be_free(vector->data);
         vector->capacity = 0;
         vector->data = NULL;
         vector->end = NULL;
-    } else if (vector->count < vector->capacity) {
+    } else if (count < vector->capacity) {
         size_t size = vector->size;
-        /* vector->capacity minimum size is 1 */
-        vector->capacity = vector->count < 1 ? 1 : vector->count;
+        vector->capacity = count;
         vector->data = be_realloc(vector->data, vector->capacity * size);
-        vector->end = (char*)vector->data + (vector->count - 1) * size;
+        vector->end = (char*)vector->data + (count - 1) * size;
     }
     return vector->data;
 }

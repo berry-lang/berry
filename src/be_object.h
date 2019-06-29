@@ -54,7 +54,7 @@ typedef struct bstring {
 } bstring;
 
 typedef struct bvector {
-    int count, capacity, size;
+    int capacity, size;
     void *data, *end;
 } bvector, bstack;
 
