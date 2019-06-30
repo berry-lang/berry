@@ -187,7 +187,7 @@ bmap* be_map_new(bvm *vm)
         map->count = 0;
         map->slots = NULL;
         var_setmap(vm->top, map);
-        be_stackpush(vm);
+        be_incrtop(vm);
         resize(vm, map, 2);
         be_stackpop(vm, 1);
     }

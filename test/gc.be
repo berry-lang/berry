@@ -1,3 +1,5 @@
+import time
+
 def func(a, b)
     c = "0hes"
     def retf()
@@ -12,7 +14,7 @@ f = nil
 testAppend = false
 l = []
 i = 0
-c = clock()
+c = time.clock()
 if (testAppend)
     while (i < 100000000) # need 64bit
         l.append("hello world")
@@ -23,7 +25,7 @@ else
     l.resize(4000, 100)
 end
 print("list resize/append", l.size(),
-    "values, time of use:", clock() - c, "s")
+    "values, time of use:", time.clock() - c, "s")
 
 def mcnt(a)
     m = a - memcount()
@@ -35,10 +37,10 @@ def mcnt(a)
     return [m, "bytes" ]
 end
 l = nil
-c = clock()
+c = time.clock()
 mc = memcount()
 l = []
 mfree = mcnt(mc)
 print("gc freed", mfree[0], mfree[1],
-    "time of use:", clock() - c, "s")
+    "time of use:", time.clock() - c, "s")
 print("now memory count:", -mcnt(0)[0], mcnt(0)[1]);

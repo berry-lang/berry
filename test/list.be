@@ -13,7 +13,6 @@ assert(it.next() == 2)
 assert(it.next() == 3)
 assert(it.next() == 4)
 assert(it.next() == 5)
-assert(it.next() == nil)
 
 l.insert(0, 10)
 assert(l[0] == 10)

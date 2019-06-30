@@ -329,7 +329,7 @@ void be_pushclass(bvm *vm, const char *name, const bnfuncinfo *lib)
     bvalue *dst = be_incrtop(vm);
     var_setstr(dst, s);
     c = be_newclass(vm, s, NULL);
-    var_setclass(dst, c);
+    var_setclass(vm->top - 1, c); /* stack may change, so dst is not available */
     class_init(vm, c, lib); /* bind members */
 }
 
@@ -417,7 +417,7 @@ int be_strlen(bvm *vm, int index)
 void be_newlist(bvm *vm)
 {
     bvalue *top = be_incrtop(vm);
-    var_setobj(top, BE_LIST, be_list_new(vm));
+    var_setlist(top, be_list_new(vm));
 }
 
 void be_newmap(bvm *vm)
@@ -454,11 +454,10 @@ void be_getmember(bvm *vm, int index, const char *k)
 {
     bvalue *o = index2value(vm, index);
     bvalue *top = be_incrtop(vm);
+    var_setnil(top);
     if (var_isinstance(o)) {
         binstance *obj = var_toobj(o);
         be_instance_member(obj, be_newstr(vm, k), top);
-    } else {
-        var_setnil(top);
     }
 }
 

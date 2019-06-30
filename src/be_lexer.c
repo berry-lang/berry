@@ -37,6 +37,7 @@ void be_lexerror(blexer *lexer, const char *msg)
     be_pushfstring(vm, "%s:%d: error: %s",
                    lexer->fname, lexer->linenumber, msg);
     be_lexer_deinit(lexer);
+    be_incrtop(lexer->vm); /* push the error message */
     be_throw(vm, BE_SYNTAX_ERROR);
 }
 

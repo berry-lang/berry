@@ -5,6 +5,8 @@
 #include "be_vector.h"
 #include "be_list.h"
 #include "be_var.h"
+#include "be_exec.h"
+#include "be_vm.h"
 
 #define min(a, b)               ((a) < (b) ? (a) : (b))
 #define exp2anyreg(f, e)        exp2reg(f, e, (f)->freereg)
@@ -279,10 +281,10 @@ static void free_suffix(bfuncinfo *finfo, bexpdesc *e)
 {
     int idx = e->v.ss.idx;
     int nlocal = be_list_count(finfo->local);
-    if (!isK(idx) && idx > nlocal) {
+    if (!isK(idx) && idx >= nlocal) {
         be_code_freeregs(finfo, 1);
     }
-    if (e->v.ss.tt == ETREG && (int)e->v.ss.obj > nlocal) {
+    if (e->v.ss.tt == ETREG && (int)e->v.ss.obj >= nlocal) {
         be_code_freeregs(finfo, 1);
     }
 }
@@ -328,6 +330,7 @@ static int var2reg(bfuncinfo *finfo, bexpdesc *e, int dst)
         return exp2const(finfo, e);
     case ETPROTO:
         code_closure(finfo, e->v.p, dst);
+        be_stackpop(finfo->lexer->vm, 1);
         break;
     case ETGLOBAL:
         codeABx(finfo, OP_GETGBL, dst, e->v.idx);
@@ -508,10 +511,8 @@ int be_code_unop(bfuncinfo *finfo, int op, bexpdesc *e)
     return 0;
 }
 
-static void setsupvar(bfuncinfo *finfo, bopcode op, bexpdesc *e1, bexpdesc *e2)
+static void setsupvar(bfuncinfo *finfo, bopcode op, bexpdesc *e1, int src)
 {
-    int src = exp2anyreg(finfo, e2);
-    free_expreg(finfo, e2);
     if (isK(src)) { /* move const to register */
         code_move(finfo, finfo->freereg, src);
         src = finfo->freereg;
@@ -519,11 +520,9 @@ static void setsupvar(bfuncinfo *finfo, bopcode op, bexpdesc *e1, bexpdesc *e2)
     codeABx(finfo, op, src, e1->v.idx);
 }
 
-static void setsfxvar(bfuncinfo *finfo, bopcode op, bexpdesc *e1, bexpdesc *e2)
+static void setsfxvar(bfuncinfo *finfo, bopcode op, bexpdesc *e1, int src)
 {
     int obj = e1->v.ss.obj;
-    int src = exp2anyreg(finfo, e2);
-    free_expreg(finfo, e2);
     free_suffix(finfo, e1);
     if (isK(obj)) { /* move const to register */
         code_move(finfo, finfo->freereg, obj);
@@ -534,25 +533,29 @@ static void setsfxvar(bfuncinfo *finfo, bopcode op, bexpdesc *e1, bexpdesc *e2)
 
 int be_code_setvar(bfuncinfo *finfo, bexpdesc *e1, bexpdesc *e2)
 {
+    int src = exp2reg(finfo, e2,
+        e1->type == ETLOCAL ? e1->v.idx : finfo->freereg);
+
+    if (e1->type != ETLOCAL || e1->v.idx != src) {
+        free_expreg(finfo, e2); /* free source (only ETREG) */
+    }
     switch (e1->type) {
-    case ETLOCAL: { /* It can't be ETREG. */
-        int src = exp2reg(finfo, e2, e1->v.idx);
+    case ETLOCAL: /* It can't be ETREG. */
         if (e1->v.idx != src) {
             code_move(finfo, e1->v.idx, src);
         }
         break;
-    }
     case ETGLOBAL: /* store to grobal R(A) -> G(Bx) */
-        setsupvar(finfo, OP_SETGBL, e1, e2);
+        setsupvar(finfo, OP_SETGBL, e1, src);
         break;
     case ETUPVAL:
-        setsupvar(finfo, OP_SETUPV, e1, e2);
+        setsupvar(finfo, OP_SETUPV, e1, src);
         break;
     case ETMEMBER: /* store to member R(A).RK(B) <- RK(C) */
-        setsfxvar(finfo, OP_SETMBR, e1, e2);
+        setsfxvar(finfo, OP_SETMBR, e1, src);
         break;
     case ETINDEX: /* store to member R(A)[RK(B)] <- RK(C) */
-        setsfxvar(finfo, OP_SETIDX, e1, e2);
+        setsfxvar(finfo, OP_SETIDX, e1, src);
         break;
     default:
         return 1;
@@ -655,6 +658,8 @@ void be_code_setsuper(bfuncinfo *finfo, bexpdesc *c, bexpdesc *s)
     int self = exp2anyreg(finfo, c);
     int super = exp2anyreg(finfo, s);
     codeABC(finfo, OP_SETSUPER, self, super, 0);
+    free_expreg(finfo, c);
+    free_expreg(finfo, s);
 }
 
 void be_code_import(bfuncinfo *finfo, bexpdesc *m, bexpdesc *v)

@@ -16,3 +16,5 @@ end
 for (xx : count(6))
     print(xx()) # 0, 1, 4 ... n * n
 end
+
+return count

@@ -15,7 +15,7 @@ blist* be_list_new(bvm *vm)
         list->count = 0;
         list->capacity = 2;
         var_setlist(vm->top, list);
-        be_stackpush(vm);
+        be_incrtop(vm);
         list->data = be_gc_malloc(vm, datasize(list->capacity));
         be_stackpop(vm, 1);
     }

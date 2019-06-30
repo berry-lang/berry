@@ -19,3 +19,5 @@ end
 
 obj = A(2)
 print(obj.func(5, 6))
+
+assert(obj.func(5, 6) == 12)

@@ -62,8 +62,8 @@ class range
         end
         return it
     end
-    def print()
-        print('range(', self.__lower, ',', self.__upper, ')')
+    def tostring()
+        return 'range(' + str(self.__lower) + ', ' + str(self.__upper) + ')'
     end
 end
 

@@ -101,8 +101,6 @@ void* be_gc_realloc(bvm *vm, void *ptr, size_t old_size, size_t new_size)
         if (!obj) {
             be_throw(vm, BE_MALLOC_FAIL);
         }
-    } else if (new_size) { /* not free */
-        be_gc_auto(vm);
     }
     gc->usage = gc->usage + new_size - old_size;
     return obj;
@@ -119,6 +117,7 @@ bgcobject* be_newgcobj(bvm *vm, int type, size_t size)
     bgc *gc = vm->gc;
 
     obj = be_gc_malloc(vm, size);
+    be_gc_auto(vm);
     var_settype(obj, (bbyte)type);
     obj->marked = GC_WHITE; /* default gc object type is white */
     obj->next = gc->list; /* insert to head */
@@ -134,6 +133,7 @@ bgcobject* be_gc_newstr(bvm *vm, size_t size, int islong)
         return be_newgcobj(vm, BE_STRING, size);
     }
     obj = be_gc_malloc(vm, size);
+    be_gc_auto(vm);
     var_settype(obj, BE_STRING);
     obj->marked = GC_WHITE; /* default string type is white */
     return obj;
@@ -440,9 +440,9 @@ static void destruct_object(bvm *vm, bgcobject *obj)
         binstance *ins = cast_instance(obj);
         vm->gc->status |= GC_HALT;
         var_setinstance(vm->top, ins);
-        be_stackpush(vm);
+        be_incrtop(vm);
         type = be_instance_member(ins, be_newstr(vm, "deinit"), vm->top);
-        be_stackpush(vm);
+        be_incrtop(vm);
         if (basetype(type) == BE_FUNCTION) {
             be_dofunc(vm, vm->top - 1, 1);
         } else {

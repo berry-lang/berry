@@ -461,8 +461,6 @@ static void anon_func(bparser *parser, bexpdesc *e)
     proto = funcbody(parser, name, FUNC_ANONYMOUS);
     init_exp(e, ETPROTO, 0);
     e->v.p = proto;
-    be_code_nextreg(parser->finfo, e);
-    be_stackpop(parser->vm, 1);
 }
 
 static void new_primtype(bparser *parser, const char *type, bexpdesc *e)
@@ -575,7 +573,6 @@ static void call_expr(bparser *parser, bexpdesc *e)
     /* func '(' [exprlist] ')' */
     check_var(parser, e);
     /* code function index to next register */
-    
     if (ismember) {
         base = be_code_getmethod(finfo, e);
     } else {
@@ -739,21 +736,23 @@ static void assign_expr(bparser *parser)
     op = get_assign_op(parser);
     if (op != OP_NOT_ASSIGN) { /* assign operator */
         bexpdesc e1;
-        scan_next_token(parser);
-        compound_assign(parser, op, &e, &e1);
         if (check_newvar(parser, &e)) { /* new variable */
             new_var(parser, e.v.s, &e);
         }
+        scan_next_token(parser);
+        compound_assign(parser, op, &e, &e1);
         if (be_code_setvar(parser->finfo, &e, &e1)) {
             parser->lexer.linenumber = line;
             parser_error(parser,
                 "try to assign constant expressions.");
         }
+    } else if (e.type == ETREG) {
+        be_code_freeregs(parser->finfo, 1);
     } else if (e.type == ETVOID) { /* not assign expression */
         /* undeclared symbol */
         parser->lexer.linenumber = line;
         check_var(parser, &e);
-    }
+    } 
 }
 
 /* binary operator: + - * / % && || < <= == != > >=
@@ -801,7 +800,6 @@ static void expr(bparser *parser, bexpdesc *e)
 static void expr_stmt(bparser *parser)
 {
     assign_expr(parser);
-    parser->finfo->freereg = (bbyte)be_list_count(parser->finfo->local);
 }
 
 static int block_follow(bparser *parser)
@@ -943,7 +941,6 @@ static void for_iter(bparser *parser, bexpdesc *v, bexpdesc *it)
     be_code_nextreg(finfo, it); /* code argv[0]: '.it' */
     be_code_call(finfo, e.v.idx, 1); /* call __next__(.it) */
     be_code_setvar(finfo, v, &e); /* code var = __next__(.it) */
-    be_code_freeregs(finfo, 1); /* free registers */
     stmtlist(parser);
     end_block(parser);
     be_code_patchjump(finfo, brk);
@@ -1153,6 +1150,7 @@ static void var_field(bparser *parser)
     bexpdesc e1, e2;
     bstring *name;
     name = next_token(parser).u.s;
+    new_var(parser, name, &e1); /* new local variable */
     match_token(parser, TokenId); /* match and skip ID */
     if (next_type(parser) == OptAssign) { /* '=' */
         scan_next_token(parser); /* skip '=' */
@@ -1161,7 +1159,6 @@ static void var_field(bparser *parser)
     } else {
         init_exp(&e2, ETNIL, 0);
     }
-    new_var(parser, name, &e1);
     be_code_setvar(parser->finfo, &e1, &e2);
 }
 
@@ -1193,6 +1190,7 @@ static void statement(bparser *parser)
     case OptSemic: scan_next_token(parser); break; /* empty statement */
     default: expr_stmt(parser); break;
     }
+    be_assert(parser->finfo->freereg == be_list_count(parser->finfo->local));
 }
 
 static void stmtlist(bparser *parser)

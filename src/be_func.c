@@ -121,7 +121,7 @@ bntvclos* be_newntvclosure(bvm *vm, bntvfunc cf, int nupvals)
     bgcobject *gco = be_newgcobj(vm, BE_NTVCLOS, size);
     bntvclos *f = cast_ntvclos(gco);
     var_setntvclos(vm->top, f);
-    be_stackpush(vm);
+    be_incrtop(vm);
     if (f) {
         f->f = cf;
         f->nupvals = (bbyte)nupvals;

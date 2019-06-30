@@ -55,7 +55,7 @@ int be_global_new(bvm *vm, bstring *name)
         var_setint(desc, idx);
         be_vector_resize(vm, &global(vm).vlist, idx + 1);
         /* set the new variable to nil */
-        var_setnil((bvalue*)(global(vm).vlist.end));
+        var_setnil((bvalue *)global(vm).vlist.end);
         return idx + be_builtin_count(vm);
     }
     return idx;
