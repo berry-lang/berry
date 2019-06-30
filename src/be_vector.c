@@ -10,6 +10,7 @@ void be_vector_init(bvm *vm, bvector *vector, int size)
     vector->size = size;
     vector->data = be_gc_malloc(vm, (size_t)vector->capacity * size);
     vector->end = (char*)vector->data - size;
+    memset(vector->data, 0, (size_t)vector->capacity * size);
 }
 
 void be_vector_delete(bvm *vm, bvector *vector)
@@ -32,8 +33,7 @@ bbool be_vector_isempty(bvector *vector)
 
 void* be_vector_at(bvector *vector, int index)
 {
-    char *pv = (char*)vector->data;
-    return pv + (size_t)index * vector->size;
+    return (char*)vector->data + (size_t)index * vector->size;
 }
 
 void be_vector_append(bvm *vm, bvector *vector, void *data)
@@ -52,6 +52,15 @@ void be_vector_append(bvm *vm, bvector *vector, void *data)
     }
     if (data != NULL) {
         memcpy(vector->end, data, size);
+    }
+}
+
+void be_vector_append_c(bvm *vm, bvector *vector, void *data)
+{
+    int capacity = vector->capacity + 1;
+    be_vector_append(vm, vector, data);
+    if (vector->capacity > capacity) {
+        memset(be_vector_at(vector, capacity), 0, vector->capacity - capacity);
     }
 }
 

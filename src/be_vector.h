@@ -8,6 +8,7 @@
 #define be_vector_first(vector)         ((vector)->data)
 #define be_vector_isend(vector, item)   ((item) > (vector)->end)
 #define be_vector_end(vector)           ((vector)->end)
+#define be_vector_capacity(vector)      ((vector)->capacity)
 #define be_stack_init(vm, stack, size)  be_vector_init(vm, stack, size)
 #define be_stack_delete(vm, stack)      be_vector_delete(vm, stack)
 #define be_stack_clear(stack)           be_vector_clear(stack)
@@ -25,6 +26,7 @@ int be_vector_count(bvector *vector);
 bbool be_vector_isempty(bvector *vector);
 void* be_vector_at(bvector *vector, int index);
 void be_vector_append(bvm *vm, bvector *vector, void *data);
+void be_vector_append_c(bvm *vm, bvector *vector, void *data);
 void be_vector_remove_end(bvector *vector);
 void be_vector_resize(bvm *vm, bvector *vector, int count);
 void be_vector_clear(bvector *vector);

@@ -49,7 +49,6 @@
 typedef struct {
     blexer lexer;
     bvm *vm;
-    bvector *global;
     bfuncinfo *finfo;
     bclosure *cl;
 } bparser;
@@ -147,7 +146,7 @@ static void end_block(bparser *parser)
         be_code_patchlist(finfo, binfo->continuelist, binfo->beginpc);
     }
     be_list_resize(parser->vm, finfo->local, binfo->nactlocals);
-    finfo->nlocal = (bbyte)max(finfo->nlocal, nlocal);
+    finfo->proto->nlocal = (bbyte)max(finfo->proto->nlocal, nlocal);
     finfo->freereg = binfo->nactlocals;
     finfo->binfo = binfo->prev;
 }
@@ -159,8 +158,14 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     var_setproto(vm->top, proto);
     be_stackpush(vm);
     be_vector_init(vm, &finfo->code, sizeof(binstruction));
+    proto->code = be_vector_data(&finfo->code);
+    proto->codesize = be_vector_capacity(&finfo->code);
     be_vector_init(vm, &finfo->kvec, sizeof(bvalue));
+    proto->ktab = be_vector_data(&finfo->kvec);
+    proto->nconst = be_vector_capacity(&finfo->kvec);
     be_vector_init(vm, &finfo->pvec, sizeof(bproto*));
+    proto->ptab = be_vector_data(&finfo->pvec);
+    proto->nproto = be_vector_capacity(&finfo->pvec);
     finfo->local = be_list_new(vm);
     var_setlist(vm->top, finfo->local);
     be_stackpush(vm);
@@ -169,22 +174,17 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     be_stackpush(vm);
     finfo->prev = parser->finfo;
     finfo->proto = proto;
-    finfo->global = parser->global;
     finfo->freereg = 0;
-    finfo->nlocal = 0;
-    finfo->nstack = 0;
     finfo->binfo = NULL;
     finfo->pc = 0;
     finfo->jpc = NO_JUMP;
     finfo->flag = 0;
     parser->finfo = finfo;
-    proto->code = be_vector_data(&finfo->code);
-    proto->ktab = be_vector_data(&finfo->kvec);
-    proto->ptab = be_vector_data(&finfo->pvec);
 #if BE_RUNTIME_DEBUG_INFO
     be_vector_init(vm, &finfo->linevec, sizeof(blineinfo));
     proto->source = be_newstr(vm, parser->lexer.fname);
     proto->lineinfo = be_vector_data(&finfo->linevec);
+    proto->nlineinfo = be_vector_capacity(&finfo->linevec);
     finfo->lexer = &parser->lexer;
 #endif
     begin_block(finfo, binfo, 0);
@@ -220,16 +220,15 @@ static void end_func(bparser *parser)
     be_code_ret(finfo, NULL); /* append a return to last code */
     end_block(parser);
     setupvals(finfo);
-    proto->codesize = finfo->pc;
-    proto->nlocal = finfo->nlocal;
-    proto->nstack = finfo->nstack;
-    proto->nproto = be_vector_count(&finfo->pvec);
-    proto->nconst = be_vector_count(&finfo->kvec);
     proto->code = be_vector_release(vm, &finfo->code);
+    proto->codesize = finfo->pc;
     proto->ktab = be_vector_release(vm, &finfo->kvec);
+    proto->nconst = be_vector_count(&finfo->kvec);
     proto->ptab = be_vector_release(vm, &finfo->pvec);
+    proto->nproto = be_vector_count(&finfo->pvec);
 #if BE_RUNTIME_DEBUG_INFO
     proto->lineinfo = be_vector_release(vm, &finfo->linevec);
+    proto->nlineinfo = be_vector_count(&finfo->linevec);
 #endif
     parser->finfo = parser->finfo->prev;
     be_stackpop(vm, 2); /* pop upval and local */

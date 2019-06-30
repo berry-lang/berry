@@ -14,13 +14,16 @@
 
 #define next_threshold(gc)  ((gc)->usage * ((gc)->steprate + 100) / 100)
 
+#define GC_PAUSE    (1 << 0)
+#define GC_HALT     (2 << 0)
+
 struct bgc {
     bgcobject *list;
     bgcobject *gray;
     bgcobject *fixed;
     size_t threshold, usage;
     bbyte steprate;
-    bbyte pause;
+    bbyte status;
 };
 
 static void mark_object(bvm *vm, bgcobject *obj, int type);
@@ -34,9 +37,9 @@ void be_gc_init(bvm *vm)
     gc->gray = NULL;
     gc->fixed = NULL;
     gc->usage = sizeof(bvm) + sizeof(bgc);
-    gc->pause = 0;
+    gc->status = 0;
     vm->gc = gc;
-    be_gc_setsteprate(vm, 300);
+    be_gc_setsteprate(vm, 200);
 }
 
 void be_gc_deleteall(bvm *vm)
@@ -64,12 +67,18 @@ void be_gc_setsteprate(bvm *vm, int rate)
 
 void be_gc_setpause(bvm *vm, int pause)
 {
-    vm->gc->pause = (bbyte)pause;
+    if (pause) {
+        vm->gc->status |= GC_PAUSE;
+    } else {
+        vm->gc->status &= ~GC_PAUSE;
+    }
 }
 
 static void* _realloc(void *ptr, size_t old_size, size_t new_size)
 {
-    (void)old_size;
+    if (old_size == new_size) {
+        return ptr;
+    }
     if (ptr && new_size) {
         return be_realloc(ptr, new_size);
     }
@@ -276,7 +285,7 @@ static void mark_module(bvm *vm, bgcobject *obj)
 
 static void mark_object(bvm *vm, bgcobject *obj, int type)
 {
-    if (be_isgctype(type) && !gc_isdark(obj)) {
+    if (obj && be_isgctype(type) && !gc_isdark(obj)) {
         switch (type) {
         case BE_STRING: gc_setdark(obj); break;
         case BE_CLASS: mark_class(vm, obj); break;
@@ -427,19 +436,19 @@ static void mark_unscanned(bvm *vm)
 static void destruct_object(bvm *vm, bgcobject *obj)
 {
     if (obj->type == BE_INSTANCE) {
-        int type, pause = vm->gc->pause;
-        bvalue *top = vm->top;
-        binstance *insobj = cast_instance(obj);
-        vm->gc->pause = 0; /* disable gc during destruction to prevent recursion */
-        be_stack_require(vm, 2);
-        type = be_instance_member(insobj,
-            be_newstr(vm, "deinit"), top);
+        int type;
+        binstance *ins = cast_instance(obj);
+        vm->gc->status |= GC_HALT;
+        var_setinstance(vm->top, ins);
+        be_stackpush(vm);
+        type = be_instance_member(ins, be_newstr(vm, "deinit"), vm->top);
+        be_stackpush(vm);
         if (basetype(type) == BE_FUNCTION) {
-            var_setinstance(top + 1, insobj);
-            vm->top += 2;
-            be_dofunc(vm, top, 1);
+            be_dofunc(vm, vm->top - 1, 1);
+        } else {
+            be_stackpop(vm, 2);
         }
-        vm->gc->pause = (bbyte)pause; /* restore gc status */
+        vm->gc->status &= ~GC_HALT;
     }
 }
 
@@ -488,13 +497,16 @@ static void reset_fixedlist(bvm *vm)
 
 void be_gc_auto(bvm *vm)
 {
-    if (vm->gc->pause && vm->gc->usage > vm->gc->threshold) {
+    if (vm->gc->status & GC_PAUSE && vm->gc->usage > vm->gc->threshold) {
         be_gc_collect(vm);
     }
 }
 
 void be_gc_collect(bvm *vm)
 {
+    if (vm->gc->status & GC_HALT) {
+        return; /* the GC cannot run for some reason */
+    }
     /* step 1: set root-set reference object to unscanned */
     premark_global(vm); /* global objects */
     premark_stack(vm); /* stack objects */

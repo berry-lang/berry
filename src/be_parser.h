@@ -51,25 +51,22 @@ typedef struct bblockinfo {
 } bblockinfo;
 
 typedef struct bfuncinfo {
-    bproto *proto;
-    struct bfuncinfo *prev;
+    struct bfuncinfo *prev; /* outer function */
+    bproto *proto; /* the function prototype */
     bblockinfo *binfo; /* block information */
-    bvector code;
+    struct blexer *lexer; /* the lexer pointer */
     blist *local; /* local variable */
     bmap *upval; /* upvalue variable */
-    bvector *global; /* global variable */
+    bvector code; /* code vector */
     bvector kvec; /* constants table */
     bvector pvec; /* proto table */
-    int pc; /* program count */
-    int jpc;  /* list of pending jumps to 'pc' */
-    bbyte nlocal; /* local variable count */
-    bbyte nstack; /* stack usage */
-    bbyte freereg; /* first free register */
-    bbyte flag; /* anonymous function */
 #if BE_RUNTIME_DEBUG_INFO /* debug information */
-    struct blexer *lexer;
     bvector linevec;
 #endif
+    int pc; /* program count */
+    int jpc;  /* list of pending jumps to 'pc' */
+    bbyte freereg; /* first free register */
+    bbyte flag; /* anonymous function */
 } bfuncinfo;
 
 bclosure* be_parser_source(bvm *vm,

@@ -30,7 +30,7 @@ static void codelineinfo(bfuncinfo *finfo)
         li->endpc = finfo->pc;
         li->linenumber = line;
         finfo->proto->lineinfo = be_vector_data(vec);
-        finfo->proto->nlineinfo = be_vector_count(vec);
+        finfo->proto->nlineinfo = be_vector_capacity(vec);
     }
 }
 #else
@@ -40,8 +40,9 @@ static void codelineinfo(bfuncinfo *finfo)
 static int codeinst(bfuncinfo *finfo, binstruction ins)
 {
     /* put new instruction in code array */
-    be_vector_append(finfo->lexer->vm, &finfo->code, &ins);
+    be_vector_append_c(finfo->lexer->vm, &finfo->code, &ins);
     finfo->proto->code = be_vector_data(&finfo->code);
+    finfo->proto->codesize = be_vector_capacity(&finfo->code);
     codelineinfo(finfo);
     return finfo->pc++;
 }
@@ -68,8 +69,8 @@ static void free_expreg(bfuncinfo *finfo, bexpdesc *e)
 static void allocstack(bfuncinfo *finfo, int count)
 {
     int nstack = finfo->freereg + count;
-    if (nstack > finfo->nstack) {
-        finfo->nstack = (bbyte)nstack;
+    if (nstack > finfo->proto->nstack) {
+        finfo->proto->nstack = (bbyte)nstack;
     }
 }
 
@@ -197,9 +198,9 @@ void be_code_patchjump(bfuncinfo *finfo, int jmp)
 static int newconst(bfuncinfo *finfo, bvalue *k)
 {
     int idx = be_vector_count(&finfo->kvec);
-    be_vector_append(finfo->lexer->vm, &finfo->kvec, k);
+    be_vector_append_c(finfo->lexer->vm, &finfo->kvec, k);
     finfo->proto->ktab = be_vector_data(&finfo->kvec);
-    finfo->proto->nconst = be_vector_count(&finfo->kvec);
+    finfo->proto->nconst = be_vector_capacity(&finfo->kvec);
     if (k == NULL) {
         var_setnil(&finfo->proto->ktab[idx]);
     }
@@ -300,9 +301,9 @@ static void code_closure(bfuncinfo *finfo, bproto *proto, int dst)
 {
     int idx = be_vector_count(&finfo->pvec);
     /* append proto to current function proto table */
-    be_vector_append(finfo->lexer->vm, &finfo->pvec, &proto);
+    be_vector_append_c(finfo->lexer->vm, &finfo->pvec, &proto);
     finfo->proto->ptab = be_vector_data(&finfo->pvec);
-    finfo->proto->nproto = be_vector_count(&finfo->pvec);
+    finfo->proto->nproto = be_vector_capacity(&finfo->pvec);
     codeABx(finfo, OP_CLOSURE, dst, idx); /* load closure to register */
 }
 

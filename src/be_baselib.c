@@ -67,11 +67,9 @@ static int l_exit(bvm *vm)
     be_return_nil(vm);
 }
 
-#include <stdio.h>
 static int l_memcount(bvm *vm)
 {
-    size_t count = be_mcount();
-    printf("%lu\n", be_gc_memcount(vm));
+    size_t count = be_gc_memcount(vm);
     if (count < 0x80000000) {
         be_pushint(vm, (bint)count);
     } else {
