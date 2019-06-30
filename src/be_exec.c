@@ -5,6 +5,7 @@
 #include "be_mem.h"
 #include "be_sys.h"
 #include "be_debug.h"
+#include "be_gc.h"
 #include <setjmp.h>
 #include <stdlib.h>
 
@@ -149,7 +150,7 @@ int be_loadbuffer(bvm *vm,
 int be_loadfile(bvm *vm, const char *name)
 {
     int res = BE_IO_ERROR;
-    struct filebuf *fbuf = be_malloc(sizeof(struct filebuf));
+    struct filebuf *fbuf = be_gc_malloc(vm, sizeof(struct filebuf));
     fbuf->fp = be_fopen(name, "r");
     if (fbuf->fp) {
         res = be_protectedparser(vm, name, _fgets, fbuf);
@@ -157,7 +158,7 @@ int be_loadfile(bvm *vm, const char *name)
     } else {
         be_pushfstring(vm, "error: can not open file '%s'.", name);
     }
-    be_free(fbuf);
+    be_gc_free(vm, fbuf, sizeof(struct filebuf));
     return res;
 }
 
@@ -182,7 +183,7 @@ int be_protectedcall(bvm *vm, bvalue *v, int argc)
         vm->reg = vm->stack + reg;
         be_moveto(vm, idx, top - reg + 1); /* copy error information */
         vm->top = vm->stack + top + 1;
-        be_vector_resize(&vm->callstack, calldepth);
+        be_vector_resize(vm, &vm->callstack, calldepth);
         vm->cf = be_stack_top(&vm->callstack);
     }
     return res;
@@ -200,9 +201,9 @@ bvalue* be_incrtop(bvm *vm)
 
 void be_stackpush(bvm *vm)
 {
+    be_incrtop(vm);
     /* make sure there is enough stack space */
     be_stack_require(vm, 1 + BE_STACK_FREE_MIN);
-    be_incrtop(vm);
 }
 
 void be_stack_require(bvm *vm, int count)
@@ -228,10 +229,11 @@ static void update_callstack(bvm *vm, bvalue *oldstack)
 
 static void stack_resize(bvm *vm, size_t size)
 {
-    bvalue *olds = vm->stack;
-    vm->stack = be_realloc(olds, sizeof(bvalue) * size);
+    bvalue *old = vm->stack;
+    size_t os = (vm->stacktop - old) * sizeof(bvalue);
+    vm->stack = be_gc_realloc(vm, old, os, sizeof(bvalue) * size);
     vm->stacktop = vm->stack + size;
-    update_callstack(vm, olds);
+    update_callstack(vm, old);
 }
 
 void be_stack_expansion(bvm *vm, int n)
@@ -240,7 +242,7 @@ void be_stack_expansion(bvm *vm, int n)
     /* check new stack size */
     if (size + n > BE_STACK_TOTAL_MAX) {
         /* ensure the stack is enough when generating error messages. */
-        stack_resize(vm, size + 10);
+        stack_resize(vm, size + 1);
         be_pusherror(vm, STACK_OVER_MSG(BE_STACK_TOTAL_MAX));
     }
     stack_resize(vm, size + n);

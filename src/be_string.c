@@ -59,7 +59,8 @@ static void resize(bvm *vm, int size)
     int i;
     bstringtable *tab = vm->strtab;
     if (size > tab->size) {
-        tab->table = be_realloc(tab->table, size * sizeof(bstring*));
+        tab->table = be_gc_realloc(vm, tab->table,
+            tab->size * sizeof(bstring*), size * sizeof(bstring*));
         for (i = tab->size; i < size; ++i) {
             tab->table[i] = NULL;
         }
@@ -76,9 +77,18 @@ static void resize(bvm *vm, int size)
         }
     }
     if (size < tab->size) {
-        tab->table = be_realloc(tab->table, size * sizeof(bstring*));
+        for (i = size; i < tab->size; ++i) {
+            tab->table[i] = NULL;
+        }
+        tab->table = be_gc_realloc(vm, tab->table,
+            tab->size * sizeof(bstring *), size * sizeof(bstring *));
     }
     tab->size = size;
+}
+
+static void free_sstring(bvm *vm, bstring *str)
+{
+    be_gc_free(vm, str, sizeof(bsstring) + str->slen + 1);
 }
 
 /* FNV-1a Hash */
@@ -93,7 +103,7 @@ uint32_t str_hash(const char *str, size_t len)
 
 void be_string_init(bvm *vm)
 {
-    vm->strtab = be_malloc(sizeof(bstringtable));
+    vm->strtab = be_gc_malloc(vm, sizeof(bstringtable));
     vm->strtab->size = 0;
     vm->strtab->count = 0;
     vm->strtab->table = NULL;
@@ -108,12 +118,12 @@ void be_string_deleteall(bvm *vm)
         bstring *node = tab->table[i];
         while (node) {
             bstring *next = next(node);
-            be_free(node);
+            free_sstring(vm, node);
             node = next;
         }
     }
-    be_free(tab->table);
-    be_free(tab);
+    be_gc_free(vm, tab->table, tab->size * sizeof(bsstring*));
+    be_gc_free(vm, tab, sizeof(bstringtable));
 }
 
 bstring* createstrobj(bvm *vm, size_t len, int islong)
@@ -223,7 +233,7 @@ void be_gcstrtab(bvm *vm)
         for (node = *list; node; node = next) {
             next = next(node);
             if (!gc_isfixed(node) && gc_iswhite(node)) {
-                be_free(node);
+                free_sstring(vm, node);
                 strtab->count--;
                 if (prev) { /* link list */
                     prev->next = cast(void*, next);

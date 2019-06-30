@@ -154,7 +154,7 @@ static void precall(bvm *vm, bvalue *func, int nstack, int mode)
         be_stack_expansion(vm, expan);
         func = vm->stack + fpos;
     }
-    be_stack_push(&vm->callstack, NULL);
+    be_stack_push(vm, &vm->callstack, NULL);
     cf = be_stack_top(&vm->callstack);
     cf->func = func - mode;
     cf->top = vm->top;
@@ -717,9 +717,9 @@ bvm* be_vm_new(void)
     bvm *vm = be_malloc(sizeof(bvm));
     be_gc_init(vm);
     be_string_init(vm);
-    be_stack_init(&vm->callstack, sizeof(bcallframe));
-    be_stack_init(&vm->refstack, sizeof(binstance*));
-    vm->stack = be_malloc(sizeof(bvalue) * BE_STACK_FREE_MIN);
+    be_stack_init(vm, &vm->callstack, sizeof(bcallframe));
+    be_stack_init(vm, &vm->refstack, sizeof(binstance*));
+    vm->stack = be_gc_malloc(vm, sizeof(bvalue) * BE_STACK_FREE_MIN);
     vm->stacktop = vm->stack + BE_STACK_FREE_MIN;
     vm->cf = NULL;
     vm->ip = NULL;
@@ -738,9 +738,9 @@ void be_vm_delete(bvm *vm)
 {
     be_gc_deleteall(vm);
     be_string_deleteall(vm);
-    be_stack_delete(&vm->callstack);
-    be_stack_delete(&vm->refstack);
-    be_free(vm->stack);
+    be_stack_delete(vm, &vm->callstack);
+    be_stack_delete(vm, &vm->refstack);
+    be_gc_free(vm, vm->stack, (vm->stacktop - vm->stack) * sizeof(bvalue));
     be_globalvar_deinit(vm);
     be_free(vm);
 }

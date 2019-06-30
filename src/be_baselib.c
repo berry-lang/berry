@@ -1,5 +1,6 @@
 #include "be_object.h"
 #include "be_mem.h"
+#include "be_gc.h"
 #include <string.h>
 
 #define READLINE_STEP       100
@@ -29,33 +30,31 @@ static int l_print(bvm *vm)
     be_return_nil(vm);
 }
 
-static char* m_readline()
+static int m_readline(bvm *vm)
 {
     size_t pos = 0, size = READLINE_STEP;
-    char *buffer = be_malloc(size);
+    char *buffer = be_gc_malloc(vm, size);
     char *res = be_readstring(buffer, (int)size);
     while (res) {
         pos += strlen(buffer + pos) - 1;
         if (!pos || buffer[pos] == '\n') {
             break;
         }
-        size += READLINE_STEP;
-        buffer = be_realloc(buffer, size);
+        buffer = be_gc_realloc(vm, buffer, size, size + READLINE_STEP);
         res = be_readstring(buffer + pos + 1, READLINE_STEP);
+        size += READLINE_STEP;
     }
-    return buffer;
+    be_pushstring(vm, buffer);
+    be_gc_free(vm, buffer, size);
+    be_return(vm);
 }
 
 static int l_input(bvm *vm)
 {
-    char *line;
     if (be_top(vm) && be_isstring(vm, 1)) { /* echo prompt */
         be_writestring(be_tostring(vm, 1));
     }
-    line = m_readline();
-    be_pushstring(vm, line);
-    be_free(line);
-    be_return(vm);
+    return m_readline(vm);
 }
 
 static int l_exit(bvm *vm)
@@ -68,9 +67,11 @@ static int l_exit(bvm *vm)
     be_return_nil(vm);
 }
 
+#include <stdio.h>
 static int l_memcount(bvm *vm)
 {
     size_t count = be_mcount();
+    printf("%lu\n", be_gc_memcount(vm));
     if (count < 0x80000000) {
         be_pushint(vm, (bint)count);
     } else {

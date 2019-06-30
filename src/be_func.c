@@ -2,6 +2,7 @@
 #include "be_gc.h"
 #include "be_mem.h"
 #include "be_vm.h"
+#include "be_exec.h"
 
 #define clousersize(n) \
     (sizeof(bclosure) + sizeof(bupval*) * ((n) - 1))
@@ -33,7 +34,7 @@ bupval* be_findupval(bvm *vm, bvalue *level)
     }
     if (!node || node->value != level) {
         /* not found */
-        node = be_malloc(sizeof(bupval));
+        node = be_gc_malloc(vm, sizeof(bupval));
         node->value = level;
         node->refcnt = 0;
         /* insert to list head */
@@ -49,7 +50,7 @@ void be_upvals_close(bvm *vm, bvalue *level)
     while (node && node->value >= level) {
         next = node->u.next;
         if (!node->refcnt) {
-            be_free(node);
+            be_gc_free(vm, node, sizeof(bupval));
         } else {
             node->u.value = *node->value; /* move value to upvalue slot */
             node->value = &node->u.value;
@@ -101,12 +102,12 @@ bclosure* be_newclosure(bvm *vm, int nupval)
     return cl;
 }
 
-static void init_upvals(bntvclos *f)
+static void init_upvals(bvm *vm, bntvclos *f)
 {
     int count = f->nupvals;
     bupval **upvals = &be_ntvclos_upval(f, 0);
     while (count--) {
-        bupval *uv = be_malloc(sizeof(bupval)); /* was closed */
+        bupval *uv = be_gc_malloc(vm, sizeof(bupval)); /* was closed */
         uv->value = &uv->u.value;
         uv->refcnt = 1;
         var_setnil(uv->value);
@@ -119,12 +120,15 @@ bntvclos* be_newntvclosure(bvm *vm, bntvfunc cf, int nupvals)
     size_t size = sizeof(bntvclos) + sizeof(bupval*) * nupvals;
     bgcobject *gco = be_newgcobj(vm, BE_NTVCLOS, size);
     bntvclos *f = cast_ntvclos(gco);
+    var_setntvclos(vm->top, f);
+    be_stackpush(vm);
     if (f) {
         f->f = cf;
         f->nupvals = (bbyte)nupvals;
         if (nupvals) {
-            init_upvals(f);
+            init_upvals(vm, f);
         }
     }
+    be_stackpop(vm, 1);
     return f;
 }

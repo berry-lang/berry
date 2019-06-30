@@ -105,8 +105,9 @@ static int save(blexer *lexer)
     int ch = lgetc(lexer);
     struct blexerbuf *buf = &lexer->buf;
     if (buf->len >= buf->size) {
-        buf->size <<= 1;
-        buf->s = be_realloc(buf->s, buf->size);
+        size_t size = buf->size << 1;
+        buf->s = be_gc_realloc(lexer->vm, buf->s, buf->size, size);
+        buf->size = size;
     }
     buf->s[buf->len++] = (char)ch;
     return next(lexer);
@@ -487,7 +488,7 @@ static btokentype lexer_next(blexer *lexer)
 static void lexerbuf_init(blexer *lexer)
 {
     lexer->buf.size = SHORT_STR_LEN;
-    lexer->buf.s = be_malloc(SHORT_STR_LEN);
+    lexer->buf.s = be_gc_malloc(lexer->vm, SHORT_STR_LEN);
     lexer->buf.len = 0;
 }
 
@@ -512,7 +513,7 @@ void be_lexer_init(blexer *lexer, bvm *vm,
 
 void be_lexer_deinit(blexer *lexer)
 {
-    be_free(lexer->buf.s);
+    be_gc_free(lexer->vm, lexer->buf.s, lexer->buf.size);
     keyword_unregiste(lexer->vm);
     be_stackpop(lexer->vm, 1); /* pop strtab */
 }

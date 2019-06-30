@@ -1,19 +1,20 @@
 #include "be_vector.h"
-#include "be_mem.h"
 #include "be_string.h"
+#include "be_mem.h"
+#include "be_gc.h"
 #include <string.h>
 
-void be_vector_init(bvector *vector, int size)
+void be_vector_init(bvm *vm, bvector *vector, int size)
 {
     vector->capacity = 2;
     vector->size = size;
-    vector->data = be_malloc((size_t)vector->capacity * size);
+    vector->data = be_gc_malloc(vm, (size_t)vector->capacity * size);
     vector->end = (char*)vector->data - size;
 }
 
-void be_vector_delete(bvector *vector)
+void be_vector_delete(bvm *vm, bvector *vector)
 {
-    be_free(vector->data);
+    be_gc_free(vm, vector->data, (size_t)vector->capacity * vector->size);
 }
 
 int be_vector_count(bvector *vector)
@@ -35,15 +36,17 @@ void* be_vector_at(bvector *vector, int index)
     return pv + (size_t)index * vector->size;
 }
 
-void be_vector_append(bvector *vector, void *data)
+void be_vector_append(bvm *vm, bvector *vector, void *data)
 {
     size_t size = vector->size;
     size_t capacity = vector->capacity;
     size_t count = be_vector_count(vector);
     if (count >= capacity) {
-        vector->capacity = be_nextsize(capacity);
-        vector->data = be_realloc(vector->data, vector->capacity * size);
+        int newcap = be_nextsize(vector->capacity);
+        vector->data = be_gc_realloc(vm,
+                vector->data, vector->capacity * size, newcap * size);
         vector->end = (char*)vector->data + count * size;
+        vector->capacity = newcap;
     } else {
         vector->end = (char*)vector->end + size;
     }
@@ -57,14 +60,15 @@ void be_vector_remove_end(bvector *vector)
     vector->end = (char*)vector->end - vector->size;
 }
 
-void be_vector_resize(bvector *vector, int count)
+void be_vector_resize(bvm *vm, bvector *vector, int count)
 {
     size_t size = vector->size;
     int newcap = be_nextsize(count);
     if (count != be_vector_count(vector)) {
         if (newcap > vector->capacity) {
+            vector->data = be_gc_realloc(vm,
+                vector->data, vector->capacity * size, newcap * size);
             vector->capacity = newcap;
-            vector->data = be_realloc(vector->data, newcap * size);
         }
         vector->end = (char*)vector->data + size * (count - 1);
     }
@@ -76,19 +80,20 @@ void be_vector_clear(bvector *vector)
 }
 
 /* free not used */
-void* be_vector_release(bvector *vector)
+void* be_vector_release(bvm *vm, bvector *vector)
 {
+    size_t size = vector->size;
     int count = be_vector_count(vector);
     if (count == 0) {
-        be_free(vector->data);
+        be_gc_free(vm, vector->data, vector->capacity * size);
         vector->capacity = 0;
         vector->data = NULL;
         vector->end = NULL;
     } else if (count < vector->capacity) {
-        size_t size = vector->size;
-        vector->capacity = count;
-        vector->data = be_realloc(vector->data, vector->capacity * size);
+        vector->data = be_gc_realloc(vm,
+            vector->data, vector->capacity * size, count * size);
         vector->end = (char*)vector->data + (count - 1) * size;
+        vector->capacity = count;
     }
     return vector->data;
 }
@@ -101,7 +106,7 @@ static int binarysearch(int value)
         192, 256, 384, 512, 768, 1024
     };
     const uint16_t *low = tab;
-    const uint16_t *high = low + (int)array_count(tab);
+    const uint16_t *high = tab + sizeof(tab) - 1;
     while (low <= high) {
         const uint16_t *mid = low + ((high - low) >> 1);
         if (*mid == value) {

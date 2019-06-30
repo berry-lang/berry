@@ -735,14 +735,14 @@ void be_refpush(bvm *vm, int index)
     bvalue *v = index2value(vm, index);
     binstance *ins = var_toobj(v);
     be_assert(var_isinstance(v));
-    be_stack_push(&vm->refstack, &ins);
+    be_stack_push(vm, &vm->refstack, &ins);
 }
 
 void be_refpop(bvm *vm)
 {
     be_stack_pop(&vm->refstack);
     if (be_stack_isempty(&vm->refstack)) {
-        be_vector_release(&vm->refstack);
+        be_vector_release(vm, &vm->refstack);
     }
 }
 

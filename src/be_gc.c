@@ -12,11 +12,13 @@
 #include "be_exec.h"
 #include "be_debug.h"
 
+#define next_threshold(gc)  ((gc)->usage * ((gc)->steprate + 100) / 100)
+
 struct bgc {
     bgcobject *list;
     bgcobject *gray;
     bgcobject *fixed;
-    size_t mcount, usage;
+    size_t threshold, usage;
     bbyte steprate;
     bbyte pause;
 };
@@ -31,11 +33,10 @@ void be_gc_init(bvm *vm)
     gc->list = NULL;
     gc->gray = NULL;
     gc->fixed = NULL;
-    gc->usage = 0;
-    gc->mcount = be_mcount();
-    gc->steprate = 200;
+    gc->usage = sizeof(bvm) + sizeof(bgc);
     gc->pause = 0;
     vm->gc = gc;
+    be_gc_setsteprate(vm, 300);
 }
 
 void be_gc_deleteall(bvm *vm)
@@ -55,7 +56,10 @@ void be_gc_deleteall(bvm *vm)
 
 void be_gc_setsteprate(bvm *vm, int rate)
 {
-    vm->gc->steprate = (bbyte)rate;
+    bgc *gc = vm->gc;
+    be_assert(rate >= 100 && rate <= 355);
+    gc->steprate = (bbyte)(rate - 100);
+    gc->threshold = next_threshold(gc);
 }
 
 void be_gc_setpause(bvm *vm, int pause)
@@ -65,6 +69,7 @@ void be_gc_setpause(bvm *vm, int pause)
 
 static void* _realloc(void *ptr, size_t old_size, size_t new_size)
 {
+    (void)old_size;
     if (ptr && new_size) {
         return be_realloc(ptr, new_size);
     }
@@ -92,6 +97,11 @@ void* be_gc_realloc(bvm *vm, void *ptr, size_t old_size, size_t new_size)
     }
     gc->usage = gc->usage + new_size - old_size;
     return obj;
+}
+
+size_t be_gc_memcount(bvm *vm)
+{
+    return vm->gc->usage;
 }
 
 bgcobject* be_newgcobj(bvm *vm, int type, size_t size)
@@ -282,22 +292,22 @@ static void mark_object(bvm *vm, bgcobject *obj, int type)
     }
 }
 
-static void free_proto(bgcobject *obj)
+static void free_proto(bvm *vm, bgcobject *obj)
 {
     bproto *proto = cast_proto(obj);
     if (proto) {
-        be_free(proto->upvals);
-        be_free(proto->ktab);
-        be_free(proto->ptab);
-        be_free(proto->code);
+        be_gc_free(vm, proto->upvals, proto->nupvals * sizeof(bupvaldesc));
+        be_gc_free(vm, proto->ktab, proto->nconst * sizeof(bvalue));
+        be_gc_free(vm, proto->ptab, proto->nproto * sizeof(bproto*));
+        be_gc_free(vm, proto->code, proto->codesize * sizeof(binstruction));
 #if BE_RUNTIME_DEBUG_INFO
-        be_free(proto->lineinfo);
+        be_gc_free(vm, proto->lineinfo, proto->nlineinfo * sizeof(blineinfo));
 #endif
-        be_free(proto);
+        be_gc_free(vm, proto, sizeof(bproto));
     }
 }
 
-static void free_closure(bgcobject *obj)
+static void free_closure(bvm *vm, bgcobject *obj)
 {
     bclosure *cl = cast_closure(obj);
     if (cl) {
@@ -309,22 +319,30 @@ static void free_closure(bgcobject *obj)
             }
             /* delete non-referenced closed upvalue */
             if (uv->value == &uv->u.value && !uv->refcnt) {
-                be_free(uv);
+                be_gc_free(vm, uv, sizeof(bupval));
             }
         }
+        be_gc_free(vm, cl, sizeof(bclosure) + sizeof(bupval*) * (count - 1));
     }
-    be_free(obj);
 }
 
-static void free_ntvclos(bgcobject *obj)
+static void free_ntvclos(bvm *vm, bgcobject *obj)
 {
     bntvclos *f = cast_ntvclos(obj);
     if (f) {
         int count = f->nupvals;
         bupval **uv = &be_ntvclos_upval(f, 0);
         while (count--) {
-            be_free(*uv++);
+            be_gc_free(vm, *uv++, sizeof(bupval));
         }
+    }
+}
+
+static void free_lstring(bvm *vm, bgcobject *obj)
+{
+    blstring *ls = gc_cast(obj, BE_STRING, blstring);
+    if (ls) {
+        be_gc_free(vm, ls, sizeof(blstring) + ls->llen + 1);
     }
 }
 
@@ -332,14 +350,14 @@ static void free_object(bvm *vm, bgcobject *obj)
 {
     (void)vm;
     switch (obj->type) {
-    case BE_STRING: be_free(obj); break; /* long string */
-    case BE_CLASS: be_free(obj); break;
-    case BE_INSTANCE: be_free(obj); break;
+    case BE_STRING: free_lstring(vm, obj); break; /* long string */
+    case BE_CLASS: be_gc_free(vm, obj, sizeof(bclass)); break;
+    case BE_INSTANCE: be_gc_free(vm, obj, sizeof(binstance)); break;
     case BE_MAP: be_map_delete(vm, cast_map(obj)); break;
     case BE_LIST: be_list_delete(vm, cast_list(obj)); break;
-    case BE_CLOSURE: free_closure(obj); break;
-    case BE_NTVCLOS: free_ntvclos(obj); break;
-    case BE_PROTO: free_proto(obj); break;
+    case BE_CLOSURE: free_closure(vm, obj); break;
+    case BE_NTVCLOS: free_ntvclos(vm, obj); break;
+    case BE_PROTO: free_proto(vm, obj); break;
     case BE_MODULE:
         be_module_delete(vm, cast_module(obj));
         break;
@@ -470,9 +488,7 @@ static void reset_fixedlist(bvm *vm)
 
 void be_gc_auto(bvm *vm)
 {
-    bgc *gc = vm->gc;
-    size_t mcount = be_mcount();
-    if (gc->pause && mcount > gc->mcount * gc->steprate / 100) {
+    if (vm->gc->pause && vm->gc->usage > vm->gc->threshold) {
         be_gc_collect(vm);
     }
 }
@@ -490,5 +506,5 @@ void be_gc_collect(bvm *vm)
     delete_white(vm);
     be_gcstrtab(vm);
     reset_fixedlist(vm);
-    vm->gc->mcount = be_mcount();
+    vm->gc->threshold = next_threshold(vm->gc);
 }

@@ -1,5 +1,5 @@
 #include "be_object.h"
-#include "be_mem.h"
+#include "be_gc.h"
 #include <string.h>
 
 #if BE_USE_JSON_MODULE
@@ -135,7 +135,7 @@ static const char* parser_string(bvm *vm, const char *json)
         int len = json_strlen(json++);
         if (len > -1) {
             int ch;
-            char *buf, *dst = buf = be_malloc(len);
+            char *buf, *dst = buf = be_gc_malloc(vm, len);
             while ((ch = *json) != '\0' && ch != '"') {
                 ++json;
                 if (ch == '\\') {
@@ -152,13 +152,13 @@ static const char* parser_string(bvm *vm, const char *json)
                     case 'u': { /* load unicode */
                         dst = load_unicode(dst, json);
                         if (dst == NULL) {
-                            be_free(buf);
+                            be_gc_free(vm, buf, len);
                             return NULL;
                         }
                         json += 4;
                         break;
                     }
-                    default: be_free(buf); return NULL; /* error */
+                    default: be_gc_free(vm, buf, len); return NULL; /* error */
                     }
                 } else {
                     *dst++ = (char)ch;
@@ -166,10 +166,10 @@ static const char* parser_string(bvm *vm, const char *json)
             }
             if (ch == '"') {
                 be_pushnstring(vm, buf, cast_int(dst - buf));
-                be_free(buf);
+                be_gc_free(vm, buf, len);
                 return json + 1; /* skip '"' */
             }
-            be_free(buf);
+            be_gc_free(vm, buf, len);
         }
     }
     return NULL;

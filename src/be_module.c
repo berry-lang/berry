@@ -125,7 +125,7 @@ void be_module_delete(bvm *vm, bmodule *module)
             prev->mnext = module->mnext;
         }
     }
-    be_free(module);
+    be_gc_free(vm, module, sizeof(bmodule));
 }
 
 bvalue* be_module_attr(bmodule *module, bstring *attr)

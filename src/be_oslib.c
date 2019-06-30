@@ -1,6 +1,7 @@
 #include "be_object.h"
 #include "be_mem.h"
 #include "be_sys.h"
+#include "be_gc.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -10,13 +11,13 @@
 
 static int m_getcwd(bvm *vm)
 {
-    char *buf = be_malloc(FNAME_BUF_SIZE);
+    char *buf = be_gc_malloc(vm, FNAME_BUF_SIZE);
     if (be_getcwd(buf, FNAME_BUF_SIZE)) {
         be_pushstring(vm, buf);
     } else {
         be_pushstring(vm, "");
     }
-    be_free(buf);
+    be_gc_free(vm, buf, FNAME_BUF_SIZE);
     be_return(vm);
 }
 

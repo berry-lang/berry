@@ -25,7 +25,7 @@ static void codelineinfo(bfuncinfo *finfo)
     int line = finfo->lexer->lastline;
     blineinfo *li = be_vector_end(vec);
     if (be_vector_isempty(vec) || li->linenumber != line) {
-        be_vector_append(vec, NULL);
+        be_vector_append(finfo->lexer->vm, vec, NULL);
         li = be_vector_end(vec);
         li->endpc = finfo->pc;
         li->linenumber = line;
@@ -40,7 +40,7 @@ static void codelineinfo(bfuncinfo *finfo)
 static int codeinst(bfuncinfo *finfo, binstruction ins)
 {
     /* put new instruction in code array */
-    be_vector_append(&finfo->code, &ins);
+    be_vector_append(finfo->lexer->vm, &finfo->code, &ins);
     finfo->proto->code = be_vector_data(&finfo->code);
     codelineinfo(finfo);
     return finfo->pc++;
@@ -197,7 +197,7 @@ void be_code_patchjump(bfuncinfo *finfo, int jmp)
 static int newconst(bfuncinfo *finfo, bvalue *k)
 {
     int idx = be_vector_count(&finfo->kvec);
-    be_vector_append(&finfo->kvec, k);
+    be_vector_append(finfo->lexer->vm, &finfo->kvec, k);
     finfo->proto->ktab = be_vector_data(&finfo->kvec);
     finfo->proto->nconst = be_vector_count(&finfo->kvec);
     if (k == NULL) {
@@ -300,7 +300,7 @@ static void code_closure(bfuncinfo *finfo, bproto *proto, int dst)
 {
     int idx = be_vector_count(&finfo->pvec);
     /* append proto to current function proto table */
-    be_vector_append(&finfo->pvec, &proto);
+    be_vector_append(finfo->lexer->vm, &finfo->pvec, &proto);
     finfo->proto->ptab = be_vector_data(&finfo->pvec);
     finfo->proto->nproto = be_vector_count(&finfo->pvec);
     codeABx(finfo, OP_CLOSURE, dst, idx); /* load closure to register */

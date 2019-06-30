@@ -158,9 +158,9 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     bproto *proto = be_newproto(vm);
     var_setproto(vm->top, proto);
     be_stackpush(vm);
-    be_vector_init(&finfo->code, sizeof(binstruction));
-    be_vector_init(&finfo->kvec, sizeof(bvalue));
-    be_vector_init(&finfo->pvec, sizeof(bproto*));
+    be_vector_init(vm, &finfo->code, sizeof(binstruction));
+    be_vector_init(vm, &finfo->kvec, sizeof(bvalue));
+    be_vector_init(vm, &finfo->pvec, sizeof(bproto*));
     finfo->local = be_list_new(vm);
     var_setlist(vm->top, finfo->local);
     be_stackpush(vm);
@@ -182,7 +182,7 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     proto->ktab = be_vector_data(&finfo->kvec);
     proto->ptab = be_vector_data(&finfo->pvec);
 #if BE_RUNTIME_DEBUG_INFO
-    be_vector_init(&finfo->linevec, sizeof(blineinfo));
+    be_vector_init(vm, &finfo->linevec, sizeof(blineinfo));
     proto->source = be_newstr(vm, parser->lexer.fname);
     proto->lineinfo = be_vector_data(&finfo->linevec);
     finfo->lexer = &parser->lexer;
@@ -198,7 +198,8 @@ static void setupvals(bfuncinfo *finfo)
         bmapnode *node;
         bmap *map = finfo->upval;
         bmapiter iter = be_map_iter();
-        bupvaldesc *upvals = be_malloc(sizeof(bupvaldesc) * nupvals);
+        bupvaldesc *upvals = be_gc_malloc(
+                finfo->lexer->vm, sizeof(bupvaldesc) * nupvals);
         while ((node = be_map_next(map, &iter)) != NULL) {
             uint32_t v = (uint32_t)node->value.v.i;
             int idx = upval_index(v);
@@ -224,11 +225,11 @@ static void end_func(bparser *parser)
     proto->nstack = finfo->nstack;
     proto->nproto = be_vector_count(&finfo->pvec);
     proto->nconst = be_vector_count(&finfo->kvec);
-    proto->code = be_vector_release(&finfo->code);
-    proto->ktab = be_vector_release(&finfo->kvec);
-    proto->ptab = be_vector_release(&finfo->pvec);
+    proto->code = be_vector_release(vm, &finfo->code);
+    proto->ktab = be_vector_release(vm, &finfo->kvec);
+    proto->ptab = be_vector_release(vm, &finfo->pvec);
 #if BE_RUNTIME_DEBUG_INFO
-    proto->lineinfo = be_vector_release(&finfo->linevec);
+    proto->lineinfo = be_vector_release(vm, &finfo->linevec);
 #endif
     parser->finfo = parser->finfo->prev;
     be_stackpop(vm, 2); /* pop upval and local */
