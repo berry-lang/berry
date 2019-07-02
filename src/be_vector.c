@@ -55,12 +55,14 @@ void be_vector_append(bvm *vm, bvector *vector, void *data)
     }
 }
 
+/* clear the expanded portion if the memory expands */
 void be_vector_append_c(bvm *vm, bvector *vector, void *data)
 {
     int capacity = vector->capacity + 1;
     be_vector_append(vm, vector, data);
     if (vector->capacity > capacity) {
-        memset(be_vector_at(vector, capacity), 0, vector->capacity - capacity);
+        size_t size = (vector->capacity - capacity) * vector->size;
+        memset(be_vector_at(vector, capacity), 0, size);
     }
 }
 

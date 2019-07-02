@@ -459,8 +459,8 @@ static void anon_func(bparser *parser, bexpdesc *e)
     /* 'def' ID '(' varlist ')' block 'end' */
     scan_next_token(parser); /* skip 'def' */
     proto = funcbody(parser, name, FUNC_ANONYMOUS);
-    init_exp(e, ETPROTO, 0);
-    e->v.p = proto;
+    init_exp(e, ETPROTO, be_code_proto(parser->finfo, proto));
+    be_stackpop(parser->vm, 1);
 }
 
 static void new_primtype(bparser *parser, const char *type, bexpdesc *e)
@@ -1025,13 +1025,12 @@ static bstring* func_name(bparser *parser, bexpdesc *e, int ismethod)
 static void def_stmt(bparser *parser)
 {
     bexpdesc e;
-    bstring *name;
     bproto *proto;
+    bfuncinfo *finfo = parser->finfo;
     /* 'def' ID '(' varlist ')' block 'end' */
     scan_next_token(parser); /* skip 'def' */
-    name = func_name(parser, &e, 0);
-    proto = funcbody(parser, name, 0);
-    be_code_closure(parser->finfo, &e, proto);
+    proto = funcbody(parser, func_name(parser, &e, 0), 0);
+    be_code_closure(finfo, &e, be_code_proto(finfo, proto));
     be_stackpop(parser->vm, 1);
 }
 
