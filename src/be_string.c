@@ -81,7 +81,7 @@ static void resize(bvm *vm, int size)
             tab->table[i] = NULL;
         }
         tab->table = be_gc_realloc(vm, tab->table,
-            tab->size * sizeof(bstring *), size * sizeof(bstring *));
+            tab->size * sizeof(bstring*), size * sizeof(bstring*));
     }
     tab->size = size;
 }
@@ -122,7 +122,7 @@ void be_string_deleteall(bvm *vm)
             node = next;
         }
     }
-    be_gc_free(vm, tab->table, tab->size * sizeof(bsstring*));
+    be_gc_free(vm, tab->table, tab->size * sizeof(bstring*));
     be_gc_free(vm, tab, sizeof(bstringtable));
 }
 

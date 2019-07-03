@@ -28,7 +28,7 @@ int be_vector_count(bvector *vector)
 
 bbool be_vector_isempty(bvector *vector)
 {
-    return vector->data && vector->data > vector->end;
+    return cast_bool(vector->data && vector->data > vector->end);
 }
 
 void* be_vector_at(bvector *vector, int index)
@@ -109,7 +109,8 @@ void* be_vector_release(bvm *vm, bvector *vector)
     return vector->data;
 }
 
-static int binarysearch(int value)
+/* use binary search to find the vector capacity between 0-1024 */
+static int binary_search(int value)
 {
     static const uint16_t tab[] = {
         0, 2, 4, 6, 8, 10, 12, 14, 16,
@@ -117,7 +118,7 @@ static int binarysearch(int value)
         192, 256, 384, 512, 768, 1024
     };
     const uint16_t *low = tab;
-    const uint16_t *high = tab + sizeof(tab) - 1;
+    const uint16_t *high = tab + array_count(tab) - 1;
     while (low <= high) {
         const uint16_t *mid = low + ((high - low) >> 1);
         if (*mid == value) {
@@ -145,7 +146,7 @@ static int nextpow(int value)
 int be_nextsize(int size)
 {
     if (size < 1024) {
-        return binarysearch(size);
+        return binary_search(size);
     }
     return nextpow(size);
 }

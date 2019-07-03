@@ -14,15 +14,16 @@
 
 #define next_threshold(gc)  ((gc)->usage * ((gc)->steprate + 100) / 100)
 
-#define GC_PAUSE    (1 << 0)
-#define GC_HALT     (2 << 0)
+#define GC_PAUSE    (1 << 0) /* GC will not be executed automatically */
+#define GC_HALT     (2 << 0) /* GC completely stopped */
 
 struct bgc {
-    bgcobject *list;
-    bgcobject *gray;
-    bgcobject *fixed;
-    size_t threshold, usage;
-    bbyte steprate;
+    bgcobject *list; /* the GC-object list */
+    bgcobject *gray; /* the gray object list */
+    bgcobject *fixed; /* the fixed objecct list  */
+    size_t usage; /* the count of bytes currently allocated */
+    size_t threshold; /* he threshold of allocation for the next GC */
+    bbyte steprate; /* the rate of increase in the distribution between two GCs (percentage) */
     bbyte status;
 };
 
@@ -54,7 +55,7 @@ void be_gc_deleteall(bvm *vm)
         next = node->next;
         free_object(vm, node);
     }
-    be_free(vm->gc);
+    /* vm->gc will be used afterwards, so it is not free here. */
 }
 
 void be_gc_setsteprate(bvm *vm, int rate)
@@ -76,13 +77,13 @@ void be_gc_setpause(bvm *vm, int pause)
 
 static void* _realloc(void *ptr, size_t old_size, size_t new_size)
 {
-    if (old_size == new_size) {
+    if (old_size == new_size) { /* the block unchanged */
         return ptr;
     }
-    if (ptr && new_size) {
+    if (ptr && new_size) { /* realloc block */
         return be_realloc(ptr, new_size);
     }
-    if (new_size) {
+    if (new_size) { /* alloc a new block */
         be_assert(ptr == NULL && old_size == 0);
         return be_malloc(new_size);
     }
@@ -94,16 +95,16 @@ static void* _realloc(void *ptr, size_t old_size, size_t new_size)
 void* be_gc_realloc(bvm *vm, void *ptr, size_t old_size, size_t new_size)
 {
     bgc *gc = vm->gc;
-    void *obj = _realloc(ptr, old_size, new_size);
-    if (!obj && new_size) {
-        be_gc_collect(vm);
-        obj = _realloc(ptr, old_size, new_size);
-        if (!obj) {
+    void *block = _realloc(ptr, old_size, new_size);
+    if (!block && new_size) { /* allocation failure */
+        be_gc_collect(vm); /* try to allocate again after GC */
+        block = _realloc(ptr, old_size, new_size);
+        if (!block) { /* lack of heap space */
             be_throw(vm, BE_MALLOC_FAIL);
         }
     }
-    gc->usage = gc->usage + new_size - old_size;
-    return obj;
+    gc->usage = gc->usage + new_size - old_size; /* update allocated count */
+    return block;
 }
 
 size_t be_gc_memcount(bvm *vm)
@@ -118,10 +119,10 @@ bgcobject* be_newgcobj(bvm *vm, int type, size_t size)
 
     obj = be_gc_malloc(vm, size);
     be_gc_auto(vm);
-    var_settype(obj, (bbyte)type);
+    var_settype(obj, (bbyte)type); /* mark the object type */
     obj->marked = GC_WHITE; /* default gc object type is white */
-    obj->next = gc->list; /* insert to head */
-    gc->list = obj;
+    obj->next = gc->list; /* link to the next field */
+    gc->list = obj; /* insert to head */
     return obj;
 }
 
@@ -129,12 +130,12 @@ bgcobject* be_gc_newstr(bvm *vm, size_t size, int islong)
 {
     bgcobject *obj;
 
-    if (islong) {
+    if (islong) { /* creating long strings is similar to ordinary GC objects */
         return be_newgcobj(vm, BE_STRING, size);
     }
     obj = be_gc_malloc(vm, size);
     be_gc_auto(vm);
-    var_settype(obj, BE_STRING);
+    var_settype(obj, BE_STRING); /* mark the object type to BE_STRING */
     obj->marked = GC_WHITE; /* default string type is white */
     return obj;
 }
@@ -507,16 +508,18 @@ void be_gc_collect(bvm *vm)
     if (vm->gc->status & GC_HALT) {
         return; /* the GC cannot run for some reason */
     }
-    /* step 1: set root-set reference object to unscanned */
+    /* step 1: set root-set reference objects to unscanned */
     premark_global(vm); /* global objects */
     premark_stack(vm); /* stack objects */
     premark_fixed(vm);
-    /* step 2: set unscanned object to black */
+    /* step 2: set unscanned objects to black */
     mark_unscanned(vm);
-    /* step 3: destruct and delete unreachable object */
+    /* step 3: destruct and delete unreachable objects */
     destruct_white(vm);
     delete_white(vm);
     be_gcstrtab(vm);
+    /* step 4: reset the fixed objects */
     reset_fixedlist(vm);
+    /* step 5: calculate the next GC threshold */
     vm->gc->threshold = next_threshold(vm->gc);
 }

@@ -24,7 +24,7 @@
 
 /* detect compiler name and version */
 #if defined(__clang__)
-    #define COMPILER  "clange" __clang_version__
+    #define COMPILER  "clang " __clang_version__
 #elif defined(__GNUC__)
     #define COMPILER  "GCC " __VERSION__
 #elif defined(_MSC_VER)
@@ -105,7 +105,7 @@ static int dofile(bvm *vm)
 }
 
 /* processing options arguments */
-int check_args(bvm *vm)
+static int check_args(bvm *vm)
 {
     int args = 0;
     while (be_top(vm) > 0) {
@@ -168,6 +168,6 @@ int main(int argc, char *argv[])
         be_pushstring(vm, argv[i]);
     }
     res = analysis_args(vm);
-    be_vm_delete(vm);
+    be_vm_delete(vm); /* free all objects and vm */
     return res;
 }

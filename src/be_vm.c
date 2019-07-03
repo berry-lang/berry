@@ -742,6 +742,7 @@ void be_vm_delete(bvm *vm)
     be_stack_delete(vm, &vm->refstack);
     be_gc_free(vm, vm->stack, (vm->stacktop - vm->stack) * sizeof(bvalue));
     be_globalvar_deinit(vm);
+    be_free(vm->gc);
     be_free(vm);
 }
 
