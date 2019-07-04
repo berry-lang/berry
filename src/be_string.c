@@ -21,12 +21,6 @@ const bcstring be_const_str_##_name = { \
     .s = _s \
 }
 
-struct bstringtable {
-    bstring **table;
-    int count; /* string count */
-    int size;
-};
-
 /* const string table */
 struct bconststrtab {
     const bstring* const *table;
@@ -57,7 +51,7 @@ int be_eqstr(bstring *s1, bstring *s2)
 static void resize(bvm *vm, int size)
 {
     int i;
-    bstringtable *tab = vm->strtab;
+    struct bstringtable *tab = &vm->strtab;
     if (size > tab->size) {
         tab->table = be_gc_realloc(vm, tab->table,
             tab->size * sizeof(bstring*), size * sizeof(bstring*));
@@ -103,17 +97,16 @@ uint32_t str_hash(const char *str, size_t len)
 
 void be_string_init(bvm *vm)
 {
-    vm->strtab = be_gc_malloc(vm, sizeof(bstringtable));
-    vm->strtab->size = 0;
-    vm->strtab->count = 0;
-    vm->strtab->table = NULL;
+    vm->strtab.size = 0;
+    vm->strtab.count = 0;
+    vm->strtab.table = NULL;
     resize(vm, 8);
 }
 
 void be_string_deleteall(bvm *vm)
 {
     int i;
-    bstringtable *tab = vm->strtab;
+    struct bstringtable *tab = &vm->strtab;
     for (i = 0; i < tab->size; ++i) {
         bstring *node = tab->table[i];
         while (node) {
@@ -123,7 +116,6 @@ void be_string_deleteall(bvm *vm)
         }
     }
     be_gc_free(vm, tab->table, tab->size * sizeof(bstring*));
-    be_gc_free(vm, tab, sizeof(bstringtable));
 }
 
 bstring* createstrobj(bvm *vm, size_t len, int islong)
@@ -169,9 +161,9 @@ static void strcopy(char *dst, const char *src, size_t len)
 static bstring* newshortstr(bvm *vm, const char *str, size_t len)
 {
     bstring *s;
-    int size = vm->strtab->size;
+    int size = vm->strtab.size;
     uint32_t hash = str_hash(str, len);
-    bstring **list = vm->strtab->table + (hash & (size - 1));
+    bstring **list = vm->strtab.table + (hash & (size - 1));
 
     for (s = *list; s != NULL; s = next(s)) {
         if (len == s->slen && !strncmp(str, sstr(s), len)) {
@@ -186,8 +178,8 @@ static bstring* newshortstr(bvm *vm, const char *str, size_t len)
     cast(bsstring*, s)->hash = hash;
 #endif
     *list = s;
-    vm->strtab->count++;
-    if (vm->strtab->count > size << 2) {
+    vm->strtab.count++;
+    if (vm->strtab.count > size << 2) {
         resize(vm, size << 1);
     }
     return s;
@@ -225,16 +217,16 @@ bstring* be_newstrn(bvm *vm, const char *str, size_t len)
 
 void be_gcstrtab(bvm *vm)
 {
-    bstringtable *strtab = vm->strtab;
-    int size = strtab->size, i;
+    struct bstringtable *tab = &vm->strtab;
+    int size = tab->size, i;
     for (i = 0; i < size; ++i) {
-        bstring **list = strtab->table + i;
+        bstring **list = tab->table + i;
         bstring *prev = NULL, *node, *next;
         for (node = *list; node; node = next) {
             next = next(node);
             if (!gc_isfixed(node) && gc_iswhite(node)) {
                 free_sstring(vm, node);
-                strtab->count--;
+                tab->count--;
                 if (prev) { /* link list */
                     prev->next = cast(void*, next);
                 } else {
@@ -246,7 +238,7 @@ void be_gcstrtab(bvm *vm)
             }
         }
     }
-    if (strtab->count < size >> 2 && size > 8) {
+    if (tab->count < size >> 2 && size > 8) {
         resize(vm, size >> 1);
     }
 }

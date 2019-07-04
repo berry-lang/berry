@@ -12,20 +12,10 @@
 #include "be_exec.h"
 #include "be_debug.h"
 
-#define next_threshold(gc)  ((gc)->usage * ((gc)->steprate + 100) / 100)
+#define next_threshold(gc)  ((gc).usage * ((gc).steprate + 100) / 100)
 
 #define GC_PAUSE    (1 << 0) /* GC will not be executed automatically */
 #define GC_HALT     (2 << 0) /* GC completely stopped */
-
-struct bgc {
-    bgcobject *list; /* the GC-object list */
-    bgcobject *gray; /* the gray object list */
-    bgcobject *fixed; /* the fixed objecct list  */
-    size_t usage; /* the count of bytes currently allocated */
-    size_t threshold; /* he threshold of allocation for the next GC */
-    bbyte steprate; /* the rate of increase in the distribution between two GCs (percentage) */
-    bbyte status;
-};
 
 static void mark_object(bvm *vm, bgcobject *obj, int type);
 static void destruct_object(bvm *vm, bgcobject *obj);
@@ -33,13 +23,11 @@ static void free_object(bvm *vm, bgcobject *obj);
 
 void be_gc_init(bvm *vm)
 {
-    bgc *gc = be_malloc(sizeof(bgc));
-    gc->list = NULL;
-    gc->gray = NULL;
-    gc->fixed = NULL;
-    gc->usage = sizeof(bvm) + sizeof(bgc);
-    gc->status = 0;
-    vm->gc = gc;
+    vm->gc.list = NULL;
+    vm->gc.gray = NULL;
+    vm->gc.fixed = NULL;
+    vm->gc.usage = sizeof(bvm);
+    vm->gc.status = 0;
     be_gc_setsteprate(vm, 200);
 }
 
@@ -47,11 +35,11 @@ void be_gc_deleteall(bvm *vm)
 {
     bgcobject *node, *next;
     /* first: call destructor */
-    for (node = vm->gc->list; node; node = node->next) {
+    for (node = vm->gc.list; node; node = node->next) {
         destruct_object(vm, node);
     }
     /* second: free objects */
-    for (node = vm->gc->list; node; node = next) {
+    for (node = vm->gc.list; node; node = next) {
         next = node->next;
         free_object(vm, node);
     }
@@ -60,18 +48,17 @@ void be_gc_deleteall(bvm *vm)
 
 void be_gc_setsteprate(bvm *vm, int rate)
 {
-    bgc *gc = vm->gc;
     be_assert(rate >= 100 && rate <= 355);
-    gc->steprate = (bbyte)(rate - 100);
-    gc->threshold = next_threshold(gc);
+    vm->gc.steprate = (bbyte)(rate - 100);
+    vm->gc.threshold = next_threshold(vm->gc);
 }
 
 void be_gc_setpause(bvm *vm, int pause)
 {
     if (pause) {
-        vm->gc->status |= GC_PAUSE;
+        vm->gc.status |= GC_PAUSE;
     } else {
-        vm->gc->status &= ~GC_PAUSE;
+        vm->gc.status &= ~GC_PAUSE;
     }
 }
 
@@ -94,7 +81,6 @@ static void* _realloc(void *ptr, size_t old_size, size_t new_size)
 
 void* be_gc_realloc(bvm *vm, void *ptr, size_t old_size, size_t new_size)
 {
-    bgc *gc = vm->gc;
     void *block = _realloc(ptr, old_size, new_size);
     if (!block && new_size) { /* allocation failure */
         be_gc_collect(vm); /* try to allocate again after GC */
@@ -103,33 +89,29 @@ void* be_gc_realloc(bvm *vm, void *ptr, size_t old_size, size_t new_size)
             be_throw(vm, BE_MALLOC_FAIL);
         }
     }
-    gc->usage = gc->usage + new_size - old_size; /* update allocated count */
+    vm->gc.usage = vm->gc.usage + new_size - old_size; /* update allocated count */
     return block;
 }
 
 size_t be_gc_memcount(bvm *vm)
 {
-    return vm->gc->usage;
+    return vm->gc.usage;
 }
 
 bgcobject* be_newgcobj(bvm *vm, int type, size_t size)
 {
-    bgcobject *obj;
-    bgc *gc = vm->gc;
-
-    obj = be_gc_malloc(vm, size);
+    bgcobject *obj = be_gc_malloc(vm, size);
     be_gc_auto(vm);
     var_settype(obj, (bbyte)type); /* mark the object type */
     obj->marked = GC_WHITE; /* default gc object type is white */
-    obj->next = gc->list; /* link to the next field */
-    gc->list = obj; /* insert to head */
+    obj->next = vm->gc.list; /* link to the next field */
+    vm->gc.list = obj; /* insert to head */
     return obj;
 }
 
 bgcobject* be_gc_newstr(bvm *vm, size_t size, int islong)
 {
     bgcobject *obj;
-
     if (islong) { /* creating long strings is similar to ordinary GC objects */
         return be_newgcobj(vm, BE_STRING, size);
     }
@@ -415,7 +397,7 @@ static void premark_stack(bvm *vm)
 
 static void premark_fixed(bvm *vm)
 {
-    bgcobject *node = vm->gc->list;
+    bgcobject *node = vm->gc.list;
     for (; node; node = node->next) {
         if (gc_isfixed(node) && gc_iswhite(node)) {
             gc_setgray(node);
@@ -425,9 +407,8 @@ static void premark_fixed(bvm *vm)
 
 static void mark_unscanned(bvm *vm)
 {
-    bgc *gc = vm->gc;
     bgcobject *node;
-    for (node = gc->list; node; node = node->next) {
+    for (node = vm->gc.list; node; node = node->next) {
         if (gc_isgray(node)) {
             mark_object(vm, node, var_type(node));
         }
@@ -439,7 +420,7 @@ static void destruct_object(bvm *vm, bgcobject *obj)
     if (obj->type == BE_INSTANCE) {
         int type;
         binstance *ins = cast_instance(obj);
-        vm->gc->status |= GC_HALT;
+        vm->gc.status |= GC_HALT;
         var_setinstance(vm->top, ins);
         be_incrtop(vm);
         type = be_instance_member(ins, be_newstr(vm, "deinit"), vm->top);
@@ -449,13 +430,13 @@ static void destruct_object(bvm *vm, bgcobject *obj)
         } else {
             be_stackpop(vm, 2);
         }
-        vm->gc->status &= ~GC_HALT;
+        vm->gc.status &= ~GC_HALT;
     }
 }
 
 static void destruct_white(bvm *vm)
 {
-    bgcobject *node = vm->gc->list;
+    bgcobject *node = vm->gc.list;
     while (node) {
         if (gc_iswhite(node)) {
             destruct_object(vm, node);
@@ -466,13 +447,12 @@ static void destruct_white(bvm *vm)
 
 static void delete_white(bvm *vm)
 {
-    bgc *gc = vm->gc;
     bgcobject *node, *prev, *next;
-    for (node = gc->list, prev = node; node; node = next) {
+    for (node = vm->gc.list, prev = node; node; node = next) {
         next = node->next;
         if (gc_iswhite(node)) {
-            if (node == gc->list) { /* first node */
-                gc->list = node->next;
+            if (node == vm->gc.list) { /* first node */
+                vm->gc.list = node->next;
                 prev = node->next;
             } else { /* not first node */
                 prev->next = next;
@@ -487,9 +467,8 @@ static void delete_white(bvm *vm)
 
 static void reset_fixedlist(bvm *vm)
 {
-    bgc *gc = vm->gc;
     bgcobject *node;
-    for (node = gc->fixed; node; node = node->next) {
+    for (node = vm->gc.fixed; node; node = node->next) {
         if (gc_isdark(node)) {
             gc_setgray(node);
         }
@@ -498,14 +477,14 @@ static void reset_fixedlist(bvm *vm)
 
 void be_gc_auto(bvm *vm)
 {
-    if (vm->gc->status & GC_PAUSE && vm->gc->usage > vm->gc->threshold) {
+    if (vm->gc.status & GC_PAUSE && vm->gc.usage > vm->gc.threshold) {
         be_gc_collect(vm);
     }
 }
 
 void be_gc_collect(bvm *vm)
 {
-    if (vm->gc->status & GC_HALT) {
+    if (vm->gc.status & GC_HALT) {
         return; /* the GC cannot run for some reason */
     }
     /* step 1: set root-set reference objects to unscanned */
@@ -521,5 +500,5 @@ void be_gc_collect(bvm *vm)
     /* step 4: reset the fixed objects */
     reset_fixedlist(vm);
     /* step 5: calculate the next GC threshold */
-    vm->gc->threshold = next_threshold(vm->gc);
+    vm->gc.threshold = next_threshold(vm->gc);
 }

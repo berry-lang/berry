@@ -3,7 +3,7 @@
 
 #include "be_object.h"
 
-typedef struct bglobaldesc {
+typedef struct {
     struct {
         bmap *vtab; /* global variable index table */
         bvector vlist; /* global variable list */
@@ -22,9 +22,23 @@ typedef struct {
     int status;
 } bcallframe;
 
+struct bgc {
+    bgcobject *list; /* the GC-object list */
+    bgcobject *gray; /* the gray object list */
+    bgcobject *fixed; /* the fixed objecct list  */
+    size_t usage; /* the count of bytes currently allocated */
+    size_t threshold; /* he threshold of allocation for the next GC */
+    bbyte steprate; /* the rate of increase in the distribution between two GCs (percentage) */
+    bbyte status;
+};
+
+struct bstringtable {
+    bstring **table;
+    int count; /* string count */
+    int size;
+};
+
 struct bvm {
-    bstringtable *strtab;
-    bgc *gc;
     bglobaldesc gbldesc; /* global description */
     bvalue *stack; /* stack space */
     bvalue *stacktop; /* stack top register */
@@ -37,6 +51,8 @@ struct bvm {
     struct blongjmp *errjmp; /* error jump point */
     bstack refstack; /* object reference stack */
     struct bmodule *modulelist;
+    struct bstringtable strtab;
+    struct bgc gc;
 };
 
 #define NONE_FLAG           0

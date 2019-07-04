@@ -38,8 +38,6 @@ typedef struct bgcobject {
     bcommon_header;
 } bgcobject;
 
-typedef struct bgc bgc;
-typedef struct bstringtable bstringtable;
 typedef struct bclosure bclosure;
 typedef struct bntvclos bntvclos;
 typedef struct bclass bclass;
