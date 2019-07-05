@@ -714,13 +714,13 @@ static void i_import(bvm *vm, binstruction ins)
 
 bvm* be_vm_new(void)
 {
-    bvm *vm = be_malloc(sizeof(bvm));
+    bvm *vm = be_os_malloc(sizeof(bvm));
     be_assert(vm != NULL);
     be_gc_init(vm);
     be_string_init(vm);
     be_stack_init(vm, &vm->callstack, sizeof(bcallframe));
     be_stack_init(vm, &vm->refstack, sizeof(binstance*));
-    vm->stack = be_gc_malloc(vm, sizeof(bvalue) * BE_STACK_FREE_MIN);
+    vm->stack = be_malloc(vm, sizeof(bvalue) * BE_STACK_FREE_MIN);
     vm->stacktop = vm->stack + BE_STACK_FREE_MIN;
     vm->cf = NULL;
     vm->ip = NULL;
@@ -741,9 +741,9 @@ void be_vm_delete(bvm *vm)
     be_string_deleteall(vm);
     be_stack_delete(vm, &vm->callstack);
     be_stack_delete(vm, &vm->refstack);
-    be_gc_free(vm, vm->stack, (vm->stacktop - vm->stack) * sizeof(bvalue));
+    be_free(vm, vm->stack, (vm->stacktop - vm->stack) * sizeof(bvalue));
     be_globalvar_deinit(vm);
-    be_free(vm);
+    be_os_free(vm);
 }
 
 static void vm_exec(bvm *vm)

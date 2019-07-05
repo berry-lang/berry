@@ -1,21 +1,20 @@
 #include "be_vector.h"
 #include "be_string.h"
 #include "be_mem.h"
-#include "be_gc.h"
 #include <string.h>
 
 void be_vector_init(bvm *vm, bvector *vector, int size)
 {
     vector->capacity = 2;
     vector->size = size;
-    vector->data = be_gc_malloc(vm, (size_t)vector->capacity * size);
+    vector->data = be_malloc(vm, (size_t)vector->capacity * size);
     vector->end = (char*)vector->data - size;
     memset(vector->data, 0, (size_t)vector->capacity * size);
 }
 
 void be_vector_delete(bvm *vm, bvector *vector)
 {
-    be_gc_free(vm, vector->data, (size_t)vector->capacity * vector->size);
+    be_free(vm, vector->data, (size_t)vector->capacity * vector->size);
 }
 
 int be_vector_count(bvector *vector)
@@ -43,7 +42,7 @@ void be_vector_append(bvm *vm, bvector *vector, void *data)
     size_t count = be_vector_count(vector);
     if (count >= capacity) {
         int newcap = be_nextsize(vector->capacity);
-        vector->data = be_gc_realloc(vm,
+        vector->data = be_realloc(vm,
                 vector->data, vector->capacity * size, newcap * size);
         vector->end = (char*)vector->data + count * size;
         vector->capacity = newcap;
@@ -77,7 +76,7 @@ void be_vector_resize(bvm *vm, bvector *vector, int count)
     int newcap = be_nextsize(count);
     if (count != be_vector_count(vector)) {
         if (newcap > vector->capacity) {
-            vector->data = be_gc_realloc(vm,
+            vector->data = be_realloc(vm,
                 vector->data, vector->capacity * size, newcap * size);
             vector->capacity = newcap;
         }
@@ -96,12 +95,12 @@ void* be_vector_release(bvm *vm, bvector *vector)
     size_t size = vector->size;
     int count = be_vector_count(vector);
     if (count == 0) {
-        be_gc_free(vm, vector->data, vector->capacity * size);
+        be_free(vm, vector->data, vector->capacity * size);
         vector->capacity = 0;
         vector->data = NULL;
         vector->end = NULL;
     } else if (count < vector->capacity) {
-        vector->data = be_gc_realloc(vm,
+        vector->data = be_realloc(vm,
             vector->data, vector->capacity * size, count * size);
         vector->end = (char*)vector->data + (count - 1) * size;
         vector->capacity = count;

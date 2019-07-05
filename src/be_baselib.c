@@ -1,6 +1,5 @@
 #include "be_object.h"
 #include "be_mem.h"
-#include "be_gc.h"
 #include <string.h>
 
 #define READLINE_STEP       100
@@ -33,19 +32,19 @@ static int l_print(bvm *vm)
 static int m_readline(bvm *vm)
 {
     size_t pos = 0, size = READLINE_STEP;
-    char *buffer = be_gc_malloc(vm, size);
+    char *buffer = be_malloc(vm, size);
     char *res = be_readstring(buffer, (int)size);
     while (res) {
         pos += strlen(buffer + pos) - 1;
         if (!pos || buffer[pos] == '\n') {
             break;
         }
-        buffer = be_gc_realloc(vm, buffer, size, size + READLINE_STEP);
+        buffer = be_realloc(vm, buffer, size, size + READLINE_STEP);
         res = be_readstring(buffer + pos + 1, READLINE_STEP);
         size += READLINE_STEP;
     }
     be_pushstring(vm, buffer);
-    be_gc_free(vm, buffer, size);
+    be_free(vm, buffer, size);
     be_return(vm);
 }
 
@@ -69,7 +68,7 @@ static int l_exit(bvm *vm)
 
 static int l_memcount(bvm *vm)
 {
-    size_t count = be_gc_memcount(vm);
+    size_t count = be_memcount(vm);
     if (count < 0x80000000) {
         be_pushint(vm, (bint)count);
     } else {

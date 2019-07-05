@@ -13,7 +13,6 @@
 #include "be_opcode.h"
 #include "be_debug.h"
 #include "be_exec.h"
-#include "be_gc.h"
 
 #define OP_NOT_BINARY           TokenNone
 #define OP_NOT_UNARY            TokenNone
@@ -198,7 +197,7 @@ static void setupvals(bfuncinfo *finfo)
         bmapnode *node;
         bmap *map = finfo->upval;
         bmapiter iter = be_map_iter();
-        bupvaldesc *upvals = be_gc_malloc(
+        bupvaldesc *upvals = be_malloc(
                 finfo->lexer->vm, sizeof(bupvaldesc) * nupvals);
         while ((node = be_map_next(map, &iter)) != NULL) {
             uint32_t v = (uint32_t)node->value.v.i;

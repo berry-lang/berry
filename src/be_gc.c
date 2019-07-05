@@ -62,45 +62,9 @@ void be_gc_setpause(bvm *vm, int pause)
     }
 }
 
-static void* _realloc(void *ptr, size_t old_size, size_t new_size)
-{
-    if (old_size == new_size) { /* the block unchanged */
-        return ptr;
-    }
-    if (ptr && new_size) { /* realloc block */
-        return be_realloc(ptr, new_size);
-    }
-    if (new_size) { /* alloc a new block */
-        be_assert(ptr == NULL && old_size == 0);
-        return be_malloc(new_size);
-    }
-    be_assert(new_size == 0);
-    be_free(ptr);
-    return NULL;
-}
-
-void* be_gc_realloc(bvm *vm, void *ptr, size_t old_size, size_t new_size)
-{
-    void *block = _realloc(ptr, old_size, new_size);
-    if (!block && new_size) { /* allocation failure */
-        be_gc_collect(vm); /* try to allocate again after GC */
-        block = _realloc(ptr, old_size, new_size);
-        if (!block) { /* lack of heap space */
-            be_throw(vm, BE_MALLOC_FAIL);
-        }
-    }
-    vm->gc.usage = vm->gc.usage + new_size - old_size; /* update allocated count */
-    return block;
-}
-
-size_t be_gc_memcount(bvm *vm)
-{
-    return vm->gc.usage;
-}
-
 bgcobject* be_newgcobj(bvm *vm, int type, size_t size)
 {
-    bgcobject *obj = be_gc_malloc(vm, size);
+    bgcobject *obj = be_malloc(vm, size);
     be_gc_auto(vm);
     var_settype(obj, (bbyte)type); /* mark the object type */
     obj->marked = GC_WHITE; /* default gc object type is white */
@@ -115,7 +79,7 @@ bgcobject* be_gc_newstr(bvm *vm, size_t size, int islong)
     if (islong) { /* creating long strings is similar to ordinary GC objects */
         return be_newgcobj(vm, BE_STRING, size);
     }
-    obj = be_gc_malloc(vm, size);
+    obj = be_malloc(vm, size);
     be_gc_auto(vm);
     var_settype(obj, BE_STRING); /* mark the object type to BE_STRING */
     obj->marked = GC_WHITE; /* default string type is white */
@@ -288,14 +252,14 @@ static void free_proto(bvm *vm, bgcobject *obj)
 {
     bproto *proto = cast_proto(obj);
     if (proto) {
-        be_gc_free(vm, proto->upvals, proto->nupvals * sizeof(bupvaldesc));
-        be_gc_free(vm, proto->ktab, proto->nconst * sizeof(bvalue));
-        be_gc_free(vm, proto->ptab, proto->nproto * sizeof(bproto*));
-        be_gc_free(vm, proto->code, proto->codesize * sizeof(binstruction));
+        be_free(vm, proto->upvals, proto->nupvals * sizeof(bupvaldesc));
+        be_free(vm, proto->ktab, proto->nconst * sizeof(bvalue));
+        be_free(vm, proto->ptab, proto->nproto * sizeof(bproto*));
+        be_free(vm, proto->code, proto->codesize * sizeof(binstruction));
 #if BE_RUNTIME_DEBUG_INFO
-        be_gc_free(vm, proto->lineinfo, proto->nlineinfo * sizeof(blineinfo));
+        be_free(vm, proto->lineinfo, proto->nlineinfo * sizeof(blineinfo));
 #endif
-        be_gc_free(vm, proto, sizeof(bproto));
+        be_free(vm, proto, sizeof(bproto));
     }
 }
 
@@ -311,10 +275,10 @@ static void free_closure(bvm *vm, bgcobject *obj)
             }
             /* delete non-referenced closed upvalue */
             if (uv->value == &uv->u.value && !uv->refcnt) {
-                be_gc_free(vm, uv, sizeof(bupval));
+                be_free(vm, uv, sizeof(bupval));
             }
         }
-        be_gc_free(vm, cl, sizeof(bclosure) + sizeof(bupval*) * (count - 1));
+        be_free(vm, cl, sizeof(bclosure) + sizeof(bupval*) * (count - 1));
     }
 }
 
@@ -325,7 +289,7 @@ static void free_ntvclos(bvm *vm, bgcobject *obj)
         int count = f->nupvals;
         bupval **uv = &be_ntvclos_upval(f, 0);
         while (count--) {
-            be_gc_free(vm, *uv++, sizeof(bupval));
+            be_free(vm, *uv++, sizeof(bupval));
         }
     }
 }
@@ -334,7 +298,7 @@ static void free_lstring(bvm *vm, bgcobject *obj)
 {
     blstring *ls = gc_cast(obj, BE_STRING, blstring);
     if (ls) {
-        be_gc_free(vm, ls, sizeof(blstring) + ls->llen + 1);
+        be_free(vm, ls, sizeof(blstring) + ls->llen + 1);
     }
 }
 
@@ -343,8 +307,8 @@ static void free_object(bvm *vm, bgcobject *obj)
     (void)vm;
     switch (obj->type) {
     case BE_STRING: free_lstring(vm, obj); break; /* long string */
-    case BE_CLASS: be_gc_free(vm, obj, sizeof(bclass)); break;
-    case BE_INSTANCE: be_gc_free(vm, obj, sizeof(binstance)); break;
+    case BE_CLASS: be_free(vm, obj, sizeof(bclass)); break;
+    case BE_INSTANCE: be_free(vm, obj, sizeof(binstance)); break;
     case BE_MAP: be_map_delete(vm, cast_map(obj)); break;
     case BE_LIST: be_list_delete(vm, cast_list(obj)); break;
     case BE_CLOSURE: free_closure(vm, obj); break;

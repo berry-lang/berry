@@ -85,7 +85,7 @@ size_t be_fsize(void *hfile)
 void* be_fopen(const char *filename, const char *modes)
 {
     BYTE mode = 0;
-    FIL *fp = be_malloc(sizeof(FIL));
+    FIL *fp = be_os_malloc(sizeof(FIL));
 
     switch (modes[0]) {
     case 'r': mode |= FA_READ; break;
@@ -106,14 +106,14 @@ void* be_fopen(const char *filename, const char *modes)
     if (fp && f_open(fp, filename, mode) == FR_OK) {
         return fp;
     }
-    be_free(fp);
+    be_os_free(fp);
     return NULL;
 }
 
 int be_fclose(void *hfile)
 {
     int res = f_close(hfile) != FR_OK;
-    be_free(hfile);
+    be_os_free(hfile);
     return res;
 }
 
@@ -213,14 +213,14 @@ int be_unlink(const char *filename)
 
 int be_dirfirst(bdirinfo *info, const char *path)
 {
-    info->dir = be_malloc(sizeof(DIR));
-    info->file = be_malloc(sizeof(FILINFO));
+    info->dir = be_os_malloc(sizeof(DIR));
+    info->file = be_os_malloc(sizeof(FILINFO));
     if (info->dir && info->file) {
         FRESULT fr = f_opendir(info->dir, path);
         return fr == FR_OK ? be_dirnext(info) : 1;
     }
-    be_free(info->dir);
-    be_free(info->file);
+    be_os_free(info->dir);
+    be_os_free(info->file);
     info->dir = NULL;
     info->file = NULL;
     return 1;
@@ -237,8 +237,8 @@ int be_dirclose(bdirinfo *info)
 {
     if (info->dir) {
         int res = f_closedir(info->dir) != FR_OK;
-        be_free(info->dir);
-        be_free(info->file);
+        be_os_free(info->dir);
+        be_os_free(info->file);
         return res;
     }
     return 1;
@@ -291,17 +291,17 @@ int be_unlink(const char *filename)
 
 int be_dirfirst(bdirinfo *info, const char *path)
 {
-    char *buf = be_malloc(strlen(path) + 3);
-    info->file = be_malloc(sizeof(struct _finddata_t));
+    char *buf = be_os_malloc(strlen(path) + 3);
+    info->file = be_os_malloc(sizeof(struct _finddata_t));
     if (buf && info->file) {
         struct _finddata_t *cfile = info->file;
         strcat(strcpy(buf, path), "/*");
         info->dir = (void *)_findfirst(buf, cfile);
         info->name = cfile->name;
-        be_free(buf);
+        be_os_free(buf);
         return (intptr_t)info->dir == -1;
     }
-    be_free(buf);
+    be_os_free(buf);
     return 1;
 }
 
@@ -315,7 +315,7 @@ int be_dirnext(bdirinfo *info)
 
 int be_dirclose(bdirinfo *info)
 {
-    be_free(info->file);
+    be_os_free(info->file);
     return _findclose((intptr_t)info->dir) != 0;
 }
 

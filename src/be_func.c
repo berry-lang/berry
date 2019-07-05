@@ -34,7 +34,7 @@ bupval* be_findupval(bvm *vm, bvalue *level)
     }
     if (!node || node->value != level) {
         /* not found */
-        node = be_gc_malloc(vm, sizeof(bupval));
+        node = be_malloc(vm, sizeof(bupval));
         node->value = level;
         node->refcnt = 0;
         /* insert to list head */
@@ -50,7 +50,7 @@ void be_upvals_close(bvm *vm, bvalue *level)
     while (node && node->value >= level) {
         next = node->u.next;
         if (!node->refcnt) {
-            be_gc_free(vm, node, sizeof(bupval));
+            be_free(vm, node, sizeof(bupval));
         } else {
             node->u.value = *node->value; /* move value to upvalue slot */
             node->value = &node->u.value;
@@ -107,7 +107,7 @@ static void init_upvals(bvm *vm, bntvclos *f)
     int count = f->nupvals;
     bupval **upvals = &be_ntvclos_upval(f, 0);
     while (count--) {
-        bupval *uv = be_gc_malloc(vm, sizeof(bupval)); /* was closed */
+        bupval *uv = be_malloc(vm, sizeof(bupval)); /* was closed */
         uv->value = &uv->u.value;
         uv->refcnt = 1;
         var_setnil(uv->value);

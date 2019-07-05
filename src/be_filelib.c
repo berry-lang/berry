@@ -32,10 +32,10 @@ static int i_read(bvm *vm)
     if (be_iscomptr(vm, -1)) {
         void *fh = be_tocomptr(vm, -1);
         size_t size = readsize(vm, argc, fh);
-        char *buffer = be_gc_malloc(vm, size);
+        char *buffer = be_malloc(vm, size);
         size = be_fread(fh, buffer, size);
         be_pushnstring(vm, buffer, size);
-        be_gc_free(vm, buffer, size);
+        be_free(vm, buffer, size);
         be_return(vm);
     }
     be_return_nil(vm);
@@ -47,19 +47,19 @@ static int i_readline(bvm *vm)
     if (be_iscomptr(vm, -1)) {
         void *fh = be_tocomptr(vm, -1);
         size_t pos = 0, size = READLINE_STEP;
-        char *buffer = be_gc_malloc(vm, size);
+        char *buffer = be_malloc(vm, size);
         char *res = be_fgets(fh, buffer, (int)size);
         while (res) {
             pos += strlen(buffer + pos) - 1;
             if (!pos || buffer[pos] == '\n') {
                 break;
             }
-            buffer = be_gc_realloc(vm, buffer, size, size + READLINE_STEP);
+            buffer = be_realloc(vm, buffer, size, size + READLINE_STEP);
             res = be_fgets(fh, buffer + pos + 1, READLINE_STEP);
             size += READLINE_STEP;
         }
         be_pushnstring(vm, buffer, size);
-        be_gc_free(vm, buffer, size);
+        be_free(vm, buffer, size);
         be_return(vm);
     }
     be_return_nil(vm);

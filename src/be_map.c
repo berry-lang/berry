@@ -156,7 +156,7 @@ static void resize(bvm *vm, bmap *map, int size)
     }
     oldsize = map->size;
     oldslots = map->slots;
-    slots = be_gc_malloc(vm, datasize(size));
+    slots = be_malloc(vm, datasize(size));
     for (i = 0; i < size; ++i) {
         setnil(slots + i);
     }
@@ -175,7 +175,7 @@ static void resize(bvm *vm, bmap *map, int size)
             newslot->value = node->value;
         }
     }
-    be_gc_free(vm, oldslots, datasize(oldsize));
+    be_free(vm, oldslots, datasize(oldsize));
 }
 
 bmap* be_map_new(bvm *vm)
@@ -196,8 +196,8 @@ bmap* be_map_new(bvm *vm)
 
 void be_map_delete(bvm *vm, bmap *map)
 {
-    be_gc_free(vm, map->slots, datasize(map->size));
-    be_gc_free(vm, map, sizeof(bmap));
+    be_free(vm, map->slots, datasize(map->size));
+    be_free(vm, map, sizeof(bmap));
 }
 
 bvalue* be_map_find(bmap *map, bvalue *key)

@@ -5,7 +5,6 @@
 #include "be_mem.h"
 #include "be_sys.h"
 #include "be_debug.h"
-#include "be_gc.h"
 #include <setjmp.h>
 #include <stdlib.h>
 
@@ -150,7 +149,7 @@ int be_loadbuffer(bvm *vm,
 int be_loadfile(bvm *vm, const char *name)
 {
     int res = BE_IO_ERROR;
-    struct filebuf *fbuf = be_gc_malloc(vm, sizeof(struct filebuf));
+    struct filebuf *fbuf = be_malloc(vm, sizeof(struct filebuf));
     fbuf->fp = be_fopen(name, "r");
     if (fbuf->fp) {
         res = be_protectedparser(vm, name, _fgets, fbuf);
@@ -158,7 +157,7 @@ int be_loadfile(bvm *vm, const char *name)
     } else {
         be_pushfstring(vm, "error: can not open file '%s'.", name);
     }
-    be_gc_free(vm, fbuf, sizeof(struct filebuf));
+    be_free(vm, fbuf, sizeof(struct filebuf));
     return res;
 }
 
@@ -231,7 +230,7 @@ static void stack_resize(bvm *vm, size_t size)
 {
     bvalue *old = vm->stack;
     size_t os = (vm->stacktop - old) * sizeof(bvalue);
-    vm->stack = be_gc_realloc(vm, old, os, sizeof(bvalue) * size);
+    vm->stack = be_realloc(vm, old, os, sizeof(bvalue) * size);
     vm->stacktop = vm->stack + size;
     update_callstack(vm, old);
 }

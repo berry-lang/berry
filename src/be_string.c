@@ -1,7 +1,6 @@
 #include "be_string.h"
 #include "be_vm.h"
 #include "be_mem.h"
-#include "be_gc.h"
 #include "be_constobj.h"
 #include <string.h>
 
@@ -53,7 +52,7 @@ static void resize(bvm *vm, int size)
     int i;
     struct bstringtable *tab = &vm->strtab;
     if (size > tab->size) {
-        tab->table = be_gc_realloc(vm, tab->table,
+        tab->table = be_realloc(vm, tab->table,
             tab->size * sizeof(bstring*), size * sizeof(bstring*));
         for (i = tab->size; i < size; ++i) {
             tab->table[i] = NULL;
@@ -74,7 +73,7 @@ static void resize(bvm *vm, int size)
         for (i = size; i < tab->size; ++i) {
             tab->table[i] = NULL;
         }
-        tab->table = be_gc_realloc(vm, tab->table,
+        tab->table = be_realloc(vm, tab->table,
             tab->size * sizeof(bstring*), size * sizeof(bstring*));
     }
     tab->size = size;
@@ -82,7 +81,7 @@ static void resize(bvm *vm, int size)
 
 static void free_sstring(bvm *vm, bstring *str)
 {
-    be_gc_free(vm, str, sizeof(bsstring) + str->slen + 1);
+    be_free(vm, str, sizeof(bsstring) + str->slen + 1);
 }
 
 /* FNV-1a Hash */
@@ -115,7 +114,7 @@ void be_string_deleteall(bvm *vm)
             node = next;
         }
     }
-    be_gc_free(vm, tab->table, tab->size * sizeof(bstring*));
+    be_free(vm, tab->table, tab->size * sizeof(bstring*));
 }
 
 bstring* createstrobj(bvm *vm, size_t len, int islong)

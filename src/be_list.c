@@ -16,7 +16,7 @@ blist* be_list_new(bvm *vm)
         list->capacity = 2;
         var_setlist(vm->top, list);
         be_incrtop(vm);
-        list->data = be_gc_malloc(vm, datasize(list->capacity));
+        list->data = be_malloc(vm, datasize(list->capacity));
         be_stackpop(vm, 1);
     }
     return list;
@@ -24,8 +24,8 @@ blist* be_list_new(bvm *vm)
 
 void be_list_delete(bvm *vm, blist *list)
 {
-    be_gc_free(vm, list->data, datasize(list->capacity));
-    be_gc_free(vm, list, sizeof(blist));
+    be_free(vm, list->data, datasize(list->capacity));
+    be_free(vm, list, sizeof(blist));
 }
 
 bvalue* be_list_index(blist *list, int index)
@@ -44,7 +44,7 @@ bvalue* be_list_append(bvm *vm, blist *list, bvalue *value)
     bvalue *slot;
     if (list->count >= list->capacity) {
         size_t newcap = be_nextsize(list->capacity);
-        list->data = be_gc_realloc(vm, list->data,
+        list->data = be_realloc(vm, list->data,
             datasize(list->capacity), datasize(newcap));
         list->capacity = newcap;
     }
@@ -67,7 +67,7 @@ bvalue* be_list_insert(bvm *vm, blist *list, int index, bvalue *value)
     }
     if (list->count >= list->capacity) {
         size_t newcap = be_nextsize(list->capacity);
-        list->data = be_gc_realloc(vm, list->data,
+        list->data = be_realloc(vm, list->data,
             datasize(list->capacity), datasize(newcap));
         list->capacity = newcap;
     }
@@ -107,7 +107,7 @@ void be_list_resize(bvm *vm, blist *list, int count)
         int newcap = be_nextsize(count);
         if (newcap > list->capacity) {
             bvalue *v, *end;
-            list->data = be_gc_realloc(vm, list->data,
+            list->data = be_realloc(vm, list->data,
                 datasize(list->capacity), datasize(newcap));
             list->capacity = newcap;
             v = list->data + list->count;
