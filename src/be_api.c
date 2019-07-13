@@ -405,6 +405,18 @@ const char* be_classname(bvm *vm, int index)
     return NULL;
 }
 
+int be_classof(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    if (var_isinstance(v)) {
+        bvalue *top = be_incrtop(vm);
+        binstance *ins = var_toobj(v);
+        var_setclass(top, be_instance_class(ins));
+        return 0;
+    }
+    return -1;
+}
+
 int be_strlen(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);

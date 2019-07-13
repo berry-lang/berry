@@ -207,7 +207,7 @@ static void mark_instance(bvm *vm, bgcobject *obj)
     if (o == NULL) {
         return;
     }
-    mark_class(vm, gc_object(o->class));
+    mark_class(vm, gc_object(be_instance_class(o)));
     /* mark self instance and super instance */
     while (o) {
         bvalue *var = be_instance_members(o);

@@ -107,6 +107,14 @@ static int l_classname(bvm *vm)
     be_return_nil(vm);
 }
 
+static int l_classof(bvm *vm)
+{
+    if (be_top(vm) && !be_classof(vm, 1)) {
+        be_return(vm);
+    }
+    be_return_nil(vm);
+}
+
 static int l_number(bvm *vm)
 {
     if (be_top(vm)) {
@@ -271,6 +279,7 @@ void be_load_baselib(bvm *vm)
     be_regfunc(vm, "memcount", l_memcount);
     be_regfunc(vm, "type", l_type);
     be_regfunc(vm, "classname", l_classname);
+    be_regfunc(vm, "classof", l_classof);
     be_regfunc(vm, "number", l_number);
     be_regfunc(vm, "str", l_str);
     be_regfunc(vm, "int", l_int);
@@ -297,6 +306,7 @@ vartab m_builtin (scope: local) {
     memcount, func(l_memcount)
     type, func(l_type)
     classname, func(l_classname)
+    classof, func(l_classof)
     number, func(l_number)
     str, func(l_str)
     int, func(l_int)

@@ -12,6 +12,7 @@
 #define be_class_super(cl)              ((cl)->super)
 #define be_class_setsuper(self, sup)    ((self)->super = (sup))
 #define be_instance_name(obj)           ((obj)->class->name)
+#define be_instance_class(obj)           ((obj)->class)
 #define be_instance_members(obj)        ((obj)->members)
 #define be_instance_member_count(obj)   ((obj)->class->nvar)
 #define be_instance_super(obj)          ((obj)->super)

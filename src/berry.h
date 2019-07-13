@@ -164,6 +164,7 @@ const char* be_str2num(bvm *vm, const char *str);
 int be_top(bvm *vm);
 const char* be_typename(bvm *vm, int index);
 const char* be_classname(bvm *vm, int index);
+int be_classof(bvm *vm, int index);
 int be_strlen(bvm *vm, int index);
 void be_strconcat(bvm *vm, int index);
 void be_pop(bvm *vm, int n);
