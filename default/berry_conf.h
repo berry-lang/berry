@@ -36,14 +36,23 @@
  **/
 #define BE_USE_PRECOMPILED_OBJECT       1
 
-/* Macro: BE_RUNTIME_DEBUG_INFO
+/* Macro: BE_DEBUG_RUNTIME_INFO
  * Set runtime error debugging information.
  * 0: unable to output source file and line number at runtime.
  * 1: output source file and line number information at runtime.
  * 2: the information use uint16_t type (save space)
  * default: 1
  **/
-#define BE_RUNTIME_DEBUG_INFO           1
+#define BE_DEBUG_RUNTIME_INFO           1
+
+/* Macro: BE_DEBUG_DUMP_LEVEL
+ * Set debugging code-dump information.
+ * 0: disable code-dump.
+ * 1: enable the function be_dumpclosure.
+ * 2: enable be_debug_ins_info on the basis of case 1.
+ * default: 2
+ **/
+#define BE_DEBUG_DUMP_LEVEL             2
 
 /* Macro: BE_STACK_TOTAL_MAX
  * Set the maximum total stack size.

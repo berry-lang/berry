@@ -20,7 +20,7 @@
 
 static int var2reg(bfuncinfo *finfo, bexpdesc *e, int dst);
 
-#if BE_RUNTIME_DEBUG_INFO
+#if BE_DEBUG_RUNTIME_INFO
 static void codelineinfo(bfuncinfo *finfo)
 {
     bvector *vec = &finfo->linevec;

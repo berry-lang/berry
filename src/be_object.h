@@ -88,7 +88,7 @@ typedef struct {
 } bupvaldesc;
 
 typedef struct {
-#if BE_RUNTIME_DEBUG_INFO > 1
+#if BE_DEBUG_RUNTIME_INFO > 1
     uint16_t linenumber;
     uint16_t endpc;
 #else
@@ -120,7 +120,7 @@ typedef struct bproto {
     int nconst; /* constants count */
     int nproto; /* proto count */
     char argc; /* argument count */
-#if BE_RUNTIME_DEBUG_INFO /* debug information */
+#if BE_DEBUG_RUNTIME_INFO /* debug information */
     bstring *source;
     blineinfo *lineinfo;
     int nlineinfo;

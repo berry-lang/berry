@@ -148,7 +148,7 @@ static void mark_proto(bvm *vm, bgcobject *obj)
         if (p->name) {
             gc_setdark(gc_object(p->name));
         }
-#if BE_RUNTIME_DEBUG_INFO
+#if BE_DEBUG_RUNTIME_INFO
         if (p->source) {
             gc_setdark(gc_object(p->source));
         }
@@ -256,7 +256,7 @@ static void free_proto(bvm *vm, bgcobject *obj)
         be_free(vm, proto->ktab, proto->nconst * sizeof(bvalue));
         be_free(vm, proto->ptab, proto->nproto * sizeof(bproto*));
         be_free(vm, proto->code, proto->codesize * sizeof(binstruction));
-#if BE_RUNTIME_DEBUG_INFO
+#if BE_DEBUG_RUNTIME_INFO
         be_free(vm, proto->lineinfo, proto->nlineinfo * sizeof(blineinfo));
 #endif
         be_free(vm, proto, sizeof(bproto));

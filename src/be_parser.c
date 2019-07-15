@@ -179,7 +179,7 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     finfo->jpc = NO_JUMP;
     finfo->flag = 0;
     parser->finfo = finfo;
-#if BE_RUNTIME_DEBUG_INFO
+#if BE_DEBUG_RUNTIME_INFO
     be_vector_init(vm, &finfo->linevec, sizeof(blineinfo));
     proto->source = be_newstr(vm, parser->lexer.fname);
     proto->lineinfo = be_vector_data(&finfo->linevec);
@@ -225,7 +225,7 @@ static void end_func(bparser *parser)
     proto->nconst = be_vector_count(&finfo->kvec);
     proto->ptab = be_vector_release(vm, &finfo->pvec);
     proto->nproto = be_vector_count(&finfo->pvec);
-#if BE_RUNTIME_DEBUG_INFO
+#if BE_DEBUG_RUNTIME_INFO
     proto->lineinfo = be_vector_release(vm, &finfo->linevec);
     proto->nlineinfo = be_vector_count(&finfo->linevec);
 #endif

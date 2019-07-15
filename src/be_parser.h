@@ -60,7 +60,7 @@ typedef struct bfuncinfo {
     bvector code; /* code vector */
     bvector kvec; /* constants table */
     bvector pvec; /* proto table */
-#if BE_RUNTIME_DEBUG_INFO /* debug information */
+#if BE_DEBUG_RUNTIME_INFO /* debug information */
     bvector linevec;
 #endif
     int pc; /* program count */

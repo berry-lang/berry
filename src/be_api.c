@@ -788,8 +788,13 @@ int be_pcall(bvm *vm, int argc)
 
 void be_codedump(bvm *vm, int index)
 {
+#if BE_DEBUG_DUMP_LEVEL >= 1
     bvalue *v = index2value(vm, index);
     if (var_isclosure(v)) {
         be_dumpclosure(var_toobj(v));
     }
+#else
+    (void)index;
+    be_pusherror(vm, "codedump unrealized");
+#endif
 }

@@ -23,6 +23,7 @@
         be_writestring(__lbuf);         \
     } while (0)
 
+#if BE_DEBUG_DUMP_LEVEL >= 1
 static void print_inst(binstruction ins, int pc)
 {
     char __lbuf[INST_BUF_SIZE];
@@ -79,19 +80,21 @@ static void print_inst(binstruction ins, int pc)
     be_writestring(__lbuf);
     be_writenewline();
 }
+#endif
 
+#if BE_DEBUG_DUMP_LEVEL >= 1
 void be_dumpclosure(bclosure *cl)
 {
     int pc;
     bproto *proto = cl->proto;
     binstruction *code = proto->code;
-#if BE_RUNTIME_DEBUG_INFO
+#if BE_DEBUG_RUNTIME_INFO
     blineinfo *lineinfo = proto->lineinfo;
     logfmt("source '%s', ", str(proto->source));
 #endif
     logfmt("function '%s':\n", str(proto->name));
     for (pc = 0; pc < proto->codesize; pc++) {
-#if BE_RUNTIME_DEBUG_INFO
+#if BE_DEBUG_RUNTIME_INFO
         if (pc == lineinfo->endpc) {
             logfmt("; line: %d\n", lineinfo->linenumber);
             ++lineinfo;
@@ -100,10 +103,11 @@ void be_dumpclosure(bclosure *cl)
         print_inst(*code++, pc);
     }
 }
+#endif
 
 static const char* sourceinfo(bvm *vm, char *buf, int deepth)
 {
-#if BE_RUNTIME_DEBUG_INFO
+#if BE_DEBUG_RUNTIME_INFO
     int size = be_stack_count(&vm->callstack);
     bcallframe *cf = be_vector_at(&vm->callstack, size + deepth);
     bproto *proto = cast(bclosure*, var_toobj(cf->func))->proto;
@@ -127,6 +131,7 @@ static const char* sourceinfo(bvm *vm, char *buf, int deepth)
 #endif
 }
 
+#if BE_DEBUG_DUMP_LEVEL >= 2
 void be_debug_ins_info(bvm *vm)
 {
     char buf[100];
@@ -141,6 +146,7 @@ void be_debug_ins_info(bvm *vm)
     }
     print_inst(*vm->ip, pc);
 }
+#endif
 
 static void patch_native(bvm *vm, int deepth)
 {
