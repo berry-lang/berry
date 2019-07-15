@@ -171,7 +171,7 @@ int be_protectedcall(bvm *vm, bvalue *v, int argc)
 {
     int res;
     struct pcall s;
-    int calldepth = be_vector_count(&vm->callstack);
+    int calldepth = be_stack_count(&vm->callstack);
     int reg = cast_int(vm->reg - vm->stack);
     int top = cast_int(vm->top - vm->stack);
     s.v = v;
@@ -182,6 +182,7 @@ int be_protectedcall(bvm *vm, bvalue *v, int argc)
         vm->reg = vm->stack + reg;
         be_moveto(vm, idx, top - reg + 1); /* copy error information */
         vm->top = vm->stack + top + 1;
+        be_assert(be_stack_count(&vm->callstack) >= calldepth);
         be_vector_resize(vm, &vm->callstack, calldepth);
         vm->cf = be_stack_top(&vm->callstack);
     }

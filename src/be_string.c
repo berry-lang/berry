@@ -100,6 +100,12 @@ void be_string_init(bvm *vm)
     vm->strtab.count = 0;
     vm->strtab.table = NULL;
     resize(vm, 8);
+#if !BE_USE_PRECOMPILED_OBJECT
+    /* the destructor name deinit needs to exist all the time, to ensure
+     * that it does not need to be created when the heap is exhausted. */
+    be_gc_fix(vm, cast(bgcobject*, be_newstr(vm, "deinit")));
+#endif
+    /* be_const_str_deinit --> for precompiled */
 }
 
 void be_string_deleteall(bvm *vm)

@@ -71,7 +71,7 @@ int be_repl(bvm *vm, breadline getl)
             case BE_EXIT:
                 return be_toindex(vm, -1);
             case BE_MALLOC_FAIL:
-                return -1;
+                return -BE_MALLOC_FAIL;
             default:
                 break;
             }

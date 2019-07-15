@@ -155,7 +155,11 @@ static int analysis_args(bvm *vm)
         be_pop(vm, be_top(vm)); /* clear the stack */
     }
     if (args & arg_i) { /* enter the REPL mode */
-        return be_repl(vm, get_line);
+        int res = be_repl(vm, get_line);
+        if (res == -BE_MALLOC_FAIL) {
+            be_writestring("error: memory allocation failed.\n");
+        }
+        return res;
     }
     return 0;
 }

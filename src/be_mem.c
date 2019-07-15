@@ -4,6 +4,8 @@
 #include "be_gc.h"
 #include <stdlib.h>
 
+#define GC_ALLOC    (1 << 2) /* GC in alloc */
+
 #ifdef BE_EXPLICIT_MALLOC
   #define malloc                BE_EXPLICIT_MALLOC
 #endif
@@ -52,7 +54,9 @@ void* be_realloc(bvm *vm, void *ptr, size_t old_size, size_t new_size)
 {
     void *block = _realloc(ptr, old_size, new_size);
     if (!block && new_size) { /* allocation failure */
+        vm->gc.status |= GC_ALLOC;
         be_gc_collect(vm); /* try to allocate again after GC */
+        vm->gc.status &= ~GC_ALLOC;
         block = _realloc(ptr, old_size, new_size);
         if (!block) { /* lack of heap space */
             be_throw(vm, BE_MALLOC_FAIL);

@@ -15,7 +15,8 @@
 #define next_threshold(gc)  ((gc).usage * ((gc).steprate + 100) / 100)
 
 #define GC_PAUSE    (1 << 0) /* GC will not be executed automatically */
-#define GC_HALT     (2 << 0) /* GC completely stopped */
+#define GC_HALT     (1 << 1) /* GC completely stopped */
+#define GC_ALLOC    (1 << 2) /* GC in alloc */
 
 static void mark_object(bvm *vm, bgcobject *obj, int type);
 static void destruct_object(bvm *vm, bgcobject *obj);
@@ -369,30 +370,45 @@ static void premark_fixed(bvm *vm)
     }
 }
 
+static void mark_inalloc(bvm *vm, bgcobject *obj)
+{
+    binstance *ins = cast_instance(obj);
+    int type = be_instance_member(ins, be_newstr(vm, "deinit"), vm->top);
+    /* an instance of a destructor is not GC at the time of allocation */
+    if (basetype(type) == BE_FUNCTION) {
+        mark_instance(vm, obj);
+    }
+}
+
 static void mark_unscanned(bvm *vm)
 {
     bgcobject *node;
     for (node = vm->gc.list; node; node = node->next) {
         if (gc_isgray(node)) {
             mark_object(vm, node, var_type(node));
+        } else if (vm->gc.status & GC_ALLOC
+            && gc_iswhite(node) && var_isinstance(node)) {
+            mark_inalloc(vm, node);
         }
     }
 }
 
 static void destruct_object(bvm *vm, bgcobject *obj)
 {
+    if (vm->gc.status & GC_ALLOC) {
+        return; /* no destructor is called during the allocation. */
+    }
     if (obj->type == BE_INSTANCE) {
         int type;
         binstance *ins = cast_instance(obj);
         vm->gc.status |= GC_HALT;
-        var_setinstance(vm->top, ins);
-        be_incrtop(vm);
+        /* does not GC when creating the string "deinit". */
         type = be_instance_member(ins, be_newstr(vm, "deinit"), vm->top);
         be_incrtop(vm);
         if (basetype(type) == BE_FUNCTION) {
             be_dofunc(vm, vm->top - 1, 1);
         } else {
-            be_stackpop(vm, 2);
+            be_stackpop(vm, 1);
         }
         vm->gc.status &= ~GC_HALT;
     }
