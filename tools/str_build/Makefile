@@ -5,4 +5,4 @@ ifeq ($(OS), Windows_NT) # Windows
 endif
 
 $(TARGET): main.cpp build_map.cpp
-	@ g++ -O2 main.cpp build_map.cpp -o $(TARGET)
+	@ g++ -std=c++11 -O2 main.cpp build_map.cpp -o $(TARGET)

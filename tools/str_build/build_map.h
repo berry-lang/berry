@@ -28,7 +28,7 @@ private:
         int extra;
     };
     size_t m_count;
-    std::vector<std::vector<str_info>> m_hashtable;
+    std::vector< std::vector<str_info> > m_hashtable;
 };
 
 #endif

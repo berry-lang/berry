@@ -5,4 +5,4 @@ ifeq ($(OS), Windows_NT) # Windows
 endif
 
 $(TARGET): hash_map.cpp map_build.cpp main.cpp
-	@ g++ -O2 hash_map.cpp map_build.cpp main.cpp -o $(TARGET)
+	@ g++ -std=c++11 -O2 hash_map.cpp map_build.cpp main.cpp -o $(TARGET)
