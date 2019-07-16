@@ -91,34 +91,15 @@
         binop_error(vm, #op, a, b); \
     }
 
-/* script closure call */
-#define push_closure(_vm, _f, _ns, _t) { \
-    bclosure *cl = var_toobj(_f); \
-    precall(_vm, _f, _ns, _t); \
-    _vm->cf->ip = _vm->ip; \
-    _vm->cf->status = NONE_FLAG; \
-    _vm->ip = cl->proto->code; \
-}
-
 #define push_native(_vm, _f, _ns, _t) { \
     precall(_vm, _f, _ns, _t); \
     _vm->cf->status = PRIM_FUNC; \
 }
 
-#define ret_native(_vm) { \
-    bcallframe *_cf = _vm->cf; \
-    _vm->reg = _cf->reg; \
-    _vm->top = _cf->top; \
-    be_stack_pop(&_vm->callstack); \
-    _vm->cf = be_stack_top(&_vm->callstack); \
-}
-
-#define attribute_error(vm, b, c, t) {          \
-    const char *attr = var_isstr(c) ?           \
-        str(var_tostr(c)) : be_vtype2str(c);    \
-    vm_error(vm,                                \
-        "'%s' value has no " t " '%s'",         \
-        be_vtype2str(b), attr);                 \
+static void attribute_error(bvm *vm, const char *t, bvalue *b, bvalue *c)
+{
+    const char *attr = var_isstr(c) ? str(var_tostr(c)) : be_vtype2str(c);
+    vm_error(vm, "'%s' value has no %s '%s'", be_vtype2str(b), t, attr);
 }
 
 static void binop_error(bvm *vm, const char *op, bvalue *a, bvalue *b)
@@ -162,6 +143,24 @@ static void precall(bvm *vm, bvalue *func, int nstack, int mode)
     vm->reg = func + 1;
     vm->top = vm->reg + nstack;
     vm->cf = cf;
+}
+
+static void push_closure(bvm *vm, bvalue *func, int nstack, int mode)
+{
+    bclosure *cl = var_toobj(func);
+    precall(vm, func, nstack, mode);
+    vm->cf->ip = vm->ip;
+    vm->cf->status = NONE_FLAG;
+    vm->ip = cl->proto->code;
+}
+
+static void ret_native(bvm *vm)
+{
+    bcallframe *_cf = vm->cf;
+    vm->reg = _cf->reg;
+    vm->top = _cf->top;
+    be_stack_pop(&vm->callstack);
+    vm->cf = be_stack_top(&vm->callstack);
 }
 
 static bbool obj2bool(bvm *vm, bvalue *var)
@@ -583,7 +582,7 @@ static void i_getmember(bvm *vm, binstruction ins)
                 be_module_name(module), str(attr));
         }
     } else {
-        attribute_error(vm, b, c, "attribute");
+        attribute_error(vm, "attribute", b, c);
     }
 }
 
@@ -616,7 +615,7 @@ static void i_getmethod(bvm *vm, binstruction ins)
                 be_module_name(module), str(attr));
         }
     } else {
-        attribute_error(vm, b, c, "method");
+        attribute_error(vm, "method", b, c);
     }
 }
 
@@ -631,7 +630,7 @@ static void i_setmember(bvm *vm, binstruction ins)
                 str(be_instance_name(obj)), str(attr));
         }
     } else {
-        attribute_error(vm, a, b, "writable attribute");
+        attribute_error(vm, "writable attribute", a, b);
     }
 }
 
