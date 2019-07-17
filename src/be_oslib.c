@@ -167,7 +167,7 @@ be_native_module_attr_table(os_attr) {
 be_define_native_module(os, os_attr);
 #else
 /* @const_object_info_begin
-module path (scope: local) {
+module path (scope: local, depend: BE_USE_OS_MODULE) {
     isdir, func(m_isdir)
     isfile, func(m_isfile)
     exists, func(m_exists)
@@ -177,7 +177,7 @@ module path (scope: local) {
 #include "../generate/be_fixed_path.h"
 
 /* @const_object_info_begin
-module os (scope: global) {
+module os (scope: global, depend: BE_USE_OS_MODULE) {
     getcwd, func(m_getcwd)
     chdir, func(m_chdir)
     mkdir, func(m_mkdir)

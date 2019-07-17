@@ -1,13 +1,14 @@
 #include "map_build.h"
 #include "hash_map.h"
+#include "macro_table.h"
 #include <regex>
 #include <sstream>
 #include <fstream>
 
-map_build::map_build(const std::string &str, const std::string &path)
+map_build::map_build(const macro_table *macro, const std::string &path)
 {
+    m_macro = macro;
     m_outpath = path.substr(path.find_last_of("\\") + 1);
-	parse_block(str);
 }
 
 void map_build::parse_block(const std::string &str)
@@ -74,15 +75,17 @@ std::string map_build::block_tostring(const block &block)
 {
 	std::ostringstream ostr;
 
-	if (block.type == "map") {
-		ostr << map_tostring(block, block.name);
-	} else if (block.type == "class") {
-		ostr << class_tostring(block);
-	} else if (block.type == "vartab") {
-		ostr << vartab_tostring(block);
-	} else if (block.type == "module") {
-		ostr << module_tostring(block);
-	}
+    if (block_depend(block)) {
+        if (block.type == "map") {
+            ostr << map_tostring(block, block.name);
+        } else if (block.type == "class") {
+            ostr << class_tostring(block);
+        } else if (block.type == "vartab") {
+            ostr << vartab_tostring(block);
+        } else if (block.type == "module") {
+            ostr << module_tostring(block);
+        }
+    }
 	writefile("be_fixed_" + block.name + ".h", ostr.str());
 	return ostr.str();
 }
@@ -206,6 +209,14 @@ std::string map_build::name(const block &block)
         return block.name;
     }
     return block.attr.at("name");
+}
+
+bool map_build::block_depend(const block &block)
+{
+    if (block.attr.find("depend") != block.attr.end()) {
+        return m_macro->query(block.attr.at("depend"));
+    }
+    return true;
 }
 
 std::string map_build::str()

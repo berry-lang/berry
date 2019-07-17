@@ -9,8 +9,8 @@ class macro_table {
 public:
     macro_table() {}
     void scan_file(const std::string &filename);
-    bool query(const std::string &str);
-    std::map<std::string, int> table();
+    bool query(const std::string &str) const;
+    std::map<std::string, int> table() const;
 
 private:
     std::string readfile(const std::string &filename);

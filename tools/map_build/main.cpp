@@ -4,8 +4,34 @@
 #include <string>
 #include <regex>
 #include "map_build.h"
+#include "macro_table.h"
 
-std::string get_str(const std::string &filename, const std::string &str)
+class argument {
+public:
+    argument(int argc, char **argv);
+    ~argument();
+    void build();
+
+private:
+    void add_arg(const std::string &arg);
+    std::string get_str(const std::string &filename, const std::string &str);
+    void gen_map_data(const std::string &srcname, const std::string &path);
+    void listdir(const std::string &srcpath, const std::string &dstpath);
+
+private:
+    enum arg_state {
+        Input,
+        Output,
+        Config
+    };
+    std::string m_output;
+    std::vector<std::string> m_input;
+    std::vector<std::string> m_config;
+    arg_state m_state;
+    macro_table *m_macro;
+};
+
+std::string argument::get_str(const std::string &filename, const std::string &str)
 {
     size_t size = filename.size();
     if (size > 2 && filename.substr(size - 2, 2) == ".c") {
@@ -22,13 +48,14 @@ std::string get_str(const std::string &filename, const std::string &str)
     return str;
 }
 
-static void gen_map_data(const std::string &srcname, const std::string &path)
+void argument::gen_map_data(const std::string &srcname, const std::string &path)
 {
     std::ifstream in(srcname);
     std::ostringstream tmp;
     tmp << in.rdbuf();
     std::string str = tmp.str();
-    map_build mb(get_str(srcname, str), path);
+    map_build mb(m_macro, path);
+    mb.parse_block(get_str(srcname, str));
     mb.str();
 }
 
@@ -42,7 +69,7 @@ static void gen_map_data(const std::string &srcname, const std::string &path)
 #endif
 
 #ifndef _MSC_VER
-static void listdir(const std::string &srcpath, const std::string &dstpath)
+void argument::listdir(const std::string &srcpath, const std::string &dstpath)
 {
     DIR *dp;
     struct dirent *ep;
@@ -60,7 +87,7 @@ static void listdir(const std::string &srcpath, const std::string &dstpath)
     }
 }
 #else
-static void listdir(const std::string &srcpath, const std::string &dstpath)
+void argument::listdir(const std::string &srcpath, const std::string &dstpath)
 {
     HANDLE find;
     WIN32_FIND_DATA data;
@@ -79,12 +106,58 @@ static void listdir(const std::string &srcpath, const std::string &dstpath)
 }
 #endif
 
+void argument::build()
+{
+    for (auto it : m_input) {
+        listdir(it, m_output);
+    }
+}
+
+argument::argument(int argc, char **argv)
+{
+    m_state = Input;
+    for (int i = 1; i < argc; ++i) {
+        add_arg(argv[i]);
+    }
+    m_macro = new macro_table();
+    for (auto it : m_config) {
+        m_macro->scan_file(it);
+    }
+}
+
+argument::~argument()
+{
+    delete m_macro;
+}
+
+void argument::add_arg(const std::string &arg)
+{
+    if (arg == "-i") {
+        m_state = Input;
+    } else if (arg == "-o") {
+        m_state = Output;
+    } else if (arg == "-c") {
+        m_state = Config;
+    } else {
+        switch (m_state) {
+        case Output:
+            m_output = arg;
+            break;
+        case Config:
+            m_config.push_back(arg);
+            break;
+        case Input:
+        default:
+            m_input.push_back(arg);
+            break;
+        }
+        m_state = Input;
+    }
+}
+
 int main(int argc, char *argv[])
 {
-    if (argc > 1) {
-        for (int i = 2; i < argc; ++i) {
-            listdir(argv[i], argv[1]);
-        }
-    }
-	return 0;
+    argument arg(argc, argv);
+    arg.build();
+    return 0;
 }

@@ -268,7 +268,7 @@ be_native_module_attr_table(attr_table) {
 be_define_native_module(math, attr_table);
 #else
 /* @const_object_info_begin
-module math (scope: global) {
+module math (scope: global, depend: BE_USE_MATH_MODULE) {
     abs, func(m_abs)
     ceil, func(m_ceil)
     floor, func(m_floor)

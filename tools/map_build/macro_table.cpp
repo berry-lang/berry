@@ -25,7 +25,7 @@ int macro_table::parse_value(std::string str)
 void macro_table::scan_file(const std::string &filename)
 {
     std::string str(readfile(filename));
-    std::regex reg("^\\s*#define\\s+(\\w+)([ \t]+(.+)?(//|/*)?|\\n)");
+    std::regex reg("\\s*#define\\s+(\\w+)([ \\t]+(.+)?(//|/*)?|[\\r\\n])");
     std::sregex_iterator it(str.begin(), str.end(), reg);
     std::sregex_iterator end;
     while (it != end) {
@@ -34,18 +34,18 @@ void macro_table::scan_file(const std::string &filename)
     }
 }
 
-bool macro_table::query(const std::string &str)
+bool macro_table::query(const std::string &str) const
 {
     std::regex reg("(!?)(\\w+)");
     std::match_results<std::string::const_iterator> res;
     if (regex_match(str, res, reg)) {
-        int value = m_map[str];
+        int value = m_map.at(str);
         return res[1] == "!" ? value == 0 : value != 0;
     }
     return 0;
 }
 
-std::map<std::string, int> macro_table::table()
+std::map<std::string, int> macro_table::table() const
 {
     return m_map;
 }

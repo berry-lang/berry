@@ -409,7 +409,7 @@ be_native_module_attr_table(attr_table) {
 be_define_native_module(json, attr_table);
 #else
 /* @const_object_info_begin
-module json (scope: global) {
+module json (scope: global, depend: BE_USE_JSON_MODULE) {
     load, func(m_json_load)
     dump, func(m_json_dump)
 }

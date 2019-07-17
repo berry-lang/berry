@@ -55,7 +55,7 @@ be_native_module_attr_table(time_attr) {
 be_define_native_module(time, time_attr);
 #else
 /* @const_object_info_begin
-module time (scope: global) {
+module time (scope: global, depend: BE_USE_TIME_MODULE) {
     time, func(m_time)
     dump, func(m_dump)
     clock, func(m_clock)

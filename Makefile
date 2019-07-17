@@ -8,6 +8,7 @@ MKDIR     = mkdir
 INCPATH   = src default
 SRCPATH   = src default
 GENERATE  = generate
+CONFIG	  = default/berry_conf.h
 MAP_BUILD = tools/map_build/map_build
 STR_BUILD = tools/str_build/str_build
 CONST_TAB = $(GENERATE)/be_const_strtab.h
@@ -55,9 +56,9 @@ sinclude $(DEPS)
 
 $(OBJS): $(CONST_TAB)
 
-$(CONST_TAB): $(STR_BUILD) $(MAP_BUILD) $(GENERATE) $(SRCS)
+$(CONST_TAB): $(STR_BUILD) $(MAP_BUILD) $(GENERATE) $(SRCS) $(CONFIG)
 	$(MSG) [Prebuild] generate resources
-	$(Q) $(MAP_BUILD) $(GENERATE) $(SRCPATH)
+	$(Q) $(MAP_BUILD) -o $(GENERATE) $(SRCPATH) -c $(CONFIG)
 	$(Q) $(STR_BUILD) $(GENERATE) $(SRCPATH) $(GENERATE)
 
 $(GENERATE):
@@ -79,7 +80,7 @@ uninstall:
 
 prebuild: $(STR_BUILD) $(MAP_BUILD) $(GENERATE)
 	$(MSG) [Prebuild] generate resources
-	$(Q) $(MAP_BUILD) $(GENERATE) $(SRCPATH)
+	$(Q) $(MAP_BUILD) -o $(GENERATE) $(SRCPATH) -c $(CONFIG)
 	$(Q) $(STR_BUILD) $(GENERATE) $(SRCPATH) $(GENERATE)
 	$(MSG) done
 

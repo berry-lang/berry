@@ -428,7 +428,7 @@ be_native_module_attr_table(str_attr) {
 be_define_native_module(string, str_attr);
 #else
 /* @const_object_info_begin
-module string (scope: global) {
+module string (scope: global, depend: BE_USE_STRING_MODULE) {
     format, func(str_format)
 }
 @const_object_info_end */
