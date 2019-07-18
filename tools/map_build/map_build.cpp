@@ -14,15 +14,15 @@ map_build::map_build(const macro_table *macro, const std::string &path)
 void map_build::parse_block(const std::string &str)
 {
 	const std::string body;
-	std::regex reg("(\\w+)\\s+(\\w+)(\\s*\\(([^\\)]*)\\)\\s*|\\s+)\\{([^\\}]*)\\}");
+	std::regex reg("(\\w+)\\s+(\\w+)(?:\\s*\\(([^\\)]*)\\)\\s*|\\s+)\\{([^\\}]*)\\}");
 	std::sregex_iterator it(str.begin(), str.end(), reg);
 	std::sregex_iterator end;
 	while (it != end) {
 		block bl;
 		bl.type = it->str(1);
 		bl.name = it->str(2);
-        bl.attr = parse_attr(it->str(4));
-		bl.data = parse_body(it->str(5));
+        bl.attr = parse_attr(it->str(3));
+		bl.data = parse_body(it->str(4));
 		m_block.push_back(bl);
 		++it;
 	}
@@ -44,7 +44,7 @@ std::map<std::string, std::string> map_build::parse_body(const std::string &str)
 
 std::map<std::string, std::string> map_build::parse_attr(const std::string &str)
 {
-    std::regex reg("(\\w+)\\s*:\\s*(\\w+)([^\\w]+|$)");
+    std::regex reg("(\\w+)\\s*:\\s*(\\w+)(?:[^\\w]+|$)");
     std::sregex_iterator it(str.begin(), str.end(), reg);
     std::sregex_iterator end;
     std::map<std::string, std::string> attr;

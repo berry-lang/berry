@@ -25,11 +25,11 @@ int macro_table::parse_value(std::string str)
 void macro_table::scan_file(const std::string &filename)
 {
     std::string str(readfile(filename));
-    std::regex reg("\\s*#define\\s+(\\w+)([ \\t]+(.+)?(//|/*)?|[\\r\\n])");
+    std::regex reg("(?:\\n|$)\\s*#define\\s+(\\w+)[ \\t]+(\\w+)");
     std::sregex_iterator it(str.begin(), str.end(), reg);
     std::sregex_iterator end;
     while (it != end) {
-        m_map[it->str(1)] = parse_value(it->str(3));
+        m_map[it->str(1)] = parse_value(it->str(2));
         ++it;
     }
 }
