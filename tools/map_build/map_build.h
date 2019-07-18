@@ -33,6 +33,7 @@ private:
     std::string super(const block &block);
     std::string name(const block &block);
     bool block_depend(const block &block);
+    std::string query_item(const std::string &str);
 
 private:
 	std::vector<block> m_block;

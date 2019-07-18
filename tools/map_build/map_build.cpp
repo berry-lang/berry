@@ -35,9 +35,11 @@ std::map<std::string, std::string> map_build::parse_body(const std::string &str)
     std::sregex_iterator it(str.begin(), str.end(), reg);
     std::sregex_iterator end;
     std::map<std::string, std::string> data;
-    while (it != end) {
-        data[it->str(1)] = it->str(2);
-        ++it;
+    for (; it != end; ++it) {
+        std::string item = query_item(it->str(2));
+        if (!item.empty()) {
+            data[it->str(1)] = item;
+        }
     }
     return data;
 }
@@ -228,4 +230,14 @@ std::string map_build::str()
 		ostr << block_tostring(it) << std::endl;
 	}
 	return ostr.str();
+}
+
+std::string map_build::query_item(const std::string &str)
+{
+    std::regex reg("^([^,]*),\\s*(\\w+).*$");
+    std::match_results<std::string::const_iterator> res;
+    if (regex_match(str, res, reg)) {
+        return m_macro->query(res[2]) ? res[1] : std::string();
+    }
+    return str;
 }
