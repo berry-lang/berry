@@ -5,11 +5,11 @@
 #include <string>
 #include <vector>
 
-class build_map
+class str_build
 {
 public:
-    build_map(std::map<std::string, int> map, const std::string &path);
-    ~build_map();
+    str_build(std::map<std::string, int> map);
+    ~str_build();
     void build(const std::string &path);
 
 private:

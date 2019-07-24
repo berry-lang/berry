@@ -2,7 +2,6 @@ CFLAGS    = -Wall -Wextra -std=c99 -pedantic-errors -O2
 LIBS      = -lm
 TARGET    = berry
 CC        = gcc
-MAKE      = make
 MKDIR     = mkdir
 
 INCPATH   = src default
@@ -10,14 +9,13 @@ SRCPATH   = src default
 GENERATE  = generate
 CONFIG	  = default/berry_conf.h
 MAP_BUILD = tools/map_build/map_build
-STR_BUILD = tools/str_build/str_build
 CONST_TAB = $(GENERATE)/be_const_strtab.h
+MAKE_MAP_BUILD = $(MAKE) -C tools/map_build
 
 ifeq ($(OS), Windows_NT) # Windows
     CFLAGS += -Wno-format # for "%I64d" warning
     TARGET := $(TARGET).exe
     MAP_BUILD := $(MAP_BUILD).exe
-    STR_BUILD := $(STR_BUILD).exe
 else
     CFLAGS += -DUSE_READLINE_LIB
     LIBS += -lreadline
@@ -26,6 +24,7 @@ endif
 ifneq ($(V), 1)
     Q=@
     MSG=@echo
+    MAKE_MAP_BUILD += -s Q=$(Q)
 else
     MSG=@true
 endif
@@ -56,21 +55,16 @@ sinclude $(DEPS)
 
 $(OBJS): $(CONST_TAB)
 
-$(CONST_TAB): $(STR_BUILD) $(MAP_BUILD) $(GENERATE) $(SRCS) $(CONFIG)
+$(CONST_TAB): $(MAP_BUILD) $(GENERATE) $(SRCS) $(CONFIG)
 	$(MSG) [Prebuild] generate resources
-	$(Q) $(MAP_BUILD) -o $(GENERATE) $(SRCPATH) -c $(CONFIG)
-	$(Q) $(STR_BUILD) $(GENERATE) $(SRCPATH) $(GENERATE)
+	$(Q) $(MAP_BUILD) -i $(SRCPATH) -c $(CONFIG) -o $(GENERATE)
 
 $(GENERATE):
 	$(Q) $(MKDIR) $(GENERATE)
 
-$(STR_BUILD):
-	$(MSG) [Make] str_build
-	$(Q) $(MAKE) -C tools/str_build -s
-
 $(MAP_BUILD):
 	$(MSG) [Make] map_build
-	$(Q) $(MAKE) -C tools/map_build -s
+	$(Q) $(MAKE_MAP_BUILD)
 
 install:
 	cp $(TARGET) /usr/local/bin
@@ -78,14 +72,13 @@ install:
 uninstall:
 	$(RM) /usr/local/bin/$(TARGET)
 
-prebuild: $(STR_BUILD) $(MAP_BUILD) $(GENERATE)
+prebuild: $(MAP_BUILD) $(GENERATE)
 	$(MSG) [Prebuild] generate resources
 	$(Q) $(MAP_BUILD) -o $(GENERATE) $(SRCPATH) -c $(CONFIG)
-	$(Q) $(STR_BUILD) $(GENERATE) $(SRCPATH) $(GENERATE)
 	$(MSG) done
 
 clean:
 	$(MSG) [Clean...]
-	$(Q) $(RM) $(OBJS) $(DEPS)
-	$(Q) $(RM) $(GENERATE)/*
+	$(Q) $(RM) $(OBJS) $(DEPS) $(GENERATE)/*
+	$(Q) $(MAKE_MAP_BUILD) clean
 	$(MSG) done

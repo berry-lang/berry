@@ -225,7 +225,6 @@ std::string map_build::str()
 {
 	hash_map map;
 	std::ostringstream ostr;
-
 	for (auto it : m_block) {
 		ostr << block_tostring(it) << std::endl;
 	}

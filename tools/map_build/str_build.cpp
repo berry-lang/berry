@@ -1,9 +1,9 @@
-#include "build_map.h"
+#include "str_build.h"
 #include <iostream>
 #include <sstream>
 #include <fstream>
 
-build_map::build_map(std::map<std::string, int> map, const std::string &path)
+str_build::str_build(std::map<std::string, int> map)
 {
     size_t size = map.size() / 2;
     m_count = map.size();
@@ -12,21 +12,20 @@ build_map::build_map(std::map<std::string, int> map, const std::string &path)
         make_ceil(it.first);
     }
     keywords();
-    build(path);
 }
 
-build_map::~build_map()
+str_build::~str_build()
 {
 }
 
-void build_map::build(const std::string &path)
+void str_build::build(const std::string &path)
 {
     std::string prefix(path + "/be_const_strtab");
     writefile(prefix + "_def.h", build_table_def());
     writefile(prefix + ".h", build_table_ext());
 }
 
-void build_map::keywords()
+void str_build::keywords()
 {
     constexpr int opif = 48;
     const static std::map<std::string, int> tab = {
@@ -45,7 +44,7 @@ void build_map::keywords()
     }
 }
 
-uint32_t build_map::hashcode(const std::string &string)
+uint32_t str_build::hashcode(const std::string &string)
 {
     size_t len = string.size();
 	const char *str = string.data();
@@ -56,7 +55,7 @@ uint32_t build_map::hashcode(const std::string &string)
 	return hash;
 }
 
-void build_map::make_ceil(const std::string &string, int extra)
+void str_build::make_ceil(const std::string &string, int extra)
 {
     str_info info;
     info.hash = hashcode(escape(string));
@@ -65,7 +64,7 @@ void build_map::make_ceil(const std::string &string, int extra)
     m_hashtable[info.hash % m_hashtable.size()].push_back(info);
 }
 
-std::string build_map::escape(const std::string &string)
+std::string str_build::escape(const std::string &string)
 {
     if (string.size() > 4 && string.substr(0, 4) == "dot_") {
         return "." + string.substr(4);
@@ -90,7 +89,7 @@ std::string build_map::escape(const std::string &string)
     return string;
 }
 
-void build_map::writefile(const std::string &filename, const std::string &text)
+void str_build::writefile(const std::string &filename, const std::string &text)
 {
     std::ostringstream buf;
 	std::ifstream fin(filename);
@@ -103,7 +102,7 @@ void build_map::writefile(const std::string &filename, const std::string &text)
 	}
 }
 
-std::string build_map::build_table_def()
+std::string str_build::build_table_def()
 {
     std::ostringstream ostr;
     for (auto bucket : m_hashtable) {
@@ -143,7 +142,7 @@ std::string build_map::build_table_def()
     return ostr.str();
 }
 
-std::string build_map::build_table_ext()
+std::string str_build::build_table_ext()
 {
     std::ostringstream ostr;
     for (auto bucket : m_hashtable) {

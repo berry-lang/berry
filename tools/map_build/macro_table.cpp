@@ -39,7 +39,8 @@ bool macro_table::query(const std::string &str) const
     std::regex reg("(!?)(\\w+)");
     std::match_results<std::string::const_iterator> res;
     if (regex_match(str, res, reg)) {
-        int value = m_map.at(str);
+        auto it = m_map.find(res[2]);
+        int value = it == m_map.end() ? 0 : it->second;
         return res[1] == "!" ? value == 0 : value != 0;
     }
     return 0;

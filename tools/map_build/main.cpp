@@ -1,62 +1,43 @@
+#include "main.h"
+#include "map_build.h"
+#include "str_build.h"
+#include "str_map.h"
+#include "macro_table.h"
 #include <iostream>
 #include <fstream>  
 #include <sstream>
-#include <string>
 #include <regex>
-#include "map_build.h"
-#include "macro_table.h"
 
-class argument {
-public:
-    argument(int argc, char **argv);
-    ~argument();
-    void build();
-
-private:
-    void add_arg(const std::string &arg);
-    std::string get_str(const std::string &filename, const std::string &str);
-    void gen_map_data(const std::string &srcname, const std::string &path);
-    void listdir(const std::string &srcpath, const std::string &dstpath);
-
-private:
-    enum arg_state {
-        Input,
-        Output,
-        Config
-    };
-    std::string m_output;
-    std::vector<std::string> m_input;
-    std::vector<std::string> m_config;
-    arg_state m_state;
-    macro_table *m_macro;
-};
-
-std::string argument::get_str(const std::string &filename, const std::string &str)
+std::string builder::info_block(const std::string &text)
 {
-    size_t size = filename.size();
-    if (size > 2 && filename.substr(size - 2, 2) == ".c") {
-        std::regex reg("@const_object_info_begin([^@]+)@const_object_info_end");
-        std::sregex_iterator it(str.begin(), str.end(), reg);
-        std::sregex_iterator end;
-        std::string result;
-        while (it != end) {
-            result += it->str(1);
-            ++it;
-        }
-        return result;
+    std::regex reg("@const_object_info_begin([^@]+)@const_object_info_end");
+    std::sregex_iterator it(text.begin(), text.end(), reg);
+    std::sregex_iterator end;
+    std::string result;
+    while (it != end) {
+        result += it->str(1);
+        ++it;
     }
-    return str;
+    return result;
 }
 
-void argument::gen_map_data(const std::string &srcname, const std::string &path)
+void builder::parse_all(const std::string &filename, const std::string &subname)
 {
-    std::ifstream in(srcname);
+    std::string text = readfile(filename);
+    if (subname == ".c" || subname == ".cc") {
+        map_build mb(m_macro, m_output);
+        mb.parse_block(info_block(text));
+        m_strmap->parse_text("temp.h", mb.str());
+    }
+    m_strmap->parse_text(filename, text);
+}
+
+std::string builder::readfile(const std::string &filename)
+{
+    std::ifstream in(filename);
     std::ostringstream tmp;
     tmp << in.rdbuf();
-    std::string str = tmp.str();
-    map_build mb(m_macro, path);
-    mb.parse_block(get_str(srcname, str));
-    mb.str();
+    return tmp.str();
 }
 
 #ifndef _MSC_VER
@@ -69,7 +50,7 @@ void argument::gen_map_data(const std::string &srcname, const std::string &path)
 #endif
 
 #ifndef _MSC_VER
-void argument::listdir(const std::string &srcpath, const std::string &dstpath)
+void builder::scandir(const std::string &srcpath)
 {
     DIR *dp;
     struct dirent *ep;
@@ -79,15 +60,15 @@ void argument::listdir(const std::string &srcpath, const std::string &dstpath)
             std::string fname(ep->d_name);
             size_t find = fname.find_last_of(".");
             std::string subname(find < fname.size() ? fname.substr(find) : "");
-            if (subname == ".c") {
-                gen_map_data(srcpath + "/" + fname, dstpath);
+            if (subname == ".c" || subname == ".h") {
+                parse_all(srcpath + "/" + fname, subname);
             }
         }
         closedir(dp);
     }
 }
 #else
-void argument::listdir(const std::string &srcpath, const std::string &dstpath)
+void builder::scandir(const std::string &srcpath)
 {
     HANDLE find;
     WIN32_FIND_DATA data;
@@ -97,8 +78,9 @@ void argument::listdir(const std::string &srcpath, const std::string &dstpath)
             std::string fname(data.cFileName);
             size_t find = fname.find_last_of(".");
             std::string subname(find < fname.size() ? fname.substr(find) : "");
-            if (subname == ".c") {
-                gen_map_data(srcpath + "/" + fname, dstpath);
+            if (subname == ".c" || subname == ".cpp" ||
+                subname == ".cc" || subname == ".h" || subname == ".hpp") {
+                parse_all(srcpath + "/" + fname, subname);
             }
         } while (FindNextFile(find, &data) != 0);
         FindClose(find);
@@ -106,31 +88,35 @@ void argument::listdir(const std::string &srcpath, const std::string &dstpath)
 }
 #endif
 
-void argument::build()
+void builder::build()
 {
     for (auto it : m_input) {
-        listdir(it, m_output);
+        scandir(it);
     }
+    str_build sb(m_strmap->data());
+    sb.build(m_output);
 }
 
-argument::argument(int argc, char **argv)
+builder::builder(int argc, char **argv)
 {
     m_state = Input;
     for (int i = 1; i < argc; ++i) {
         add_arg(argv[i]);
     }
+    m_strmap = new str_map();
     m_macro = new macro_table();
     for (auto it : m_config) {
         m_macro->scan_file(it);
     }
 }
 
-argument::~argument()
+builder::~builder()
 {
     delete m_macro;
+    delete m_strmap;
 }
 
-void argument::add_arg(const std::string &arg)
+void builder::add_arg(const std::string &arg)
 {
     if (arg == "-i") {
         m_state = Input;
@@ -157,7 +143,7 @@ void argument::add_arg(const std::string &arg)
 
 int main(int argc, char *argv[])
 {
-    argument arg(argc, argv);
+    builder arg(argc, argv);
     arg.build();
     return 0;
 }
