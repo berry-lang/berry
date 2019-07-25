@@ -116,6 +116,11 @@ static void unop_error(bvm *vm, const char *op, bvalue *a)
         op, be_vtype2str(a));
 }
 
+static void call_error(bvm *vm, bvalue *v)
+{
+    vm_error(vm, "'%s' value is not callable", be_vtype2str(v));
+}
+
 static void check_bool(bvm *vm, binstance *obj, const char *method)
 {
     if (!var_isbool(vm->top)) {
@@ -202,7 +207,7 @@ static void obj_method(bvm *vm, bvalue *o, bstring *attr)
     int type = be_instance_member(obj, attr, vm->top);
     if (basetype(type) != BE_FUNCTION) {
         vm_error(vm,
-            "the class '%s' has no method '%s'",
+            "the '%s' object has no method '%s'",
             str(be_instance_name(obj)), str(attr));
     }
 }
@@ -213,7 +218,7 @@ static int obj_attribute(bvm *vm, bvalue *o, bstring *attr, bvalue *dst)
     int type = be_instance_member(obj, attr, dst);
     if (basetype(type) == BE_NIL) {
         vm_error(vm,
-            "the class '%s' has no attribute '%s'",
+            "the '%s' object has no attribute '%s'",
             str(be_instance_name(obj)), str(attr));
     }
     return type;
@@ -551,8 +556,7 @@ static void i_call(bvm *vm, binstruction ins)
         break;
     }
     default:
-        vm_error(vm, "'%s' value is not callable",
-            be_vtype2str(var));
+        call_error(vm, var);
     }
 }
 
@@ -854,6 +858,6 @@ void be_dofunc(bvm *vm, bvalue *v, int argc)
     case BE_CLOSURE: do_closure(vm, v, argc); break;
     case BE_NTVCLOS: do_ntvclos(vm, v, argc); break;
     case BE_NTVFUNC: do_ntvfunc(vm, v, argc); break;
-    default: break;
+    default: call_error(vm, v);
     }
 }

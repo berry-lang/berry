@@ -90,8 +90,8 @@ static void ins2str(bvm *vm, int idx)
     bvalue *top = be_incrtop(vm);
     binstance *obj = var_toobj(v);
     /* get method 'tostring' */
-    be_instance_member(obj, be_newstr(vm, "tostring"), top);
-    if (var_isnil(top)) {
+    int type = be_instance_member(obj, be_newstr(vm, "tostring"), top);
+    if (basetype(type) == BE_FUNCTION) {
         char sbuf[2 * sizeof(void*) + 16];
         sprintf(sbuf, "<instance: %p>", var_toobj(v));
         --vm->top;

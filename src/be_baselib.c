@@ -165,10 +165,15 @@ static int l_real(bvm *vm)
     be_return_nil(vm);
 }
 
+static int check_method(bvm *vm, const char *attr)
+{
+    return be_top(vm) &&
+        be_isinstance(vm, 1) && be_getmethod(vm, 1, attr);
+}
+
 static int l_iterator(bvm *vm)
 {
-    if (be_isinstance(vm, 1)) {
-        be_getmember(vm, 1, "iter");
+    if (check_method(vm, "iter")) {
         be_pushvalue(vm, 1);
         be_call(vm, 1);
         be_pop(vm, 1);
@@ -179,8 +184,7 @@ static int l_iterator(bvm *vm)
 
 static int l_hasnext(bvm *vm)
 {
-    if (be_isinstance(vm, 1)) {
-        be_getmember(vm, 1, "hasnext");
+    if (check_method(vm, "hasnext")) {
         be_pushvalue(vm, 1);
         be_call(vm, 1);
         be_pop(vm, 1);
@@ -192,8 +196,7 @@ static int l_hasnext(bvm *vm)
 
 static int l_next(bvm *vm)
 {
-    if (be_isinstance(vm, 1)) {
-        be_getmember(vm, 1, "next");
+    if (check_method(vm, "next")) {
         be_pushvalue(vm, 1);
         be_call(vm, 1);
         be_pop(vm, 1);
@@ -212,10 +215,16 @@ static int l_str(bvm *vm)
     be_return(vm);
 }
 
-static int l_length(bvm *vm)
+static int l_size(bvm *vm)
 {
     if (be_top(vm) && be_isstring(vm, 1)) {
         be_pushint(vm, be_strlen(vm, 1));
+        be_return(vm);
+    }
+    if (check_method(vm, "size")) {
+        be_pushvalue(vm, 1);
+        be_call(vm, 1);
+        be_pop(vm, 1);
         be_return(vm);
     }
     be_return_nil(vm);
@@ -284,7 +293,7 @@ void be_load_baselib(bvm *vm)
     be_regfunc(vm, "str", l_str);
     be_regfunc(vm, "int", l_int);
     be_regfunc(vm, "real", l_real);
-    be_regfunc(vm, "length", l_length);
+    be_regfunc(vm, "size", l_size);
     be_regfunc(vm, "compile", l_compile);
     be_regfunc(vm, "codedump", l_codedump);
     be_regfunc(vm, "__iterator__", l_iterator);
@@ -311,7 +320,7 @@ vartab m_builtin (scope: local) {
     str, func(l_str)
     int, func(l_int)
     real, func(l_real)
-    length, func(l_length)
+    size, func(l_size)
     compile, func(l_compile)
     codedump, func(l_codedump)
     __iterator__, func(l_iterator)

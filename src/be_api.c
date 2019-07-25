@@ -452,28 +452,42 @@ void be_getbuiltin(bvm *vm, const char *name)
     *top = *be_global_var(vm, idx);
 }
 
-void be_setmember(bvm *vm, int index, const char *k)
+int be_setmember(bvm *vm, int index, const char *k)
 {
+    int res = BE_NIL;
     bvalue *o = index2value(vm, index);
     if (var_isinstance(o)) {
         bvalue *v = index2value(vm, -1);
         binstance *obj = var_toobj(o);
-        be_instance_setmember(obj, be_newstr(vm, k), v);
+        res = be_instance_setmember(obj, be_newstr(vm, k), v);
     }
+    return res != BE_NIL;
 }
 
-void be_getmember(bvm *vm, int index, const char *k)
+static int ins_member(bvm *vm, int index, const char *k)
 {
+    int type = BE_NIL;
     bvalue *o = index2value(vm, index);
     bvalue *top = be_incrtop(vm);
     var_setnil(top);
     if (var_isinstance(o)) {
         binstance *obj = var_toobj(o);
-        be_instance_member(obj, be_newstr(vm, k), top);
+        type = be_instance_member(obj, be_newstr(vm, k), top);
     }
+    return type;
 }
 
-void be_getindex(bvm *vm, int index)
+int be_getmember(bvm *vm, int index, const char *k)
+{
+    return ins_member(vm, index, k) != BE_NIL;
+}
+
+int be_getmethod(bvm *vm, int index, const char *k)
+{
+    return basetype(ins_member(vm, index, k)) == BE_FUNCTION;
+}
+
+int be_getindex(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     bvalue *k = index2value(vm, -1);
@@ -486,7 +500,7 @@ void be_getindex(bvm *vm, int index)
             bvalue *src = be_list_index(list, idx);
             if (src) {
                 var_setval(dst, src);
-                return;
+                return btrue;
             }
         }
         break;
@@ -496,7 +510,7 @@ void be_getindex(bvm *vm, int index)
             bvalue *src = be_map_find(map, k);
             if (src) {
                 var_setval(dst, src);
-                return;
+                return btrue;
             }
         }
         break;
@@ -504,9 +518,10 @@ void be_getindex(bvm *vm, int index)
         break;
     }
     var_setnil(dst);
+    return bfalse;
 }
 
-void be_setindex(bvm *vm, int index)
+int be_setindex(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     bvalue *k = index2value(vm, -2);
@@ -519,6 +534,7 @@ void be_setindex(bvm *vm, int index)
             if (idx < be_list_count(list)) {
                 bvalue *dst = be_list_at(list, idx);
                 var_setval(dst, v);
+                return btrue;
             }
         }
         break;
@@ -528,12 +544,14 @@ void be_setindex(bvm *vm, int index)
             bvalue *dst = be_map_find(map, k);
             if (dst) {
                 var_setval(dst, v);
+                return btrue;
             }
         }
         break;
     default:
         break;
     }
+    return bfalse;
 }
 
 void be_getupval(bvm *vm, int index, int pos)
