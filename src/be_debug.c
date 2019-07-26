@@ -199,3 +199,17 @@ void be_pusherror(bvm *vm, const char *msg)
     addinfo(vm, msg);
     be_throw(vm, BE_EXEC_ERROR);
 }
+
+#if BE_DEBUG_DUMP_LEVEL >= 3
+void be_debug_dump_stack(bvm * vm, int deepth)
+{
+
+    bvalue *v = vm->top - 1;
+    bvalue *end = deepth > 0 ? v - deepth : vm->stack - 1;
+    while (v > end) {
+        logfmt("S[%3d]: <0x%.8x>, type(%d)\n",
+            v - vm->top, (int)var_toint(v), var_type(v));
+        --v;
+    }
+}
+#endif

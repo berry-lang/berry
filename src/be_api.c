@@ -351,15 +351,12 @@ void be_remove(bvm *vm, int index)
 
 void be_strconcat(bvm *vm, int index)
 {
+    bstring *s;
     bvalue *dst = index2value(vm, index);
     bvalue *src = index2value(vm, -1);
-    if (var_isstr(src) && var_isstr(dst)) {
-        bstring *s = be_strcat(vm, var_tostr(dst), var_tostr(src));
-        var_setstr(dst, s);
-    } else {
-        var_setnil(dst);
-        be_writestring("strconcat error: object not string.\n");
-    }
+    be_assert(var_isstr(src) && var_isstr(dst));
+    s = be_strcat(vm, var_tostr(dst), var_tostr(src));
+    var_setstr(dst, s);
 }
 
 void be_getsuper(bvm *vm, int index)

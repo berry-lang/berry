@@ -91,7 +91,7 @@ static void ins2str(bvm *vm, int idx)
     binstance *obj = var_toobj(v);
     /* get method 'tostring' */
     int type = be_instance_member(obj, be_newstr(vm, "tostring"), top);
-    if (basetype(type) == BE_FUNCTION) {
+    if (basetype(type) != BE_FUNCTION) {
         char sbuf[2 * sizeof(void*) + 16];
         sprintf(sbuf, "<instance: %p>", var_toobj(v));
         --vm->top;
@@ -139,6 +139,7 @@ static const char* concat2(bvm *vm)
     bstring *s1 = var_tostr(dst);
     bstring *s2 = var_tostr(dst + 1);
     bstring *s = be_strcat(vm, s1, s2);
+    be_assert(var_isstr(vm->top - 2) && var_isstr(vm->top - 1));
     dst = vm->top - 2; /* maybe GC (stack change) */
     var_setstr(dst, s);
     --vm->top;

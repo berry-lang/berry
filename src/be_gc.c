@@ -407,9 +407,8 @@ static void destruct_object(bvm *vm, bgcobject *obj)
         be_incrtop(vm);
         if (basetype(type) == BE_FUNCTION) {
             be_dofunc(vm, vm->top - 1, 1);
-        } else {
-            be_stackpop(vm, 1);
         }
+        be_stackpop(vm, 1);
         vm->gc.status &= ~GC_HALT;
     }
 }

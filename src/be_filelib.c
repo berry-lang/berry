@@ -58,7 +58,7 @@ static int i_readline(bvm *vm)
             res = be_fgets(fh, buffer + pos + 1, READLINE_STEP);
             size += READLINE_STEP;
         }
-        be_pushnstring(vm, buffer, size);
+        be_pushnstring(vm, buffer, pos + 1);
         be_free(vm, buffer, size);
         be_return(vm);
     }
