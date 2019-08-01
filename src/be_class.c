@@ -25,6 +25,18 @@ bclass* be_newclass(bvm *vm, bstring *name, bclass *super)
     return obj;
 }
 
+int be_class_attribute(bclass *c, bstring *attr)
+{
+    while (c) {
+        bvalue *v = be_map_findstr(c->members, attr);
+        if (v) {
+            return var_type(v);
+        }
+        c = c->super;
+    }
+    return BE_NIL;
+}
+
 void be_member_bind(bvm *vm, bclass *c, bstring *name)
 {
     bmap *map = c->members;

@@ -1045,17 +1045,29 @@ static void return_stmt(bparser *parser)
     be_code_ret(parser->finfo, &e);
 }
 
+static void check_class_attr(bparser *parser, bclass *c, bstring *attr)
+{
+    if (be_class_attribute(c, attr) != BE_NIL) {
+        push_error(parser,
+            "redefinition of the attribute '%s'", str(attr));
+    }
+}
+
 static void classvar_stmt(bparser *parser, bclass *c)
 {
     /* 'var' ID {',' ID} */
     scan_next_token(parser); /* skip 'var' */
     if (next_type(parser) == TokenId) {
-        be_member_bind(parser->vm, c, next_token(parser).u.s);
+        bstring *name = next_token(parser).u.s;
+        check_class_attr(parser, c, name);
+        be_member_bind(parser->vm, c, name);
         scan_next_token(parser);
         while (next_type(parser) == OptComma) {
             scan_next_token(parser);
             if (next_type(parser) == TokenId) {
-                be_member_bind(parser->vm, c, next_token(parser).u.s);
+                name = next_token(parser).u.s;
+                check_class_attr(parser, c, name);
+                be_member_bind(parser->vm, c, name);
                 scan_next_token(parser);
             } else {
                 parser_error(parser, "class var error");
@@ -1074,6 +1086,7 @@ static void classdef_stmt(bparser *parser, bclass *c)
     /* 'def' ID '(' varlist ')' block 'end' */
     scan_next_token(parser); /* skip 'def' */
     name = func_name(parser, &e, 1);
+    check_class_attr(parser, c, name);
     proto = funcbody(parser, name, FUNC_METHOD);
     be_method_bind(parser->vm, c, proto->name, proto);
     be_stackpop(parser->vm, 1);
@@ -1099,7 +1112,7 @@ static void class_block(bparser *parser, bclass *c)
         case KeyDef: classdef_stmt(parser, c); break;
         case OptSemic: scan_next_token(parser); break;
         default: push_error(parser,
-                    "unexpected token '%s'", token2str(parser));
+                "unexpected token '%s'", token2str(parser));
         }
     }
 }
