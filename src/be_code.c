@@ -8,15 +8,21 @@
 #include "be_exec.h"
 #include "be_vm.h"
 
+#define NOT_MASK                (1 << 0)
+#define NOT_EXPR                (1 << 1)
+
+#define isset(v, mask)          (((v) & (mask)) != 0)
 #define min(a, b)               ((a) < (b) ? (a) : (b))
+#define notexpr(e)              isset((e)->not, NOT_EXPR)
+#define notmask(e)              isset((e)->not, NOT_MASK)
 #define exp2anyreg(f, e)        exp2reg(f, e, (f)->freereg)
 #define var2anyreg(f, e)        var2reg(f, e, (f)->freereg)
-#define hasjump(e)              ((e)->t != (e)->f || (e)->not)
+#define hasjump(e)              ((e)->t != (e)->f || notexpr(e))
 #define code_bool(f, r, b, j)   codeABC(f, OP_LDBOOL, r, b, j)
 #define code_move(f, a, b)      codeABC(f, OP_MOVE, a, b, 0)
 #define code_call(f, a, b)      codeABC(f, OP_CALL, a, b, 0)
 #define code_getmbr(f, a, b, c) codeABC(f, OP_GETMBR, a, b, c)
-#define jumpboolop(e, b)        ((b) ^ (e)->not ? OP_JMPT : OP_JMPF)
+#define jumpboolop(e, b)        ((b) != notmask(e) ? OP_JMPT : OP_JMPF)
 
 static int var2reg(bfuncinfo *finfo, bexpdesc *e, int dst);
 
@@ -461,7 +467,7 @@ static void code_not(bexpdesc *e)
         int temp = e->t;
         e->t = e->f;
         e->f = temp;
-        e->not = !e->not;
+        e->not = NOT_EXPR | (e->not ^ NOT_MASK);
         return;
     }
     }
