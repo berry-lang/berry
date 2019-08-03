@@ -172,6 +172,7 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     var_setmap(vm->top, finfo->upval);
     be_stackpush(vm);
     finfo->prev = parser->finfo;
+    finfo->lexer = &parser->lexer;
     finfo->proto = proto;
     finfo->freereg = 0;
     finfo->binfo = NULL;
@@ -184,7 +185,6 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     proto->source = be_newstr(vm, parser->lexer.fname);
     proto->lineinfo = be_vector_data(&finfo->linevec);
     proto->nlineinfo = be_vector_capacity(&finfo->linevec);
-    finfo->lexer = &parser->lexer;
 #endif
     begin_block(finfo, binfo, 0);
 }
