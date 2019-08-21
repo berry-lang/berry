@@ -51,11 +51,19 @@ typedef struct bstring {
     bstring_header;
 } bstring;
 
+/* the definition of the vector and stack data structures.
+ * in fact, the stack is implemented by vector. */
 typedef struct bvector {
-    int capacity, size;
-    void *data, *end;
+    int capacity;   /* the number of elements that the vector can store */
+    int size;       /* the size of each element (bytes) */
+    void *data;     /* the data block pointer, if vector is empty,
+                       it will point to the first element */
+    void *end;      /* pointer to the last element, if the vector is empty,
+                       the end pointer will be smaller than the data pointer */
 } bvector, bstack;
 
+/* berry value data union, a berry value is always described
+ * by the data structure contained in the bvaldata union. */
 union bvaldata {
     bbool b;        /* boolean */
     breal r;        /* real number */
@@ -66,15 +74,17 @@ union bvaldata {
     bntvfunc nf;    /* native C function */
 };
 
+/* berry value. for simple types, the value of the data is stored,
+ * while the complex type stores a reference to the data. */
 typedef struct bvalue {
-    union bvaldata v;
-    int type;
+    union bvaldata v; /* the value data */
+    int type;         /* the value type */
 } bvalue;
 
 typedef struct {
-  bstring *name;
-  int startpc;  /* first point where variable is active */
-  int endpc;    /* first point where variable is dead */
+    bstring *name; /* the name of variable */
+    int startpc;   /* first point where variable is active */
+    int endpc;     /* first point where variable is dead */
 } blocalval;
 
 typedef struct {

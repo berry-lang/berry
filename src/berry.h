@@ -252,6 +252,6 @@ int be_loadfile(bvm *vm, const char *name);
 void be_codedump(bvm *vm, int index);
 
 void be_writebuffer(const char *buffer, size_t length);
-char* be_readstring(char* buffer, size_t size);
+char* be_readstring(char *buffer, size_t size);
 
 #endif

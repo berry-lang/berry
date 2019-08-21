@@ -1,11 +1,13 @@
 #include "be_vector.h"
-#include "be_string.h"
 #include "be_mem.h"
 #include <string.h>
 
+/* initialize a vector, the vector structure itself is usually allocated
+ * on the stack, and the data is allocated from the heap.
+ **/
 void be_vector_init(bvm *vm, bvector *vector, int size)
 {
-    vector->capacity = 2;
+    vector->capacity = 2; /* the default capacity */
     vector->size = size;
     vector->data = be_malloc(vm, (size_t)vector->capacity * size);
     vector->end = (char*)vector->data - size;
