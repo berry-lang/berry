@@ -98,7 +98,7 @@ static int m_remove(bvm *vm)
 static int item_range(bvm *vm)
 {
     bint lower, upper;
-    int size = be_data_size(vm, -1); /* get source list size */
+    bint size = be_data_size(vm, -1); /* get source list size */
     /* get index range */
     be_getmember(vm, 2, "__lower__");
     lower = be_toint(vm, -1);

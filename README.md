@@ -64,16 +64,16 @@ Berry has the following advantages:
 * GC (Garbage collection)
   * Mark-Sweep GC
 
-## Build
+## Build and Run
 
-1. install the readline library (Linux or MacOS)
+1. Install the readline library (Windows does not need):
 
    ``` bash
    sudo apt install libreadline-dev # Ubuntu
    brew install readline            # MacOS
    ```
 
-2. Build:
+2. Build (The default compiler is GCC):
 
    ```
    make
@@ -86,11 +86,17 @@ Berry has the following advantages:
    berry   # Windows CMD
    ```
 
+4. Install (Only Unix-like):
+
+   ``` bash
+   make install
+   ```
+
 ## Editor pulgins
 
 [Visual Studio Code](https://code.visualstudio.com/) pulgin are in this directory: [./tools/pulgins/vscode](./tools/pulgins/vscode).
 
-# Examples
+## Examples
 
 After compiling successfully, use the `berry` command with no parameters to enter the REPL environment:
 ```

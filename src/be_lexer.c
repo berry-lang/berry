@@ -82,6 +82,11 @@ static bstring* lexer_newstrn(blexer *lexer, const char *str, size_t len)
     return cache_string(lexer, be_newstrn(lexer->vm, str, len));
 }
 
+bstring* be_lexer_newstr(blexer *lexer, const char *str)
+{
+    return cache_string(lexer, be_newstr(lexer->vm, str));
+}
+
 static int next(blexer *lexer)
 {
     struct blexerreader *lr = &lexer->reader;
@@ -542,11 +547,6 @@ int be_lexer_scan_next(blexer *lexer)
         return 0;
     }
     return 1;
-}
-
-bstring* be_lexer_newstr(blexer *lexer, const char *str)
-{
-    return cache_string(lexer, be_newstr(lexer->vm, str));
 }
 
 const char* be_token2str(bvm *vm, btoken *token)
