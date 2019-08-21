@@ -14,4 +14,4 @@ jobs:
     - name: make
       run: make
     - name: install
-      run sudo make install
+      run: sudo make install
