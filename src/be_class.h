@@ -23,12 +23,14 @@ struct bclass {
     struct bclass *super;
     bmap *members;
     bstring *name;
+    bgcobject *gray; /* for gc gray list */
 };
 
 struct binstance {
     bcommon_header;
     struct binstance *super;
     bclass *class;
+    bgcobject *gray; /* for gc gray list */
     bvalue members[1]; /* members table */
 };
 

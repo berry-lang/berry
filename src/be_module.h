@@ -11,6 +11,7 @@ typedef struct bmodule {
         const char *name;
     } info;
     struct bmodule *mnext;
+    bgcobject *gray; /* for gc gray list */
 } bmodule;
 
 bmodule* be_module_load(bvm *vm, bstring *path, bvalue *dst);

@@ -235,7 +235,7 @@ static void mark_object(bvm *vm, bgcobject *obj, int type)
 {
     if (obj && be_isgctype(type) && !gc_isdark(obj)) {
         switch (type) {
-        case BE_STRING: gc_setdark(obj); break;
+        case BE_STRING: gc_setdark(obj); break; /* just set dark */
         case BE_CLASS: mark_class(vm, obj); break;
         case BE_PROTO: mark_proto(vm, obj); break;
         case BE_INSTANCE: mark_instance(vm, obj); break;
