@@ -12,13 +12,17 @@
 #include "be_exec.h"
 #include "be_debug.h"
 
-#define next_threshold(gc)  ((gc).usage * ((gc).steprate + 100) / 100)
-
 #define GC_PAUSE    (1 << 0) /* GC will not be executed automatically */
 #define GC_HALT     (1 << 1) /* GC completely stopped */
 #define GC_ALLOC    (1 << 2) /* GC in alloc */
 
-static void mark_object(bvm *vm, bgcobject *obj, int type);
+#define next_threshold(gc) ((gc).usage * ((gc).steprate + 100) / 100)
+
+#define link_gray(vm, obj)     { \
+    (obj)->gray = (vm)->gc.gray; \
+    (vm)->gc.gray = gc_object(obj);       \
+}
+
 static void destruct_object(bvm *vm, bgcobject *obj);
 static void free_object(bvm *vm, bgcobject *obj);
 
@@ -103,6 +107,25 @@ void be_gc_unfix(bvm *vm, bgcobject *obj)
     }
 }
 
+static void mark_gray(bvm *vm, bgcobject *obj)
+{
+    if (obj && gc_iswhite(obj) && !gc_isconst(obj)) {
+        gc_setgray(obj);
+        switch (var_type(obj)) {
+        case BE_STRING: gc_setdark(obj); break; /* just set dark */
+        case BE_CLASS: link_gray(vm, cast_class(obj)); break;
+        case BE_PROTO: link_gray(vm, cast_proto(obj)); break;
+        case BE_INSTANCE: link_gray(vm, cast_instance(obj)); break;
+        case BE_MAP: link_gray(vm, cast_map(obj)); break;
+        case BE_LIST: link_gray(vm, cast_list(obj)); break;
+        case BE_CLOSURE: link_gray(vm, cast_closure(obj)); break;
+        case BE_NTVCLOS: link_gray(vm, cast_ntvclos(obj)); break;
+        case BE_MODULE: link_gray(vm, cast_module(obj)); break;
+        default: break;
+        }
+    }
+}
+
 static void mark_map(bvm *vm, bgcobject *obj)
 {
     bmap *map = cast_map(obj);
@@ -113,8 +136,8 @@ static void mark_map(bvm *vm, bgcobject *obj)
         while ((node = be_map_next(map, &iter)) != NULL) {
             bmapkey *key = &node->key;
             bvalue *val = &node->value;
-            mark_object(vm, key->v.gc, var_type(key));
-            mark_object(vm, val->v.gc, var_type(val));
+            mark_gray(vm, key->v.gc);
+            mark_gray(vm, val->v.gc);
         }
     }
 }
@@ -127,7 +150,7 @@ static void mark_list(bvm *vm, bgcobject *obj)
         int count = be_list_count(list);
         gc_setdark(obj);
         for (; count--; val++) {
-            mark_object(vm, val->v.gc, var_type(val));
+            mark_gray(vm, val->v.gc);
         }
     }
 }
@@ -141,10 +164,10 @@ static void mark_proto(bvm *vm, bgcobject *obj)
         bproto **ptab = p->ptab;
         gc_setdark(obj);
         for (count = p->nconst; count--; ++k) {
-            mark_object(vm, k->v.gc, var_type(k));
+            mark_gray(vm, k->v.gc);
         }
         for (count = p->nproto; count--; ++ptab) {
-            mark_object(vm, gc_object(*ptab), BE_PROTO);
+            mark_gray(vm, gc_object(*ptab));
         }
         if (p->name) {
             gc_setdark(gc_object(p->name));
@@ -167,10 +190,10 @@ static void mark_closure(bvm *vm, bgcobject *obj)
         for (; count--; ++uv) {
             if ((*uv)->refcnt) {
                 bvalue *v = (*uv)->value;
-                mark_object(vm, v->v.gc, var_type(v));
+                mark_gray(vm, v->v.gc);
             }
         }
-        mark_proto(vm, gc_object(cl->proto));
+        mark_gray(vm, gc_object(cl->proto));
     }
 }
 
@@ -184,7 +207,7 @@ static void mark_ntvclos(bvm *vm, bgcobject *obj)
         for (; count--; ++uv) {
             if ((*uv)->refcnt) {
                 bvalue *v = (*uv)->value;
-                mark_object(vm, v->v.gc, var_type(v));
+                mark_gray(vm, v->v.gc);
             }
         }
     }
@@ -195,7 +218,7 @@ static void mark_class(bvm *vm, bgcobject *obj)
     bclass *c = cast_class(obj);
     /* mark this class and super class */
     while (c) {
-        mark_map(vm, gc_object(be_class_members(c)));
+        mark_gray(vm, gc_object(be_class_members(c)));
         gc_setdark(be_class_name(c));
         gc_setdark(c);
         c = be_class_super(c);
@@ -208,14 +231,14 @@ static void mark_instance(bvm *vm, bgcobject *obj)
     if (o == NULL) {
         return;
     }
-    mark_class(vm, gc_object(be_instance_class(o)));
+    mark_gray(vm, gc_object(be_instance_class(o)));
     /* mark self instance and super instance */
     while (o) {
         bvalue *var = be_instance_members(o);
         int nvar = be_instance_member_count(o);
         gc_setdark(o);
         while (nvar--) {
-            mark_object(vm, var->v.gc, var_type(var));
+            mark_gray(vm, var->v.gc);
             var++;
         }
         o = be_instance_super(o);
@@ -227,15 +250,16 @@ static void mark_module(bvm *vm, bgcobject *obj)
     bmodule *o = cast_module(obj);
     if (o) {
         gc_setdark(o);
-        mark_map(vm, gc_object(o->table));
+        mark_gray(vm, gc_object(o->table));
     }
 }
 
-static void mark_object(bvm *vm, bgcobject *obj, int type)
+static void mark_dark(bvm *vm, bgcobject *obj)
 {
-    if (obj && be_isgctype(type) && !gc_isdark(obj)) {
-        switch (type) {
-        case BE_STRING: gc_setdark(obj); break; /* just set dark */
+    if (obj && !gc_isdark(obj) && !gc_isconst(obj)) {
+        gc_setdark(obj);
+        vm->gc.gray = vm->gc.gray->next; /* remove object from gray list */
+        switch (var_type(obj)) {
         case BE_CLASS: mark_class(vm, obj); break;
         case BE_PROTO: mark_proto(vm, obj); break;
         case BE_INSTANCE: mark_instance(vm, obj); break;
@@ -328,7 +352,7 @@ static void premark_global(bvm *vm)
     bvalue *end = v + be_global_count(vm);
     while (v < end) {
         if (be_isgcobj(v)) {
-            gc_setgray(var_togc(v));
+            mark_gray(vm, var_togc(v));
         }
         ++v;
     }
@@ -336,7 +360,7 @@ static void premark_global(bvm *vm)
     end = v + be_builtin_count(vm);
     while (v < end) {
         if (be_isgcobj(v)) {
-            gc_setgray(var_togc(v));
+            mark_gray(vm, var_togc(v));
         }
         ++v;
     }
@@ -348,7 +372,7 @@ static void premark_stack(bvm *vm)
     /* mark live objects */
     while (v < end) {
         if (be_isgcobj(v)) {
-            gc_setgray(var_togc(v));
+            mark_gray(vm, var_togc(v));
         }
         ++v;
     }
@@ -365,31 +389,15 @@ static void premark_fixed(bvm *vm)
     bgcobject *node = vm->gc.list;
     for (; node; node = node->next) {
         if (gc_isfixed(node) && gc_iswhite(node)) {
-            gc_setgray(node);
+            mark_gray(vm, node);
         }
-    }
-}
-
-static void mark_inalloc(bvm *vm, bgcobject *obj)
-{
-    binstance *ins = cast_instance(obj);
-    int type = be_instance_member(ins, be_newstr(vm, "deinit"), vm->top);
-    /* an instance of a destructor is not GC at the time of allocation */
-    if (basetype(type) == BE_FUNCTION) {
-        mark_instance(vm, obj);
     }
 }
 
 static void mark_unscanned(bvm *vm)
 {
-    bgcobject *node;
-    for (node = vm->gc.list; node; node = node->next) {
-        if (gc_isgray(node)) {
-            mark_object(vm, node, var_type(node));
-        } else if (vm->gc.status & GC_ALLOC
-            && gc_iswhite(node) && var_isinstance(node)) {
-            mark_inalloc(vm, node);
-        }
+    while (vm->gc.gray) {
+        mark_dark(vm, vm->gc.gray);
     }
 }
 
