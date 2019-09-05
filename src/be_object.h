@@ -121,6 +121,7 @@ typedef struct bproto {
     bbyte nlocal; /* local variable count */
     bbyte nstack; /* number of stack size by this function */
     bbyte nupvals; /* upvalue count */
+    bbyte argc; /* argument count */
     bgcobject *gray; /* for gc gray list */
     bupvaldesc *upvals;
     bvalue *ktab; /* constants table */
@@ -130,7 +131,6 @@ typedef struct bproto {
     int codesize; /* code size */
     int nconst; /* constants count */
     int nproto; /* proto count */
-    char argc; /* argument count */
 #if BE_DEBUG_RUNTIME_INFO /* debug information */
     bstring *source;
     blineinfo *lineinfo;
