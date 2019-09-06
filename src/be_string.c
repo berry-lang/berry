@@ -88,6 +88,7 @@ static void free_sstring(bvm *vm, bstring *str)
 uint32_t str_hash(const char *str, size_t len)
 {
     uint32_t hash = 2166136261u;
+    be_assert(str || len);
     while (len--) {
         hash = (hash ^ *str++) * 16777619u;
     }
@@ -125,18 +126,13 @@ void be_string_deleteall(bvm *vm)
 
 bstring* createstrobj(bvm *vm, size_t len, int islong)
 {
-    char *str;
     size_t size = (islong ? sizeof(blstring)
                 : sizeof(bsstring)) + len + 1;
     bgcobject *gco = be_gc_newstr(vm, size, islong);
     bstring *s = cast_str(gco);
     if (s) {
         s->slen = islong ? 255 : (bbyte)len;
-        if (islong) {
-            str = cast(char*, lstr(s));
-        } else {
-            str = cast(char*, sstr(s));
-        }
+        char *str = cast(char *, islong ? lstr(s) : sstr(s));
         str[len] = '\0';
     }
     return s;
@@ -157,12 +153,6 @@ static bstring* find_conststr(const char *str, size_t len)
 }
 #endif
 
-static void strcopy(char *dst, const char *src, size_t len)
-{
-    memcpy(dst, src, len);
-    dst[len] = '\0';
-}
-
 static bstring* newshortstr(bvm *vm, const char *str, size_t len)
 {
     bstring *s;
@@ -176,7 +166,7 @@ static bstring* newshortstr(bvm *vm, const char *str, size_t len)
         }
     }
     s = createstrobj(vm, len, 0);
-    strcopy(cast(char*, sstr(s)), str, len);
+    memcpy(cast(char *, sstr(s)), str, len);
     s->extra = 0;
     s->next = cast(void*, *list);
 #if BE_STR_HASH_CACHE
@@ -198,7 +188,9 @@ static bstring* newlongstr(bvm *vm, const char *str, size_t len)
     ls = cast(blstring*, s);
     s->extra = 0;
     ls->llen = cast_int(len);
-    strcopy(cast(char*, lstr(s)), str, len);
+    if (str) { /* if the argument 'str' is NULL, we just allocate space */
+        memcpy(cast(char *, lstr(s)), str, len);
+    }
     return s;
 }
 
@@ -207,7 +199,7 @@ bstring* be_newstr(bvm *vm, const char *str)
     return be_newstrn(vm, str, strlen(str));
 }
 
-bstring* be_newstrn(bvm *vm, const char *str, size_t len)
+bstring *be_newstrn(bvm *vm, const char *str, size_t len)
 {
     if (len <= SHORT_STR_MAX_LEN) {
 #if BE_USE_PRECOMPILED_OBJECT

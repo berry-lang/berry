@@ -16,6 +16,7 @@ typedef struct bmapnode {
 
 struct bmap {
     bcommon_header;
+    bgcobject *gray; /* for gc gray list */
     bmapnode *slots;
     bmapnode *lastfree;
     int size;

@@ -5,6 +5,7 @@
 
 struct blist {
     bcommon_header;
+    bgcobject *gray; /* for gc gray list */
     int count, capacity;
     bvalue *data;
 };

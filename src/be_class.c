@@ -109,7 +109,6 @@ int be_class_newobj(bvm *vm, bclass *c, bvalue *argv, int argc)
 {
     bvalue init;
     binstance *obj = newobject(vm, c);
-
     var_setinstance(argv, obj);
     /* find constructor */
     obj = instance_member(obj, be_newstr(vm, "init"), &init);
@@ -129,6 +128,7 @@ int be_class_newobj(bvm *vm, bclass *c, bvalue *argv, int argc)
 int be_instance_member(binstance *obj, bstring *name, bvalue *dst)
 {
     int type;
+    be_assert(name != NULL);
     obj = instance_member(obj, name, dst);
     type = var_type(dst);
     if (obj && type == MT_VARIABLE) {
@@ -140,6 +140,7 @@ int be_instance_member(binstance *obj, bstring *name, bvalue *dst)
 int be_instance_setmember(binstance *obj, bstring *name, bvalue *src)
 {
     bvalue v;
+    be_assert(name != NULL);
     obj = instance_member(obj, name, &v);
     if (obj && var_istype(&v, MT_VARIABLE)) {
         obj->members[var_toint(&v)] = *src;

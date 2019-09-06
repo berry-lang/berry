@@ -20,8 +20,9 @@ bstring* be_strcat(bvm *vm, bstring *s1, bstring *s2)
         strncat(buf, str(s2), len);
         return be_newstrn(vm, buf, len);
     } else { /* long string */
-        bstring *s = be_newstrn(vm, str(s1), len);
+        bstring *s = be_newstrn(vm, NULL, len);
         char *sbuf = (char*)str(s);
+        strcpy(sbuf, str(s1));
         strcpy(sbuf + str_len(s1), str(s2));
         return s;
     }
