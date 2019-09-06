@@ -40,6 +40,8 @@ void be_gc_init(bvm *vm)
 void be_gc_deleteall(bvm *vm)
 {
     bgcobject *node, *next;
+    /* halt GC and delete all objects */
+    vm->gc.status |= GC_HALT;
     /* first: call destructor */
     for (node = vm->gc.list; node; node = node->next) {
         destruct_object(vm, node);
@@ -258,7 +260,7 @@ static void mark_module(bvm *vm, bgcobject *obj)
 static void free_proto(bvm *vm, bgcobject *obj)
 {
     bproto *proto = cast_proto(obj);
-    if (proto) {
+    gc_try (proto != NULL) {
         be_free(vm, proto->upvals, proto->nupvals * sizeof(bupvaldesc));
         be_free(vm, proto->ktab, proto->nconst * sizeof(bvalue));
         be_free(vm, proto->ptab, proto->nproto * sizeof(bproto*));
@@ -273,7 +275,7 @@ static void free_proto(bvm *vm, bgcobject *obj)
 static void free_closure(bvm *vm, bgcobject *obj)
 {
     bclosure *cl = cast_closure(obj);
-    if (cl) {
+    gc_try (cl != NULL) {
         int i, count = cl->nupvals;
         for (i = 0; i < count; ++i) {
             bupval *uv = cl->upvals[i];
@@ -292,7 +294,7 @@ static void free_closure(bvm *vm, bgcobject *obj)
 static void free_ntvclos(bvm *vm, bgcobject *obj)
 {
     bntvclos *f = cast_ntvclos(obj);
-    if (f) {
+    gc_try (f != NULL)  {
         int count = f->nupvals;
         bupval **uv = &be_ntvclos_upval(f, 0);
         while (count--) {
@@ -304,14 +306,13 @@ static void free_ntvclos(bvm *vm, bgcobject *obj)
 static void free_lstring(bvm *vm, bgcobject *obj)
 {
     blstring *ls = gc_cast(obj, BE_STRING, blstring);
-    if (ls) {
+    gc_try (ls != NULL)  {
         be_free(vm, ls, sizeof(blstring) + ls->llen + 1);
     }
 }
 
 static void free_object(bvm *vm, bgcobject *obj)
 {
-    (void)vm;
     switch (obj->type) {
     case BE_STRING: free_lstring(vm, obj); break; /* long string */
     case BE_CLASS: be_free(vm, obj, sizeof(bclass)); break;
@@ -321,9 +322,7 @@ static void free_object(bvm *vm, bgcobject *obj)
     case BE_CLOSURE: free_closure(vm, obj); break;
     case BE_NTVCLOS: free_ntvclos(vm, obj); break;
     case BE_PROTO: free_proto(vm, obj); break;
-    case BE_MODULE:
-        be_module_delete(vm, cast_module(obj));
-        break;
+    case BE_MODULE: be_module_delete(vm, cast_module(obj)); break;
     default: break; /* case BE_STRING: break; */
     }
 }
@@ -349,14 +348,13 @@ static void premark_stack(bvm *vm)
 {
     bvalue *v = vm->stack, *end = vm->top;
     /* mark live objects */
-    while (v < end) {
-        mark_gray_var(vm, v++);
+    for (; v < end; ++v) {
+        mark_gray_var(vm, v);
     }
     /* set other values to nil */
     end = vm->stacktop;
-    while (v < end) {
+    for (; v < end; ++v) {
         var_setnil(v);
-        ++v;
     }
 }
 
