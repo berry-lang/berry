@@ -6,22 +6,27 @@
 
 static int l_assert(bvm *vm)
 {
+    int argc = be_top(vm);
     /* assertion fails when there is no argument
      * or the first argument is nil or false. */
-    if (!be_top(vm) || !be_tobool(vm, 1)) {
-        be_pusherror(vm, "assert failed!");
+    if (!argc || !be_tobool(vm, 1)) {
+        const char *msg = "assert failed!";
+        if (argc >= 2 && be_isstring(vm, 2)) {
+            msg = be_tostring(vm, 2);
+        }
+        be_pusherror(vm, msg);
     }
     be_return_nil(vm);
 }
 
 static int l_print(bvm *vm)
 {
-    int i, n = be_top(vm);
-    for (i = 1; i <= n; ++i) {
+    int i, argc = be_top(vm);
+    for (i = 1; i <= argc; ++i) {
         const char *str = be_tostring(vm, i);
         size_t len = be_strlen(vm, i);
         be_writebuffer(str, len);
-        if (i < n) {
+        if (i < argc) {
             be_writebuffer(" ", 1);
         }
     }

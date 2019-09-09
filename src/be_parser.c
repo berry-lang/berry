@@ -291,7 +291,9 @@ static int new_localvar(bparser *parser, bstring *s)
         reg = be_list_count(finfo->local); /* new local index */
         var = be_list_append(parser->vm, finfo->local, NULL);
         var_setstr(var, s);
-        be_code_allocregs(finfo, 1); /* use a register */
+        if (reg >= finfo->freereg) {
+            be_code_allocregs(finfo, 1); /* use a register */
+        }
     }
     return reg;
 }
@@ -735,11 +737,11 @@ static void assign_expr(bparser *parser)
     op = get_assign_op(parser);
     if (op != OP_NOT_ASSIGN) { /* assign operator */
         bexpdesc e1;
+        scan_next_token(parser);
+        compound_assign(parser, op, &e, &e1);
         if (check_newvar(parser, &e)) { /* new variable */
             new_var(parser, e.v.s, &e);
         }
-        scan_next_token(parser);
-        compound_assign(parser, op, &e, &e1);
         if (be_code_setvar(parser->finfo, &e, &e1)) {
             parser->lexer.linenumber = line;
             parser_error(parser,
@@ -1161,7 +1163,6 @@ static void var_field(bparser *parser)
     bexpdesc e1, e2;
     bstring *name;
     name = next_token(parser).u.s;
-    new_var(parser, name, &e1); /* new local variable */
     match_token(parser, TokenId); /* match and skip ID */
     if (next_type(parser) == OptAssign) { /* '=' */
         scan_next_token(parser); /* skip '=' */
@@ -1170,6 +1171,7 @@ static void var_field(bparser *parser)
     } else {
         init_exp(&e2, ETNIL, 0);
     }
+    new_var(parser, name, &e1); /* new local variable */
     be_code_setvar(parser->finfo, &e1, &e2);
 }
 
