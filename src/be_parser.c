@@ -419,14 +419,13 @@ static void func_varlist(bparser *parser)
         while (next_type(parser) == OptComma) {
             scan_next_token(parser); /* skip ',' */
             str = next_token(parser).u.s;
+            match_token(parser, TokenId); /* match and skip ID */
             /* new local variable */
             if (find_localvar(parser->finfo, str, 0) == -1) {
                 new_var(parser, str, &v);
             } else {
-                push_error(parser,
-                    "redefinition of '%s'", token2str(parser));
+                push_error(parser, "redefinition of '%s'", str(str));
             }
-            scan_next_token(parser); /* skip ID */
         }
     }
     match_token(parser, OptRBK); /* skip ')' */
@@ -461,6 +460,55 @@ static void anon_func(bparser *parser, bexpdesc *e)
     scan_next_token(parser); /* skip 'def' */
     proto = funcbody(parser, name, FUNC_ANONYMOUS);
     init_exp(e, ETPROTO, be_code_proto(parser->finfo, proto));
+    be_stackpop(parser->vm, 1);
+}
+
+static void lamda_varlist(bparser *parser)
+{
+    bexpdesc v;
+    /* [ID {',' ID}] | {ID}] */
+    if (next_type(parser) == TokenId) {
+        bbool comma;
+        bstring *str = next_token(parser).u.s;
+        new_var(parser, str, &v); /* new variable */
+        scan_next_token(parser);
+        comma = next_type(parser) == OptComma;
+        while (next_type(parser) != OptArrow) {
+            if (comma) {
+                match_token(parser, OptComma); /* match and skip ',' */
+            }
+            str = next_token(parser).u.s;
+            match_token(parser, TokenId); /* match and skip ID */
+            /* new local variable */
+            if (find_localvar(parser->finfo, str, 0) == -1) {
+                new_var(parser, str, &v);
+            } else {
+                push_error(parser, "redefinition of '%s'", str(str));
+            }
+        }
+    }
+    match_token(parser, OptArrow); /* skip '->' */
+    parser->finfo->proto->argc = parser->finfo->freereg;
+}
+
+/* lamda expression */
+static void lamda_expr(bparser *parser, bexpdesc *e)
+{
+    bexpdesc e1;
+    bfuncinfo finfo;
+    bblockinfo binfo;
+    bstring *name = parser_newstr(parser, "<lamda>");
+    /* '/' ID {[',' ID]} '->' expr */
+    scan_next_token(parser); /* skip '/' */
+    begin_func(parser, &finfo, &binfo);
+    finfo.proto->name = name;
+    finfo.flag = (bbyte)FUNC_ANONYMOUS;
+    lamda_varlist(parser);
+    expr(parser, &e1);
+    check_var(parser, &e1);
+    be_code_ret(parser->finfo, &e1);
+    end_func(parser);
+    init_exp(e, ETPROTO, be_code_proto(parser->finfo, finfo.proto));
     be_stackpop(parser->vm, 1);
 }
 
@@ -671,6 +719,9 @@ static void primary_expr(bparser *parser, bexpdesc *e)
         break;
     case KeyDef: /* anonymous function */
         anon_func(parser, e);
+        break;
+    case OptDiv: /* lamda expression */
+        lamda_expr(parser, e);
         break;
     default: /* simple expr */
         simple_expr(parser, e);

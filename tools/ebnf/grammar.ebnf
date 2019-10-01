@@ -21,16 +21,18 @@ import_stmt = 'import' ID ['as' ID];
 var_stmt = 'var' ID ['=' expr] {',' ID ['=' expr]};
 (* expression define *)
 expr_stmt = expr [assign_op expr];
-expr = suffix_expr | unop expr | expr binop expr;
+expr = suffix_expr | unop expr | expr binop expr | cond_expr;
+cond_expr = expr '?' expr ':' expr;
 assign_op = '=' | '+=' | '-=' | '*=' | '/=' |
             '%=' | '&=' | '|=' | '^=' | '<<=' | '>>=';
 binop = '..' | '<' | '<=' | '==' | '!=' | '>' | '>=' | '||' | '&&' |
         '<<' | '>>' | '&' | '|' | '^' | '+' | '-' | '*' | '/' | '%';
 unop = '-' | '!' | '~';
 suffix_expr = primary_expr {call_expr | ('.' ID) | '[' expr ']'};
-primary_expr = '(' expr ')' | simple_expr | list_expr | map_expr | anon_func;
+primary_expr = '(' expr ')' | simple_expr | list_expr | map_expr | anon_func | lamda_expr;
 simple_expr =  INTEGER | REAL | STRING | ID | 'true' | 'false' | 'nil';
 call_expr = '(' [expr {',' expr}] ')';
 list_expr = '[' {expr ','} [expr] ']';
 map_expr = '{' {expr ':' expr ','} [expr ':' expr] '}';
 anon_func = 'def' func_body; (* anonymous function *)
+lamda_expr = '/' [ID {',' ID}] | {ID}] '->' expr;

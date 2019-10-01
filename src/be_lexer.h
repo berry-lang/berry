@@ -58,6 +58,8 @@ typedef enum {
     OptComma,       /* operator, , */
     OptSemic,       /* operator, ; */
     OptColon,       /* operator, : */
+    OptQuestion,    /* operator, ? */
+    OptArrow,       /* operator, -> */
     /* keyword */
     KeyIf,          /* keyword if */
     KeyElif,        /* keyword elif */

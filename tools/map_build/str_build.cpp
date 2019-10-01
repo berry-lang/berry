@@ -27,7 +27,7 @@ void str_build::build(const std::string &path)
 
 void str_build::keywords()
 {
-    constexpr int opif = 48;
+    constexpr int opif = 50; /* note the definition in be_lexer.h */
     const static std::map<std::string, int> tab = {
         { "if", opif}, { "elif", opif + 1 },
         { "else", opif + 2 }, { "while", opif + 3 },

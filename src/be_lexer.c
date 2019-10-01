@@ -25,8 +25,8 @@ static const char* const kwords_tab[] = {
         "<", "<=", "==", "!=", ">", ">=", "&", "|",
         "^", "<<", ">>", "..", "&&", "||", "!", "~",
         "(", ")", "[", "]", "{", "}", ".", ",", ";",
-        ":", "if", "elif", "else", "while", "for",
-        "def", "end", "class", "break", "continue",
+        ":", "?", "->", "if", "elif", "else", "while",
+        "for", "def", "end", "class", "break", "continue",
         "return", "true", "false", "nil", "var", "do",
         "import", "as"
 };
@@ -380,6 +380,18 @@ static btokentype scan_assign(blexer *lexer, btokentype is, btokentype not)
     return check_next(lexer, '=') ? is : not;
 }
 
+static btokentype scan_sub(blexer *lexer)
+{
+    btokentype op;
+    switch (next(lexer)) {
+        case '>': op = OptArrow; break;
+        case '=': op = OptSubAssign; break;
+        default: return OptSub;
+    }
+    next(lexer);
+    return op;
+}
+
 static btokentype scan_and(blexer *lexer)
 {
     btokentype op;
@@ -448,7 +460,7 @@ static btokentype lexer_next(blexer *lexer)
         case EOS: return TokenEOS; /* end of source stream */
         /* operator */
         case '+': return scan_assign(lexer, OptAddAssign, OptAdd);
-        case '-': return scan_assign(lexer, OptSubAssign, OptSub);
+        case '-': return scan_sub(lexer);
         case '*': return scan_assign(lexer, OptMulAssign, OptMul);
         case '/': return scan_assign(lexer, OptDivAssign, OptDiv);
         case '%': return scan_assign(lexer, OptModAssign, OptMod);
@@ -461,6 +473,7 @@ static btokentype lexer_next(blexer *lexer)
         case ',': next(lexer); return OptComma;
         case ';': next(lexer); return OptSemic;
         case ':': next(lexer); return OptColon;
+        case '?': next(lexer); return OptQuestion;
         case '^': return scan_assign(lexer, OptXorAssign, OptBitXor);
         case '~': next(lexer); return OptFlip;
         case '&': return scan_and(lexer);
