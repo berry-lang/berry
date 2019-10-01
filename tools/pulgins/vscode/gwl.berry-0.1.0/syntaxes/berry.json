@@ -21,6 +21,9 @@
 			"include": "#number"
 		},
 		{
+			"include": "#operator"
+		},
+		{
 			"include": "#member"
 		},
 		{
@@ -68,6 +71,12 @@
 			"patterns": [{
 				"name": "constant.numeric.berry",
 				"match": "\\b((0x)?[0-9]+)\\b"
+			}]
+		},
+		"operator": {
+			"patterns": [{
+				"name": "keyword.operator.berry",
+				"match": "\\(|\\)|\\[|\\]|\\.|-|\\!|~|\\*|/|%|\\+|&|\\^|\\||<|>|=|:"
 			}]
 		},
 		"member": {
