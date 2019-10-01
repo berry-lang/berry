@@ -18,7 +18,7 @@
 #define OP_NOT_UNARY            TokenNone
 #define OP_NOT_ASSIGN           TokenNone
 #define UNARY_OP_PRIO           3
-#define ASSIGN_OP_PRIO          15
+#define ASSIGN_OP_PRIO          16
 
 #define FUNC_METHOD             1
 #define FUNC_ANONYMOUS          2
@@ -817,14 +817,17 @@ static void cond_expr(bparser *parser, bexpdesc *e)
         be_code_goiftrue(finfo, e);
         jf = e->f;
         expr(parser, e);
+        check_var(parser, e);
         be_code_nextreg(finfo, e);
         be_code_freeregs(finfo, 1);
         be_code_conjump(finfo, &jl, be_code_jump(finfo)); /* connect jump */
         be_code_patchjump(finfo, jf);
         match_token(parser, OptColon); /* match and skip ':' */
         expr(parser, e);
-        be_code_nextreg(finfo, e);
+        check_var(parser, e);
+        e->v.idx = be_code_nextreg(finfo, e);
         be_code_patchjump(finfo, jl);
+        e->type = ETREG;
     }
 }
 
@@ -862,7 +865,9 @@ static void sub_expr(bparser *parser, bexpdesc *e, int prio)
         be_code_binop(finfo, op, e, &e2); /* encode binary op */
         op = get_binop(parser);
     }
-    cond_expr(parser, e);
+    if (prio == ASSIGN_OP_PRIO) {
+        cond_expr(parser, e);
+    }
 }
 
 static void expr(bparser *parser, bexpdesc *e)
