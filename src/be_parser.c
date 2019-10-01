@@ -463,7 +463,7 @@ static void anon_func(bparser *parser, bexpdesc *e)
     be_stackpop(parser->vm, 1);
 }
 
-static void lamda_varlist(bparser *parser)
+static void lambda_varlist(bparser *parser)
 {
     bexpdesc v;
     /* [ID {',' ID}] | {ID}] */
@@ -491,19 +491,19 @@ static void lamda_varlist(bparser *parser)
     parser->finfo->proto->argc = parser->finfo->freereg;
 }
 
-/* lamda expression */
-static void lamda_expr(bparser *parser, bexpdesc *e)
+/* lambda expression */
+static void lambda_expr(bparser *parser, bexpdesc *e)
 {
     bexpdesc e1;
     bfuncinfo finfo;
     bblockinfo binfo;
-    bstring *name = parser_newstr(parser, "<lamda>");
+    bstring *name = parser_newstr(parser, "<lambda>");
     /* '/' ID {[',' ID]} '->' expr */
     scan_next_token(parser); /* skip '/' */
     begin_func(parser, &finfo, &binfo);
     finfo.proto->name = name;
     finfo.flag = (bbyte)FUNC_ANONYMOUS;
-    lamda_varlist(parser);
+    lambda_varlist(parser);
     expr(parser, &e1);
     check_var(parser, &e1);
     be_code_ret(parser->finfo, &e1);
@@ -720,8 +720,8 @@ static void primary_expr(bparser *parser, bexpdesc *e)
     case KeyDef: /* anonymous function */
         anon_func(parser, e);
         break;
-    case OptDiv: /* lamda expression */
-        lamda_expr(parser, e);
+    case OptDiv: /* lambda expression */
+        lambda_expr(parser, e);
         break;
     default: /* simple expr */
         simple_expr(parser, e);
