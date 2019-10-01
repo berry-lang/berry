@@ -807,6 +807,27 @@ static void assign_expr(bparser *parser)
     } 
 }
 
+static void cond_expr(bparser *parser, bexpdesc *e)
+{
+    /* expr '?' expr ':' expr */
+    if (next_type(parser) == OptQuestion) {
+        int jf, jl = NO_JUMP; /* jump list */
+        bfuncinfo *finfo = parser->finfo;
+        scan_next_token(parser); /* skip '?' */
+        be_code_goiftrue(finfo, e);
+        jf = e->f;
+        expr(parser, e);
+        be_code_nextreg(finfo, e);
+        be_code_freeregs(finfo, 1);
+        be_code_conjump(finfo, &jl, be_code_jump(finfo)); /* connect jump */
+        be_code_patchjump(finfo, jf);
+        match_token(parser, OptColon); /* match and skip ':' */
+        expr(parser, e);
+        be_code_nextreg(finfo, e);
+        be_code_patchjump(finfo, jl);
+    }
+}
+
 /* binary operator: + - * / % && || < <= == != > >=
  * unary operator: + - !
  */
@@ -841,6 +862,7 @@ static void sub_expr(bparser *parser, bexpdesc *e, int prio)
         be_code_binop(finfo, op, e, &e2); /* encode binary op */
         op = get_binop(parser);
     }
+    cond_expr(parser, e);
 }
 
 static void expr(bparser *parser, bexpdesc *e)
@@ -879,7 +901,6 @@ static int cond_stmt(bparser *parser)
 
 static void condition_block(bparser *parser, int *jmp)
 {
-    
     bfuncinfo *finfo = parser->finfo;
     int br = cond_stmt(parser);
     block(parser);
