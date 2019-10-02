@@ -807,6 +807,7 @@ static void assign_expr(bparser *parser)
     } 
 }
 
+/* conditional expression */
 static void cond_expr(bparser *parser, bexpdesc *e)
 {
     /* expr '?' expr ':' expr */

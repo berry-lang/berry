@@ -22,7 +22,7 @@ var_stmt = 'var' ID ['=' expr] {',' ID ['=' expr]};
 (* expression define *)
 expr_stmt = expr [assign_op expr];
 expr = suffix_expr | unop expr | expr binop expr | cond_expr;
-cond_expr = expr '?' expr ':' expr;
+cond_expr = expr '?' expr ':' expr; (* conditional expression *)
 assign_op = '=' | '+=' | '-=' | '*=' | '/=' |
             '%=' | '&=' | '|=' | '^=' | '<<=' | '>>=';
 binop = '..' | '<' | '<=' | '==' | '!=' | '>' | '>=' | '||' | '&&' |

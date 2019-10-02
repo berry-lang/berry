@@ -18,11 +18,13 @@ Berry has the following advantages:
 
 ## Documents
 
-[https://skiars.github.io/berry](https://skiars.github.io/berry)
+Onlined documents: [https://skiars.github.io/berry](https://skiars.github.io/berry) (Expired)
 
-[https://github.com/Skiars/berry_doc](https://github.com/Skiars/berry_doc)
+LaTeX documents repository: [https://github.com/Skiars/berry_doc](https://github.com/Skiars/berry_doc)
 
-[berry_rm_zh_cn.pdf](https://github.com/Skiars/berry_doc/releases/download/latest/berry_rm_zh_cn.pdf) (Simplified Chinese version of the Reference Manual)
+Reference Manual: [berry_rm_zh_cn.pdf](https://github.com/Skiars/berry_doc/releases/download/latest/berry_rm_zh_cn.pdf) (Simplified Chinese version)
+
+Berry's EBNF grammar definition: [tools/ebnf/grammar.ebnf](./tools/ebnf/grammar.ebnf)
 
 ## Features
 
@@ -42,6 +44,7 @@ Berry has the following advantages:
   * Field operator: `.`
   * Subscript operator: `[]`
   * Connect string operator: `+`
+  * Conditional operator: `? :`
   * Brackets: `()`
 * Control Structure
   * Conditional statement: `if-else`
@@ -53,6 +56,7 @@ Berry has the following advantages:
   * Nested functions definition
   * Closure based on Upvalue
   * Anonymous function
+  * Lambda expression
 * Class
   * Inheritance (only public single inheritance)
   * Method and Operator Overload
