@@ -7,6 +7,7 @@
 #include "be_debug.h"
 #include <setjmp.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define FILE_BUFFER_SIZE    256
 
@@ -88,15 +89,15 @@ int be_execprotected(bvm *vm, bpfunc f, void *data)
     return jmp.status;
 }
 
-void be_bytecode_build(const char *filename, bproto *proto);
+void be_bytecode_save(const char *filename, bproto *proto);
 
 static void m_parser(bvm *vm, void *data)
 {
     struct pparser *p = cast(struct pparser*, data);
     bclosure *cl = be_parser_source(vm, p->fname, p->reader, p->data);
     var_setclosure(vm->top, cl);
-    be_bytecode_build("berry.bec", cl->proto);
     be_incrtop(vm);
+    be_bytecode_save("berry.bec", cl->proto);
 }
 
 int be_protectedparser(bvm *vm,
@@ -149,7 +150,7 @@ int be_loadbuffer(bvm *vm,
     return be_protectedparser(vm, name, _sgets, &sbuf);
 }
 
-int be_loadfile(bvm *vm, const char *name)
+int _load_script(bvm *vm, const char *name)
 {
     int res = BE_IO_ERROR;
     struct filebuf *fbuf = be_malloc(vm, sizeof(struct filebuf));
@@ -162,6 +163,23 @@ int be_loadfile(bvm *vm, const char *name)
     }
     be_free(vm, fbuf, sizeof(struct filebuf));
     return res;
+}
+
+int _load_bytecode(bvm *vm, const char *name)
+{
+    bclosure *be_bytecode_load(bvm * vm, const char *filename);
+    bclosure *cl = be_bytecode_load(vm, name);
+    var_setclosure(vm->top, cl);
+    be_incrtop(vm);
+    return BE_OK;
+}
+
+int be_loadfile(bvm *vm, const char *name)
+{
+    if (strstr(name, ".bec")) {
+        return _load_bytecode(vm, name);
+    }
+    return _load_script(vm, name);
 }
 
 static void m_pcall(bvm *vm, void *data)
