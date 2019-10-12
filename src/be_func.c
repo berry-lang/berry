@@ -72,7 +72,6 @@ bproto* be_newproto(bvm *vm)
         p->code = NULL;
         p->name = NULL;
         p->codesize = 0;
-        p->nlocal = 0;
         p->nupvals = 0;
         p->nproto = 0;
         p->nconst = 0;

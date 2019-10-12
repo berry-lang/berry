@@ -88,11 +88,14 @@ int be_execprotected(bvm *vm, bpfunc f, void *data)
     return jmp.status;
 }
 
+void be_bytecode_build(const char *filename, bproto *proto);
+
 static void m_parser(bvm *vm, void *data)
 {
     struct pparser *p = cast(struct pparser*, data);
     bclosure *cl = be_parser_source(vm, p->fname, p->reader, p->data);
     var_setclosure(vm->top, cl);
+    be_bytecode_build("berry.bec", cl->proto);
     be_incrtop(vm);
 }
 

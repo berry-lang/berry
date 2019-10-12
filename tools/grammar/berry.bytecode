@@ -21,6 +21,7 @@
 
 bytecode_file:  -- little endian
     header
+    global_desc
     main_function
 
 header: 8
@@ -33,27 +34,42 @@ header: 8
 
 main_function -> function
 
+global_desc:
+    global_count: 4
+    global_name -> [
+            string
+        ](global_count)
+
 function:
     information:
         function_name:
             string
-        argc: 1  -- arguments count
-        stack_size: 1
+        argc: 1   -- arguments count
+        nstack: 1 -- number of stack size by this function
     bytecode:
         code_size: 4
         code_array: code_size * 4
     constant_table:
         constant_count: 4
-        [constant_value]{constant_count}
+        [constant_value](constant_count)
+    proto_table:
+        proto_count: 4
+        [function](proto_count)
+    upval_table:
+        upval_count: 1
+        upvals -> [
+                instack: 1
+                index: 1
+            ](upval_count)
     debug_info:
         -- reserved
 
 constant_value:
     type: 1  -- type of value
-    nil | boolean | integer | float | string | function | class
+    nil | boolean | integer | float | string | class
 
 string:
-    string_size: 4
+    string_size: 2
     byte_array: string_size
 
 class:
@@ -63,7 +79,7 @@ class:
     method_count: 4   -- number of method
     member_index_table -> [
             string    -- member name
-            int          -- member variable index
+            int       -- member variable index
         ](member_count)
     method_table -> [
             string    -- method name

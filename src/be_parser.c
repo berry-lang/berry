@@ -136,7 +136,6 @@ static void end_block(bparser *parser)
 {
     bfuncinfo *finfo = parser->finfo;
     bblockinfo *binfo = finfo->binfo;
-    int nlocal = be_list_count(finfo->local);
 
     be_code_close(finfo, 0); /* close upvalues */
     if (binfo->isloop) {
@@ -145,7 +144,6 @@ static void end_block(bparser *parser)
         be_code_patchlist(finfo, binfo->continuelist, binfo->beginpc);
     }
     be_list_resize(parser->vm, finfo->local, binfo->nactlocals);
-    finfo->proto->nlocal = (bbyte)max(finfo->proto->nlocal, nlocal);
     finfo->freereg = binfo->nactlocals;
     finfo->binfo = binfo->prev;
 }
