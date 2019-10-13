@@ -48,7 +48,9 @@ function:
         nstack: 1 -- number of stack size by this function
     bytecode:
         code_size: 4
-        code_array: code_size * 4
+        code_array -> [ -- bytecode array
+                instruction: 4
+            ](code_size)
     constant_table:
         constant_count: 4
         [constant_value](constant_count)
@@ -66,7 +68,7 @@ function:
 
 constant_value:
     type: 1  -- type of value
-    nil | boolean | integer | float | string | class
+    integer | float | string | class
 
 string:
     string_size: 2
