@@ -1,12 +1,15 @@
 #include "be_bytecode.h"
+#include "be_vector.h"
 #include "be_string.h"
 #include "be_func.h"
 #include "be_exec.h"
 #include "be_mem.h"
 #include "be_sys.h"
+#include "be_var.h"
 #include "be_vm.h"
 #include "be_gc.h"
 #include <string.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 #define BYTECODE_VERSION    0
@@ -90,28 +93,38 @@ static void save_value(void *fp, bvalue *v)
 
 static void save_bytecode(void *fp, bproto *proto)
 {
-    binstruction *code = proto->code, *end = code + proto->codesize;
+    binstruction *code = proto->code, *end;
     save_long(fp, (uint32_t)proto->codesize);
-    while (code < end) {
-        save_long(fp, (uint32_t)*code++);
+    for (end = code + proto->codesize; code < end; ++code) {
+        save_long(fp, (uint32_t)*code);
     }
 }
 
 static void save_constant(void *fp, bproto *proto)
 {
-    bvalue *v = proto->ktab, *end = v + proto->nconst;
+    bvalue *v = proto->ktab, *end;
     save_long(fp, proto->nconst); /* constants count */
-    while (v < end) {
-        save_value(fp, v++);
+    for (end = v + proto->nconst; v < end; ++v) {
+        save_value(fp, v);
     }
 }
 
 static void save_proto_table(void *fp, bproto *proto)
 {
-    bproto **p = proto->ptab, **end = p + proto->nproto;
+    bproto **p = proto->ptab, **end;
     save_long(fp, proto->nproto); /* proto count */
-    while (p < end) {
-        save_proto(fp, *p++);
+    for (end = p + proto->nproto; p < end; ++p) {
+        save_proto(fp, *p);
+    }
+}
+
+static void save_upvals(void *fp, bproto *proto)
+{
+    bupvaldesc *uv = proto->upvals, *end;
+    save_byte(fp, proto->nupvals); /* upvals count */
+    for (end = uv + proto->nupvals; uv < end; ++uv) {
+        save_byte(fp, uv->instack);
+        save_byte(fp, uv->idx);
     }
 }
 
@@ -124,13 +137,21 @@ static void save_proto(void *fp, bproto *proto)
         save_bytecode(fp, proto); /* bytecode */
         save_constant(fp, proto); /* constant */
         save_proto_table(fp, proto); /* proto table */
+        save_upvals(fp, proto); /* upvals description table */
     }
 }
 
-void be_bytecode_save(const char *filename, bproto *proto)
+void save_global_info(bvm *vm, void *fp)
+{
+    int count = be_global_count(vm);
+    save_long(fp, count);
+}
+
+void be_bytecode_save(bvm *vm, const char *filename, bproto *proto)
 {
     void *fp = be_fopen(filename, "w");
     save_header(fp);
+    save_global_info(vm, fp);
     save_proto(fp, proto);
     be_fclose(fp);
 }
@@ -190,13 +211,16 @@ static breal load_real(void *fp)
     return u.r;
 }
 
-static bstring *load_string(bvm *vm, void *fp)
+static bstring* load_string(bvm *vm, void *fp)
 {
     uint16_t len = load_word(fp);
-    if (len) {
+    if (len > 0) {
+        bstring *str;
         char *buf = be_malloc(vm, len);
         be_fread(fp, buf, len);
-        return be_newstrn(vm, buf, len);
+        str = be_newstrn(vm, buf, len);
+        be_free(vm, buf, len);
+        return str;
     }
     return be_newstr(vm, "");
 }
@@ -216,7 +240,7 @@ static void load_bytecode(bvm *vm, void *fp, bproto *proto)
 {
     int size = (int)load_long(fp);
     if (size) {
-        binstruction *end, *code;
+        binstruction *code, *end;
         proto->code = be_malloc(vm, sizeof(binstruction) * size);
         proto->codesize = size;
         code = proto->code;
@@ -244,9 +268,27 @@ static void load_proto_table(bvm *vm, void *fp, bproto *proto)
 {
     int size = (int)load_long(fp); /* proto count */
     if (size) {
-        proto->ptab = be_malloc(vm, sizeof(bproto*) * size);
-        for (; proto->nproto < size; ++proto->nproto) {
-            load_proto(vm, fp, proto->ptab + proto->nproto);
+        bproto **p = be_malloc(vm, sizeof(bproto *) * size);
+        memset(p, 0, sizeof(bproto *) * size);
+        proto->ptab = p;
+        proto->nproto = size;
+        while (size--) {
+            load_proto(vm, fp, p++);
+        }
+    }
+}
+
+static void load_upvals(bvm *vm, void *fp, bproto *proto)
+{
+    int size = (int)load_byte(fp);
+    if (size) {
+        bupvaldesc *uv, *end;
+        proto->upvals = be_malloc(vm, sizeof(bupvaldesc) * size);
+        proto->nupvals = size;
+        uv = proto->upvals;
+        for (end = uv + size; uv < end; ++uv) {
+            uv->instack = load_byte(fp);
+            uv->idx = load_byte(fp);
         }
     }
 }
@@ -260,6 +302,17 @@ static void load_proto(bvm *vm, void *fp, bproto **proto)
     load_bytecode(vm, fp, *proto);
     load_constant(vm, fp, *proto);
     load_proto_table(vm, fp, *proto);
+    load_upvals(vm, fp, *proto);
+}
+
+void load_global_info(bvm *vm, void *fp)
+{
+    int i, count = load_long(fp);
+    for (i = 0; i < count; ++i) {
+        char buf[16];
+        sprintf(buf, "g%d", i);
+        be_global_new(vm, be_newstr(vm, buf));
+    }
 }
 
 bclosure* be_bytecode_load(bvm *vm, const char *filename)
@@ -267,12 +320,11 @@ bclosure* be_bytecode_load(bvm *vm, const char *filename)
     void *fp = be_fopen(filename, "r");
     bclosure *cl = be_newclosure(vm, 0);
     var_setclosure(vm->top, cl);
-    be_gc_setpause(vm, 0);
     be_stackpush(vm);
     load_head(fp);
+    load_global_info(vm, fp);
     load_proto(vm, fp, &cl->proto);
     be_stackpop(vm, 1);
-    be_gc_setpause(vm, 1);
     be_fclose(fp);
     return cl;
 }

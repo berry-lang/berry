@@ -89,7 +89,7 @@ int be_execprotected(bvm *vm, bpfunc f, void *data)
     return jmp.status;
 }
 
-void be_bytecode_save(const char *filename, bproto *proto);
+void be_bytecode_save(bvm *vm, const char *filename, bproto *proto);
 
 static void m_parser(bvm *vm, void *data)
 {
@@ -97,7 +97,7 @@ static void m_parser(bvm *vm, void *data)
     bclosure *cl = be_parser_source(vm, p->fname, p->reader, p->data);
     var_setclosure(vm->top, cl);
     be_incrtop(vm);
-    be_bytecode_save("berry.bec", cl->proto);
+    be_bytecode_save(vm, "berry.bec", cl->proto);
 }
 
 int be_protectedparser(bvm *vm,
