@@ -352,7 +352,7 @@ static void new_class(bparser *parser, bstring *name, bclass *c, bexpdesc *e)
     } else {
         init_exp(e, ETGLOBAL, 0);
         e->v.idx = be_global_new(parser->vm, name);
-        var = be_global_var(parser->vm, e->v.idx);
+        var = be_code_globalobject(finfo, e->v.idx);
     }
     var_settype(var, BE_CLASS);
     var->v.p = c;

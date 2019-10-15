@@ -28,6 +28,7 @@ void be_code_ret(bfuncinfo *finfo, bexpdesc *e);
 void be_code_member(bfuncinfo *finfo, bexpdesc *e1, bexpdesc *e2);
 void be_code_index(bfuncinfo *finfo, bexpdesc *c, bexpdesc *k);
 bvalue* be_code_localobject(bfuncinfo *finfo, int dst);
+bvalue* be_code_globalobject(bfuncinfo *finfo, int dst);
 void be_code_setsuper(bfuncinfo *finfo, bexpdesc *c, bexpdesc *s);
 void be_code_import(bfuncinfo *finfo, bexpdesc *m, bexpdesc *v);
 

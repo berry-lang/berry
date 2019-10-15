@@ -1,8 +1,10 @@
 #include "be_bytecode.h"
 #include "be_vector.h"
 #include "be_string.h"
+#include "be_class.h"
 #include "be_func.h"
 #include "be_exec.h"
+#include "be_map.h"
 #include "be_mem.h"
 #include "be_sys.h"
 #include "be_var.h"
@@ -16,7 +18,7 @@
 #define VERIFY_CODE         0x5A
 #define MAGIC_NUMBER        0xBECD
 
-static void save_proto(void *fp, bproto *proto);
+static void save_proto(bvm *vm, void *fp, bproto *proto);
 static void load_proto(bvm *vm, void *fp, bproto **proto);
 
 static void save_byte(void *fp, uint8_t value)
@@ -79,14 +81,45 @@ static void save_string(void *fp, bstring *s)
     }
 }
 
-static void save_value(void *fp, bvalue *v)
+static void save_class(bvm *vm, void *fp, bclass *c)
+{
+    bstring **vars = NULL;
+    bmapnode *node;
+    bmap *members = c->members;
+    bmapiter iter = be_map_iter();
+    int i, count = be_map_count(members);
+    if (c->nvar) {
+        vars = be_malloc(vm, sizeof(bstring *) * c->nvar);
+    }
+    save_long(fp, c->nvar); /* member variables count */
+    save_long(fp, count - c->nvar); /* method count */
+    while ((node = be_map_next(members, &iter)) != NULL) {
+        be_assert(var_isstr(&node->key));
+        if (var_isint(&node->value)) {
+            vars[var_toidx(&node->value)] = var_tostr(&node->key);
+        } else {
+            bclosure *cl = var_toobj(&node->value);
+            be_assert(var_isclosure(&node->value));
+            save_string(fp, var_tostr(&node->key));
+            save_proto(vm, fp, cl->proto);
+        }
+    }
+    if (c->nvar) {
+        for (i = 0; i < c->nvar; ++i) {
+            save_string(fp, vars[i]);
+        }
+        be_free(vm, vars, sizeof(bstring *) * c->nvar);
+    }
+}
+
+static void save_value(bvm *vm, void *fp, bvalue *v)
 {
     save_byte(fp, var_type(v)); /* type */
     switch (var_type(v)) {
     case BE_INT: save_int(fp, var_toint(v)); break;
     case BE_REAL: save_real(fp, var_toreal(v)); break;
     case BE_STRING: save_string(fp, var_tostr(v)); break;
-    case BE_CLASS: break; /* TODO */
+    case BE_CLASS: save_class(vm, fp, var_toobj(v)); break;
     default: break;
     }
 }
@@ -100,21 +133,21 @@ static void save_bytecode(void *fp, bproto *proto)
     }
 }
 
-static void save_constant(void *fp, bproto *proto)
+static void save_constant(bvm *vm, void *fp, bproto *proto)
 {
     bvalue *v = proto->ktab, *end;
     save_long(fp, proto->nconst); /* constants count */
     for (end = v + proto->nconst; v < end; ++v) {
-        save_value(fp, v);
+        save_value(vm, fp, v);
     }
 }
 
-static void save_proto_table(void *fp, bproto *proto)
+static void save_proto_table(bvm *vm, void *fp, bproto *proto)
 {
     bproto **p = proto->ptab, **end;
     save_long(fp, proto->nproto); /* proto count */
     for (end = p + proto->nproto; p < end; ++p) {
-        save_proto(fp, *p);
+        save_proto(vm, fp, *p);
     }
 }
 
@@ -128,15 +161,15 @@ static void save_upvals(void *fp, bproto *proto)
     }
 }
 
-static void save_proto(void *fp, bproto *proto)
+static void save_proto(bvm *vm, void *fp, bproto *proto)
 {
     if (proto) {
         save_string(fp, proto->name); /* name */
         save_byte(fp, proto->argc); /* argc */
         save_byte(fp, proto->nstack); /* nstack */
         save_bytecode(fp, proto); /* bytecode */
-        save_constant(fp, proto); /* constant */
-        save_proto_table(fp, proto); /* proto table */
+        save_constant(vm, fp, proto); /* constant */
+        save_proto_table(vm, fp, proto); /* proto table */
         save_upvals(fp, proto); /* upvals description table */
     }
 }
@@ -152,7 +185,7 @@ void be_bytecode_save(bvm *vm, const char *filename, bproto *proto)
     void *fp = be_fopen(filename, "w");
     save_header(fp);
     save_global_info(vm, fp);
-    save_proto(fp, proto);
+    save_proto(vm, fp, proto);
     be_fclose(fp);
 }
 

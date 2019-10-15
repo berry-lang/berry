@@ -79,14 +79,13 @@ class:
         string
     member_count: 4   -- number of member variables
     method_count: 4   -- number of method
-    member_index_table -> [
-            string    -- member name
-            int       -- member variable index
-        ](member_count)
     method_table -> [
             string    -- method name
             function  -- method function body
         ](method_count)
+    member_index_table -> [
+            string    -- member name
+        ](member_count)
 
 nil: 1
 boolean: 1

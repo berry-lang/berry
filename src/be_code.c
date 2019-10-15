@@ -666,6 +666,14 @@ bvalue* be_code_localobject(bfuncinfo *finfo, int dst)
     return be_vector_end(&finfo->kvec);
 }
 
+bvalue* be_code_globalobject(bfuncinfo *finfo, int dst)
+{
+    int src = newconst(finfo, NULL);
+    code_move(finfo, finfo->freereg, setK(src));
+    codeABx(finfo, OP_SETGBL, finfo->freereg, dst);
+    return be_vector_end(&finfo->kvec);
+}
+
 void be_code_setsuper(bfuncinfo *finfo, bexpdesc *c, bexpdesc *s)
 {
     int self = exp2anyreg(finfo, c);
