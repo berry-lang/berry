@@ -211,7 +211,7 @@ int be_loadexec(bvm *vm, const char *name)
 static void _bytecode_save(bvm *vm, void *data)
 {
     if (var_isclosure(vm->top)) {
-        bclosure *cl = var_toclosure(vm->top);
+        bclosure *cl = var_toobj(vm->top);
         be_bytecode_save(vm, (const char *)data, cl->proto);
     }
 }

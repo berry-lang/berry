@@ -127,12 +127,95 @@ static int check_args(bvm *vm)
     return args;
 }
 
-/* berry [options] [script [args]]
- * command options:
- * -i: enter interactive mode after executing 'script'
- * -v: show version information
- * -h: show help information
+struct arg_opts {
+    int index;
+    const char *pattern;
+    const char *optarg;
+    const char *errarg;
+};
+
+static int is_letter(int ch)
+{
+    return ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z';
+}
+
+static const char* match_opt(const char *pattern, int ch)
+{
+    int c = '\0';
+    if (pattern) {
+        while ((c = *pattern) != '\0' && c != ch) {
+            c = *(++pattern);
+            while (c != '\0' && !is_letter(c)) {
+                c = *(++pattern); /* skip characters that are not letters */
+            }
+        }
+    }
+    return c == ch ? pattern : NULL;
+}
+
+static int arg_getopt(struct arg_opts *opt, int argc, char *argv[])
+{
+    if (opt->index < argc) {
+        char *arg = argv[opt->index++];
+        if (arg[0] == '-' && strlen(arg) == 2) {
+            const char *res = match_opt(opt->pattern, arg[1]);
+            if (res != NULL) {
+                if (res[1] == ':') { /* get argument */
+                    opt->optarg =
+                        opt->index < argc ? argv[opt->index++] : NULL;
+                } else if (res[1] == '?') {
+                    if (opt->index < argc && argv[opt->index][0] != '-') {
+                        opt->optarg = argv[opt->index++];
+                    } else {
+                        opt->optarg = NULL;
+                    }
+                }
+                return *res;
+            }
+            opt->errarg = arg;
+            return '?';
+        }
+    }
+    return 0;
+}
+
+/* 
+ * command format: berry [options] [script [args]]
+ *   command options:
+ *   -i: enter interactive mode after executing 'script'
+ *   -b: load code from bytecode file
+ * command format: berry options
+ *   command options:
+ *   -v: show version information
+ *   -h: show help information
+ * command format: berry option file [option file]
+ *   -c: compile script file to bytecode file
+ *   -o: set the output file name
  * */
+static int analysis_args(bvm *vm, int argc, char *argv[])
+{
+    int ch;
+    struct arg_opts opt = { 0 };
+    opt.index = 1;
+    opt.pattern = "ibvhc:o:";
+    while ((ch = arg_getopt(&opt, argc, argv)) != '\0') {
+        switch (ch) {
+        case 'h':
+            be_writestring(help_information);
+            break;
+        case 'v':
+            be_writestring(FULL_VERSION "\n");
+            break;
+        case 'i':
+            break;
+        case '?':
+            printf("unknown option: %s\n", opt.errarg);
+            break;
+        }
+    }
+    return 0;
+}
+#if 0
 static int analysis_args(bvm *vm)
 {
     int args = check_args(vm);
@@ -163,15 +246,13 @@ static int analysis_args(bvm *vm)
     }
     return 0;
 }
+#endif
 
 int main(int argc, char *argv[])
 {
-    int i = 0, res;
+    int res;
     bvm *vm = be_vm_new(); /* create a virtual machine instance */
-    for (i = 1; i < argc; ++i) { /* push arguments into the stack */
-        be_pushstring(vm, argv[i]);
-    }
-    res = analysis_args(vm);
+    res = analysis_args(vm, argc, argv);
     be_vm_delete(vm); /* free all objects and vm */
     return res;
 }
