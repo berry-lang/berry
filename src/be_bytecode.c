@@ -91,6 +91,7 @@ static void save_class(bvm *vm, void *fp, bclass *c)
     if (c->nvar) {
         vars = be_malloc(vm, sizeof(bstring *) * c->nvar);
     }
+    save_string(fp, c->name);
     save_long(fp, c->nvar); /* member variables count */
     save_long(fp, count - c->nvar); /* method count */
     while ((node = be_map_next(members, &iter)) != NULL) {
@@ -258,13 +259,42 @@ static bstring* load_string(bvm *vm, void *fp)
     return be_newstr(vm, "");
 }
 
+static void load_class(bvm *vm, void *fp, bvalue *v)
+{
+    int nvar, count;
+    bclass *c = be_newclass(vm, NULL, NULL);
+    var_setclass(v, c);
+    c->name = load_string(vm, fp);
+    nvar = load_long(fp);
+    count = load_long(fp);
+    while (count--) {
+        bvalue *value;
+        bstring *name = load_string(vm, fp);
+        var_setstr(vm->top, name);
+        be_stackpush(vm);
+        value = vm->top;
+        var_setproto(value, NULL);
+        be_stackpush(vm);
+        load_proto(vm, fp, cast(bproto**, &var_toobj(value)));
+        be_method_bind(vm, c, name, var_toobj(value));
+        be_stackpop(vm, 2);
+    }
+    for (count = 0; count < nvar; ++count) {
+        bstring *name = load_string(vm, fp);
+        var_setstr(vm->top, name);
+        be_stackpush(vm);
+        be_member_bind(vm, c, name);
+        be_stackpop(vm, 1);
+    }
+}
+
 static void load_value(bvm *vm, void *fp, bvalue *v)
 {
     switch (load_byte(fp)) {
     case BE_INT: var_setint(v, load_int(fp)); break;
     case BE_REAL: var_setreal(v, load_real(fp)); break;
     case BE_STRING: var_setstr(v, load_string(vm, fp)); break;
-    case BE_CLASS: break; /* TODO */
+    case BE_CLASS: load_class(vm, fp, v); break;
     default: break;
     }
 }
