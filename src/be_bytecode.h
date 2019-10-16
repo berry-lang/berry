@@ -3,6 +3,7 @@
 
 #include "be_object.h"
 
-void be_bytecode_build(const char *filename, bproto *bproto);
+void be_bytecode_save(bvm *vm, const char *filename, bproto *proto);
+bclosure* be_bytecode_load(bvm *vm, const char *filename);
 
 #endif

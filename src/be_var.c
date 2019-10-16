@@ -45,18 +45,24 @@ int be_global_find(bvm *vm, bstring *name)
     return res != -1 ? res : be_builtin_find(vm, name);
 }
 
+int be_global_new_anonymous(bvm *vm)
+{
+    int idx = be_global_count(vm);
+    /* allocate space for new variables */
+    be_vector_resize(vm, &global(vm).vlist, idx + 1);
+    /* set the new variable to nil */
+    var_setnil((bvalue *)global(vm).vlist.end);
+    return idx + be_builtin_count(vm);
+}
+
 int be_global_new(bvm *vm, bstring *name)
 {
     int idx = global_find(vm, name);
     if (idx == -1) {
         bvalue *desc;
-        idx = be_map_count(global(vm).vtab);
+        idx = be_global_new_anonymous(vm);
         desc = be_map_insertstr(vm, global(vm).vtab, name, NULL);
-        var_setint(desc, idx);
-        be_vector_resize(vm, &global(vm).vlist, idx + 1);
-        /* set the new variable to nil */
-        var_setnil((bvalue *)global(vm).vlist.end);
-        return idx + be_builtin_count(vm);
+        var_setint(desc, idx - be_builtin_count(vm));
     }
     return idx;
 }

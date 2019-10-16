@@ -220,10 +220,11 @@ static uint32_t load_long(void *fp)
     return 0;
 }
 
-static void load_head(void *fp)
+static int load_head(void *fp)
 {
     uint8_t buffer[8] = { 0 };
     be_fread(fp, buffer, sizeof(buffer));
+    return btrue;
 }
 
 static bint load_int(void *fp)
@@ -370,24 +371,24 @@ static void load_proto(bvm *vm, void *fp, bproto **proto)
 
 void load_global_info(bvm *vm, void *fp)
 {
-    int i, count = load_long(fp);
+    int i, count = load_long(fp) - be_global_count(vm);
     for (i = 0; i < count; ++i) {
-        char buf[16];
-        sprintf(buf, "g%d", i);
-        be_global_new(vm, be_newstr(vm, buf));
+        be_global_new_anonymous(vm);
     }
 }
 
 bclosure* be_bytecode_load(bvm *vm, const char *filename)
 {
     void *fp = be_fopen(filename, "r");
-    bclosure *cl = be_newclosure(vm, 0);
-    var_setclosure(vm->top, cl);
-    be_stackpush(vm);
-    load_head(fp);
-    load_global_info(vm, fp);
-    load_proto(vm, fp, &cl->proto);
-    be_stackpop(vm, 1);
-    be_fclose(fp);
-    return cl;
+    if (fp && load_head(fp)) {
+        bclosure *cl = be_newclosure(vm, 0);
+        var_setclosure(vm->top, cl);
+        be_stackpush(vm);
+        load_global_info(vm, fp);
+        load_proto(vm, fp, &cl->proto);
+        be_stackpop(vm, 1);
+        be_fclose(fp);
+        return cl;
+    }
+    return NULL;
 }

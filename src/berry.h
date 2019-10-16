@@ -249,6 +249,8 @@ void be_vm_delete(bvm *vm);
 int be_loadbuffer(bvm *vm,
     const char *name, const char *buffer, size_t length);
 int be_loadfile(bvm *vm, const char *name);
+int be_loadexec(bvm *vm, const char *name);
+int be_saveexec(bvm *vm, const char *name);
 void be_codedump(bvm *vm, int index);
 
 void be_writebuffer(const char *buffer, size_t length);

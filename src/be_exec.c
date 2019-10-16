@@ -5,9 +5,9 @@
 #include "be_mem.h"
 #include "be_sys.h"
 #include "be_debug.h"
+#include "be_bytecode.h"
 #include <setjmp.h>
 #include <stdlib.h>
-#include <string.h>
 
 #define FILE_BUFFER_SIZE    256
 
@@ -44,6 +44,10 @@ struct pparser {
 struct pcall {
     bvalue *v;
     int argc;
+};
+
+struct vmstate {
+    int top, reg, depth;
 };
 
 struct strbuf {
@@ -89,7 +93,26 @@ int be_execprotected(bvm *vm, bpfunc f, void *data)
     return jmp.status;
 }
 
-void be_bytecode_save(bvm *vm, const char *filename, bproto *proto);
+static void vm_state_save(bvm *vm, struct vmstate *state)
+{
+    state->depth = be_stack_count(&vm->callstack);
+    state->top = cast_int(vm->top - vm->stack);
+    state->reg = cast_int(vm->reg - vm->stack);
+}
+
+static void vm_state_restore(bvm *vm, const struct vmstate *state)
+{
+    int idx = cast_int(vm->top - vm->reg);
+    vm->reg = vm->stack + state->reg;
+    /* copy error information to top */
+    be_moveto(vm, idx, state->top - state->reg + 1);
+    vm->top = vm->stack + state->top + 1;
+    be_assert(be_stack_count(&vm->callstack) >= state->depth);
+    if (be_stack_count(&vm->callstack) > state->depth) {
+        be_vector_resize(vm, &vm->callstack, state->depth);
+        vm->cf = be_stack_top(&vm->callstack);
+    }
+}
 
 static void m_parser(bvm *vm, void *data)
 {
@@ -97,7 +120,6 @@ static void m_parser(bvm *vm, void *data)
     bclosure *cl = be_parser_source(vm, p->fname, p->reader, p->data);
     var_setclosure(vm->top, cl);
     be_incrtop(vm);
-    be_bytecode_save(vm, "berry.bec", cl->proto);
 }
 
 int be_protectedparser(bvm *vm,
@@ -105,17 +127,14 @@ int be_protectedparser(bvm *vm,
 {
     int res;
     struct pparser s;
-    int top = cast_int(vm->top - vm->stack);
-    int reg = cast_int(vm->reg - vm->stack);
+    struct vmstate state;
     s.fname = fname;
     s.reader = reader;
     s.data = data;
+    vm_state_save(vm, &state);
     res = be_execprotected(vm, m_parser, &s);
-    if (res) { /* recovery call stack */
-        int idx = cast_int(vm->top - vm->reg);
-        vm->reg = vm->stack + reg;
-        be_moveto(vm, idx, top - reg + 1); /* copy error information */
-        vm->top = vm->stack + top + 1;
+    if (res) { /* restore call stack */
+        vm_state_restore(vm, &state);
     }
     return res;
 }
@@ -150,7 +169,7 @@ int be_loadbuffer(bvm *vm,
     return be_protectedparser(vm, name, _sgets, &sbuf);
 }
 
-int _load_script(bvm *vm, const char *name)
+int be_loadfile(bvm *vm, const char *name)
 {
     int res = BE_IO_ERROR;
     struct filebuf *fbuf = be_malloc(vm, sizeof(struct filebuf));
@@ -165,21 +184,49 @@ int _load_script(bvm *vm, const char *name)
     return res;
 }
 
-int _load_bytecode(bvm *vm, const char *name)
+static void _bytecode_load(bvm *vm, void *data)
 {
-    bclosure *be_bytecode_load(bvm * vm, const char *filename);
-    bclosure *cl = be_bytecode_load(vm, name);
-    var_setclosure(vm->top, cl);
+    bclosure *cl = be_bytecode_load(vm, (const char *)data);
+    if (cl != NULL) {
+        var_setclosure(vm->top, cl);
+    } else {
+        var_setnil(vm->top);
+    }
     be_incrtop(vm);
-    return BE_OK;
 }
 
-int be_loadfile(bvm *vm, const char *name)
+/* load bytecode file */
+int be_loadexec(bvm *vm, const char *name)
 {
-    if (strstr(name, ".bec")) {
-        return _load_bytecode(vm, name);
+    int res;
+    struct vmstate state;
+    vm_state_save(vm, &state);
+    res = be_execprotected(vm, _bytecode_load, (void *)name);
+    if (res) { /* restore call stack */
+        vm_state_restore(vm, &state);
     }
-    return _load_script(vm, name);
+    return res;
+}
+
+static void _bytecode_save(bvm *vm, void *data)
+{
+    if (var_isclosure(vm->top)) {
+        bclosure *cl = var_toclosure(vm->top);
+        be_bytecode_save(vm, (const char *)data, cl->proto);
+    }
+}
+
+/* save bytecode file */
+int be_saveexec(bvm *vm, const char *name)
+{
+    int res;
+    struct vmstate state;
+    vm_state_save(vm, &state);
+    res = be_execprotected(vm, _bytecode_save, (void *)name);
+    if (res) { /* restore call stack */
+        vm_state_restore(vm, &state);
+    }
+    return res;
 }
 
 static void m_pcall(bvm *vm, void *data)
@@ -192,20 +239,13 @@ int be_protectedcall(bvm *vm, bvalue *v, int argc)
 {
     int res;
     struct pcall s;
-    int calldepth = be_stack_count(&vm->callstack);
-    int reg = cast_int(vm->reg - vm->stack);
-    int top = cast_int(vm->top - vm->stack);
+    struct vmstate state;
     s.v = v;
     s.argc = argc;
+    vm_state_save(vm, &state);
     res = be_execprotected(vm, m_pcall, &s);
-    if (res) { /* recovery call stack */
-        int idx = cast_int(vm->top - (vm->stack + reg));
-        vm->reg = vm->stack + reg;
-        be_moveto(vm, idx, top - reg + 1); /* copy error information */
-        vm->top = vm->stack + top + 1;
-        be_assert(be_stack_count(&vm->callstack) >= calldepth);
-        be_vector_resize(vm, &vm->callstack, calldepth);
-        vm->cf = be_stack_top(&vm->callstack);
+    if (res) { /* restore call stack */
+        vm_state_restore(vm, &state);
     }
     return res;
 }
