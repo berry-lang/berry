@@ -183,7 +183,7 @@ void save_global_info(bvm *vm, void *fp)
 
 void be_bytecode_save(bvm *vm, const char *filename, bproto *proto)
 {
-    void *fp = be_fopen(filename, "w");
+    void *fp = be_fopen(filename, "wb");
     save_header(fp);
     save_global_info(vm, fp);
     save_proto(vm, fp, proto);
@@ -379,7 +379,7 @@ void load_global_info(bvm *vm, void *fp)
 
 bclosure* be_bytecode_load(bvm *vm, const char *filename)
 {
-    void *fp = be_fopen(filename, "r");
+    void *fp = be_fopen(filename, "rb");
     if (fp && load_head(fp)) {
         bclosure *cl = be_newclosure(vm, 0);
         var_setclosure(vm->top, cl);

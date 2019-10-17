@@ -102,7 +102,7 @@ static void vm_state_save(bvm *vm, struct vmstate *state)
 
 static void vm_state_restore(bvm *vm, const struct vmstate *state)
 {
-    int idx = cast_int(vm->top - vm->reg);
+    int idx = cast_int(vm->top - (vm->stack + state->reg));
     vm->reg = vm->stack + state->reg;
     /* copy error information to top */
     be_moveto(vm, idx, state->top - state->reg + 1);

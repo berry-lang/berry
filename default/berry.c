@@ -205,7 +205,6 @@ static int load_file(bvm *vm, int argc, char *argv[], int args)
 
 static int build_file(bvm *vm, const char *dst, const char *src)
 {
-    printf("src: %s, dst: %s\n", src, dst);
     int res = be_loadfile(vm, src); /* compile script file */
     if (res == BE_OK) {
         if (!dst) dst = "a.out"; /* the default output file name */
@@ -275,7 +274,9 @@ static int analysis_args(bvm *vm, int argc, char *argv[])
     opt.pattern = "vhibc?o?";
     args = parse_arg(&opt, argc, argv);
     if (args & arg_err) {
-        printf("error: missing argument to '%s'\n", opt.errarg);
+        be_writestring(be_pushfstring(vm,
+            "error: missing argument to '%s'\n", opt.errarg));
+        be_pop(vm, 1);
         return -1;
     }
     if (args & arg_v) {
