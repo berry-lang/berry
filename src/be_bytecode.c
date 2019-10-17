@@ -21,6 +21,12 @@
 static void save_proto(bvm *vm, void *fp, bproto *proto);
 static void load_proto(bvm *vm, void *fp, bproto **proto);
 
+static void bytecode_error(bvm *vm, const char *msg)
+{
+    be_pushstring(vm, msg);
+    be_throw(vm, BE_IO_ERROR);
+}
+
 static void save_byte(void *fp, uint8_t value)
 {
     be_fwrite(fp, &value, 1);
@@ -175,7 +181,7 @@ static void save_proto(bvm *vm, void *fp, bproto *proto)
     }
 }
 
-void save_global_info(bvm *vm, void *fp)
+static void save_global_info(bvm *vm, void *fp)
 {
     int count = be_global_count(vm);
     save_long(fp, count);
@@ -184,10 +190,15 @@ void save_global_info(bvm *vm, void *fp)
 void be_bytecode_save(bvm *vm, const char *filename, bproto *proto)
 {
     void *fp = be_fopen(filename, "wb");
-    save_header(fp);
-    save_global_info(vm, fp);
-    save_proto(vm, fp, proto);
-    be_fclose(fp);
+    if (fp == NULL) {
+        bytecode_error(vm, be_pushfstring(vm,
+            "error: can not open file '%s'.", filename));
+    } else {
+        save_header(fp);
+        save_global_info(vm, fp);
+        save_proto(vm, fp, proto);
+        be_fclose(fp);
+    }
 }
 
 static uint8_t load_byte(void *fp)
@@ -222,9 +233,14 @@ static uint32_t load_long(void *fp)
 
 static int load_head(void *fp)
 {
+    int res;
     uint8_t buffer[8] = { 0 };
     be_fread(fp, buffer, sizeof(buffer));
-    return btrue;
+    res = buffer[0] == (MAGIC_NUMBER & 0xff) &&
+          buffer[1] == (MAGIC_NUMBER >> 8) &&
+          buffer[2] == BYTECODE_VERSION &&
+          buffer[3] == VERIFY_CODE;
+    return res;
 }
 
 static bint load_int(void *fp)
@@ -380,7 +396,10 @@ void load_global_info(bvm *vm, void *fp)
 bclosure* be_bytecode_load(bvm *vm, const char *filename)
 {
     void *fp = be_fopen(filename, "rb");
-    if (fp && load_head(fp)) {
+    if (fp == NULL) {
+        bytecode_error(vm, be_pushfstring(vm,
+            "error: can not open file '%s'.", filename));
+    } else if (load_head(fp)) {
         bclosure *cl = be_newclosure(vm, 0);
         var_setclosure(vm->top, cl);
         be_stackpush(vm);
@@ -390,5 +409,7 @@ bclosure* be_bytecode_load(bvm *vm, const char *filename)
         be_fclose(fp);
         return cl;
     }
+    bytecode_error(vm, be_pushfstring(vm,
+        "error: invalid bytecode file '%s'.", filename));
     return NULL;
 }
