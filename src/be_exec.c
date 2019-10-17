@@ -114,6 +114,8 @@ static void vm_state_restore(bvm *vm, const struct vmstate *state)
     }
 }
 
+#if BE_USE_SCRIPT_COMPILER
+
 static void m_parser(bvm *vm, void *data)
 {
     struct pparser *p = cast(struct pparser*, data);
@@ -183,6 +185,8 @@ int be_loadfile(bvm *vm, const char *name)
     be_free(vm, fbuf, sizeof(struct filebuf));
     return res;
 }
+
+#endif
 
 static void _bytecode_load(bvm *vm, void *data)
 {

@@ -235,6 +235,7 @@ static int l_size(bvm *vm)
     be_return_nil(vm);
 }
 
+#if BE_USE_SCRIPT_COMPILER
 static int m_compile_str(bvm *vm)
 {
     int len = be_strlen(vm, 1);
@@ -255,9 +256,11 @@ static int m_compile_file(bvm *vm)
     }
     be_return_nil(vm);
 }
+#endif
 
 static int l_compile(bvm *vm)
 {
+#if BE_USE_SCRIPT_COMPILER
     if (be_top(vm) && be_isstring(vm, 1)) {
         if (be_top(vm) >= 2 && be_isstring(vm, 2)) {
             const char *s = be_tostring(vm, 2);
@@ -271,6 +274,7 @@ static int l_compile(bvm *vm)
             return m_compile_str(vm);
         }
     }
+#endif
     be_return_nil(vm);
 }
 

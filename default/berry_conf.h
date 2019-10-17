@@ -85,6 +85,30 @@
  **/
 #define BE_USE_FILE_SYSTEM              0
 
+/*
+ * Macro: BE_USE_SCRIPT_COMPILER
+ * Enable compiler when BE_USE_SCRIPT_COMPILER is not 0, otherwise
+ * disable the compiler.
+ * default: 1
+ **/
+#define BE_USE_SCRIPT_COMPILER          1
+
+/*
+ * Macro: BE_USE_BYTECODE_SAVER
+ * Enable save bytecode to file when BE_USE_BYTECODE_SAVER is not 0,
+ * otherwise disable the feature.
+ * default: 1
+ **/
+#define BE_USE_BYTECODE_SAVER           1
+
+/*
+ * Macro: BE_USE_BYTECODE_LOADER
+ * Enable load bytecode from file when BE_USE_BYTECODE_LOADER is not 0,
+ * otherwise disable the feature.
+ * default: 1
+ **/
+#define BE_USE_BYTECODE_LOADER          1
+
 /* Macro: BE_USE_XXX_MODULE
  * These macros control whether the related module is compiled.
  * When they are true, they will enable related modules. At this

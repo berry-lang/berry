@@ -9,6 +9,11 @@
     #include <readline/history.h>
 #endif
 
+#if !BE_USE_SCRIPT_COMPILER || \
+    !BE_USE_BYTECODE_SAVER || !BE_USE_BYTECODE_LOADER
+#error incomplete function configuration
+#endif
+
 /* detect operating system name */
 #if defined(__linux)
     #define OS_NAME   "Linux"

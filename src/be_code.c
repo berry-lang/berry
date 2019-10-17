@@ -24,6 +24,8 @@
 #define code_getmbr(f, a, b, c) codeABC(f, OP_GETMBR, a, b, c)
 #define jumpboolop(e, b)        ((b) != notmask(e) ? OP_JMPT : OP_JMPF)
 
+#if BE_USE_SCRIPT_COMPILER
+
 static int var2reg(bfuncinfo *finfo, bexpdesc *e, int dst);
 
 #if BE_DEBUG_RUNTIME_INFO
@@ -697,3 +699,5 @@ void be_code_import(bfuncinfo *finfo, bexpdesc *m, bexpdesc *v)
         be_code_setvar(finfo, v, m);
     }
 }
+
+#endif

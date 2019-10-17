@@ -18,14 +18,33 @@
 #define VERIFY_CODE         0x5A
 #define MAGIC_NUMBER        0xBECD
 
-static void save_proto(bvm *vm, void *fp, bproto *proto);
-static void load_proto(bvm *vm, void *fp, bproto **proto);
+#define USE_64BIT_INT       (BE_INTGER_TYPE == 2 \
+    || BE_INTGER_TYPE == 1 && LONG_MAX == 9223372036854775807L)
+
+#if !BE_USE_SCRIPT_COMPILER && BE_USE_BYTECODE_SAVER
+#error bytecode generation dependent compiler (require BE_USE_SCRIPT_COMPILER != 0)
+#endif
+
+#if BE_USE_BYTECODE_SAVER || BE_USE_BYTECODE_LOADER
 
 static void bytecode_error(bvm *vm, const char *msg)
 {
     be_pushstring(vm, msg);
     be_throw(vm, BE_IO_ERROR);
 }
+
+static uint8_t vm_sizeinfo(void)
+{
+    uint8_t res = sizeof(bint) == 8;
+    res |= (sizeof(breal) == 8) << 1;
+    return res;
+}
+
+#endif
+
+#if BE_USE_BYTECODE_SAVER
+
+static void save_proto(bvm *vm, void *fp, bproto *proto);
 
 static void save_byte(void *fp, uint8_t value)
 {
@@ -57,17 +76,30 @@ static void save_header(void *fp)
     buffer[1] = MAGIC_NUMBER >> 8;
     buffer[2] = BYTECODE_VERSION;
     buffer[3] = VERIFY_CODE;
+    buffer[4] = vm_sizeinfo();
     be_fwrite(fp, buffer, sizeof(buffer));
 }
 
 static void save_int(void *fp, bint i)
 {
+#if USE_64BIT_INT
     save_long(fp, i & 0xffffffff);
     save_long(fp, (i >> 32) & 0xffffffff);
+#else
+    save_long(fp, (uint32_t)i);
+#endif
 }
 
 static void save_real(void *fp, breal r)
 {
+#if BE_SINGLE_FLOAT
+    union {
+        breal r;
+        uint32_t i;
+    } u;
+    u.r = r;
+    save_long(fp, u.i);
+#else
     union {
         breal r;
         uint64_t i;
@@ -75,6 +107,7 @@ static void save_real(void *fp, breal r)
     u.r = r;
     save_long(fp, u.i & 0xffffffff);
     save_long(fp, (u.i >> 32) & 0xffffffff);
+#endif
 }
 
 static void save_string(void *fp, bstring *s)
@@ -201,6 +234,12 @@ void be_bytecode_save(bvm *vm, const char *filename, bproto *proto)
     }
 }
 
+#endif
+
+#if BE_USE_BYTECODE_LOADER
+
+static void load_proto(bvm *vm, void *fp, bproto **proto);
+
 static uint8_t load_byte(void *fp)
 {
     uint8_t buffer[1];
@@ -239,20 +278,33 @@ static int load_head(void *fp)
     res = buffer[0] == (MAGIC_NUMBER & 0xff) &&
           buffer[1] == (MAGIC_NUMBER >> 8) &&
           buffer[2] == BYTECODE_VERSION &&
-          buffer[3] == VERIFY_CODE;
+          buffer[3] == VERIFY_CODE &&
+          buffer[4] == vm_sizeinfo();
     return res;
 }
 
 static bint load_int(void *fp)
 {
+#if USE_64BIT_INT
     bint i;
     i = load_long(fp);
     i |= (bint)load_long(fp) << 32;
     return i;
+#else
+    return load_long(fp);
+#endif
 }
 
 static breal load_real(void *fp)
 {
+#if BE_SINGLE_FLOAT
+    union {
+        breal r;
+        uint32_t i;
+    } u;
+    u.i = load_long(fp);
+    return u.r;
+#else
     union {
         breal r;
         uint64_t i;
@@ -260,6 +312,7 @@ static breal load_real(void *fp)
     u.i = load_long(fp);
     u.i |= (uint64_t)load_long(fp) << 32;
     return u.r;
+#endif
 }
 
 static bstring* load_string(bvm *vm, void *fp)
@@ -413,3 +466,5 @@ bclosure* be_bytecode_load(bvm *vm, const char *filename)
         "error: invalid bytecode file '%s'.", filename));
     return NULL;
 }
+
+#endif

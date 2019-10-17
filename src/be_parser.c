@@ -52,6 +52,8 @@ typedef struct {
     bclosure *cl;
 } bparser;
 
+#if BE_USE_SCRIPT_COMPILER
+
 static void stmtlist(bparser *parser);
 static void block(bparser *parser);
 static void expr(bparser *parser, bexpdesc *e);
@@ -1331,3 +1333,5 @@ bclosure* be_parser_source(bvm *vm,
     scan_next_token(&parser); /* clear lexer */
     return cl;
 }
+
+#endif
