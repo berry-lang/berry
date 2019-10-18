@@ -17,6 +17,8 @@
 #define setreal(lex, v)     ((lex)->token.u.r = (v))
 #define match(lex, pattern) while (pattern(lgetc(lex))) { save(lex); }
 
+#if BE_USE_SCRIPT_COMPILER
+
 /* IMPORTANT: This must follow the enum found in be_lexer.h !!! */
 static const char* const kwords_tab[] = {
         "NONE", "EOS", "ID", "INT", "REAL", "STR",
@@ -581,3 +583,5 @@ const char* be_tokentype2str(btokentype type)
 {
     return kwords_tab[type];
 }
+
+#endif

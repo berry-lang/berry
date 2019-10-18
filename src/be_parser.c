@@ -52,6 +52,8 @@ typedef struct {
     bclosure *cl;
 } bparser;
 
+#if BE_USE_SCRIPT_COMPILER
+
 static void stmtlist(bparser *parser);
 static void block(bparser *parser);
 static void expr(bparser *parser, bexpdesc *e);
@@ -136,7 +138,6 @@ static void end_block(bparser *parser)
 {
     bfuncinfo *finfo = parser->finfo;
     bblockinfo *binfo = finfo->binfo;
-    int nlocal = be_list_count(finfo->local);
 
     be_code_close(finfo, 0); /* close upvalues */
     if (binfo->isloop) {
@@ -145,7 +146,6 @@ static void end_block(bparser *parser)
         be_code_patchlist(finfo, binfo->continuelist, binfo->beginpc);
     }
     be_list_resize(parser->vm, finfo->local, binfo->nactlocals);
-    finfo->proto->nlocal = (bbyte)max(finfo->proto->nlocal, nlocal);
     finfo->freereg = binfo->nactlocals;
     finfo->binfo = binfo->prev;
 }
@@ -354,7 +354,7 @@ static void new_class(bparser *parser, bstring *name, bclass *c, bexpdesc *e)
     } else {
         init_exp(e, ETGLOBAL, 0);
         e->v.idx = be_global_new(parser->vm, name);
-        var = be_global_var(parser->vm, e->v.idx);
+        var = be_code_globalobject(finfo, e->v.idx);
     }
     var_settype(var, BE_CLASS);
     var->v.p = c;
@@ -1333,3 +1333,5 @@ bclosure* be_parser_source(bvm *vm,
     scan_next_token(&parser); /* clear lexer */
     return cl;
 }
+
+#endif

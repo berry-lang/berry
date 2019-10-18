@@ -64,15 +64,15 @@ static int eqnode(bmapnode *node, bvalue *key, uint32_t hash)
         case BE_NIL:
             return 0;
         case BE_BOOL:
-            return key->v.b == k->v.b;
+            return var_tobool(key) == var_tobool(k);
         case BE_INT:
-            return key->v.b == k->v.b;
+            return var_toint(key) == var_toint(k);
         case BE_REAL:
-            return key->v.r == k->v.r;
+            return var_toreal(key) == var_toreal(k);
         case BE_STRING:
             return be_eqstr(key->v.s, k->v.s);
         default:
-            return key->v.p == k->v.p;
+            return var_toobj(key) == var_toobj(k);
         }
     }
     return 0;

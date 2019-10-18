@@ -255,6 +255,7 @@ uint32_t be_strhash(bstring *s)
 
 const char* be_str2cstr(bstring *s)
 {
+    be_assert(cast_str(s) != NULL);
     if (gc_isconst(s)) {
         return cstr(s);
     }

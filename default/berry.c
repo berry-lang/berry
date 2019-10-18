@@ -9,6 +9,11 @@
     #include <readline/history.h>
 #endif
 
+#if !BE_USE_SCRIPT_COMPILER || \
+    !BE_USE_BYTECODE_SAVER || !BE_USE_BYTECODE_LOADER
+#error incomplete function configuration
+#endif
+
 /* detect operating system name */
 #if defined(__linux)
     #define OS_NAME   "Linux"
@@ -44,21 +49,88 @@
 #endif
 
 /* prompt message when REPL is loaded */
-#define repl_prelude                                            \
-    FULL_VERSION " (build in " __DATE__ ", " __TIME__ ")\n"     \
-    "[" COMPILER "] on " OS_NAME " (default)\n"                 \
+#define repl_prelude                                                \
+    FULL_VERSION " (build in " __DATE__ ", " __TIME__ ")\n"         \
+    "[" COMPILER "] on " OS_NAME " (default)\n"                     \
 
 /* command help information */
-#define help_information                                        \
-    "usage: berry [options] [script [args]]\n"                  \
-    "avilable options are:\n"                                   \
-    "-i   enter interactive mode after executing 'script'\n"    \
-    "-v   show version information\n"                           \
-    "-h   show help information\n"
+#define help_information                                            \
+    "Usage: berry [options] [script [args]]\n"                      \
+    "Avilable options are:\n"                                       \
+    "  -i        enter interactive mode after executing 'file'\n"   \
+    "  -b        load code from bytecode 'file'\n"                  \
+    "  -c <file> compile script 'file' to bytecode file\n"          \
+    "  -o <file> save bytecode to 'file'\n"                         \
+    "  -v        show version information\n"                        \
+    "  -h        show help information\n\n"                         \
+    "For more information, please see:\n"                           \
+    "https://github.com/skiars/berry.git\n"
 
-#define arg_i       1
-#define arg_v       2
-#define arg_h       4
+#define arg_i       (1 << 0)
+#define arg_b       (1 << 1)
+#define arg_c       (1 << 2)
+#define arg_o       (1 << 3)
+#define arg_h       (1 << 4)
+#define arg_v       (1 << 5)
+#define arg_err     (1 << 7)
+
+    struct arg_opts {
+    int idx;
+    const char *pattern;
+    const char *optarg;
+    const char *errarg;
+    const char *src;
+    const char *dst;
+};
+
+/* check if the character is a letter */
+static int is_letter(int ch)
+{
+    return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z');
+}
+
+/* matching options
+ * pattern: pattern string, the set of vaild options
+ * ch: option character to be matched
+ * */
+static const char* match_opt(const char *pattern, int ch)
+{
+    int c = '\0';
+    if (pattern) {
+        while ((c = *pattern) != '\0' && c != ch) {
+            c = *(++pattern);
+            while (c != '\0' && !is_letter(c)) {
+                c = *(++pattern); /* skip characters that are not letters */
+            }
+        }
+    }
+    return c == ch ? pattern : NULL;
+}
+
+/* read an option from the arguments
+ * opt: option match state
+ * argc: the number of arguments
+ * argv: the arguments list
+ * */
+static int arg_getopt(struct arg_opts *opt, int argc, char *argv[])
+{
+    if (opt->idx < argc) {
+        char *arg = argv[opt->idx];
+        if (arg[0] == '-' && strlen(arg) == 2) {
+            const char *res = match_opt(opt->pattern, arg[1]);
+            /* the '?' indicates an optional argument after the option */
+            if (++opt->idx < argc && res != NULL
+                && res[1] == '?' && *argv[opt->idx] != '-') {
+                opt->optarg = argv[opt->idx++]; /* save the argument */
+                return *res;
+            }
+            opt->optarg = NULL;
+            opt->errarg = arg;
+            return res != NULL ? *res : '?';
+        }
+    }
+    return 0;
+}
 
 /* portable readline function package */
 static const char* get_line(const char *prompt)
@@ -80,13 +152,20 @@ static const char* get_line(const char *prompt)
 }
 
 /* execute a script file and output a result or error */
-static int dofile(bvm *vm)
+static int dofile(bvm *vm, const char *name, int args)
 {
-    const char *name = be_tostring(vm, 1); /* get script file path */
-    int res = be_loadfile(vm, name); /* compile */
-    res = res == BE_OK ? be_pcall(vm, 0) : res; /* execute */
+    int res;
+    /* load bytecode file or compile script file */
+    if (args & arg_b) { /* load a bytecode file */
+        res = be_loadexec(vm, name);
+    } else { /* load a script file */
+        res = be_loadfile(vm, name);
+    }
+    if (res == BE_OK) { /* parsing succeeded */
+        res = be_pcall(vm, 0); /* execute */
+    }
     switch (res) {
-    case BE_OK:
+    case BE_OK: /* everything is OK */
         return 0;
     case BE_IO_ERROR: /* IO error */
     case BE_SYNTAX_ERROR: /* syntax error */
@@ -104,74 +183,127 @@ static int dofile(bvm *vm)
     }
 }
 
-/* processing options arguments */
-static int check_args(bvm *vm)
-{
-    int args = 0;
-    while (be_top(vm) > 0) {
-        const char *arg = be_tostring(vm, 1);
-        if (arg[0] != '-') { /* non-option argument */
-            return args;
-        }
-        if (strlen(arg) == 2) {
-            switch (arg[1]) { /* update option */
-            case 'i': args |= arg_i; break;
-            case 'v': args |= arg_v; break;
-            case 'h': args |= arg_h; break;
-            default: break;
-            }
-        }
-        be_remove(vm, 1); /* remove the processed argument */
-    }
-    args |= arg_i;
-    return args;
-}
-
-/* berry [options] [script [args]]
- * command options:
- * -i: enter interactive mode after executing 'script'
- * -v: show version information
- * -h: show help information
+/* load a Berry file and execute
+ * args: the enabled options mask
  * */
-static int analysis_args(bvm *vm)
+static int load_file(bvm *vm, int argc, char *argv[], int args)
 {
-    int args = check_args(vm);
-    if (args & arg_v) { /* query version information */
-        be_writestring(FULL_VERSION "\n");
-        return 0;
-    }
-    if (args & arg_h) { /* query help information */
-        be_writestring(help_information);
-        return 0;
-    }
-    if (args & arg_i) { /* enter the REPL mode after executing the script file */
+    int repl_mode = args & arg_i || (args == 0 && argc == 0);
+    if (repl_mode) { /* enter the REPL mode after executing the script file */
         be_writestring(repl_prelude);
     }
-    if (be_top(vm) > 0) { /* check file path argument */
-        int res = dofile(vm);
+    if (argc > 0) { /* check file path argument */
+        int res = dofile(vm, argv[0], args);
         if (res && !(args & arg_i)) {
             return res;
         }
-        be_pop(vm, be_top(vm)); /* clear the stack */
     }
-    if (args & arg_i) { /* enter the REPL mode */
+    if (repl_mode) { /* enter the REPL mode */
         int res = be_repl(vm, get_line);
         if (res == -BE_MALLOC_FAIL) {
             be_writestring("error: memory allocation failed.\n");
         }
         return res;
     }
+    return -1;
+}
+
+static int build_file(bvm *vm, const char *dst, const char *src)
+{
+    int res = be_loadfile(vm, src); /* compile script file */
+    if (res == BE_OK) {
+        if (!dst) dst = "a.out"; /* the default output file name */
+        res = be_saveexec(vm, dst); /* execute */
+    }
+    switch (res) {
+    case BE_OK:
+        return 0;
+    case BE_IO_ERROR: /* IO error */
+    case BE_SYNTAX_ERROR: /* syntax error */
+        be_writestring(be_tostring(vm, -1)); /* print the error message */
+        be_writenewline();
+        return 1;
+    case BE_MALLOC_FAIL:
+        be_writestring("error: memory allocation failed.\n");
+        return -1;
+    default: /* unkonw result */
+        return 2;
+    }
     return 0;
+}
+
+static int parse_arg(struct arg_opts *opt, int argc, char *argv[])
+{
+    int ch, args = 0;
+    opt->idx = 1;
+    while ((ch = arg_getopt(opt, argc, argv)) != '\0') {
+        switch (ch) {
+        case 'h': args |= arg_h; break;
+        case 'v': args |= arg_v; break;
+        case 'i': args |= arg_i; break;
+        case 'b': args |= arg_b; break;
+        case '?': return args | arg_err;
+        case 'c':
+            args |= arg_c;
+            opt->src = opt->optarg;
+            break;
+        case 'o':
+            args |= arg_o;
+            opt->dst = opt->optarg;
+            break;
+        default:
+            break;
+        }
+    }
+    return args;
+}
+
+/* 
+ * command format: berry [options] [script [args]]
+ *  command options:
+ *   -i: enter interactive mode after executing 'script'
+ *   -b: load code from bytecode file
+ * command format: berry options
+ *  command options:
+ *   -v: show version information
+ *   -h: show help information
+ * command format: berry option file [option file]
+ *  command options:
+ *   -c: compile script file to bytecode file
+ *   -o: set the output file name
+ * */
+static int analysis_args(bvm *vm, int argc, char *argv[])
+{
+    int args = 0;
+    struct arg_opts opt = { 0 };
+    opt.pattern = "vhibc?o?";
+    args = parse_arg(&opt, argc, argv);
+    if (args & arg_err) {
+        be_writestring(be_pushfstring(vm,
+            "error: missing argument to '%s'\n", opt.errarg));
+        be_pop(vm, 1);
+        return -1;
+    }
+    if (args & arg_v) {
+        be_writestring(FULL_VERSION "\n");
+    }
+    if (args & arg_h) {
+        be_writestring(help_information);
+    }
+    if (args & (arg_c | arg_o)) {
+        if (!opt.src && opt.idx < argc) {
+            opt.src = argv[opt.idx];
+        }
+        return build_file(vm, opt.dst, opt.src);
+    }
+    return load_file(vm, argc - opt.idx, argv + opt.idx, args);
 }
 
 int main(int argc, char *argv[])
 {
-    int i = 0, res;
+    int res;
     bvm *vm = be_vm_new(); /* create a virtual machine instance */
-    for (i = 1; i < argc; ++i) { /* push arguments into the stack */
-        be_pushstring(vm, argv[i]);
-    }
-    res = analysis_args(vm);
+    res = analysis_args(vm, argc, argv);
     be_vm_delete(vm); /* free all objects and vm */
     return res;
 }

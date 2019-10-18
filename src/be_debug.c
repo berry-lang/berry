@@ -90,12 +90,14 @@ void be_dumpclosure(bclosure *cl)
     binstruction *code = proto->code;
 #if BE_DEBUG_RUNTIME_INFO
     blineinfo *lineinfo = proto->lineinfo;
-    logfmt("source '%s', ", str(proto->source));
+    if (proto->source) {
+        logfmt("source '%s', ", str(proto->source));
+    }
 #endif
     logfmt("function '%s':\n", str(proto->name));
     for (pc = 0; pc < proto->codesize; pc++) {
 #if BE_DEBUG_RUNTIME_INFO
-        if (pc == lineinfo->endpc) {
+        if (lineinfo && pc == lineinfo->endpc) {
             logfmt("; line: %d\n", lineinfo->linenumber);
             ++lineinfo;
         }
@@ -111,20 +113,23 @@ static const char* sourceinfo(bvm *vm, char *buf, int deepth)
     int size = be_stack_count(&vm->callstack);
     bcallframe *cf = be_vector_at(&vm->callstack, size + deepth);
     bproto *proto = cast(bclosure*, var_toobj(cf->func))->proto;
-    blineinfo *start = proto->lineinfo;
-    blineinfo *it = start + proto->nlineinfo - 1;
-    int pc;
-    if (deepth == -1) {
-        pc = cast_int(vm->ip - proto->code);
-    } else {
-        cf = be_vector_at(&vm->callstack, size + deepth + 1);
-        pc = cast_int(cf->ip - proto->code);
+    if (proto->lineinfo && proto->nlineinfo) {
+        blineinfo *start = proto->lineinfo;
+        blineinfo *it = start + proto->nlineinfo - 1;
+        int pc;
+        if (deepth == -1) {
+            pc = cast_int(vm->ip - proto->code);
+        } else {
+            cf = be_vector_at(&vm->callstack, size + deepth + 1);
+            pc = cast_int(cf->ip - proto->code);
+        }
+        while (it > start && it->endpc > pc) {
+            --it;
+        }
+        sprintf(buf, "%s:%d:", str(proto->source), it->linenumber);
+        return buf;
     }
-    while (it > start && it->endpc > pc) {
-        --it;
-    }
-    sprintf(buf, "%s:%d:", str(proto->source), it->linenumber);
-    return buf;
+    return "<unknow source>:";
 #else
     (void)vm; (void)buf; (void)deepth;
     return "<unknow source>:";

@@ -24,6 +24,8 @@
 #define code_getmbr(f, a, b, c) codeABC(f, OP_GETMBR, a, b, c)
 #define jumpboolop(e, b)        ((b) != notmask(e) ? OP_JMPT : OP_JMPF)
 
+#if BE_USE_SCRIPT_COMPILER
+
 static int var2reg(bfuncinfo *finfo, bexpdesc *e, int dst);
 
 #if BE_DEBUG_RUNTIME_INFO
@@ -666,6 +668,14 @@ bvalue* be_code_localobject(bfuncinfo *finfo, int dst)
     return be_vector_end(&finfo->kvec);
 }
 
+bvalue* be_code_globalobject(bfuncinfo *finfo, int dst)
+{
+    int src = newconst(finfo, NULL);
+    code_move(finfo, finfo->freereg, setK(src));
+    codeABx(finfo, OP_SETGBL, finfo->freereg, dst);
+    return be_vector_end(&finfo->kvec);
+}
+
 void be_code_setsuper(bfuncinfo *finfo, bexpdesc *c, bexpdesc *s)
 {
     int self = exp2anyreg(finfo, c);
@@ -689,3 +699,5 @@ void be_code_import(bfuncinfo *finfo, bexpdesc *m, bexpdesc *v)
         be_code_setvar(finfo, v, m);
     }
 }
+
+#endif

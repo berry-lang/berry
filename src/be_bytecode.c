@@ -1,0 +1,470 @@
+#include "be_bytecode.h"
+#include "be_vector.h"
+#include "be_string.h"
+#include "be_class.h"
+#include "be_func.h"
+#include "be_exec.h"
+#include "be_map.h"
+#include "be_mem.h"
+#include "be_sys.h"
+#include "be_var.h"
+#include "be_vm.h"
+#include "be_gc.h"
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#define BYTECODE_VERSION    0
+#define VERIFY_CODE         0x5A
+#define MAGIC_NUMBER        0xBECD
+
+#define USE_64BIT_INT       (BE_INTGER_TYPE == 2 \
+    || BE_INTGER_TYPE == 1 && LONG_MAX == 9223372036854775807L)
+
+#if !BE_USE_SCRIPT_COMPILER && BE_USE_BYTECODE_SAVER
+#error bytecode generation dependent compiler (require BE_USE_SCRIPT_COMPILER != 0)
+#endif
+
+#if BE_USE_BYTECODE_SAVER || BE_USE_BYTECODE_LOADER
+
+static void bytecode_error(bvm *vm, const char *msg)
+{
+    be_pushstring(vm, msg);
+    be_throw(vm, BE_IO_ERROR);
+}
+
+static uint8_t vm_sizeinfo(void)
+{
+    uint8_t res = sizeof(bint) == 8;
+    res |= (sizeof(breal) == 8) << 1;
+    return res;
+}
+
+#endif
+
+#if BE_USE_BYTECODE_SAVER
+
+static void save_proto(bvm *vm, void *fp, bproto *proto);
+
+static void save_byte(void *fp, uint8_t value)
+{
+    be_fwrite(fp, &value, 1);
+}
+
+static void save_word(void *fp, uint16_t value)
+{
+    uint8_t buffer[2];
+    buffer[0] = value & 0xff;
+    buffer[1] = value >> 8;
+    be_fwrite(fp, buffer, sizeof(buffer));
+}
+
+static void save_long(void *fp, uint32_t value)
+{
+    uint8_t buffer[4];
+    buffer[0] = value & 0xff;
+    buffer[1] = (value >> 8) & 0xff;
+    buffer[2] = (value >> 16) & 0xff;
+    buffer[3] = (value >> 24) & 0xff;
+    be_fwrite(fp, buffer, sizeof(buffer));
+}
+
+static void save_header(void *fp)
+{
+    uint8_t buffer[8] = { 0 };
+    buffer[0] = MAGIC_NUMBER & 0xff;
+    buffer[1] = MAGIC_NUMBER >> 8;
+    buffer[2] = BYTECODE_VERSION;
+    buffer[3] = VERIFY_CODE;
+    buffer[4] = vm_sizeinfo();
+    be_fwrite(fp, buffer, sizeof(buffer));
+}
+
+static void save_int(void *fp, bint i)
+{
+#if USE_64BIT_INT
+    save_long(fp, i & 0xffffffff);
+    save_long(fp, (i >> 32) & 0xffffffff);
+#else
+    save_long(fp, (uint32_t)i);
+#endif
+}
+
+static void save_real(void *fp, breal r)
+{
+#if BE_SINGLE_FLOAT
+    union {
+        breal r;
+        uint32_t i;
+    } u;
+    u.r = r;
+    save_long(fp, u.i);
+#else
+    union {
+        breal r;
+        uint64_t i;
+    } u;
+    u.r = r;
+    save_long(fp, u.i & 0xffffffff);
+    save_long(fp, (u.i >> 32) & 0xffffffff);
+#endif
+}
+
+static void save_string(void *fp, bstring *s)
+{
+    if (s) {
+        uint16_t length = str_len(s);
+        const char *data = str(s);
+        save_word(fp, length);
+        be_fwrite(fp, data, length);
+    }
+}
+
+static void save_class(bvm *vm, void *fp, bclass *c)
+{
+    bstring **vars = NULL;
+    bmapnode *node;
+    bmap *members = c->members;
+    bmapiter iter = be_map_iter();
+    int i, count = be_map_count(members);
+    if (c->nvar) {
+        vars = be_malloc(vm, sizeof(bstring *) * c->nvar);
+    }
+    save_string(fp, c->name);
+    save_long(fp, c->nvar); /* member variables count */
+    save_long(fp, count - c->nvar); /* method count */
+    while ((node = be_map_next(members, &iter)) != NULL) {
+        be_assert(var_isstr(&node->key));
+        if (var_isint(&node->value)) {
+            vars[var_toidx(&node->value)] = var_tostr(&node->key);
+        } else {
+            bclosure *cl = var_toobj(&node->value);
+            be_assert(var_isclosure(&node->value));
+            save_string(fp, var_tostr(&node->key));
+            save_proto(vm, fp, cl->proto);
+        }
+    }
+    if (c->nvar) {
+        for (i = 0; i < c->nvar; ++i) {
+            save_string(fp, vars[i]);
+        }
+        be_free(vm, vars, sizeof(bstring *) * c->nvar);
+    }
+}
+
+static void save_value(bvm *vm, void *fp, bvalue *v)
+{
+    save_byte(fp, var_type(v)); /* type */
+    switch (var_type(v)) {
+    case BE_INT: save_int(fp, var_toint(v)); break;
+    case BE_REAL: save_real(fp, var_toreal(v)); break;
+    case BE_STRING: save_string(fp, var_tostr(v)); break;
+    case BE_CLASS: save_class(vm, fp, var_toobj(v)); break;
+    default: break;
+    }
+}
+
+static void save_bytecode(void *fp, bproto *proto)
+{
+    binstruction *code = proto->code, *end;
+    save_long(fp, (uint32_t)proto->codesize);
+    for (end = code + proto->codesize; code < end; ++code) {
+        save_long(fp, (uint32_t)*code);
+    }
+}
+
+static void save_constant(bvm *vm, void *fp, bproto *proto)
+{
+    bvalue *v = proto->ktab, *end;
+    save_long(fp, proto->nconst); /* constants count */
+    for (end = v + proto->nconst; v < end; ++v) {
+        save_value(vm, fp, v);
+    }
+}
+
+static void save_proto_table(bvm *vm, void *fp, bproto *proto)
+{
+    bproto **p = proto->ptab, **end;
+    save_long(fp, proto->nproto); /* proto count */
+    for (end = p + proto->nproto; p < end; ++p) {
+        save_proto(vm, fp, *p);
+    }
+}
+
+static void save_upvals(void *fp, bproto *proto)
+{
+    bupvaldesc *uv = proto->upvals, *end;
+    save_byte(fp, proto->nupvals); /* upvals count */
+    for (end = uv + proto->nupvals; uv < end; ++uv) {
+        save_byte(fp, uv->instack);
+        save_byte(fp, uv->idx);
+    }
+}
+
+static void save_proto(bvm *vm, void *fp, bproto *proto)
+{
+    if (proto) {
+        save_string(fp, proto->name); /* name */
+        save_byte(fp, proto->argc); /* argc */
+        save_byte(fp, proto->nstack); /* nstack */
+        save_bytecode(fp, proto); /* bytecode */
+        save_constant(vm, fp, proto); /* constant */
+        save_proto_table(vm, fp, proto); /* proto table */
+        save_upvals(fp, proto); /* upvals description table */
+    }
+}
+
+static void save_global_info(bvm *vm, void *fp)
+{
+    int count = be_global_count(vm);
+    save_long(fp, count);
+}
+
+void be_bytecode_save(bvm *vm, const char *filename, bproto *proto)
+{
+    void *fp = be_fopen(filename, "wb");
+    if (fp == NULL) {
+        bytecode_error(vm, be_pushfstring(vm,
+            "error: can not open file '%s'.", filename));
+    } else {
+        save_header(fp);
+        save_global_info(vm, fp);
+        save_proto(vm, fp, proto);
+        be_fclose(fp);
+    }
+}
+
+#endif
+
+#if BE_USE_BYTECODE_LOADER
+
+static void load_proto(bvm *vm, void *fp, bproto **proto);
+
+static uint8_t load_byte(void *fp)
+{
+    uint8_t buffer[1];
+    if (be_fread(fp, buffer, sizeof(buffer)) == sizeof(buffer)) {
+        return buffer[0];
+    }
+    return 0;
+}
+
+static uint16_t load_word(void *fp)
+{
+    uint8_t buffer[2];
+    if (be_fread(fp, buffer, sizeof(buffer)) == sizeof(buffer)) {
+        return ((uint16_t)buffer[1] << 8) | buffer[0];
+    }
+    return 0;
+}
+
+static uint32_t load_long(void *fp)
+{
+    uint8_t buffer[4];
+    if (be_fread(fp, buffer, sizeof(buffer)) == sizeof(buffer)) {
+        return ((uint32_t)buffer[3] << 24)
+            | ((uint32_t)buffer[2] << 16)
+            | ((uint32_t)buffer[1] << 8)
+            | buffer[0];
+    }
+    return 0;
+}
+
+static int load_head(void *fp)
+{
+    int res;
+    uint8_t buffer[8] = { 0 };
+    be_fread(fp, buffer, sizeof(buffer));
+    res = buffer[0] == (MAGIC_NUMBER & 0xff) &&
+          buffer[1] == (MAGIC_NUMBER >> 8) &&
+          buffer[2] == BYTECODE_VERSION &&
+          buffer[3] == VERIFY_CODE &&
+          buffer[4] == vm_sizeinfo();
+    return res;
+}
+
+static bint load_int(void *fp)
+{
+#if USE_64BIT_INT
+    bint i;
+    i = load_long(fp);
+    i |= (bint)load_long(fp) << 32;
+    return i;
+#else
+    return load_long(fp);
+#endif
+}
+
+static breal load_real(void *fp)
+{
+#if BE_SINGLE_FLOAT
+    union {
+        breal r;
+        uint32_t i;
+    } u;
+    u.i = load_long(fp);
+    return u.r;
+#else
+    union {
+        breal r;
+        uint64_t i;
+    } u;
+    u.i = load_long(fp);
+    u.i |= (uint64_t)load_long(fp) << 32;
+    return u.r;
+#endif
+}
+
+static bstring* load_string(bvm *vm, void *fp)
+{
+    uint16_t len = load_word(fp);
+    if (len > 0) {
+        bstring *str;
+        char *buf = be_malloc(vm, len);
+        be_fread(fp, buf, len);
+        str = be_newstrn(vm, buf, len);
+        be_free(vm, buf, len);
+        return str;
+    }
+    return be_newstr(vm, "");
+}
+
+static void load_class(bvm *vm, void *fp, bvalue *v)
+{
+    int nvar, count;
+    bclass *c = be_newclass(vm, NULL, NULL);
+    var_setclass(v, c);
+    c->name = load_string(vm, fp);
+    nvar = load_long(fp);
+    count = load_long(fp);
+    while (count--) {
+        bvalue *value;
+        bstring *name = load_string(vm, fp);
+        var_setstr(vm->top, name);
+        be_stackpush(vm);
+        value = vm->top;
+        var_setproto(value, NULL);
+        be_stackpush(vm);
+        load_proto(vm, fp, cast(bproto**, &var_toobj(value)));
+        be_method_bind(vm, c, name, var_toobj(value));
+        be_stackpop(vm, 2);
+    }
+    for (count = 0; count < nvar; ++count) {
+        bstring *name = load_string(vm, fp);
+        var_setstr(vm->top, name);
+        be_stackpush(vm);
+        be_member_bind(vm, c, name);
+        be_stackpop(vm, 1);
+    }
+}
+
+static void load_value(bvm *vm, void *fp, bvalue *v)
+{
+    switch (load_byte(fp)) {
+    case BE_INT: var_setint(v, load_int(fp)); break;
+    case BE_REAL: var_setreal(v, load_real(fp)); break;
+    case BE_STRING: var_setstr(v, load_string(vm, fp)); break;
+    case BE_CLASS: load_class(vm, fp, v); break;
+    default: break;
+    }
+}
+
+static void load_bytecode(bvm *vm, void *fp, bproto *proto)
+{
+    int size = (int)load_long(fp);
+    if (size) {
+        binstruction *code, *end;
+        proto->code = be_malloc(vm, sizeof(binstruction) * size);
+        proto->codesize = size;
+        code = proto->code;
+        for (end = code + size; code < end; ++code) {
+            *code = (binstruction)load_long(fp);
+        }
+    }
+}
+
+static void load_constant(bvm *vm, void *fp, bproto *proto)
+{
+    int size = (int)load_long(fp); /* nconst */
+    if (size) {
+        bvalue *end, *v = be_malloc(vm, sizeof(bvalue) * size);
+        memset(v, 0, sizeof(bvalue) * size);
+        proto->ktab = v;
+        proto->nconst = size;
+        for (end = v + size; v < end; ++v) {
+            load_value(vm, fp, v);
+        }
+    }
+}
+
+static void load_proto_table(bvm *vm, void *fp, bproto *proto)
+{
+    int size = (int)load_long(fp); /* proto count */
+    if (size) {
+        bproto **p = be_malloc(vm, sizeof(bproto *) * size);
+        memset(p, 0, sizeof(bproto *) * size);
+        proto->ptab = p;
+        proto->nproto = size;
+        while (size--) {
+            load_proto(vm, fp, p++);
+        }
+    }
+}
+
+static void load_upvals(bvm *vm, void *fp, bproto *proto)
+{
+    int size = (int)load_byte(fp);
+    if (size) {
+        bupvaldesc *uv, *end;
+        proto->upvals = be_malloc(vm, sizeof(bupvaldesc) * size);
+        proto->nupvals = size;
+        uv = proto->upvals;
+        for (end = uv + size; uv < end; ++uv) {
+            uv->instack = load_byte(fp);
+            uv->idx = load_byte(fp);
+        }
+    }
+}
+
+static void load_proto(bvm *vm, void *fp, bproto **proto)
+{
+    *proto = be_newproto(vm);
+    (*proto)->name = load_string(vm, fp);
+    (*proto)->argc = load_byte(fp);
+    (*proto)->nstack = load_byte(fp);
+    load_bytecode(vm, fp, *proto);
+    load_constant(vm, fp, *proto);
+    load_proto_table(vm, fp, *proto);
+    load_upvals(vm, fp, *proto);
+}
+
+void load_global_info(bvm *vm, void *fp)
+{
+    int i, count = load_long(fp) - be_global_count(vm);
+    for (i = 0; i < count; ++i) {
+        be_global_new_anonymous(vm);
+    }
+}
+
+bclosure* be_bytecode_load(bvm *vm, const char *filename)
+{
+    void *fp = be_fopen(filename, "rb");
+    if (fp == NULL) {
+        bytecode_error(vm, be_pushfstring(vm,
+            "error: can not open file '%s'.", filename));
+    } else if (load_head(fp)) {
+        bclosure *cl = be_newclosure(vm, 0);
+        var_setclosure(vm->top, cl);
+        be_stackpush(vm);
+        load_global_info(vm, fp);
+        load_proto(vm, fp, &cl->proto);
+        be_stackpop(vm, 1);
+        be_fclose(fp);
+        return cl;
+    }
+    bytecode_error(vm, be_pushfstring(vm,
+        "error: invalid bytecode file '%s'.", filename));
+    return NULL;
+}
+
+#endif

@@ -2,6 +2,8 @@
 #include "be_repl.h"
 #include <string.h>
 
+#if BE_USE_SCRIPT_COMPILER
+
 static int try_return(bvm *vm, const char *line)
 {
     int res;
@@ -80,3 +82,5 @@ int be_repl(bvm *vm, breadline getl)
     be_writenewline();
     return 0;
 }
+
+#endif
