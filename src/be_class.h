@@ -19,7 +19,7 @@
 
 struct bclass {
     bcommon_header;
-    unsigned short nvar; /* members variable count */
+    unsigned short nvar; /* members variable data field count */
     struct bclass *super;
     bmap *members;
     bstring *name;
@@ -31,7 +31,7 @@ struct binstance {
     struct binstance *super;
     bclass *class;
     bgcobject *gray; /* for gc gray list */
-    bvalue members[1]; /* members table */
+    bvalue members[1]; /* members variable data field */
 };
 
 bclass* be_newclass(bvm *vm, bstring *name, bclass *super);
@@ -39,6 +39,7 @@ int be_class_attribute(bclass *c, bstring *attr);
 void be_member_bind(bvm *vm, bclass *c, bstring *name);
 void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p);
 void be_prim_method_bind(bvm *vm, bclass *c, bstring *name, bntvfunc f);
+int be_class_closure_count(bclass *c);
 int be_class_newobj(bvm *vm, bclass *c, bvalue *argv, int argc);
 int be_instance_member(binstance *obj, bstring *name, bvalue *dst);
 int be_instance_setmember(binstance *obj, bstring *name, bvalue *src);

@@ -11,8 +11,6 @@
 #include "be_vm.h"
 #include "be_gc.h"
 #include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 #define BYTECODE_VERSION    0
 #define VERIFY_CODE         0x5A
@@ -127,28 +125,38 @@ static void save_class(bvm *vm, void *fp, bclass *c)
     bmap *members = c->members;
     bmapiter iter = be_map_iter();
     int i, count = be_map_count(members);
-    if (c->nvar) {
-        vars = be_malloc(vm, sizeof(bstring *) * c->nvar);
+    int var_count = c->nvar - be_class_closure_count(c);
+    if (var_count) {
+        vars = be_malloc(vm, sizeof(bstring *) * var_count);
     }
     save_string(fp, c->name);
-    save_long(fp, c->nvar); /* member variables count */
-    save_long(fp, count - c->nvar); /* method count */
+    save_long(fp, var_count); /* member variables count */
+    save_long(fp, count - var_count); /* method count */
     while ((node = be_map_next(members, &iter)) != NULL) {
         be_assert(var_isstr(&node->key));
         if (var_isint(&node->value)) {
             vars[var_toidx(&node->value)] = var_tostr(&node->key);
         } else {
-            bclosure *cl = var_toobj(&node->value);
-            be_assert(var_isclosure(&node->value));
+            bproto *proto;
+            bvalue *value = &node->value;
+            be_assert(var_isclosure(value) || var_isproto(value));
             save_string(fp, var_tostr(&node->key));
-            save_proto(vm, fp, cl->proto);
+            if (var_isproto(value)) {
+                proto = var_toobj(value);
+            } else {
+                bclosure *cl = var_toobj(value);
+                proto = cl->proto;
+            }
+            proto = var_isproto(value) ? var_toobj(value) :
+                    cast(bclosure *, var_toobj(value))->proto;
+            save_proto(vm, fp, proto);
         }
     }
-    if (c->nvar) {
-        for (i = 0; i < c->nvar; ++i) {
+    if (var_count) {
+        for (i = 0; i < var_count; ++i) {
             save_string(fp, vars[i]);
         }
-        be_free(vm, vars, sizeof(bstring *) * c->nvar);
+        be_free(vm, vars, sizeof(bstring *) * var_count);
     }
 }
 

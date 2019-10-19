@@ -46,6 +46,7 @@ function:
             string
         argc: 1   -- arguments count
         nstack: 1 -- number of stack size by this function
+        extra: 2  -- extra data
     bytecode:
         code_size: 4
         code_array -> [ -- bytecode array
