@@ -194,7 +194,7 @@ static int load_file(bvm *vm, int argc, char *argv[], int args)
     }
     if (argc > 0) { /* check file path argument */
         int res = dofile(vm, argv[0], args);
-        if (res && !(args & arg_i)) {
+        if (!repl_mode) {
             return res;
         }
     }

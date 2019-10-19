@@ -121,6 +121,7 @@ typedef struct bproto {
     bbyte nstack; /* number of stack size by this function */
     bbyte nupvals; /* upvalue count */
     bbyte argc; /* argument count */
+    unsigned short extra; /* extra data */
     bgcobject *gray; /* for gc gray list */
     bupvaldesc *upvals;
     bvalue *ktab; /* constants table */

@@ -314,6 +314,7 @@ static void i_getupval(bvm *vm, binstruction ins)
 {
     bvalue *v = RA(ins);
     int idx = IGET_Bx(ins);
+    be_assert(*curcl(vm)->upvals != NULL);
     *v = *curcl(vm)->upvals[idx]->value;
 }
 
@@ -321,6 +322,7 @@ static void i_setupval(bvm *vm, binstruction ins)
 {
     bvalue *v = RA(ins);
     int idx = IGET_Bx(ins);
+    be_assert(*curcl(vm)->upvals != NULL);
     *curcl(vm)->upvals[idx]->value = *v;
 }
 
