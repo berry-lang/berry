@@ -289,9 +289,11 @@ static void free_suffix(bfuncinfo *finfo, bexpdesc *e)
 {
     int idx = e->v.ss.idx;
     int nlocal = be_list_count(finfo->local);
+    /* release suffix register */
     if (!isK(idx) && idx >= nlocal) {
         be_code_freeregs(finfo, 1);
     }
+    /* release object register */
     if (e->v.ss.tt == ETREG && (int)e->v.ss.obj >= nlocal) {
         be_code_freeregs(finfo, 1);
     }
@@ -299,7 +301,7 @@ static void free_suffix(bfuncinfo *finfo, bexpdesc *e)
 
 static int code_suffix(bfuncinfo *finfo, bopcode op, bexpdesc *e, int dst)
 {
-    free_suffix(finfo, e); /* free temporary register */
+    free_suffix(finfo, e); /* free temporary registers */
     if (dst > finfo->freereg) {
         dst = finfo->freereg;
     }

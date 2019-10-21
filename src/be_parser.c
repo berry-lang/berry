@@ -749,11 +749,24 @@ static void suffix_expr(bparser *parser, bexpdesc *e)
     }
 }
 
+static void suffix_alloc_reg(bparser *parser, bexpdesc *l)
+{
+    bfuncinfo *finfo = parser->finfo;
+    bbool suffix = l->type == ETINDEX || l->type == ETMEMBER;
+    /* in the suffix expression, if the object is a temporary
+     * variable (l->v.ss.tt == ETREG), it needs to be cached. */
+    if (suffix && l->v.ss.tt == ETREG) {
+        be_code_allocregs(finfo, 1);
+    }
+}
+
 /* compound assignment */
 static void compound_assign(bparser *parser, int op, bexpdesc *l, bexpdesc *r)
 {
     if (op != OptAssign) { /* check left variable */
         check_var(parser, l);
+        /* cache the register of the object when continuously assigning */
+        suffix_alloc_reg(parser, l);
     }
     expr(parser, r); /* right expression */
     check_var(parser, r);
