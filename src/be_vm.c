@@ -717,6 +717,21 @@ static void i_import(bvm *vm, binstruction ins)
     }
 }
 
+static void i_try(bvm *vm, binstruction ins)
+{
+    (void)vm, (void)ins;
+}
+
+static void i_catch(bvm *vm, binstruction ins)
+{
+    (void)vm, (void)ins;
+}
+
+static void i_throw(bvm *vm, binstruction ins)
+{
+    (void)vm, (void)ins;
+}
+
 bvm* be_vm_new(void)
 {
     bvm *vm = be_os_malloc(sizeof(bvm));
@@ -800,6 +815,9 @@ static void vm_exec(bvm *vm)
         case OP_SETSUPER: i_setsuper(vm, ins); break;
         case OP_CLOSE: i_close(vm, ins); break;
         case OP_IMPORT: i_import(vm, ins); break;
+        case OP_TRY: i_try(vm, ins); break;
+        case OP_CATCH: i_catch(vm, ins); break;
+        case OP_THROW: i_throw(vm, ins); break;
         case OP_RET: i_return(vm, ins); goto retpoint;
         default: retpoint:
             if (vm->cf == NULL) {

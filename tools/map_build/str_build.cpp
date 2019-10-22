@@ -38,6 +38,8 @@ void str_build::keywords()
         { "false", opif + 12 }, { "nil", opif + 13 },
         { "var", opif + 14 }, { "do", opif + 15 },
         { "import", opif + 16 }, { "as", opif + 17 },
+        { "try", opif + 18 }, { "catch", opif + 19 },
+        { "throw", opif + 20 }
     };
     for (auto it : tab) {
         make_ceil(it.first, it.second);

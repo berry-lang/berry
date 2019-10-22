@@ -32,7 +32,7 @@ typedef jmp_buf bjmpbuf;
 struct blongjmp {
     bjmpbuf b;
     struct blongjmp *prev;
-    volatile int status;
+    volatile int status; /* error code */
 };
 
 struct pparser {
@@ -78,6 +78,12 @@ void be_exit(bvm *vm, int status)
     } else {
         exit(status);
     }
+}
+
+void be_throw_message(bvm *vm, int errorcode, const char *msg)
+{
+    be_pushstring(vm, msg);
+    be_throw(vm, errorcode);
 }
 
 int be_execprotected(bvm *vm, bpfunc f, void *data)

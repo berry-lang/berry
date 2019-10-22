@@ -83,7 +83,7 @@ typedef enum {
     OP_JMP,       /*  sBx      |   pc <- pc + sBx */
     OP_JMPT,      /*  A, sBx   |   if(R(A)): pc <- pc + sBx  */
     OP_JMPF,      /*  A, sBx   |   if(not R(A)): pc <- pc + sBx  */
-    OP_CALL,      /*  A        |   CALL(R(A), B) */
+    OP_CALL,      /*  A, B     |   CALL(R(A), B) */
     OP_RET,       /*  A, B     |   if (R(A)) R(-1) <- RK(B) else R(-1) <- nil */
     OP_CLOSURE,   /*  A, Bx    |   R(A) <- CLOSURE(proto_table[Bx])*/
     OP_GETMBR,    /*  A, B, C  |   R(A) <- RK(B).RK(C) */
@@ -93,7 +93,10 @@ typedef enum {
     OP_SETIDX,    /*  A, B, C  |   R(A)[RK(B)] <- RK(C) */
     OP_SETSUPER,  /*  A, B     |   class:R(A) set super with class:RK(B) */
     OP_CLOSE,     /*  A        |   close upvalues */
-    OP_IMPORT     /*  A, B     |   R(A) <- import module from name RK(B) */
+    OP_IMPORT,    /*  A, B     |   R(A) <- import module from name RK(B) */
+    OP_TRY,       /*  sBx      | */
+    OP_CATCH,     /*  A        | */
+    OP_THROW      /*  B        |   throw RK(B) */
 } bopcode;
 
 const char *be_opcode2str(bopcode op);

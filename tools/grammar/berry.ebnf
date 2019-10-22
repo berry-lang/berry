@@ -4,7 +4,8 @@ program = block;
 block = {statement};
 (* statement define *)
 statement = class_stmt | func_stmt | var_stmt | if_stmt | while_stmt |
-        for_stmt | break_stmt | return_stmt | expr_stmt | import_stmt | ';';
+         for_stmt | break_stmt | return_stmt | expr_stmt | import_stmt |
+         try_stmt | throw_stmt | ';';
 if_stmt = 'if' '(' 'expr' ')' block {'elif' '(' expr ')' block} ['else' block] 'end';
 while_stmt = 'while' '(' expr ')' block 'end';
 for_stmt = 'for' '(' ID ':' expr')' block 'end';
@@ -17,6 +18,8 @@ func_body = '(' [ID {',' ID}] ')' block 'end';
 class_stmt = 'class' ID [':' ID] class_block 'end';
 class_block = {'var' ID {',' ID} | func_stmt};
 import_stmt = 'import' ID ['as' ID];
+try_stmt = 'try' block 'catch' '(' ID ')' block 'end';
+throw_stmt = 'throw' expr;
 (* variable define statement *)
 var_stmt = 'var' ID ['=' expr] {',' ID ['=' expr]};
 (* expression define *)

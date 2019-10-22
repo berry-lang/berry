@@ -46,7 +46,7 @@ static void print_inst(binstruction ins, int pc)
     case OP_MOVE: case OP_SETSUPER: case OP_NEG: case OP_FLIP: case OP_IMPORT:
         logbuf("%s\tR%d\tR%d", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins));
         break;
-    case OP_JMP:
+    case OP_JMP: case OP_TRY:
         logbuf("%s\t\t[%d]", be_opcode2str(op), IGET_sBx(ins) + pc + 1);
         break;
     case OP_JMPT: case OP_JMPF:
@@ -70,8 +70,11 @@ static void print_inst(binstruction ins, int pc)
     case OP_CLOSURE:
         logbuf("%s\tR%d\tP:%d", be_opcode2str(op), IGET_RA(ins), IGET_Bx(ins));
         break;
-    case OP_CLOSE:
+    case OP_CLOSE: case OP_CATCH:
         logbuf("%s\t%d", be_opcode2str(op), IGET_RA(ins));
+        break;
+    case OP_THROW:
+        logbuf("%s\t\t%d", be_opcode2str(op), IGET_RKB(ins));
         break;
     default:
         logbuf("%s", be_opcode2str(op));
@@ -206,7 +209,7 @@ void be_pusherror(bvm *vm, const char *msg)
 }
 
 #if BE_DEBUG_DUMP_LEVEL >= 3
-void be_debug_dump_stack(bvm * vm, int deepth)
+void be_debug_dump_stack(bvm *vm, int deepth)
 {
 
     bvalue *v = vm->top - 1;

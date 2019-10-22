@@ -22,6 +22,11 @@ typedef struct {
     int status;
 } bcallframe;
 
+typedef struct {
+    int top; /* stack top index */
+    int calldepth; /* function call stack depth */
+} bexceptframe;
+
 struct bgc {
     bgcobject *list; /* the GC-object list */
     bgcobject *gray; /* the gray object list */
@@ -44,6 +49,7 @@ struct bvm {
     bvalue *stacktop; /* stack top register */
     bupval *upvalist; /* open upvalue list */
     bstack callstack; /* function call stack */
+    bstack exceptstack; /* exception stack */
     bcallframe *cf; /* function call frame */
     bvalue *reg; /* function base register */
     bvalue *top; /* function top register */

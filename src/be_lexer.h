@@ -78,7 +78,10 @@ typedef enum {
     KeyVar,         /* keyword var */
     KeyDo,          /* keyword do */
     KeyImport,      /* keyword import */
-    KeyAs           /* keyword as */
+    KeyAs,          /* keyword as */
+    KeyTry,         /* keyword try */
+    KeyCatch,       /* keyword catch */
+    KeyThrow        /* keyword throw */
 } btokentype;
 
 struct blexerreader {
