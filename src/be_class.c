@@ -8,6 +8,11 @@
 #include "be_func.h"
 #include "be_var.h"
 
+#define check_members(vm, c)            \
+    if (!(c)->members) {                \
+        (c)->members = be_map_new(vm);  \
+    }
+
 bclass* be_newclass(bvm *vm, bstring *name, bclass *super)
 {
     bgcobject *gco = be_gcnew(vm, BE_CLASS, bclass);
@@ -19,80 +24,95 @@ bclass* be_newclass(bvm *vm, bstring *name, bclass *super)
         obj->members = NULL; /* gc protection */
         obj->nvar = 0;
         obj->name = name;
-        obj->members = be_map_new(vm);
     }
     be_stackpop(vm, 1);
     return obj;
 }
 
+void be_class_compress(bvm *vm, bclass *c)
+{
+    if (!gc_isconst(c) && c->members) {
+        be_map_release(vm, c->members); /* clear space */
+    }
+}
+
 int be_class_attribute(bclass *c, bstring *attr)
 {
-    while (c) {
-        bvalue *v = be_map_findstr(c->members, attr);
-        if (v) {
-            return var_type(v);
+    for (; c; c = c->super) {
+        if (c->members) {
+            bvalue *v = be_map_findstr(c->members, attr);
+            if (v) {
+                return var_type(v);
+            }
         }
-        c = c->super;
     }
     return BE_NIL;
 }
 
 void be_member_bind(bvm *vm, bclass *c, bstring *name)
 {
-    bmap *map = c->members;
-    bvalue *v = be_map_insertstr(vm, map, name, NULL);
-    v->v.i = c->nvar++;
-    v->type = MT_VARIABLE;
+    bvalue *attr;
+    check_members(vm, c);
+    attr = be_map_insertstr(vm, c->members, name, NULL);
+    attr->v.i = c->nvar++;
+    attr->type = MT_VARIABLE;
 }
 
 void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p)
 {
-    bvalue *m = be_map_insertstr(vm, c->members, name, NULL);
+    bvalue *attr;
+    check_members(vm, c);
+    attr = be_map_insertstr(vm, c->members, name, NULL);
     /* closure with upvalues need to be created when instantiating */
     if (p->nupvals > 0) {
-        var_setproto(m, p);
-        m->type = BE_PROTO;
+        var_setproto(attr, p);
+        attr->type = BE_PROTO;
         /* Store the index of the method in the instance
          * data field into the extra field of the prototype. */
         p->extra = c->nvar++;
     } else { /* create closures without upvalues directly */
         bclosure *cl = be_newclosure(vm, 0);
         cl->proto = p;
-        var_setclosure(m, cl);
+        var_setclosure(attr, cl);
     }
 }
 
 void be_prim_method_bind(bvm *vm, bclass *c, bstring *name, bntvfunc f)
 {
-    bvalue *m = be_map_insertstr(vm, c->members, name, NULL);
-    m->v.nf = f;
-    m->type = MT_PRIMMETHOD;
+    bvalue *attr;
+    check_members(vm, c);
+    attr = be_map_insertstr(vm, c->members, name, NULL);
+    attr->v.nf = f;
+    attr->type = MT_PRIMMETHOD;
 }
 
 /* get the closure method count that need upvalues */
 int be_class_closure_count(bclass *c)
 {
     int count = 0;
-    bmapnode *node;
-    bmapiter iter = be_map_iter();
-    bmap *members = c->members;
-    while ((node = be_map_next(members, &iter)) != NULL) {
-        if (var_isproto(&node->value)) {
-            ++count;
+    if (c->members) {
+        bmapnode *node;
+        bmap *members = c->members;
+        bmapiter iter = be_map_iter();
+        while ((node = be_map_next(members, &iter)) != NULL) {
+            if (var_isproto(&node->value)) {
+                ++count;
+            }
         }
     }
     return count;
 }
 
-binstance* instance_member(binstance *obj, bstring *name, bvalue *dst)
+static binstance* instance_member(binstance *obj, bstring *name, bvalue *dst)
 {
-    while (obj) {
-        bvalue *v = be_map_findstr(obj->class->members, name);
-        if (v) {
-            *dst = *v;
-            return obj;
+    for (; obj; obj = obj->super) {
+        if (obj->class->members) {
+            bvalue *v = be_map_findstr(obj->class->members, name);
+            if (v) {
+                *dst = *v;
+                return obj;
+            }
         }
-        obj = obj->super;
     }
     var_setnil(dst);
     return NULL;
@@ -133,7 +153,9 @@ static binstance* newobjself(bvm *vm, bclass *c)
         while (v < end) { var_setnil(v); ++v; }
         obj->class = c;
         obj->super = NULL;
-        create_closures(vm, obj);
+        if (c->members) {
+            create_closures(vm, obj);
+        }
     }
     return obj;
 }

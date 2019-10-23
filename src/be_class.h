@@ -35,6 +35,7 @@ struct binstance {
 };
 
 bclass* be_newclass(bvm *vm, bstring *name, bclass *super);
+void be_class_compress(bvm *vm, bclass *c);
 int be_class_attribute(bclass *c, bstring *attr);
 void be_member_bind(bvm *vm, bclass *c, bstring *name);
 void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p);

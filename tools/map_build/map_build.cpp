@@ -94,19 +94,22 @@ std::string map_build::block_tostring(const block &block)
 
 std::string map_build::class_tostring(const block &block)
 {
-	std::ostringstream ostr;
-	hash_map map(block.data);
+    bool empty_map = block.data.empty();
+    std::ostringstream ostr;
+    hash_map map(block.data);
 	std::string map_name(block.name + "_map");
 
-	ostr << map_tostring(block, map_name, true) << std::endl;
-	ostr << scope(block) << "const bclass " << block.name << " = {\n"
-		 << "    be_const_header_class(),\n"
-		 << "    .nvar = " << map.var_count() << ",\n"
-		 << "    .super = " << super(block) << ",\n"
-		 << "    .members = (bmap *)&" << map_name << ",\n"
-		 << "    .name = (bstring *)&be_const_str_" << name(block) << "\n"
-		 << "};\n";
-	return ostr.str();
+    if (!empty_map) {
+        ostr << map_tostring(block, map_name, true) << std::endl;
+    }
+    ostr << scope(block) << "const bclass " << block.name << " = {\n"
+         << "    be_const_header_class(),\n"
+         << "    .nvar = " << map.var_count() << ",\n"
+         << "    .super = " << super(block) << ",\n"
+         << "    .members = " << (empty_map ? "NULL" : "(bmap *)&" + map_name) << ",\n"
+         << "    .name = (bstring *)&be_const_str_" << name(block) << "\n"
+         << "};\n";
+    return ostr.str();
 }
 
 std::string map_build::map_tostring(const block &block, const std::string &name, bool local)
@@ -202,7 +205,7 @@ std::string map_build::super(const block &block)
     if (block.attr.find("super") == block.attr.end()) {
         return "NULL";
     }
-    return block.attr.at("super");
+    return "(bclass *)&" + block.attr.at("super");
 }
 
 std::string map_build::name(const block &block)

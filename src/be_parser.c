@@ -1223,7 +1223,7 @@ static void class_stmt(bparser *parser)
         scan_next_token(parser); /* skip ID */
         class_inherit(parser, &e);
         class_block(parser, c);
-        be_map_release(parser->vm, c->members); /* clear space */
+        be_class_compress(parser->vm, c); /* compress class size */
         match_token(parser, KeyEnd); /* skip 'end' */
     } else {
         parser_error(parser, "class name error");

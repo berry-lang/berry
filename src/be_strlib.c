@@ -4,6 +4,7 @@
 #include "be_class.h"
 #include "be_module.h"
 #include "be_exec.h"
+#include "be_mem.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -51,7 +52,7 @@ bstring* be_num2str(bvm *vm, bvalue *v)
 
 static void sim2str(bvm *vm, bvalue *v)
 {
-    char sbuf[64];
+    char sbuf[64]; /* BUG: memory overflow */
     switch (var_type(v)) {
     case BE_NIL:
         strcpy(sbuf, "nil");
@@ -93,10 +94,12 @@ static void ins2str(bvm *vm, int idx)
     /* get method 'tostring' */
     int type = be_instance_member(obj, be_newstr(vm, "tostring"), top);
     if (basetype(type) != BE_FUNCTION) {
-        char sbuf[2 * sizeof(void*) + 16];
-        sprintf(sbuf, "<instance: %p>", var_toobj(v));
-        --vm->top;
+        bstring *name = be_class_name(be_instance_class(obj));
+        char *sbuf = be_malloc(vm, str_len(name) + 16);
+        sprintf(sbuf, "<instance: %s()>", str(name));
+        --vm->top; /* free the result register */
         var_setstr(v, be_newstr(vm, sbuf));
+        be_free(vm, sbuf, str_len(name) + 16);
     } else {
         be_incrtop(vm);
         var_setval(top + 1, v);
