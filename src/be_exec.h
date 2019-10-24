@@ -2,6 +2,7 @@
 #define BE_EXEC_H
 
 #include "be_object.h"
+#include <setjmp.h>
 
 typedef void (*bpfunc)(bvm *vm, void *data);
 
@@ -14,6 +15,14 @@ bvalue* be_incrtop(bvm *vm);
 
 #define be_stackpop(vm, n)      ((vm)->top -= (n))
 
+typedef jmp_buf bjmpbuf;
+
+struct blongjmp {
+    bjmpbuf b;
+    struct blongjmp *prev;
+    volatile int status; /* error code */
+};
+
 void be_throw(bvm *vm, int errorcode);
 int be_execprotected(bvm *vm, bpfunc f, void *data);
 int be_protectedparser(bvm *vm,
@@ -21,5 +30,7 @@ int be_protectedparser(bvm *vm,
 int be_protectedcall(bvm *vm, bvalue *v, int argc);
 void be_stackpush(bvm *vm);
 void be_stack_expansion(bvm *vm, int n);
+void be_except_stack_push(bvm *vm);
+void be_except_stack_pop(bvm *vm);
 
 #endif

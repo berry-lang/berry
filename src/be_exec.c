@@ -6,13 +6,10 @@
 #include "be_sys.h"
 #include "be_debug.h"
 #include "be_bytecode.h"
-#include <setjmp.h>
+#include "be_opcode.h"
 #include <stdlib.h>
 
 #define FILE_BUFFER_SIZE    256
-
-#define exec_try(j)         if (setjmp((j)->b) == 0)
-#define exec_throw(j)       longjmp((j)->b, 1)
 
 #define STR(s)              #s
 
@@ -27,13 +24,8 @@
   #define exit              BE_EXPLICIT_EXIT
 #endif
 
-typedef jmp_buf bjmpbuf;
-
-struct blongjmp {
-    bjmpbuf b;
-    struct blongjmp *prev;
-    volatile int status; /* error code */
-};
+#define exec_try(j) if (setjmp((j)->b) == 0)
+#define exec_throw(j) longjmp((j)->b, 1)
 
 struct pparser {
     const char *fname;
@@ -317,4 +309,40 @@ void be_stack_expansion(bvm *vm, int n)
         be_pusherror(vm, STACK_OVER_MSG(BE_STACK_TOTAL_MAX));
     }
     stack_resize(vm, size + n);
+}
+
+void be_except_stack_push(bvm *vm)
+{
+    bvalue *func;
+    bcallframe *cf;
+    struct blongjmp *jmp;
+    cf = be_stack_top(&vm->callstack);
+    func = cf->func;
+    be_stack_push(vm, &vm->callstack, NULL);
+    cf = be_stack_top(&vm->callstack);
+    cf->top = vm->top;
+    cf->reg = vm->reg;
+    cf->ip = vm->ip;
+    cf->func = func;
+    cf->status = EXCEPT_FRAME;
+    be_stack_push(vm, &vm->exceptstack, NULL);
+    jmp = be_stack_top(&vm->exceptstack);
+    jmp->status = 0;
+    jmp->prev = vm->errjmp; /* save long jump position */
+    vm->errjmp = jmp;
+}
+
+void be_except_stack_pop(bvm *vm)
+{
+    bcallframe *cf = be_stack_top(&vm->callstack);
+    while (!(cf->status & EXCEPT_FRAME)) {
+        be_stack_pop(&vm->callstack);
+        cf = be_stack_top(&vm->callstack);
+    }
+    vm->top = cf->top;
+    vm->reg = cf->reg;
+    vm->ip = cf->ip + IGET_sBx(*cf->ip); /* jump to except instruction */
+    be_stack_pop(&vm->callstack);
+    vm->errjmp = vm->errjmp->prev;
+    be_stack_pop(&vm->exceptstack);
 }
