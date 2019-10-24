@@ -1,7 +1,7 @@
 codedump(def ()
     try
-        throw 'error'
-    catch (e)
+        raise 'error'
+    except (e)
         print(e)
     end
 end)

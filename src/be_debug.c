@@ -70,10 +70,10 @@ static void print_inst(binstruction ins, int pc)
     case OP_CLOSURE:
         logbuf("%s\tR%d\tP:%d", be_opcode2str(op), IGET_RA(ins), IGET_Bx(ins));
         break;
-    case OP_CLOSE: case OP_CATCH:
+    case OP_CLOSE: case OP_EXCEPT:
         logbuf("%s\t%d", be_opcode2str(op), IGET_RA(ins));
         break;
-    case OP_THROW:
+    case OP_RAISE:
         logbuf("%s\t\t%d", be_opcode2str(op), IGET_RKB(ins));
         break;
     default:

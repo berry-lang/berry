@@ -899,7 +899,7 @@ static int block_follow(bparser *parser)
 {
     switch (next_type(parser)) {
     case KeyElse: case KeyElif:
-    case KeyEnd: case KeyCatch:
+    case KeyEnd: case KeyExcept:
     case TokenEOS:
         return 0;
     default:
@@ -1283,8 +1283,8 @@ static void catch_block(bparser *parser, int jmp)
     bexpdesc e;
     bstring *name;
     bblockinfo binfo;
-    /* 'catch' '(' ID ')' */
-    match_token(parser, KeyCatch); /* skip 'catch' */
+    /* 'except' '(' ID ')' */
+    match_token(parser, KeyExcept); /* skip 'except' */
     match_token(parser, OptLBK); /* skip '(' */
     name = next_token(parser).u.s;
     match_token(parser, TokenId); /* skip ID */
@@ -1302,7 +1302,7 @@ static void catch_block(bparser *parser, int jmp)
 static void try_stmt(bparser *parser)
 {
     int jmp;
-    /* 'try' block 'catch' '(' ID ')' block 'end' */
+    /* 'try' block 'except' '(' ID ')' block 'end' */
     scan_next_token(parser); /* skip 'try' */
     jmp = be_code_try(parser->finfo);
     block(parser);
@@ -1312,8 +1312,8 @@ static void try_stmt(bparser *parser)
 static void throw_stmt(bparser *parser)
 {
     bexpdesc e;
-    /* 'throw' expr */
-    scan_next_token(parser); /* skip 'throw' */
+    /* 'raise' expr */
+    scan_next_token(parser); /* skip 'raise' */
     expr(parser, &e);
     check_var(parser, &e);
     be_code_throw(parser->finfo, &e);
@@ -1334,7 +1334,7 @@ static void statement(bparser *parser)
     case KeyImport: import_stmt(parser); break;
     case KeyVar: var_stmt(parser); break;
     case KeyTry: try_stmt(parser); break;
-    case KeyThrow: throw_stmt(parser); break;
+    case KeyRaise: throw_stmt(parser); break;
     case OptSemic: scan_next_token(parser); break; /* empty statement */
     default: expr_stmt(parser); break;
     }

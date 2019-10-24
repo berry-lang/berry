@@ -95,8 +95,8 @@ typedef enum {
     OP_CLOSE,     /*  A        |   close upvalues */
     OP_IMPORT,    /*  A, B     |   R(A) <- import module from name RK(B) */
     OP_TRY,       /*  sBx      | */
-    OP_CATCH,     /*  A        | */
-    OP_THROW      /*  B        |   throw RK(B) */
+    OP_EXCEPT,    /*  A        | */
+    OP_RAISE      /*  B        |   raise RK(B) */
 } bopcode;
 
 const char *be_opcode2str(bopcode op);

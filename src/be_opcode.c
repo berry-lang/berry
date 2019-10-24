@@ -13,7 +13,7 @@ const char *be_opcode2str(bopcode op)
         "JMPT", "JMPF", "CALL", "RET", "CLOSURE",
         "GETMBR", "GETMET", "SETMBR", "GETIDX",
         "SETIDX", "SETSUPER", "CLOSE", "IMPORT",
-        "TRY", "CATCH", "THROW"
+        "TRY", "EXCEPT", "RAISE"
     };
     return op < array_count(opcode_tab) ? opcode_tab[op] : "ERROP";
 }
