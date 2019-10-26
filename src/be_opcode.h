@@ -94,8 +94,8 @@ typedef enum {
     OP_SETSUPER,  /*  A, B     |   class:R(A) set super with class:RK(B) */
     OP_CLOSE,     /*  A        |   close upvalues */
     OP_IMPORT,    /*  A, B     |   R(A) <- import module from name RK(B) */
-    OP_TRY,       /*  sBx      | */
-    OP_EXCEPT,    /*  A        | */
+    OP_EXBLK,     /*  sBx      | */
+    OP_CATCH,     /*  A        | */
     OP_RAISE      /*  B        |   raise RK(B) */
 } bopcode;
 

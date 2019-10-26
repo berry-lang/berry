@@ -59,7 +59,6 @@ struct bvm {
 #define NONE_FLAG           0
 #define BASE_FRAME          (1 << 0)
 #define PRIM_FUNC           (1 << 1)
-#define EXCEPT_FRAME        (1 << 2)
 
 #define var2cl(_v)          cast(bclosure*, var_toobj(_v))
 #define curcl(_vm)          var2cl((_vm)->cf->func)

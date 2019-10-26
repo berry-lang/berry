@@ -311,38 +311,42 @@ void be_stack_expansion(bvm *vm, int n)
     stack_resize(vm, size + n);
 }
 
-void be_except_stack_push(bvm *vm)
+/* set an exception handling recovery point. To do this, we have to
+ * push some VM states into the exception stack. */
+void be_except_block_setup(bvm *vm)
 {
-    bvalue *func;
-    bcallframe *cf;
-    struct blongjmp *jmp;
-    cf = be_stack_top(&vm->callstack);
-    func = cf->func;
-    be_stack_push(vm, &vm->callstack, NULL);
-    cf = be_stack_top(&vm->callstack);
-    cf->top = vm->top;
-    cf->reg = vm->reg;
-    cf->ip = vm->ip;
-    cf->func = func;
-    cf->status = EXCEPT_FRAME;
+    struct bexecptframe *frame;
     be_stack_push(vm, &vm->exceptstack, NULL);
-    jmp = be_stack_top(&vm->exceptstack);
-    jmp->status = 0;
-    jmp->prev = vm->errjmp; /* save long jump position */
-    vm->errjmp = jmp;
+    frame = be_stack_top(&vm->exceptstack);
+    frame->depth = be_stack_count(&vm->callstack); /* the call stack depth */
+    frame->ip = vm->ip; /* instruction pointer */
+    /* set longjmp() jump point */
+    frame->jmp.status = 0;
+    frame->jmp.prev = vm->errjmp; /* save long jump list */
+    vm->errjmp = &frame->jmp;
 }
 
-void be_except_stack_pop(bvm *vm)
+/* resumes to the state of the previous frame when an exception occurs.
+ *  */
+void be_except_block_resume(bvm *vm)
 {
-    bcallframe *cf = be_stack_top(&vm->callstack);
-    while (!(cf->status & EXCEPT_FRAME)) {
-        be_stack_pop(&vm->callstack);
-        cf = be_stack_top(&vm->callstack);
-    }
-    vm->top = cf->top;
-    vm->reg = cf->reg;
-    vm->ip = cf->ip + IGET_sBx(*cf->ip); /* jump to except instruction */
-    be_stack_pop(&vm->callstack);
+    struct bexecptframe *frame = be_stack_top(&vm->exceptstack);
     vm->errjmp = vm->errjmp->prev;
+    vm->ip = frame->ip + IGET_sBx(*frame->ip); /* jump to except instruction */
+    if (be_stack_count(&vm->callstack) > frame->depth) {
+        bcallframe *cf = be_vector_at(&vm->callstack, frame->depth);
+        vm->top = cf->top;
+        vm->reg = cf->reg;
+        vm->cf = frame->depth ? cf - 1 : NULL;
+        be_vector_resize(vm, &vm->callstack, frame->depth);
+    }
     be_stack_pop(&vm->exceptstack);
+}
+
+/* only close the except block, no other operations */
+void be_except_block_close(bvm *vm, int count)
+{
+    int size = be_stack_count(&vm->exceptstack);
+    be_assert(count > 0 && count <= size);
+    be_vector_resize(vm, &vm->exceptstack, size - count);
 }

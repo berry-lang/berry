@@ -736,7 +736,7 @@ bvm* be_vm_new(void)
     be_string_init(vm);
     be_stack_init(vm, &vm->callstack, sizeof(bcallframe));
     be_stack_init(vm, &vm->refstack, sizeof(binstance*));
-    be_stack_init(vm, &vm->exceptstack, sizeof(struct blongjmp));
+    be_stack_init(vm, &vm->exceptstack, sizeof(struct bexecptframe));
     vm->stack = be_malloc(vm, sizeof(bvalue) * BE_STACK_FREE_MIN);
     vm->stacktop = vm->stack + BE_STACK_FREE_MIN;
     vm->cf = NULL;
@@ -812,12 +812,12 @@ static void vm_exec(bvm *vm)
         case OP_SETSUPER: i_setsuper(vm, ins); break;
         case OP_CLOSE: i_close(vm, ins); break;
         case OP_IMPORT: i_import(vm, ins); break;
-        case OP_EXCEPT: i_except(vm, ins); break;
+        case OP_CATCH: i_except(vm, ins); break;
         case OP_RAISE: i_raise(vm, ins); break;
-        case OP_TRY:
-            be_except_stack_push(vm);
-            if (!setjmp(vm->errjmp->b)) {
-                be_except_stack_pop(vm);
+        case OP_EXBLK:
+            be_except_block_setup(vm);
+            if (setjmp(vm->errjmp->b)) {
+                be_except_block_resume(vm);
             }
             break;
         case OP_RET: i_return(vm, ins); goto retpoint;

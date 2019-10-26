@@ -560,8 +560,9 @@ int be_setindex(bvm *vm, int index)
     }
     if (dst) {
         var_setval(dst, v);
+        return btrue;
     }
-    return dst != NULL;
+    return bfalse;
 }
 
 void be_getupval(bvm *vm, int index, int pos)

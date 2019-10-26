@@ -704,7 +704,7 @@ void be_code_import(bfuncinfo *finfo, bexpdesc *m, bexpdesc *v)
 
 int be_code_try(bfuncinfo *finfo)
 {
-    return appendjump(finfo, OP_TRY, NULL);
+    return appendjump(finfo, OP_EXBLK, NULL);
 }
 
 int be_code_catch(bfuncinfo *finfo, bexpdesc *e, int jtry)
@@ -712,7 +712,7 @@ int be_code_catch(bfuncinfo *finfo, bexpdesc *e, int jtry)
     int brk = appendjump(finfo, OP_JMP, NULL);
     be_assert(e->type == ETLOCAL);
     be_code_patchjump(finfo, jtry);
-    codeABC(finfo, OP_EXCEPT, e->v.idx, 0, 0);
+    codeABC(finfo, OP_CATCH, e->v.idx, 0, 0);
     return brk;
 }
 
