@@ -518,37 +518,50 @@ int be_getindex(bvm *vm, int index)
     return bfalse;
 }
 
+static bvalue* list_setindex(blist *list, bvalue *key)
+{
+    int idx = var_toidx(key);
+    if (idx < be_list_count(list)) {
+        return be_list_at(list, idx);
+    }
+    return NULL;
+}
+
+static bvalue* map_setindex(bvm *vm, bmap *map, bvalue *key)
+{
+    bvalue *dst = be_map_find(map, key);
+    if (dst == NULL) {
+        dst = be_map_insert(vm, map, key, NULL);
+    }
+    return dst;
+}
+
 int be_setindex(bvm *vm, int index)
 {
+    bvalue *dst = NULL;
     bvalue *o = index2value(vm, index);
     bvalue *k = index2value(vm, -2);
     bvalue *v = index2value(vm, -1);
     switch (var_type(o)) {
     case BE_LIST:
         if (var_isint(k)) {
-            blist *list = cast(blist*, var_toobj(o));
-            int idx = var_toidx(k);
-            if (idx < be_list_count(list)) {
-                bvalue *dst = be_list_at(list, idx);
-                var_setval(dst, v);
-                return btrue;
-            }
+            blist *list = var_toobj(o);
+            dst = list_setindex(list, k);
         }
         break;
     case BE_MAP:
         if (!var_isnil(k)) {
-            bmap *map = cast(bmap*, var_toobj(o));
-            bvalue *dst = be_map_find(map, k);
-            if (dst) {
-                var_setval(dst, v);
-                return btrue;
-            }
+            bmap *map = var_toobj(o);
+            dst = map_setindex(vm, map, k);
         }
         break;
     default:
         break;
     }
-    return bfalse;
+    if (dst) {
+        var_setval(dst, v);
+    }
+    return dst != NULL;
 }
 
 void be_getupval(bvm *vm, int index, int pos)
