@@ -236,6 +236,14 @@ static int l_size(bvm *vm)
 }
 
 #if BE_USE_SCRIPT_COMPILER
+static int raise_compile_error(bvm *vm)
+{
+    be_pushstring(vm, "syntax_error");
+    be_pushvalue(vm, -2);
+    be_raise(vm);
+    return 0;
+}
+
 static int m_compile_str(bvm *vm)
 {
     int len = be_strlen(vm, 1);
@@ -244,7 +252,7 @@ static int m_compile_str(bvm *vm)
     if (res == BE_OK) {
         be_return(vm);
     }
-    be_return_nil(vm);
+    return raise_compile_error(vm);
 }
 
 static int m_compile_file(bvm *vm)
@@ -254,7 +262,7 @@ static int m_compile_file(bvm *vm)
     if (res == BE_OK) {
         be_return(vm);
     }
-    be_return_nil(vm);
+    return raise_compile_error(vm);
 }
 #endif
 

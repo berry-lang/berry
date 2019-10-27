@@ -827,3 +827,11 @@ void be_codedump(bvm *vm, int index)
     be_pusherror(vm, "codedump unrealized");
 #endif
 }
+
+/* index -1: exception value,
+ * index -2: exception argument */
+void be_raise(bvm *vm)
+{
+    be_pop(vm, 2);
+    be_throw(vm, BE_EXCEPTION);
+}

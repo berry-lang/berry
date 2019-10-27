@@ -238,6 +238,7 @@ int be_returnvalue(bvm *vm);
 int be_returnnilvalue(bvm *vm);
 void be_call(bvm *vm, int argc);
 int be_pcall(bvm *vm, int argc);
+void be_raise(bvm *vm);
 void be_abort(void);
 void be_exit(bvm *vm, int status);
 

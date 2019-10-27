@@ -21,9 +21,9 @@ test_func1()
 
 def test_func2()
     try
-        compile('def end')
+        compile('def +() end')()
     except .. as e, v:
-        print('error:', str(e) + ', message:' + str(v))
+        print('catch execption:', str(e) + ' >>>\n    ' + str(v))
     end
 end
 
