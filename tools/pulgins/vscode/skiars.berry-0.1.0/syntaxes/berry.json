@@ -34,7 +34,7 @@
 		"controls": {
 			"patterns": [{
 				"name": "keyword.control.berry",
-				"match": "\\b(if|elif|else|for|while|do|end|break|continue|return|import|as)\\b"
+				"match": "\\b(if|elif|else|for|while|do|end|break|continue|return|try|except)\\b"
 			}]
 		},
 		"strings": {
@@ -64,7 +64,7 @@
 		"keywords": {
 			"patterns": [{
 				"name": "keyword.berry",
-				"match": "\\b(var|def|class|global|true|false|nil|self|super|parent)\\b"
+				"match": "\\b(var|def|class|global|true|false|nil|self|super|import|as)\\b"
 			}]
 		},
 		"number": {
