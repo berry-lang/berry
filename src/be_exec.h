@@ -24,7 +24,7 @@ struct blongjmp {
 };
 
 struct bexecptframe {
-    struct blongjmp jmp; /* long jump information */
+    struct blongjmp errjmp; /* long jump information */
     int depth; /* function call stack depth */
     binstruction *ip; /* instruction pointer */
 };

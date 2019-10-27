@@ -729,19 +729,55 @@ static void i_import(bvm *vm, binstruction ins)
     }                                            \
 }
 
-static void i_except(bvm *vm, binstruction ins)
+static bbool except_iseq(bvalue *a, bvalue *b)
 {
-    (void)vm, (void)ins;
+    bbool res = bfalse;
+    if (var_isint(a) && var_isint(b)) {
+        res = ibinop(==, a, b);
+    } else if (var_isnumber(a) && var_isnumber(b)) {
+        res = var2real(a) == var2real(b);
+    } else if (var_type(a) == var_type(b)) { /* same types */
+        if (var_isnil(a)) { /* nil op nil */
+            res = btrue;
+        } else if (var_isbool(a)) { /* bool op bool */
+            res = var_tobool(a) == var_tobool(b);
+        } else if (var_isstr(a)) { /* string op string */
+            res = be_eqstr(a->v.s, b->v.s);
+        } else if (var_isclass(a) || var_isfunction(a)) {
+            res = var_toobj(a) == var_toobj(b);
+        }
+        /* in other cases, it is considered to be unequal */
+    }
+    return res;
+}
+
+static void i_catch(bvm *vm, binstruction ins)
+{
+    bvalue *base = RA(ins), *top = vm->top;
+    int i, ecnt = IGET_RKB(ins), vcnt = IGET_RKC(ins);
+    for (i = 0; i < ecnt; ++i) {
+        if (except_iseq(top, base + i)) {
+            break;
+        }
+    }
+    if (!ecnt || i < ecnt) { /* exception caught */
+        for (i = 0; i < vcnt; ++i) {
+            *base++ = *top++;
+        }
+        vm->ip += 1; /* skip next instruction */
+    }
 }
 
 static void i_raise(bvm *vm, binstruction ins)
 {
-    bvalue *top = vm->top;
-    *top++ = *RKB(ins);
-    if (IGET_RA(ins)) {
-        *top = *RKB(ins);
-    } else {
-        var_setnil(top);
+    if (IGET_RA(ins) < 2) {
+        bvalue *top = vm->top;
+        *top++ = *RKB(ins); /* push the exception value to top */
+        if (IGET_RA(ins)) { /* has exception argument? */
+            *top = *RKC(ins); /* push the exception argument to top + 1 */
+        } else {
+            var_setnil(top);
+        }
     }
     be_throw(vm, BE_EXCEPTION);
 }
@@ -830,7 +866,7 @@ static void vm_exec(bvm *vm)
         case OP_SETSUPER: i_setsuper(vm, ins); break;
         case OP_CLOSE: i_close(vm, ins); break;
         case OP_IMPORT: i_import(vm, ins); break;
-        case OP_CATCH: i_except(vm, ins); break;
+        case OP_CATCH: i_catch(vm, ins); break;
         case OP_RAISE: i_raise(vm, ins); break;
         case OP_EXBLK: i_exblc(vm, ins); break;
         case OP_RET: i_return(vm, ins); goto retpoint;

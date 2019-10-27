@@ -321,26 +321,42 @@ void be_except_block_setup(bvm *vm)
     frame->depth = be_stack_count(&vm->callstack); /* the call stack depth */
     frame->ip = vm->ip; /* instruction pointer */
     /* set longjmp() jump point */
-    frame->jmp.status = 0;
-    frame->jmp.prev = vm->errjmp; /* save long jump list */
-    vm->errjmp = &frame->jmp;
+    frame->errjmp.status = 0;
+    frame->errjmp.prev = vm->errjmp; /* save long jump list */
+    vm->errjmp = &frame->errjmp;
 }
 
-/* resumes to the state of the previous frame when an exception occurs.
- *  */
+/* resumes to the state of the previous frame when an exception occurs. */
 void be_except_block_resume(bvm *vm)
 {
+    int errorcode = vm->errjmp->status;
     struct bexecptframe *frame = be_stack_top(&vm->exceptstack);
-    vm->errjmp = vm->errjmp->prev;
-    vm->ip = frame->ip + IGET_sBx(*frame->ip); /* jump to except instruction */
-    if (be_stack_count(&vm->callstack) > frame->depth) {
-        bcallframe *cf = be_vector_at(&vm->callstack, frame->depth);
-        vm->top = cf->top;
-        vm->reg = cf->reg;
-        vm->cf = frame->depth ? cf - 1 : NULL;
-        be_vector_resize(vm, &vm->callstack, frame->depth);
+    if (errorcode == BE_EXCEPTION) {
+        vm->errjmp = vm->errjmp->prev;
+        /* jump to except instruction */
+        vm->ip = frame->ip + IGET_sBx(*frame->ip);
+        if (be_stack_count(&vm->callstack) > frame->depth) {
+            bvalue *top = vm->top;
+            bcallframe *cf = be_vector_at(&vm->callstack, frame->depth);
+            vm->top = cf->top;
+            vm->reg = cf->reg;
+            vm->cf = frame->depth ? cf - 1 : NULL;
+            be_vector_resize(vm, &vm->callstack, frame->depth);
+            /* copy the exception value and argument to the top of
+             * the current function */
+            vm->top[0] = top[0];
+            vm->top[1] = top[1];
+        }
+        be_stack_pop(&vm->exceptstack);
+    } else { /* other errors cannot be catch by the except block */
+        /* find the next error handling location */
+        while (vm->errjmp == &frame->errjmp) {
+            vm->errjmp = vm->errjmp->prev;
+            be_stack_pop(&vm->exceptstack);
+            frame = be_stack_top(&vm->exceptstack);
+        }
+        be_throw(vm, errorcode); /* rethrow this exception */
     }
-    be_stack_pop(&vm->exceptstack);
 }
 
 /* only close the except block, no other operations */
@@ -350,6 +366,6 @@ void be_except_block_close(bvm *vm, int count)
     int size = be_stack_count(&vm->exceptstack);
     be_assert(count > 0 && count <= size);
     frame = be_vector_at(&vm->exceptstack, size - count);
-    vm->errjmp = frame->jmp.prev;
+    vm->errjmp = frame->errjmp.prev;
     be_vector_resize(vm, &vm->exceptstack, size - count);
 }
