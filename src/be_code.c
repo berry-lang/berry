@@ -319,6 +319,7 @@ static void code_closure(bfuncinfo *finfo, int idx, int dst)
 
 static int var2reg(bfuncinfo *finfo, bexpdesc *e, int dst)
 {
+    be_assert(e != NULL);
     switch (e->type) {
     case ETINT:
         if (e->v.i >= IsBx_MIN && e->v.i <= IsBx_MAX) {
@@ -702,24 +703,31 @@ void be_code_import(bfuncinfo *finfo, bexpdesc *m, bexpdesc *v)
     }
 }
 
-int be_code_try(bfuncinfo *finfo)
+int be_code_exblk(bfuncinfo *finfo, int depth)
 {
-    return appendjump(finfo, OP_EXBLK, NULL);
+    if (depth == 0) {
+        return appendjump(finfo, OP_EXBLK, NULL);
+    }
+    codeABx(finfo, OP_EXBLK, 1, depth);
+    return 0;
 }
 
-int be_code_catch(bfuncinfo *finfo, bexpdesc *e, int jtry)
+void be_code_catch(bfuncinfo *finfo, int base, int ecnt, int vcnt, int *jmp)
 {
-    int brk = appendjump(finfo, OP_JMP, NULL);
-    be_assert(e->type == ETLOCAL);
-    be_code_patchjump(finfo, jtry);
-    codeABC(finfo, OP_CATCH, e->v.idx, 0, 0);
-    return brk;
+    *jmp = NO_JUMP; /* reset jump point */
+    codeABC(finfo, OP_CATCH, base, ecnt, vcnt);
+    be_code_conjump(finfo, jmp, be_code_jump(finfo));
 }
 
-void be_code_throw(bfuncinfo *finfo, bexpdesc *e)
+void be_code_raise(bfuncinfo *finfo, bexpdesc *e1, bexpdesc *e2)
 {
-    int src = exp2anyreg(finfo, e);
-    codeABC(finfo, OP_RAISE, 0, src, 0);
+    if (e1) {
+        int src1 = exp2anyreg(finfo, e1);
+        int src2 = e2 ? exp2anyreg(finfo, e2) : 0;
+        codeABC(finfo, OP_RAISE, e2 != NULL, src1, src2);
+    } else {
+        codeABC(finfo, OP_RAISE, 2, 0, 0);
+    }
 }
 
 #endif

@@ -46,7 +46,7 @@ static void print_inst(binstruction ins, int pc)
     case OP_MOVE: case OP_SETSUPER: case OP_NEG: case OP_FLIP: case OP_IMPORT:
         logbuf("%s\tR%d\tR%d", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins));
         break;
-    case OP_JMP: case OP_EXBLK:
+    case OP_JMP:
         logbuf("%s\t\t[%d]", be_opcode2str(op), IGET_sBx(ins) + pc + 1);
         break;
     case OP_JMPT: case OP_JMPF:
@@ -70,11 +70,21 @@ static void print_inst(binstruction ins, int pc)
     case OP_CLOSURE:
         logbuf("%s\tR%d\tP:%d", be_opcode2str(op), IGET_RA(ins), IGET_Bx(ins));
         break;
-    case OP_CLOSE: case OP_CATCH:
+    case OP_CLOSE:
         logbuf("%s\t%d", be_opcode2str(op), IGET_RA(ins));
         break;
     case OP_RAISE:
-        logbuf("%s\t\t%d", be_opcode2str(op), IGET_RKB(ins));
+        logbuf("%s\t%d\tR%d\tR%d", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins), IGET_RKC(ins));
+        break;
+    case OP_EXBLK:
+        if (IGET_RA(ins)) {
+            logbuf("%s\t%d\t%d", be_opcode2str(op), IGET_RA(ins), IGET_Bx(ins));
+        } else {
+            logbuf("%s\t%d\t[%d]", be_opcode2str(op), IGET_RA(ins), IGET_sBx(ins) + pc + 1);
+        }
+        break;
+    case OP_CATCH:
+        logbuf("%s\tR%d\t%d\t%d", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins), IGET_RKC(ins));
         break;
     default:
         logbuf("%s", be_opcode2str(op));

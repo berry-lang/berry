@@ -718,6 +718,17 @@ static void i_import(bvm *vm, binstruction ins)
     }
 }
 
+#define i_exblc(vm, ins) {                       \
+    if (!IGET_RA(ins)) {                         \
+        be_except_block_setup(vm);               \
+        if (setjmp(vm->errjmp->b)) {             \
+            be_except_block_resume(vm);          \
+        }                                        \
+    } else {                                     \
+        be_except_block_close(vm, IGET_Bx(ins)); \
+    }                                            \
+}
+
 static void i_except(bvm *vm, binstruction ins)
 {
     (void)vm, (void)ins;
@@ -725,7 +736,14 @@ static void i_except(bvm *vm, binstruction ins)
 
 static void i_raise(bvm *vm, binstruction ins)
 {
-    (void)vm, (void)ins;
+    bvalue *top = vm->top;
+    *top++ = *RKB(ins);
+    if (IGET_RA(ins)) {
+        *top = *RKB(ins);
+    } else {
+        var_setnil(top);
+    }
+    be_throw(vm, BE_EXCEPTION);
 }
 
 bvm* be_vm_new(void)
@@ -814,12 +832,7 @@ static void vm_exec(bvm *vm)
         case OP_IMPORT: i_import(vm, ins); break;
         case OP_CATCH: i_except(vm, ins); break;
         case OP_RAISE: i_raise(vm, ins); break;
-        case OP_EXBLK:
-            be_except_block_setup(vm);
-            if (setjmp(vm->errjmp->b)) {
-                be_except_block_resume(vm);
-            }
-            break;
+        case OP_EXBLK: i_exblc(vm, ins); break;
         case OP_RET: i_return(vm, ins); goto retpoint;
         default: retpoint:
             if (vm->cf == NULL) {

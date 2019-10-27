@@ -53,6 +53,7 @@ enum berrorcode {
     BE_IO_ERROR,
     BE_SYNTAX_ERROR,
     BE_EXEC_ERROR,
+    BE_EXCEPTION,
     BE_MALLOC_FAIL,
     BE_EXIT
 };

@@ -6,10 +6,14 @@ def test_func()
     try
         fraise()
         return
-    except (e)
+    except 'error', 'exception' as e, d:
+        print('exception test')
+    except 'error':
+        print('exception test')
+    except '2':
         print('exception test')
     end
 end
 
 codedump(test_func)
-test_func()
+codedump(fraise)

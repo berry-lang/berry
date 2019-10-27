@@ -346,7 +346,10 @@ void be_except_block_resume(bvm *vm)
 /* only close the except block, no other operations */
 void be_except_block_close(bvm *vm, int count)
 {
+    struct bexecptframe *frame;
     int size = be_stack_count(&vm->exceptstack);
     be_assert(count > 0 && count <= size);
+    frame = be_vector_at(&vm->exceptstack, size - count);
+    vm->errjmp = frame->jmp.prev;
     be_vector_resize(vm, &vm->exceptstack, size - count);
 }

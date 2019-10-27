@@ -31,8 +31,8 @@ bvalue* be_code_localobject(bfuncinfo *finfo, int dst);
 bvalue* be_code_globalobject(bfuncinfo *finfo, int dst);
 void be_code_setsuper(bfuncinfo *finfo, bexpdesc *c, bexpdesc *s);
 void be_code_import(bfuncinfo *finfo, bexpdesc *m, bexpdesc *v);
-int be_code_try(bfuncinfo *finfo);
-int be_code_catch(bfuncinfo *finfo, bexpdesc *e, int jtry);
-void be_code_throw(bfuncinfo *finfo, bexpdesc *e);
+int be_code_exblk(bfuncinfo *finfo, int depth);
+void be_code_catch(bfuncinfo *finfo, int base, int ecnt, int vcnt, int *jmp);
+void be_code_raise(bfuncinfo *finfo, bexpdesc *e1, bexpdesc *e2);
 
 #endif

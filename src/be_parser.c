@@ -38,6 +38,8 @@
 #define upval_desc(i, t, s)     (((i) & 0xFF) | (((t) & 0xFF) << 8) \
                                 | (((s) != 0) << 16))
 
+#define match_id(parser, s)     ((s) = _match_id(parser))
+
 #define parser_newstr(p, str)   be_lexer_newstr(&(p)->lexer, (str))
 
 #define parser_error(p, msg)    be_lexerror(&(p)->lexer, msg)
@@ -109,6 +111,16 @@ static int match_skip(bparser *parser, btokentype type)
         return btrue;
     }
     return bfalse;
+}
+
+static bstring* _match_id(bparser *parser)
+{
+    if (next_type(parser) == TokenId) {
+        bstring *str = next_token(parser).u.s;
+        scan_next_token(parser); /* skip ID */
+        return str;
+    }
+    return NULL;
 }
 
 static void begin_block(bfuncinfo *finfo, bblockinfo *binfo, int isloop)
@@ -410,14 +422,12 @@ static void singlevar(bparser *parser, bexpdesc *var)
 static void func_varlist(bparser *parser)
 {
     bexpdesc v;
+    bstring *str;
     /* '(' [ID {',' ID}] ')' */
     match_token(parser, OptLBK); /* skip '(' */
-    if (next_type(parser) == TokenId) {
-        bstring *str = next_token(parser).u.s;
+    if (match_id(parser, str) != NULL) {
         new_var(parser, str, &v); /* new variable */
-        scan_next_token(parser);
-        while (next_type(parser) == OptComma) {
-            scan_next_token(parser); /* skip ',' */
+        while (match_skip(parser, OptComma)) { /* ',' */
             str = next_token(parser).u.s;
             match_token(parser, TokenId); /* match and skip ID */
             /* new local variable */
@@ -466,12 +476,11 @@ static void anon_func(bparser *parser, bexpdesc *e)
 static void lambda_varlist(bparser *parser)
 {
     bexpdesc v;
+    bstring *str;
     /* [ID {',' ID}] | {ID}] */
-    if (next_type(parser) == TokenId) {
+    if (match_id(parser, str) != NULL) {
         bbool comma;
-        bstring *str = next_token(parser).u.s;
         new_var(parser, str, &v); /* new variable */
-        scan_next_token(parser);
         comma = next_type(parser) == OptComma;
         while (next_type(parser) != OptArrow) {
             if (comma) {
@@ -602,8 +611,7 @@ static int exprlist(bparser *parser, bexpdesc *e)
     expr(parser, e);
     check_var(parser, e);
     be_code_nextreg(finfo, e);
-    while (next_type(parser) == OptComma) {
-        scan_next_token(parser); /* skip ',' */
+    while (match_skip(parser, OptComma)) { /* ',' */
         expr(parser, e);
         check_var(parser, e);
         be_code_nextreg(finfo, e);
@@ -642,15 +650,15 @@ static void call_expr(bparser *parser, bexpdesc *e)
 
 static void member_expr(bparser *parser, bexpdesc *e)
 {
+    bstring *str;
     /* . ID */
     check_var(parser, e);
     scan_next_token(parser); /* skip '.' */
-    if (next_type(parser) == TokenId) {
+    if (match_id(parser, str) != NULL) {
         bexpdesc key;
         init_exp(&key, ETSTRING, 0);
-        key.v.s = next_token(parser).u.s;
+        key.v.s = str;
         be_code_member(parser->finfo, e, &key);
-        scan_next_token(parser); /* skip ID */
     } else {
         push_error(parser, "invalid syntax near '%s'",
             be_token2str(parser->vm, &next_token(parser)));
@@ -937,12 +945,10 @@ static void if_stmt(bparser *parser)
     /* IF (expr) block {ELSEIF (expr) block}, [ELSE block], end */
     scan_next_token(parser); /* skip 'if' */
     condition_block(parser, &jl);
-    while (next_type(parser) == KeyElif) {
-        scan_next_token(parser);
+    while (match_skip(parser, KeyElif)) { /* 'elif' */
         condition_block(parser, &jl);
     }
-    if (next_type(parser) == KeyElse) {
-        scan_next_token(parser);
+    if (match_skip(parser, KeyElse)) { /* 'else' */
         block(parser);
     }
     match_token(parser, KeyEnd); /* skip end */
@@ -974,11 +980,10 @@ static void while_stmt(bparser *parser)
 
 static void for_itvar(bparser *parser, bexpdesc *e)
 {
-    if (next_type(parser) == TokenId) {
-        bstring *s = next_token(parser).u.s;
-        int idx = new_localvar(parser, s);
+    bstring *str;
+    if (match_id(parser, str) != NULL) {
+        int idx = new_localvar(parser, str);
         init_exp(e, ETLOCAL, idx);
-        scan_next_token(parser);
     } else {
         push_error(parser,
             "missing iteration variable before '%s'",
@@ -1149,20 +1154,16 @@ static void check_class_attr(bparser *parser, bclass *c, bstring *attr)
 
 static void classvar_stmt(bparser *parser, bclass *c)
 {
+    bstring *name;
     /* 'var' ID {',' ID} */
     scan_next_token(parser); /* skip 'var' */
-    if (next_type(parser) == TokenId) {
-        bstring *name = next_token(parser).u.s;
+    if (match_id(parser, name) != NULL) {
         check_class_attr(parser, c, name);
         be_member_bind(parser->vm, c, name);
-        scan_next_token(parser);
-        while (next_type(parser) == OptComma) {
-            scan_next_token(parser);
-            if (next_type(parser) == TokenId) {
-                name = next_token(parser).u.s;
+        while (match_skip(parser, OptComma)) { /* ',' */
+            if (match_id(parser, name) != NULL) {
                 check_class_attr(parser, c, name);
                 be_member_bind(parser->vm, c, name);
-                scan_next_token(parser);
             } else {
                 parser_error(parser, "class var error");
             }
@@ -1213,14 +1214,13 @@ static void class_block(bparser *parser, bclass *c)
 
 static void class_stmt(bparser *parser)
 {
+    bstring *name;
     /* 'class' ID [':' ID] class_block 'end' */
     scan_next_token(parser); /* skip 'class' */
-    if (next_type(parser) == TokenId) {
+    if (match_id(parser, name) != NULL) {
         bexpdesc e;
-        bstring *name = next_token(parser).u.s;
         bclass *c = be_newclass(parser->vm, name, NULL);
         new_class(parser, name, c, &e);
-        scan_next_token(parser); /* skip ID */
         class_inherit(parser, &e);
         class_block(parser, c);
         be_class_compress(parser->vm, c); /* compress class size */
@@ -1240,8 +1240,7 @@ static void import_stmt(bparser *parser)
     match_token(parser, TokenId); /* match and skip ID */
     init_exp(&m, ETSTRING, 0);
     m.v.s = name;
-    if (next_type(parser) == KeyAs) {
-        scan_next_token(parser); /* skip 'as' */
+    if (match_skip(parser, KeyAs)) { /* 'as' */
         name = next_token(parser).u.s;
         match_token(parser, TokenId);  /* match and skip ID */
     }
@@ -1256,8 +1255,7 @@ static void var_field(bparser *parser)
     bstring *name;
     name = next_token(parser).u.s;
     match_token(parser, TokenId); /* match and skip ID */
-    if (next_type(parser) == OptAssign) { /* '=' */
-        scan_next_token(parser); /* skip '=' */
+    if (match_skip(parser, OptAssign)) { /* '=' */
         expr(parser, &e2);
         check_var(parser, &e2);
     } else {
@@ -1272,17 +1270,74 @@ static void var_stmt(bparser *parser)
     /* 'var' ID ['=' expr] {',' ID ['=' expr]} */
     scan_next_token(parser); /* skip 'var' */
     var_field(parser);
-    while (next_type(parser) == OptComma) {
-        scan_next_token(parser); /* skip ',' */
+    while (match_skip(parser, OptComma)) { /* ',' */
         var_field(parser);
     }
 }
 
-static void catch_block(bparser *parser, int jmp)
+static int except_case_list(bparser *parser, int *base)
 {
+    int idx;
     bexpdesc e;
-    bstring *name;
+    bfuncinfo *finfo = parser->finfo;
+    /* expr {',' expr} | '..' */
+    if (match_skip(parser, OptRange)) { /* '..' */
+        return 0;
+    }
+    expr(parser, &e); /* first exception expression */
+    check_var(parser, &e);
+    *base = idx = be_code_nextreg(finfo, &e);
+    while (match_skip(parser, OptComma)) { /* ',' */
+        expr(parser, &e);
+        check_var(parser, &e);
+        idx = be_code_nextreg(finfo, &e);
+    }
+    idx = idx - *base + 1; /* count of exception expression */
+    be_code_freeregs(finfo, idx);
+    return idx;
+}
+
+static int except_var_list(bparser *parser, int base)
+{
+    bexpdesc v;
+    (void)base; /* unused variable (no debugging) */
+    /* [as ID [, ID]] */
+    if (match_skip(parser, KeyAs)) { /* 'as' */
+        bstring *name = next_token(parser).u.s;
+        match_token(parser, TokenId); /* match and skip ID */
+        new_var(parser, name, &v); /* new local variable */
+        be_assert(v.type == ETLOCAL && v.v.idx == base);
+        if (match_skip(parser, OptComma)) { /* match and skip ',' */
+            name = next_token(parser).u.s;
+            match_token(parser, TokenId); /* match and skip ID */
+            new_var(parser, name, &v); /* new local variable */
+            be_assert(v.type == ETLOCAL && v.v.idx == base + 1);
+            return 2;
+        }
+        return 1;
+    }
+    return 0;
+}
+
+static void catch_block(bparser *parser, int *jmp, int *jbrk)
+{
+    int base;
+    int ecnt, vcnt; /* exception cases count, exception variable count */
     bblockinfo binfo;
+    bfuncinfo *finfo = parser->finfo;
+    /* 'except' (expr {',' expr} | '..') ['as' ID [, ID]]: */
+    match_token(parser, KeyExcept); /* skip 'except' */
+    begin_block(finfo, &binfo, 0); /* begin catch block */
+    /* link from the previous except failure point */
+    be_code_conjump(finfo, jmp, finfo->pc);
+    ecnt = except_case_list(parser, &base);
+    vcnt = except_var_list(parser, base);
+    match_token(parser, OptColon); /* ':' */
+    be_code_catch(finfo, base, ecnt, vcnt, jmp);
+    stmtlist(parser);
+    be_code_conjump(finfo, jbrk, be_code_jump(finfo));
+    end_block(parser); /* leave catch block */
+#if 0
     /* 'except' '(' ID ')' */
     match_token(parser, KeyExcept); /* skip 'except' */
     match_token(parser, OptLBK); /* skip '(' */
@@ -1297,26 +1352,42 @@ static void catch_block(bparser *parser, int jmp)
     end_block(parser);
     be_code_patchjump(parser->finfo, jmp);
     match_token(parser, KeyEnd); /* skip 'end' */
+#endif
 }
 
 static void try_stmt(bparser *parser)
 {
-    int jmp;
+    int jcatch, jbrk;
     /* 'try' block 'except' '(' ID ')' block 'end' */
     scan_next_token(parser); /* skip 'try' */
-    jmp = be_code_try(parser->finfo);
+    jcatch = be_code_exblk(parser->finfo, 0);
     block(parser);
-    catch_block(parser, jmp);
+    be_code_exblk(parser->finfo, 1);
+    jbrk = be_code_jump(parser->finfo);
+    catch_block(parser, &jcatch, &jbrk);
+    while (next_type(parser) == KeyExcept) {
+        catch_block(parser, &jcatch, &jbrk);
+    }
+    be_code_patchjump(parser->finfo, jcatch);
+    be_code_raise(parser->finfo, NULL, NULL);
+    be_code_patchjump(parser->finfo, jbrk);
+    match_token(parser, KeyEnd); /* skip 'end' */
 }
 
 static void throw_stmt(bparser *parser)
 {
-    bexpdesc e;
+    bexpdesc e1, e2;
     /* 'raise' expr */
     scan_next_token(parser); /* skip 'raise' */
-    expr(parser, &e);
-    check_var(parser, &e);
-    be_code_throw(parser->finfo, &e);
+    expr(parser, &e1);
+    check_var(parser, &e1);
+    if (match_skip(parser, OptComma)) {
+        expr(parser, &e2);
+        check_var(parser, &e2);
+        be_code_raise(parser->finfo, &e1, &e2);
+    } else {
+        be_code_raise(parser->finfo, &e1, NULL);
+    }
 }
 
 static void statement(bparser *parser)
