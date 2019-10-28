@@ -755,13 +755,11 @@ static bbool except_iseq(bvalue *a, bvalue *b)
 static void i_catch(bvm *vm, binstruction ins)
 {
     bvalue *base = RA(ins), *top = vm->top;
-    int i, ecnt = IGET_RKB(ins), vcnt = IGET_RKC(ins);
-    for (i = 0; i < ecnt; ++i) {
-        if (except_iseq(top, base + i)) {
-            break;
-        }
+    int i = 0, ecnt = IGET_RKB(ins), vcnt = IGET_RKC(ins);
+    while (i < ecnt && !except_iseq(top, base + i)) {
+        ++i;
     }
-    if (!ecnt || i < ecnt) { /* exception caught */
+    if (!ecnt || i < ecnt) { /* exception catched */
         for (i = 0; i < vcnt; ++i) {
             *base++ = *top++;
         }

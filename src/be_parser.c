@@ -1317,7 +1317,7 @@ static int except_var_list(bparser *parser, int base)
 
 static void except_block(bparser *parser, int *jmp, int *jbrk)
 {
-    int base;
+    int base = 0; /* the first register of the catch opcode */
     int ecnt = 0; /* exception cases count */
     int vcnt = 0; /* exception variable count */
     bblockinfo binfo;
