@@ -624,7 +624,7 @@ static void call_expr(bparser *parser, bexpdesc *e)
 {
     bexpdesc args;
     bfuncinfo *finfo = parser->finfo;
-    int argc = 0, base = finfo->freereg;
+    int argc = 0, base;
     int ismember = e->type == ETMEMBER;
 
     /* func '(' [exprlist] ')' */

@@ -166,16 +166,18 @@ static bstring* newshortstr(bvm *vm, const char *str, size_t len)
         }
     }
     s = createstrobj(vm, len, 0);
-    memcpy(cast(char *, sstr(s)), str, len);
-    s->extra = 0;
-    s->next = cast(void*, *list);
+    if (s) {
+        memcpy(cast(char *, sstr(s)), str, len);
+        s->extra = 0;
+        s->next = cast(void*, *list);
 #if BE_STR_HASH_CACHE
-    cast(bsstring*, s)->hash = hash;
+        cast(bsstring*, s)->hash = hash;
 #endif
-    *list = s;
-    vm->strtab.count++;
-    if (vm->strtab.count > size << 2) {
-        resize(vm, size << 1);
+        *list = s;
+        vm->strtab.count++;
+        if (vm->strtab.count > size << 2) {
+            resize(vm, size << 1);
+        }
     }
     return s;
 }

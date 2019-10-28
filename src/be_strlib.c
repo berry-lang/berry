@@ -14,7 +14,7 @@
 
 bstring* be_strcat(bvm *vm, bstring *s1, bstring *s2)
 {
-    size_t len = str_len(s1) + str_len(s2);
+    size_t len = (size_t)str_len(s1) + str_len(s2);
     if (len <= SHORT_STR_MAX_LEN) {
         char buf[SHORT_STR_MAX_LEN + 1];
         strcpy(buf, str(s1));
@@ -95,11 +95,11 @@ static void ins2str(bvm *vm, int idx)
     int type = be_instance_member(obj, be_newstr(vm, "tostring"), top);
     if (basetype(type) != BE_FUNCTION) {
         bstring *name = be_class_name(be_instance_class(obj));
-        char *sbuf = be_malloc(vm, str_len(name) + 16);
+        char *sbuf = be_malloc(vm, (size_t)str_len(name) + 16);
         sprintf(sbuf, "<instance: %s()>", str(name));
         --vm->top; /* free the result register */
         var_setstr(v, be_newstr(vm, sbuf));
-        be_free(vm, sbuf, str_len(name) + 16);
+        be_free(vm, sbuf, (size_t)str_len(name) + 16);
     } else {
         be_incrtop(vm);
         var_setval(top + 1, v);

@@ -74,7 +74,7 @@
 #define arg_v       (1 << 5)
 #define arg_err     (1 << 7)
 
-    struct arg_opts {
+struct arg_opts {
     int idx;
     const char *pattern;
     const char *optarg;
@@ -229,7 +229,6 @@ static int build_file(bvm *vm, const char *dst, const char *src)
     default: /* unkonw result */
         return 2;
     }
-    return 0;
 }
 
 static int parse_arg(struct arg_opts *opt, int argc, char *argv[])

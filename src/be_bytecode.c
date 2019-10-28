@@ -118,45 +118,53 @@ static void save_string(void *fp, bstring *s)
     }
 }
 
-static void save_class(bvm *vm, void *fp, bclass *c)
+static bstring** save_members(bvm *vm, void *fp, bclass *c, int nvar)
 {
-    bstring **vars = NULL;
     bmapnode *node;
+    bstring **vars = NULL;
     bmap *members = c->members;
     bmapiter iter = be_map_iter();
-    int i, count = be_map_count(members);
-    int var_count = c->nvar - be_class_closure_count(c);
-    if (var_count) {
-        vars = be_malloc(vm, sizeof(bstring *) * var_count);
+    if (nvar) {
+        /* allocate the member-variable name cache */
+        vars = be_malloc(vm, sizeof(bstring *) * nvar);
     }
-    save_string(fp, c->name);
-    save_long(fp, var_count); /* member variables count */
-    save_long(fp, count - var_count); /* method count */
     while ((node = be_map_next(members, &iter)) != NULL) {
         be_assert(var_isstr(&node->key));
-        if (var_isint(&node->value)) {
+        if (var_isint(&node->value)) { /* cache member name */
+            if (vars == NULL) {
+                return NULL; /* should never be executed */
+            }
             vars[var_toidx(&node->value)] = var_tostr(&node->key);
-        } else {
+        } else { /* save method's name and function */
             bproto *proto;
             bvalue *value = &node->value;
             be_assert(var_isclosure(value) || var_isproto(value));
-            save_string(fp, var_tostr(&node->key));
-            if (var_isproto(value)) {
+            save_string(fp, var_tostr(&node->key)); /* save method name */
+            if (var_isproto(value)) { /* the method is a prototype */
                 proto = var_toobj(value);
-            } else {
-                bclosure *cl = var_toobj(value);
-                proto = cl->proto;
+            } else { /* the method is a closure */
+                proto = cast(bclosure *, var_toobj(value))->proto;
             }
-            proto = var_isproto(value) ? var_toobj(value) :
-                    cast(bclosure *, var_toobj(value))->proto;
-            save_proto(vm, fp, proto);
+            save_proto(vm, fp, proto); /* only save prototype */
         }
     }
-    if (var_count) {
-        for (i = 0; i < var_count; ++i) {
+    return vars;
+}
+
+static void save_class(bvm *vm, void *fp, bclass *c)
+{
+    bstring **vars;
+    int i, count = be_map_count(c->members);
+    int nvar = c->nvar - be_class_closure_count(c);
+    save_string(fp, c->name);
+    save_long(fp, nvar); /* member variables count */
+    save_long(fp, count - nvar); /* method count */
+    vars = save_members(vm, fp, c, nvar);
+    if (vars != NULL) {
+        for (i = 0; i < nvar; ++i) {
             save_string(fp, vars[i]);
         }
-        be_free(vm, vars, sizeof(bstring *) * var_count);
+        be_free(vm, vars, sizeof(bstring *) * nvar);
     }
 }
 
@@ -181,7 +189,7 @@ static void save_bytecode(void *fp, bproto *proto)
     }
 }
 
-static void save_constant(bvm *vm, void *fp, bproto *proto)
+static void save_constants(bvm *vm, void *fp, bproto *proto)
 {
     bvalue *v = proto->ktab, *end;
     save_long(fp, proto->nconst); /* constants count */
@@ -216,7 +224,7 @@ static void save_proto(bvm *vm, void *fp, bproto *proto)
         save_byte(fp, proto->argc); /* argc */
         save_byte(fp, proto->nstack); /* nstack */
         save_bytecode(fp, proto); /* bytecode */
-        save_constant(vm, fp, proto); /* constant */
+        save_constants(vm, fp, proto); /* constant */
         save_proto_table(vm, fp, proto); /* proto table */
         save_upvals(fp, proto); /* upvals description table */
     }
@@ -345,7 +353,7 @@ static void load_class(bvm *vm, void *fp, bvalue *v)
     c->name = load_string(vm, fp);
     nvar = load_long(fp);
     count = load_long(fp);
-    while (count--) {
+    while (count--) { /* load method table */
         bvalue *value;
         bstring *name = load_string(vm, fp);
         var_setstr(vm->top, name);
@@ -357,7 +365,7 @@ static void load_class(bvm *vm, void *fp, bvalue *v)
         be_method_bind(vm, c, name, var_toobj(value));
         be_stackpop(vm, 2);
     }
-    for (count = 0; count < nvar; ++count) {
+    for (count = 0; count < nvar; ++count) { /* load member-variable table */
         bstring *name = load_string(vm, fp);
         var_setstr(vm->top, name);
         be_stackpush(vm);

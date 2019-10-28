@@ -114,7 +114,7 @@ static int l_classname(bvm *vm)
 
 static int l_classof(bvm *vm)
 {
-    if (be_top(vm) && !be_classof(vm, 1)) {
+    if (be_top(vm) && be_classof(vm, 1)) {
         be_return(vm);
     }
     be_return_nil(vm);

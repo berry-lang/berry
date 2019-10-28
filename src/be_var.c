@@ -62,7 +62,7 @@ int be_global_new(bvm *vm, bstring *name)
         bvalue *desc;
         idx = be_global_new_anonymous(vm);
         desc = be_map_insertstr(vm, global(vm).vtab, name, NULL);
-        var_setint(desc, idx - be_builtin_count(vm));
+        var_setint(desc, (bint)idx - (bint)be_builtin_count(vm));
     }
     return idx;
 }

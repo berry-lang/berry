@@ -33,6 +33,7 @@
 #endif
 #define BE_INT_FORMAT       "%"BE_INT_FMTLEN"d"
 
+typedef int                 bbool;
 typedef uint8_t             bbyte;
 typedef BE_INTEGER          bint;
 
@@ -42,10 +43,11 @@ typedef BE_INTEGER          bint;
     typedef double          breal;
 #endif
 
-typedef enum {
+/* boolean values definition */
+enum {
     bfalse = 0,
     btrue = 1
-} bbool;
+};
 
 /* error code definition */
 enum berrorcode {
@@ -165,33 +167,33 @@ const char* be_str2num(bvm *vm, const char *str);
 int be_top(bvm *vm);
 const char* be_typename(bvm *vm, int index);
 const char* be_classname(bvm *vm, int index);
-int be_classof(bvm *vm, int index);
+bbool be_classof(bvm *vm, int index);
 int be_strlen(bvm *vm, int index);
 void be_strconcat(bvm *vm, int index);
 void be_pop(bvm *vm, int n);
 void be_remove(bvm *vm, int index);
 int be_absindex(bvm *vm, int index);
 
-int be_isnil(bvm *vm, int index);
-int be_isbool(bvm *vm, int index);
-int be_isint(bvm *vm, int index);
-int be_isreal(bvm *vm, int index);
-int be_isnumber(bvm *vm, int index);
-int be_isstring(bvm *vm, int index);
-int be_isclosure(bvm *vm, int index);
-int be_isntvclos(bvm *vm, int index);
-int be_isfunction(bvm *vm, int index);
-int be_isproto(bvm *vm, int index);
-int be_isclass(bvm *vm, int index);
-int be_isinstance(bvm *vm, int index);
-int be_islist(bvm *vm, int index);
-int be_ismap(bvm *vm, int index);
-int be_iscomptr(bvm *vm, int index);
+bbool be_isnil(bvm *vm, int index);
+bbool be_isbool(bvm *vm, int index);
+bbool be_isint(bvm *vm, int index);
+bbool be_isreal(bvm *vm, int index);
+bbool be_isnumber(bvm *vm, int index);
+bbool be_isstring(bvm *vm, int index);
+bbool be_isclosure(bvm *vm, int index);
+bbool be_isntvclos(bvm *vm, int index);
+bbool be_isfunction(bvm *vm, int index);
+bbool be_isproto(bvm *vm, int index);
+bbool be_isclass(bvm *vm, int index);
+bbool be_isinstance(bvm *vm, int index);
+bbool be_islist(bvm *vm, int index);
+bbool be_ismap(bvm *vm, int index);
+bbool be_iscomptr(bvm *vm, int index);
 
 bint be_toint(bvm *vm, int index);
 breal be_toreal(bvm *vm, int index);
 int be_toindex(bvm *vm, int index);
-int be_tobool(bvm *vm, int index);
+bbool be_tobool(bvm *vm, int index);
 const char* be_tostring(bvm *vm, int index);
 void* be_tocomptr(bvm *vm, int index);
 void be_moveto(bvm *vm, int from, int to);
@@ -207,29 +209,29 @@ void be_pushntvclosure(bvm *vm, bntvfunc f, int nupvals);
 void be_pushntvfunction(bvm *vm, bntvfunc f);
 void be_pushclass(bvm *vm, const char *name, const bnfuncinfo *lib);
 void be_pushcomptr(bvm *vm, void *ptr);
-int be_pushiter(bvm *vm, int index);
+bbool be_pushiter(bvm *vm, int index);
 void be_pusherror(bvm *vm, const char *msg);
 
 void be_newlist(bvm *vm);
 void be_newmap(bvm *vm);
 void be_getglobal(bvm *vm, const char *name);
 void be_getbuiltin(bvm *vm, const char *name);
-int be_setmember(bvm *vm, int index, const char *k);
-int be_getmember(bvm *vm, int index, const char *k);
-int be_getmethod(bvm *vm, int index, const char *k);
-int be_getindex(bvm *vm, int index);
-int be_setindex(bvm *vm, int index);
+bbool be_setmember(bvm *vm, int index, const char *k);
+bbool be_getmember(bvm *vm, int index, const char *k);
+bbool be_getmethod(bvm *vm, int index, const char *k);
+bbool be_getindex(bvm *vm, int index);
+bbool be_setindex(bvm *vm, int index);
 void be_getupval(bvm *vm, int index, int pos);
 void be_setupval(bvm *vm, int index, int pos);
 void be_getsuper(bvm *vm, int index);
 int be_data_size(bvm *vm, int index);
 void be_data_append(bvm *vm, int index);
-int be_data_insert(bvm *vm, int index);
-int be_data_remove(bvm *vm, int index);
+bbool be_data_insert(bvm *vm, int index);
+bbool be_data_remove(bvm *vm, int index);
 void be_data_resize(bvm *vm, int index);
 int be_iter_next(bvm *vm, int index);
-int be_iter_hasnext(bvm *vm, int index);
-int be_refcontains(bvm *vm, int index);
+bbool be_iter_hasnext(bvm *vm, int index);
+bbool be_refcontains(bvm *vm, int index);
 void be_refpush(bvm *vm, int index);
 void be_refpop(bvm *vm);
 void be_stack_require(bvm *vm, int count);

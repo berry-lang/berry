@@ -43,7 +43,7 @@ bvalue* be_list_append(bvm *vm, blist *list, bvalue *value)
 {
     bvalue *slot;
     if (list->count >= list->capacity) {
-        size_t newcap = be_nextsize(list->capacity);
+        int newcap = be_nextsize(list->capacity);
         list->data = be_realloc(vm, list->data,
             datasize(list->capacity), datasize(newcap));
         list->capacity = newcap;
@@ -66,7 +66,7 @@ bvalue* be_list_insert(bvm *vm, blist *list, int index, bvalue *value)
         return NULL;
     }
     if (list->count >= list->capacity) {
-        size_t newcap = be_nextsize(list->capacity);
+        int newcap = be_nextsize(list->capacity);
         list->data = be_realloc(vm, list->data,
             datasize(list->capacity), datasize(newcap));
         list->capacity = newcap;

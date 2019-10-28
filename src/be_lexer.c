@@ -165,13 +165,13 @@ static int char2hex(int c)
     } else if (c >= 'A' && c <= 'F') {
         return c - 'A' + 0x0A;
     }
-    return -1;
+    return 0x10;
 }
 
 static int check2hex(blexer *lexer, int c)
 {
     c = char2hex(c);
-    if (c < 0) {
+    if (c > 0x0f) {
         be_lexerror(lexer, "hexadecimal digit expected.");
     }
     return c;

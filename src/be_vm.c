@@ -31,7 +31,7 @@
     (var_isreal(_v) ? (_v)->v.r : (breal)(_v)->v.i)
 
 #define val2bool(v)        ((v) ? btrue : bfalse)
-#define ibinop(op, a, b)    ((a)->v.i op (b)->v.i)
+#define ibinop(op, a, b)   ((a)->v.i op (b)->v.i)
 
 #define define_function(name, block) \
     static void name(bvm *vm, binstruction ins) { \
@@ -394,8 +394,9 @@ static void i_div(bvm *vm, binstruction ins)
         bint x = var_toint(a), y = var_toint(b);
         if (y == 0) {
             vm_error(vm, "division by zero");
+        } else {
+            var_setint(dst, x / y);
         }
-        var_setint(dst, x / y);
     } else if (var_isnumber(a) && var_isnumber(b)) {
         breal x = var2real(a), y = var2real(b);
         if (y == cast(breal, 0)) {

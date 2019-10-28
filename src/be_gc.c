@@ -16,12 +16,13 @@
 #define GC_HALT     (1 << 1) /* GC completely stopped */
 #define GC_ALLOC    (1 << 2) /* GC in alloc */
 
-#define gc_try(expr)        be_assert(expr);
-#define next_threshold(gc)  ((gc).usage * ((gc).steprate + 100) / 100)
+#define gc_try(expr)        be_assert(expr); if (expr)
 
-#define link_gray(vm, obj)     { \
-    (obj)->gray = (vm)->gc.gray; \
-    (vm)->gc.gray = gc_object(obj);       \
+#define next_threshold(gc)  ((gc).usage * ((size_t)(gc).steprate + 100) / 100)
+
+#define link_gray(vm, obj)     {    \
+    (obj)->gray = (vm)->gc.gray;    \
+    (vm)->gc.gray = gc_object(obj); \
 }
 
 static void destruct_object(bvm *vm, bgcobject *obj);
@@ -287,7 +288,8 @@ static void free_closure(bvm *vm, bgcobject *obj)
                 be_free(vm, uv, sizeof(bupval));
             }
         }
-        be_free(vm, cl, sizeof(bclosure) + sizeof(bupval*) * (count - 1));
+        be_free(vm, cl, sizeof(bclosure)
+            + sizeof(bupval*) * ((size_t)count - 1));
     }
 }
 

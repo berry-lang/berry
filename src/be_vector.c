@@ -62,7 +62,7 @@ void be_vector_append_c(bvm *vm, bvector *vector, void *data)
     int capacity = vector->capacity + 1;
     be_vector_append(vm, vector, data);
     if (vector->capacity > capacity) {
-        size_t size = (vector->capacity - capacity) * vector->size;
+        size_t size = ((size_t)vector->capacity - capacity) * vector->size;
         memset(be_vector_at(vector, capacity), 0, size);
     }
 }
@@ -82,7 +82,7 @@ void be_vector_resize(bvm *vm, bvector *vector, int count)
                 vector->data, vector->capacity * size, newcap * size);
             vector->capacity = newcap;
         }
-        vector->end = (char*)vector->data + size * (count - 1);
+        vector->end = (char*)vector->data + size * ((size_t)count - 1);
     }
 }
 
@@ -104,7 +104,7 @@ void* be_vector_release(bvm *vm, bvector *vector)
     } else if (count < vector->capacity) {
         vector->data = be_realloc(vm,
             vector->data, vector->capacity * size, count * size);
-        vector->end = (char*)vector->data + (count - 1) * size;
+        vector->end = (char*)vector->data + ((size_t)count - 1) * size;
         vector->capacity = count;
     }
     return vector->data;

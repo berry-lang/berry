@@ -101,91 +101,91 @@ int be_absindex(bvm *vm, int index)
     return cast_int(vm->top + index - vm->reg + 1);
 }
 
-int be_isnil(bvm *vm, int index)
+bbool be_isnil(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isnil(v);
 }
 
-int be_isbool(bvm *vm, int index)
+bbool be_isbool(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isbool(v);
 }
 
-int be_isint(bvm *vm, int index)
+bbool be_isint(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isint(v);
 }
 
-int be_isreal(bvm *vm, int index)
+bbool be_isreal(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isreal(v);
 }
 
-int be_isnumber(bvm *vm, int index)
+bbool be_isnumber(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isnumber(v);
 }
 
-int be_isstring(bvm *vm, int index)
+bbool be_isstring(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isstr(v);
 }
 
-int be_isclosure(bvm *vm, int index)
+bbool be_isclosure(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isclosure(v);
 }
 
-int be_isntvclos(bvm *vm, int index)
+bbool be_isntvclos(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isntvclos(v);
 }
 
-int be_isfunction(bvm *vm, int index)
+bbool be_isfunction(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isfunction(v);
 }
 
-int be_isproto(bvm *vm, int index)
+bbool be_isproto(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isproto(v);
 }
 
-int be_isclass(bvm *vm, int index)
+bbool be_isclass(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isclass(v);
 }
 
-int be_isinstance(bvm *vm, int index)
+bbool be_isinstance(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isinstance(v);
 }
 
-int be_islist(bvm *vm, int index)
+bbool be_islist(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_islist(v);
 }
 
-int be_ismap(bvm *vm, int index)
+bbool be_ismap(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_ismap(v);
 }
 
-int be_iscomptr(bvm *vm, int index)
+bbool be_iscomptr(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_istype(v, BE_COMPTR);
@@ -215,7 +215,7 @@ int be_toindex(bvm *vm, int index)
     return var_toidx(v);
 }
 
-int be_tobool(bvm *vm, int index)
+bbool be_tobool(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return be_value2bool(vm, v);
@@ -253,7 +253,7 @@ void be_pushnil(bvm *vm)
 void be_pushbool(bvm *vm, int b)
 {
     bvalue *reg = be_incrtop(vm);
-    var_setbool(reg, b != 0);
+    var_setbool(reg, b != bfalse);
 }
 
 void be_pushint(bvm *vm, bint i)
@@ -402,16 +402,16 @@ const char* be_classname(bvm *vm, int index)
     return NULL;
 }
 
-int be_classof(bvm *vm, int index)
+bbool be_classof(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     if (var_isinstance(v)) {
         bvalue *top = be_incrtop(vm);
         binstance *ins = var_toobj(v);
         var_setclass(top, be_instance_class(ins));
-        return 0;
+        return btrue;
     }
-    return -1;
+    return bfalse;
 }
 
 int be_strlen(bvm *vm, int index)
@@ -449,7 +449,7 @@ void be_getbuiltin(bvm *vm, const char *name)
     *top = *be_global_var(vm, idx);
 }
 
-int be_setmember(bvm *vm, int index, const char *k)
+bbool be_setmember(bvm *vm, int index, const char *k)
 {
     int res = BE_NIL;
     bvalue *o = index2value(vm, index);
@@ -474,17 +474,17 @@ static int ins_member(bvm *vm, int index, const char *k)
     return type;
 }
 
-int be_getmember(bvm *vm, int index, const char *k)
+bbool be_getmember(bvm *vm, int index, const char *k)
 {
     return ins_member(vm, index, k) != BE_NIL;
 }
 
-int be_getmethod(bvm *vm, int index, const char *k)
+bbool be_getmethod(bvm *vm, int index, const char *k)
 {
     return basetype(ins_member(vm, index, k)) == BE_FUNCTION;
 }
 
-int be_getindex(bvm *vm, int index)
+bbool be_getindex(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     bvalue *k = index2value(vm, -1);
@@ -536,7 +536,7 @@ static bvalue* map_setindex(bvm *vm, bmap *map, bvalue *key)
     return dst;
 }
 
-int be_setindex(bvm *vm, int index)
+bbool be_setindex(bvm *vm, int index)
 {
     bvalue *dst = NULL;
     bvalue *o = index2value(vm, index);
@@ -612,7 +612,7 @@ void be_data_append(bvm *vm, int index)
     }
 }
 
-int be_data_insert(bvm *vm, int index)
+bbool be_data_insert(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     bvalue *k = index2value(vm, -2);
@@ -636,7 +636,7 @@ int be_data_insert(bvm *vm, int index)
     return bfalse;
 }
 
-int be_data_remove(bvm *vm, int index)
+bbool be_data_remove(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     bvalue *k = index2value(vm, -1);
@@ -671,20 +671,20 @@ void be_data_resize(bvm *vm, int index)
     }
 }
 
-int be_pushiter(bvm *vm, int index)
+bbool be_pushiter(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     if (var_ismap(v)) {
         bvalue *iter = be_incrtop(vm);
         var_setobj(iter, BE_COMPTR, NULL);
-        return 1;
+        return btrue;
     } else if (var_islist(v)) {
         blist *list = var_toobj(v);
         bvalue *iter = be_incrtop(vm);
         var_setobj(iter, BE_COMPTR, be_list_data(list) - 1);
-        return 1;
+        return btrue;
     }
-    return 0;
+    return bfalse;
 }
 
 static int list_next(bvm *vm)
@@ -697,7 +697,7 @@ static int list_next(bvm *vm)
     return 1;
 }
 
-static int list_hasnext(bvm *vm, bvalue *v)
+static bbool list_hasnext(bvm *vm, bvalue *v)
 {
     bvalue *next;
     bvalue *iter = index2value(vm, -1);
@@ -725,7 +725,7 @@ static int map_next(bvm *vm, bvalue *v)
     return 0;
 }
 
-static int map_hasnext(bvm *vm, bvalue *v)
+static bbool map_hasnext(bvm *vm, bvalue *v)
 {
     bvalue *node = index2value(vm, -1);
     bmapiter iter = var_toobj(node);
@@ -743,7 +743,7 @@ int be_iter_next(bvm *vm, int index)
     return 0;
 }
 
-int be_iter_hasnext(bvm *vm, int index)
+bbool be_iter_hasnext(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     if (var_islist(o)) {
@@ -751,10 +751,10 @@ int be_iter_hasnext(bvm *vm, int index)
     } else if (var_ismap(o)) {
         return map_hasnext(vm, o);
     }
-    return 0;
+    return bfalse;
 }
 
-int be_refcontains(bvm *vm, int index)
+bbool be_refcontains(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     binstance **ref = be_stack_base(&vm->refstack);
@@ -767,7 +767,7 @@ int be_refcontains(bvm *vm, int index)
         }
         return ref <= top;
     }
-    return 0;
+    return bfalse;
 }
 
 void be_refpush(bvm *vm, int index)

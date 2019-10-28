@@ -118,7 +118,6 @@ void hash_map::insert_p(const std::string &key, const std::string value)
 
 void hash_map::insert(const std::string &key, const std::string value)
 {
-	uint32_t hash = hashcode(key);
 	entry slot = find(key);
 	if (slot.next == NODE_EMPTY) { /* new entry */
 		if (m_count >= m_bucket.size()) {

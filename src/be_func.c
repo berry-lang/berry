@@ -5,7 +5,7 @@
 #include "be_exec.h"
 
 #define clousersize(n) \
-    (sizeof(bclosure) + sizeof(bupval*) * ((n) - 1))
+    (sizeof(bclosure) + sizeof(bupval*) * ((size_t)(n) - 1))
 
 void be_initupvals(bvm *vm, bclosure *cl)
 {
