@@ -636,6 +636,20 @@ void be_code_close(bfuncinfo *finfo, int isret)
     }
 }
 
+static void leave_function(bfuncinfo *finfo)
+{
+    int try_depth = 0; /* count of exception catch blocks */
+    bblockinfo *binfo = finfo->binfo;
+    for (; binfo; binfo = binfo->prev) {
+        if (binfo->type == BLOCK_EXCEPT) {
+            ++try_depth; /* leave the exception catch block */
+        }
+    }
+    if (try_depth) { /* exception catch blocks that needs to leave */
+        be_code_exblk(finfo, try_depth);
+    }
+}
+
 void be_code_ret(bfuncinfo *finfo, bexpdesc *e)
 {
     if (e == NULL) {
@@ -643,6 +657,7 @@ void be_code_ret(bfuncinfo *finfo, bexpdesc *e)
     } else {
         int reg = exp2anyreg(finfo, e);
         be_code_close(finfo, 1);
+        leave_function(finfo);
         codeABC(finfo, OP_RET, e->type != ETVOID, reg, 0);
         free_expreg(finfo, e);
     }

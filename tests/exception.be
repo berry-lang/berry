@@ -3,7 +3,13 @@ def fraise()
 end
 
 def test_func1()
+    while (1)
     try
+        try
+            break
+            return 45
+        except:
+        end
         fraise()
         return
     except 'exception' as e, v:
@@ -13,6 +19,7 @@ def test_func1()
     except '2':
         print('exception 3')
     end
+end
 end
 
 codedump(test_func1)

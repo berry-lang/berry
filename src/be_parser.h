@@ -43,7 +43,7 @@ typedef struct {
 typedef struct bblockinfo {
     struct bblockinfo *prev;
     bbyte nactlocals; /* number of active local variables */
-    bbyte isloop;     /* loop mark */
+    bbyte type;       /* block type mask */
     bbyte hasupval;   /* has upvalue mark */
     int breaklist;    /* break list */
     int beginpc;      /* begin pc */
@@ -68,6 +68,10 @@ typedef struct bfuncinfo {
     bbyte freereg; /* first free register */
     bbyte flag; /* anonymous function */
 } bfuncinfo;
+
+/* code block type definitions */
+#define BLOCK_LOOP      1
+#define BLOCK_EXCEPT    2
 
 bclosure* be_parser_source(bvm *vm,
     const char *fname, breader reader, void *data);

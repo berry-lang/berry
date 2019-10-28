@@ -18,8 +18,10 @@ func_body = '(' [ID {',' ID}] ')' block 'end';
 class_stmt = 'class' ID [':' ID] class_block 'end';
 class_block = {'var' ID {',' ID} | func_stmt};
 import_stmt = 'import' ID ['as' ID];
-try_stmt = 'try' block 'except' '(' ID ')' block 'end';
-throw_stmt = 'raise' expr;
+try_stmt = 'try' block except_block {except_block} 'end';
+except_block = except_stmt block;
+except_stmt = 'except' [(expr {',' expr} | '..') ['as' ID [',' ID]]] ':';
+throw_stmt = 'raise' expr [',' expr];
 (* variable define statement *)
 var_stmt = 'var' ID ['=' expr] {',' ID ['=' expr]};
 (* expression define *)
