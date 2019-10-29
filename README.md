@@ -24,7 +24,7 @@ LaTeX documents repository: [https://github.com/Skiars/berry_doc](https://github
 
 Reference Manual: [berry_rm_zh_cn.pdf](https://github.com/Skiars/berry_doc/releases/download/latest/berry_rm_zh_cn.pdf) (Simplified Chinese version)
 
-Berry's EBNF grammar definition: [tools/ebnf/grammar.ebnf](./tools/grammar/berry.ebnf)
+Berry's EBNF grammar definition: [tools/grammar/berry.ebnf](./tools/grammar/berry.ebnf)
 
 ## Features
 

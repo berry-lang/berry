@@ -819,11 +819,10 @@ void be_vm_delete(bvm *vm)
 
 static void vm_exec(bvm *vm)
 {
-    binstruction ins;
     vm->cf->status |= BASE_FRAME;
     newframe:
     for (;;) {
-        ins = *vm->ip;
+        binstruction ins = *vm->ip;
         switch (IGET_OP(ins)) {
         case OP_LDNIL: i_ldnil(vm, ins); break;
         case OP_LDBOOL: i_ldbool(vm, ins); break;

@@ -61,8 +61,8 @@ static int iter_closure(bvm *vm)
     bntvclos *func = var_toobj(vm->cf->func);
     bvalue *uv0 = be_ntvclos_upval(func, 0)->value;
     bvalue *uv1 = be_ntvclos_upval(func, 1)->value;
-    int lower = var_toint(uv0); /* upvalue[0] => lower */
-    int upper = var_toint(uv1); /* upvalue[1] => upper */
+    bint lower = var_toint(uv0); /* upvalue[0] => lower */
+    bint upper = var_toint(uv1); /* upvalue[1] => upper */
     if (lower > upper) {
         be_pushstring(vm, "stop_iteration");
         be_pushnil(vm);

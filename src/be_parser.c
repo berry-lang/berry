@@ -985,7 +985,6 @@ static void for_init(bparser *parser, bexpdesc *v)
     bexpdesc e;
     bstring *s;
     bfuncinfo *finfo = parser->finfo;
-
     /* .it = __iterator__(expr) */
     s = parser_newstr(parser, "__iterator__");
     init_exp(&e, ETGLOBAL, be_builtin_find(parser->vm, s));
@@ -999,51 +998,59 @@ static void for_init(bparser *parser, bexpdesc *v)
     init_exp(v, ETLOCAL, new_localvar(parser, s));
 }
 
-/*
- * try
- *     while (1)
- *         v = .it()
- *         stmtlist
- *     end
- * except 'stop_iteration':
- * end
- * */
 static void for_iter(bparser *parser, bstring *var, bexpdesc *it)
 {
     bexpdesc e;
     bfuncinfo *finfo = parser->finfo;
-    int jcatch = be_code_exblk(parser->finfo, 0);
     int jloop = finfo->pc;
-    /* new iter-var */
-    init_exp(&e, ETLOCAL, new_localvar(parser, var));
-    /* v = .it() */
-    be_code_setvar(finfo, &e, it); /* code function '.it' */
-    be_code_call(finfo, e.v.idx, 0); /* v = call .it() */
+    /* itvar = .it() */
+    init_exp(&e, ETLOCAL, new_localvar(parser, var)); /* new itvar */
+    be_code_setvar(finfo, &e, it); /* code function to variable '.it' */
+    be_code_call(finfo, e.v.idx, 0); /* itvar <- call .it() */
     stmtlist(parser);
     be_code_jumpto(finfo, jloop);
+}
+
+static void for_leave(bparser *parser, int jcatch)
+{
+    bexpdesc e;
+    bfuncinfo *finfo = parser->finfo;
     end_block(parser); /* leave except block */
     init_exp(&e, ETSTRING, 0);
     e.v.s = parser_newstr(parser, "stop_iteration");
     be_code_conjump(finfo, &jcatch, finfo->pc);
     be_code_catch(finfo, be_code_nextreg(finfo, &e), 1, 0, NULL);
-    be_code_raise(parser->finfo, NULL, NULL);
+    be_code_raise(finfo, NULL, NULL);
     be_code_freeregs(finfo, 1);
 }
 
+/* approximate equivalent script code:
+ * .it = __iter__(expr)
+ * try
+ *     while (1)
+ *         itvar = .it()
+ *         stmtlist
+ *     end
+ * except 'stop_iteration':
+ * end
+ * */
 static void for_stmt(bparser *parser)
 {
+    int jcatch;
     bblockinfo binfo;
     bstring *var;
     bexpdesc iter;
     /* FOR (ID : expr) block END */
     scan_next_token(parser); /* skip 'for' */
     match_token(parser, OptLBK); /* skip '(' */
-    begin_block(parser->finfo, &binfo, BLOCK_EXCEPT); /* begin except block */
+    begin_block(parser->finfo, &binfo, BLOCK_EXCEPT | BLOCK_LOOP);
     var = for_itvar(parser);
     match_token(parser, OptColon); /* skip ':' */
     for_init(parser, &iter);
     match_token(parser, OptRBK); /* skip ')' */
+    jcatch = be_code_exblk(parser->finfo, 0);
     for_iter(parser, var, &iter);
+    for_leave(parser, jcatch);
     match_token(parser, KeyEnd); /* skip 'end' */
 }
 
@@ -1427,7 +1434,6 @@ bclosure* be_parser_source(bvm *vm,
 {
     bparser parser;
     bclosure *cl = be_newclosure(vm, 0);
-
     parser.vm = vm;
     parser.finfo = NULL;
     parser.cl = cl;
