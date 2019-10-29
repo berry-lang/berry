@@ -567,7 +567,7 @@ bbool be_setindex(bvm *vm, int index)
 
 void be_getupval(bvm *vm, int index, int pos)
 {
-    bvalue *f = index2value(vm, index);
+    bvalue *f = index ? index2value(vm, index) : vm->cf->func;
     bvalue *top = be_incrtop(vm);
     if (var_istype(f, BE_NTVCLOS)) {
         bntvclos *nf = var_toobj(f);
@@ -580,7 +580,7 @@ void be_getupval(bvm *vm, int index, int pos)
 
 void be_setupval(bvm *vm, int index, int pos)
 {
-    bvalue *f = index2value(vm, index);
+    bvalue *f = index ? index2value(vm, index) : vm->cf->func;
     bvalue *v = index2value(vm, -1);
     if (var_istype(f, BE_NTVCLOS)) {
         bntvclos *nf = var_toobj(f);

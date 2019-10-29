@@ -178,30 +178,9 @@ static int check_method(bvm *vm, const char *attr)
 
 static int l_iterator(bvm *vm)
 {
-    if (check_method(vm, "iter")) {
-        be_pushvalue(vm, 1);
-        be_call(vm, 1);
-        be_pop(vm, 1);
-        be_return(vm);
-    }
-    be_return_nil(vm);
-}
-
-static int l_hasnext(bvm *vm)
-{
-    if (check_method(vm, "hasnext")) {
-        be_pushvalue(vm, 1);
-        be_call(vm, 1);
-        be_pop(vm, 1);
-    } else {
-        be_pushbool(vm, bfalse);
-    }
-    be_return(vm);
-}
-
-static int l_next(bvm *vm)
-{
-    if (check_method(vm, "next")) {
+    if (be_top(vm) && be_isfunction(vm, 1)) {
+        be_return(vm); /* return the argument[0]::function */
+    } else if (check_method(vm, "iter")) {
         be_pushvalue(vm, 1);
         be_call(vm, 1);
         be_pop(vm, 1);
@@ -314,15 +293,11 @@ void be_load_baselib(bvm *vm)
     be_regfunc(vm, "compile", l_compile);
     be_regfunc(vm, "codedump", l_codedump);
     be_regfunc(vm, "__iterator__", l_iterator);
-    be_regfunc(vm, "__hasnext__", l_hasnext);
-    be_regfunc(vm, "__next__", l_next);
 }
 #else
 extern const bclass be_class_list;
 extern const bclass be_class_map;
 extern const bclass be_class_range;
-extern const bclass be_class_exception;
-extern const bclass be_class_stop_iterator;
 extern int be_nfunc_open(bvm *vm);
 /* @const_object_info_begin
 vartab m_builtin (scope: local) {
@@ -343,14 +318,10 @@ vartab m_builtin (scope: local) {
     compile, func(l_compile)
     codedump, func(l_codedump)
     __iterator__, func(l_iterator)
-    __hasnext__, func(l_hasnext)
-    __next__, func(l_next)
     open, func(be_nfunc_open)
     list, class(be_class_list)
     map, class(be_class_map)
     range, class(be_class_range)
-    exception, class(be_class_exception)
-    stop_iterator, class(be_class_stop_iterator)
 }
 @const_object_info_end */
 #include "../generate/be_fixed_m_builtin.h"

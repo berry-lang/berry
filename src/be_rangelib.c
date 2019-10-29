@@ -1,4 +1,6 @@
 #include "be_object.h"
+#include "be_func.h"
+#include "be_vm.h"
 
 static int m_init(bvm *vm)
 {
@@ -52,54 +54,33 @@ static int m_setrange(bvm *vm)
     be_return_nil(vm);
 }
 
-static int i_init(bvm *vm)
+static int iter_closure(bvm *vm)
 {
-    be_pushvalue(vm, 2);
-    be_setmember(vm, 1, ".obj");
-    be_return_nil(vm);
-}
-
-static int i_hashnext(bvm *vm)
-{
-    be_getmember(vm, 1, ".obj");
-    be_getmember(vm, 1, ".iter");
-    be_getmember(vm, -2, "__upper__");
-    if (!be_isint(vm, -2) || be_toint(vm, -2) < be_toint(vm, -1)) {
-        be_pushbool(vm, btrue);
-    } else {
-        be_pushbool(vm, bfalse);
+    /* for better performance, we operate the upvalues
+     * directly without using by the stack. */
+    bntvclos *func = var_toobj(vm->cf->func);
+    bvalue *uv0 = be_ntvclos_upval(func, 0)->value;
+    bvalue *uv1 = be_ntvclos_upval(func, 1)->value;
+    int lower = var_toint(uv0); /* upvalue[0] => lower */
+    int upper = var_toint(uv1); /* upvalue[1] => upper */
+    if (lower > upper) {
+        be_pushstring(vm, "stop_iteration");
+        be_pushnil(vm);
+        be_raise(vm);
     }
-    be_return(vm);
-}
-
-static int i_next(bvm *vm)
-{
-    be_getmember(vm, 1, ".iter");
-    if (!be_isint(vm, -1)) {
-        be_getmember(vm, 1, ".obj");
-        be_getmember(vm, -1, "__lower__");
-        be_setmember(vm, 1, ".iter");
-    } else {
-        be_getmember(vm, 1, ".iter");
-        be_pushint(vm, be_toint(vm, -1) + 1);
-        be_setmember(vm, 1, ".iter");
-    }
+    var_toint(uv0) = lower + 1; /* set upvale[0] */
+    be_pushint(vm, lower); /* push the return value */
     be_return(vm);
 }
 
 static int m_iter(bvm *vm)
 {
-    static const bnfuncinfo members[] = {
-        { ".obj", NULL },
-        { ".iter", NULL },
-        { "init", i_init },
-        { "hasnext", i_hashnext },
-        { "next", i_next },
-        { NULL, NULL }
-    };
-    be_pushclass(vm, "iterator", members);
-    be_pushvalue(vm, 1);
-    be_call(vm, 1);
+    be_pushntvclosure(vm, iter_closure, 2);
+    be_getmethod(vm, 1, "__lower__");
+    be_setupval(vm, -2, 0);
+    be_pop(vm, 1);
+    be_getmethod(vm, 1, "__upper__");
+    be_setupval(vm, -2, 1);
     be_pop(vm, 1);
     be_return(vm);
 }

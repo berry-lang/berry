@@ -729,9 +729,11 @@ int be_code_exblk(bfuncinfo *finfo, int depth)
 
 void be_code_catch(bfuncinfo *finfo, int base, int ecnt, int vcnt, int *jmp)
 {
-    *jmp = NO_JUMP; /* reset jump point */
     codeABC(finfo, OP_CATCH, base, ecnt, vcnt);
-    be_code_conjump(finfo, jmp, be_code_jump(finfo));
+    if (jmp) {
+        *jmp = NO_JUMP; /* reset jump point */
+        be_code_conjump(finfo, jmp, be_code_jump(finfo));
+    }
 }
 
 void be_code_raise(bfuncinfo *finfo, bexpdesc *e1, bexpdesc *e2)
