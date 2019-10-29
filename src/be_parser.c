@@ -61,7 +61,7 @@ static void block(bparser *parser, int type);
 static void expr(bparser *parser, bexpdesc *e);
 static void sub_expr(bparser *parser, bexpdesc *e, int prio);
 
-static const int binary_op_prio_tab[] = {
+static const bbyte binary_op_prio_tab[] = {
     5, 5, 4, 4, 4, /* + - * / % */
     11, 11, 12, 12, 11, 11, /* < <= == != > >= */
     7, 9, 8, 6, 6, 10, 13, 14 /*  & | ^ << >> .. && || */

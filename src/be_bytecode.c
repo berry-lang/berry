@@ -111,7 +111,7 @@ static void save_real(void *fp, breal r)
 static void save_string(void *fp, bstring *s)
 {
     if (s) {
-        uint16_t length = str_len(s);
+        uint16_t length = (uint16_t)str_len(s);
         const char *data = str(s);
         save_word(fp, length);
         be_fwrite(fp, data, length);
@@ -170,7 +170,7 @@ static void save_class(bvm *vm, void *fp, bclass *c)
 
 static void save_value(bvm *vm, void *fp, bvalue *v)
 {
-    save_byte(fp, var_type(v)); /* type */
+    save_byte(fp, (uint8_t)var_type(v)); /* type */
     switch (var_type(v)) {
     case BE_INT: save_int(fp, var_toint(v)); break;
     case BE_REAL: save_real(fp, var_toreal(v)); break;
@@ -433,7 +433,7 @@ static void load_upvals(bvm *vm, void *fp, bproto *proto)
     if (size) {
         bupvaldesc *uv, *end;
         proto->upvals = be_malloc(vm, sizeof(bupvaldesc) * size);
-        proto->nupvals = size;
+        proto->nupvals = (bbyte)size;
         uv = proto->upvals;
         for (end = uv + size; uv < end; ++uv) {
             uv->instack = load_byte(fp);

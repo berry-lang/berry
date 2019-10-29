@@ -9,6 +9,7 @@
 #define SHORT_STR_LEN       32
 #define EOS                 '\0' /* end of source */
 
+#define type_count()        (int)array_count(kwords_tab)
 #define lexbuf(lex)         ((lex)->buf.s)
 #define isvalid(lex)        ((lex)->cursor < (lex)->endbuf)
 #define lgetc(lex)          ((lex)->cursor)
@@ -21,16 +22,16 @@
 
 /* IMPORTANT: This must follow the enum found in be_lexer.h !!! */
 static const char* const kwords_tab[] = {
-        "NONE", "EOS", "ID", "INT", "REAL", "STR",
-        "=", "+=","-=", "*=", "/=", "%=", "&=", "|=",
-        "^=", "<<=", ">>=", "+", "-", "*", "/", "%",
-        "<", "<=", "==", "!=", ">", ">=", "&", "|",
-        "^", "<<", ">>", "..", "&&", "||", "!", "~",
-        "(", ")", "[", "]", "{", "}", ".", ",", ";",
-        ":", "?", "->", "if", "elif", "else", "while",
-        "for", "def", "end", "class", "break", "continue",
-        "return", "true", "false", "nil", "var", "do",
-        "import", "as", "try", "except", "raise"
+    "NONE", "EOS", "ID", "INT", "REAL", "STR",
+    "=", "+=","-=", "*=", "/=", "%=", "&=", "|=",
+    "^=", "<<=", ">>=", "+", "-", "*", "/", "%",
+    "<", "<=", "==", "!=", ">", ">=", "&", "|",
+    "^", "<<", ">>", "..", "&&", "||", "!", "~",
+    "(", ")", "[", "]", "{", "}", ".", ",", ";",
+    ":", "?", "->", "if", "elif", "else", "while",
+    "for", "def", "end", "class", "break", "continue",
+    "return", "true", "false", "nil", "var", "do",
+    "import", "as", "try", "except", "raise"
 };
 
 void be_lexerror(blexer *lexer, const char *msg)
@@ -45,8 +46,8 @@ void be_lexerror(blexer *lexer, const char *msg)
 
 static void keyword_registe(bvm *vm)
 {
-    int i, n = (int)array_count(kwords_tab);
-    for (i = KeyIf; i < n; ++i) {
+    int i;
+    for (i = KeyIf; i < type_count(); ++i) {
         bstring *s = be_newstr(vm, kwords_tab[i]);
         be_gc_fix(vm, gc_object(s));
         be_str_setextra(s, i);
@@ -55,8 +56,8 @@ static void keyword_registe(bvm *vm)
 
 static void keyword_unregiste(bvm *vm)
 {
-    int i, n = (int)array_count(kwords_tab);
-    for (i = KeyIf; i < n; ++i) {
+    int i;
+    for (i = KeyIf; i < type_count(); ++i) {
         bstring *s = be_newstr(vm, kwords_tab[i]);
         be_gc_unfix(vm, gc_object(s));
     }
@@ -348,12 +349,14 @@ static btokentype scan_numeral(blexer *lexer)
 
 static btokentype scan_identifier(blexer *lexer)
 {
+    int type;
     bstring *s;
     save(lexer);
     match(lexer, is_word);
     s = buf_tostr(lexer);
-    if (str_extra(s) != 0) {
-        lexer->token.type = (btokentype)str_extra(s);
+    type = str_extra(s);
+    if (type >= KeyIf && type < type_count()) {
+        lexer->token.type = (btokentype)type;
         return lexer->token.type;
     }
     setstr(lexer, s); /* set identifier name */
