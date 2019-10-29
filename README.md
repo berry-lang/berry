@@ -24,7 +24,7 @@ LaTeX documents repository: [https://github.com/Skiars/berry_doc](https://github
 
 Reference Manual: [berry_rm_zh_cn.pdf](https://github.com/Skiars/berry_doc/releases/download/latest/berry_rm_zh_cn.pdf) (Simplified Chinese version)
 
-Berry's EBNF grammar definition: [tools/ebnf/grammar.ebnf](./tools/ebnf/grammar.ebnf)
+Berry's EBNF grammar definition: [tools/ebnf/grammar.ebnf](./tools/grammar/berry.ebnf)
 
 ## Features
 
@@ -67,6 +67,12 @@ Berry's EBNF grammar definition: [tools/ebnf/grammar.ebnf](./tools/ebnf/grammar.
   * Module nesting
 * GC (Garbage collection)
   * Mark-Sweep GC
+* Exceptional Handling
+  * Throw any exception value using the `raise` statement
+  * Multiple catch mode
+* Bytecode file support
+  * Export function to bytecode file
+  * Load the bytecode file and execute
 
 ## Build and Run
 

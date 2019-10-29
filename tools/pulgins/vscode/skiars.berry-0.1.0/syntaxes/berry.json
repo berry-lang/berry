@@ -34,7 +34,7 @@
 		"controls": {
 			"patterns": [{
 				"name": "keyword.control.berry",
-				"match": "\\b(if|elif|else|for|while|do|end|break|continue|return|try|except)\\b"
+				"match": "\\b(if|elif|else|for|while|do|end|break|continue|return|try|except|raise)\\b"
 			}]
 		},
 		"strings": {
