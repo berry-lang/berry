@@ -24,8 +24,8 @@
   #define exit              BE_EXPLICIT_EXIT
 #endif
 
-#define exec_try(j) if (setjmp((j)->b) == 0)
-#define exec_throw(j) longjmp((j)->b, 1)
+#define exec_try(j) if      (be_setjmp((j)->b) == 0)
+#define exec_throw(j)       be_longjmp((j)->b, 1)
 
 struct pparser {
     const char *fname;

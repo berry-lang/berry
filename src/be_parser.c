@@ -123,6 +123,15 @@ static bstring* _match_id(bparser *parser)
     return NULL;
 }
 
+static void block_set_loop(bfuncinfo *finfo)
+{
+    bblockinfo *binfo = finfo->binfo;
+    binfo->type |= BLOCK_LOOP;
+    binfo->beginpc = finfo->pc;
+    binfo->breaklist = NO_JUMP;
+    binfo->continuelist = NO_JUMP;
+}
+
 static void begin_block(bfuncinfo *finfo, bblockinfo *binfo, int type)
 {
     binfo->prev = finfo->binfo;
@@ -130,10 +139,8 @@ static void begin_block(bfuncinfo *finfo, bblockinfo *binfo, int type)
     binfo->type = (bbyte)type;
     binfo->hasupval = 0;
     binfo->nactlocals = (bbyte)be_list_count(finfo->local);
-    if (type == BLOCK_LOOP) {
-        binfo->beginpc = finfo->pc;
-        binfo->breaklist = NO_JUMP;
-        binfo->continuelist = NO_JUMP;
+    if (type & BLOCK_LOOP) {
+        block_set_loop(finfo);
     }
 }
 
@@ -141,9 +148,8 @@ static void end_block(bparser *parser)
 {
     bfuncinfo *finfo = parser->finfo;
     bblockinfo *binfo = finfo->binfo;
-
     be_code_close(finfo, 0); /* close upvalues */
-    if (binfo->type == BLOCK_LOOP) {
+    if (binfo->type & BLOCK_LOOP) {
         be_code_jumpto(finfo, binfo->beginpc);
         be_code_patchjump(finfo, binfo->breaklist);
         be_code_patchlist(finfo, binfo->continuelist, binfo->beginpc);
@@ -1002,20 +1008,19 @@ static void for_iter(bparser *parser, bstring *var, bexpdesc *it)
 {
     bexpdesc e;
     bfuncinfo *finfo = parser->finfo;
-    int jloop = finfo->pc;
+    block_set_loop(finfo); /* now, setup the loop block */
     /* itvar = .it() */
     init_exp(&e, ETLOCAL, new_localvar(parser, var)); /* new itvar */
     be_code_setvar(finfo, &e, it); /* code function to variable '.it' */
     be_code_call(finfo, e.v.idx, 0); /* itvar <- call .it() */
     stmtlist(parser);
-    be_code_jumpto(finfo, jloop);
+    end_block(parser); /* leave except & loop block */
 }
 
 static void for_leave(bparser *parser, int jcatch)
 {
     bexpdesc e;
     bfuncinfo *finfo = parser->finfo;
-    end_block(parser); /* leave except block */
     init_exp(&e, ETSTRING, 0);
     e.v.s = parser_newstr(parser, "stop_iteration");
     be_code_conjump(finfo, &jcatch, finfo->pc);
@@ -1043,7 +1048,7 @@ static void for_stmt(bparser *parser)
     /* FOR (ID : expr) block END */
     scan_next_token(parser); /* skip 'for' */
     match_token(parser, OptLBK); /* skip '(' */
-    begin_block(parser->finfo, &binfo, BLOCK_EXCEPT | BLOCK_LOOP);
+    begin_block(parser->finfo, &binfo, BLOCK_EXCEPT);
     var = for_itvar(parser);
     match_token(parser, OptColon); /* skip ':' */
     for_init(parser, &iter);
@@ -1060,10 +1065,11 @@ static bblockinfo* break_block(bparser *parser)
     bblockinfo *binfo = parser->finfo->binfo;
     /* BREAK | CONTINUE */
     scan_next_token(parser); /* skip 'break' or 'continue' */
-    for (; binfo && binfo->type != BLOCK_LOOP; binfo = binfo->prev) {
-        if (binfo->type == BLOCK_EXCEPT) {
+    while (binfo && !(binfo->type & BLOCK_LOOP)) {
+        if (binfo->type & BLOCK_EXCEPT) {
             ++try_depth; /* leave the exception catch block */
         }
+        binfo = binfo->prev;
     }
     if (binfo && try_depth) { /* exception catch blocks that needs to leave */
         be_code_exblk(parser->finfo, try_depth);

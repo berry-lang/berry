@@ -14,7 +14,6 @@
 #include "be_debug.h"
 #include "be_libs.h"
 #include <string.h>
-#include <setjmp.h>
 
 #define NOT_METHOD      BE_NONE
 
@@ -722,7 +721,7 @@ static void i_import(bvm *vm, binstruction ins)
 #define i_exblc(vm, ins) {                       \
     if (!IGET_RA(ins)) {                         \
         be_except_block_setup(vm);               \
-        if (setjmp(vm->errjmp->b)) {             \
+        if (be_setjmp(vm->errjmp->b)) {          \
             be_except_block_resume(vm);          \
         }                                        \
     } else {                                     \
