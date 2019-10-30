@@ -9,6 +9,7 @@
 #define IRKB_BITS               9u
 #define IRKC_BITS               9u
 
+/* define bits and positions */
 #define IRKC_POS                0u
 #define IRKB_POS                (IRKC_POS + IRKC_BITS)
 #define IRA_POS                 (IRKB_POS + IRKB_BITS)
@@ -16,16 +17,19 @@
 #define IAx_BITS                (IRA_BITS + IRKB_BITS + IRKC_BITS)
 #define IBx_BITS                (IRKC_BITS + IRKB_BITS)
 
+/* mask operation */
 #define INS_MASK(pos, bits)     ((binstruction)((1 << (bits)) - 1) << (pos))
 #define INS_GETx(i, mask, pos)  cast_int(((binstruction)(i) & (mask)) >> (pos))
 #define INS_SETx(v, mask, pos)  (((binstruction)(v) << (pos)) & (mask))
 
+/* instruction operation */
 #define isK(v)                  (((v) & (1 << (IRKB_BITS - 1))) != 0)
 #define setK(v)                 ((v) | (1 << (IRKB_BITS - 1)))
 #define KR2idx(v)               ((v) & 0xFF)
 #define isKB(v)                 (((v) & (1 << (IRA_POS - 1))) != 0)
 #define isKC(v)                 (((v) & (1 << (IRKB_POS - 1))) != 0)
 
+/* define masks and limit values */
 #define IOP_MASK                INS_MASK(IOP_POS, IOP_BITS)
 #define IRA_MASK                INS_MASK(IRA_POS, IRA_BITS)
 #define IRKB_MASK               INS_MASK(IRKB_POS, IRKB_BITS)
@@ -35,6 +39,7 @@
 #define IsBx_MAX                cast_int(IBx_MASK >> 1)
 #define IsBx_MIN                cast_int(-IsBx_MAX - 1)
 
+/* get field */
 #define IGET_OP(i)              cast(bopcode, INS_GETx(i, IOP_MASK, IOP_POS))
 #define IGET_RA(i)              INS_GETx(i, IRA_MASK, IRA_POS)
 #define IGET_RKB(i)             INS_GETx(i, IRKB_MASK, IRKB_POS)
@@ -42,6 +47,7 @@
 #define IGET_Bx(i)              INS_GETx(i, IBx_MASK, 0)
 #define IGET_sBx(i)             (IGET_Bx(i) - IsBx_MAX)
 
+/* set field */
 #define ISET_OP(i)              INS_SETx(i, IOP_MASK, IOP_POS)
 #define ISET_RA(i)              INS_SETx(i, IRA_MASK, IRA_POS)
 #define ISET_RKB(i)             INS_SETx(i, IRKB_MASK, IRKB_POS)
@@ -50,7 +56,7 @@
 #define ISET_sBx(i)             (ISET_Bx(cast_int(i) + IsBx_MAX))
 
 typedef enum {
-    /* don't change order */
+    /* define opcode, don't change order */
 /*  opcode           parameters         description */
     OP_ADD,       /*  A, B, C  |   R(A) <- RK(B) + RK(C) */
     OP_SUB,       /*  A, B, C  |   R(A) <- RK(B) - RK(C) */
