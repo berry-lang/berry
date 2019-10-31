@@ -3,13 +3,13 @@
 
 #define NO_JUMP                 -1
 
-/* define bits */
+/* define field's bit-width  */
 #define IOP_BITS                6u
 #define IRA_BITS                8u
 #define IRKB_BITS               9u
 #define IRKC_BITS               9u
 
-/* define bits and positions */
+/* define field's bit-width and positions */
 #define IRKC_POS                0u
 #define IRKB_POS                (IRKC_POS + IRKC_BITS)
 #define IRA_POS                 (IRKB_POS + IRKB_BITS)
@@ -17,7 +17,7 @@
 #define IAx_BITS                (IRA_BITS + IRKB_BITS + IRKC_BITS)
 #define IBx_BITS                (IRKC_BITS + IRKB_BITS)
 
-/* mask operation */
+/* basic field operation */
 #define INS_MASK(pos, bits)     ((binstruction)((1 << (bits)) - 1) << (pos))
 #define INS_GETx(i, mask, pos)  cast_int(((binstruction)(i) & (mask)) >> (pos))
 #define INS_SETx(v, mask, pos)  (((binstruction)(v) << (pos)) & (mask))
