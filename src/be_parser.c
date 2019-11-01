@@ -186,7 +186,6 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     finfo->freereg = 0;
     finfo->binfo = NULL;
     finfo->pc = 0;
-    finfo->jpc = NO_JUMP;
     finfo->flag = 0;
     parser->finfo = finfo;
 #if BE_DEBUG_RUNTIME_INFO

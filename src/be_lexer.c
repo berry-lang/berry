@@ -181,7 +181,7 @@ static int check2hex(blexer *lexer, int c)
 static int read_hex(blexer *lexer, const char *src)
 {
     int c = check2hex(lexer, *src++);
-    return (c << 4) + check2hex(lexer, *src);
+    return ((unsigned)c << 4) + check2hex(lexer, *src);
 }
 
 static int read_oct(blexer *lexer, const char *src)
@@ -303,15 +303,44 @@ static btokentype scan_dot_real(blexer *lexer)
     return OptDot;
 }
 
-static bint scan_hex(blexer *lexer)
+static bint scan_hexadecimal(blexer *lexer)
 {
     bint res = 0;
-    int dig;
+    int dig, num = 0;
     while ((dig = char2hex(lgetc(lexer))) >= 0) {
-        res = (res << 4) + dig;
+        res = ((unsigned)res << 4) + dig;
         next(lexer);
+        ++num;
+    }
+    if (num == 0) {
+        be_lexerror(lexer, "invalid hexadecimal number");
     }
     return res;
+}
+
+static btokentype scan_decimal(blexer *lexer)
+{
+    btokentype type = TokenInteger;
+    match(lexer, is_digit);
+    if (lgetc(lexer) == '.') { /* '..' or real */
+        if (save(lexer) == '.') { /* token  '..' */
+            next(lexer); /*  skip the second '.' */
+            lexer->cacheType = OptRange;
+        } else {
+            match(lexer, is_digit); /* read numberic */
+            type = TokenReal;
+        }
+    }
+    if (!lexer->cacheType && scan_realexp(lexer)) {
+        type = TokenReal;
+    }
+    lexer->buf.s[lexer->buf.len] = '\0';
+    if (type == TokenReal) {
+        setreal(lexer, be_str2real(lexbuf(lexer), NULL));
+    } else {
+        setint(lexer, be_str2int(lexbuf(lexer), NULL));
+    }
+    return type;
 }
 
 static btokentype scan_numeral(blexer *lexer)
@@ -321,27 +350,12 @@ static btokentype scan_numeral(blexer *lexer)
     /* hex: 0[xX][0-9a-fA-F]+ */
     if (c0 == '0' && (c1 == 'x' || c1 == 'X')) {
         next(lexer);
-        setint(lexer, scan_hex(lexer));
+        setint(lexer, scan_hexadecimal(lexer));
     } else {
-        match(lexer, is_digit);
-        if (lgetc(lexer) == '.') { /* '..' or real */
-            if (save(lexer) == '.') { /* token  '..' */
-                next(lexer); /*  skip the second '.' */
-                lexer->cacheType = OptRange;
-            } else {
-                match(lexer, is_digit); /* read numberic */
-                type = TokenReal;
-            }
-        }
-        if (!lexer->cacheType && scan_realexp(lexer)) {
-            type = TokenReal;
-        }
-        lexer->buf.s[lexer->buf.len] = '\0';
-        if (type == TokenReal) {
-            setreal(lexer, be_str2real(lexbuf(lexer), NULL));
-        } else {
-            setint(lexer, be_str2int(lexbuf(lexer), NULL));
-        }
+        type = scan_decimal(lexer);
+    }
+    if (is_letter(lgetc(lexer))) {
+        be_lexerror(lexer, "malformed number");
     }
     return type;
 }

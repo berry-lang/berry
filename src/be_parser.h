@@ -64,7 +64,6 @@ typedef struct bfuncinfo {
     bvector linevec;
 #endif
     int pc; /* program count */
-    int jpc;  /* list of pending jumps to 'pc' */
     bbyte freereg; /* first free register */
     bbyte flag; /* anonymous function */
 } bfuncinfo;

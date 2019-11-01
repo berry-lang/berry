@@ -7,6 +7,7 @@
 #include "be_var.h"
 #include "be_exec.h"
 #include "be_vm.h"
+#include <stdio.h>
 
 #define NOT_MASK                (1 << 0)
 #define NOT_EXPR                (1 << 1)
@@ -131,26 +132,16 @@ static void patchlistaux(bfuncinfo *finfo, int list, int vtarget, int dtarget)
     }
 }
 
-static void dischargejpc(bfuncinfo *finfo)
-{
-    patchlistaux(finfo, finfo->jpc, finfo->pc, finfo->pc);
-    finfo->jpc = NO_JUMP;
-}
-
 static int appendjump(bfuncinfo *finfo, bopcode op, bexpdesc *e)
 {
-    int j, jpc = finfo->jpc;
     int reg = e ? var2anyreg(finfo, e) : 0;
-    finfo->jpc = NO_JUMP;
     if (isK(reg)) {
         reg = be_code_allocregs(finfo, 1);
         code_move(finfo, reg, e->v.idx);
         e->v.idx = reg;
         e->type = ETREG;
     }
-    j = codeABx(finfo, op, reg, NO_JUMP + IsBx_MAX);
-    be_code_conjump(finfo, &j, jpc);
-    return j;
+    return codeABx(finfo, op, reg, NO_JUMP + IsBx_MAX);
 }
 
 int be_code_jump(bfuncinfo *finfo)
@@ -201,8 +192,7 @@ void be_code_patchlist(bfuncinfo *finfo, int list, int dst)
 
 void be_code_patchjump(bfuncinfo *finfo, int jmp)
 {
-    be_code_conjump(finfo, &finfo->jpc, jmp);
-    dischargejpc(finfo);  /* 'pc' will change */
+    patchlistaux(finfo, jmp, finfo->pc, finfo->pc);
 }
 
 static int newconst(bfuncinfo *finfo, bvalue *k)
