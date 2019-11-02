@@ -1013,18 +1013,24 @@ static void for_iter(bparser *parser, bstring *var, bexpdesc *it)
     be_code_setvar(finfo, &e, it); /* code function to variable '.it' */
     be_code_call(finfo, e.v.idx, 0); /* itvar <- call .it() */
     stmtlist(parser);
-    end_block(parser); /* leave except & loop block */
 }
 
 static void for_leave(bparser *parser, int jcatch)
 {
     bexpdesc e;
     bfuncinfo *finfo = parser->finfo;
+    int jbrk = finfo->binfo->breaklist;
     init_exp(&e, ETSTRING, 0);
     e.v.s = parser_newstr(parser, "stop_iteration");
+    end_block(parser); /* leave except & loop block */
+    if (jbrk != NO_JUMP) { /* has `break` statement in iteration block */
+        be_code_exblk(finfo, 1);
+        jbrk = be_code_jump(finfo);
+    }
     be_code_conjump(finfo, &jcatch, finfo->pc);
     be_code_catch(finfo, be_code_nextreg(finfo, &e), 1, 0, NULL);
     be_code_raise(finfo, NULL, NULL);
+    be_code_conjump(finfo, &jbrk, finfo->pc);
     be_code_freeregs(finfo, 1);
 }
 

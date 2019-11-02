@@ -425,9 +425,29 @@ static int str_format(bvm *vm)
     be_return_nil(vm);
 }
 
+static int str_i2hex(bvm *vm)
+{
+    int top = be_top(vm);
+    if (top && be_isint(vm, 1)) {
+        bint value = be_toint(vm, 1);
+        char fmt[10] = "%" BE_INT_FMTLEN "X", buf[18];
+        if (top >= 2 && be_isint(vm, 2)) {
+            bint num = be_toint(vm, 2);
+            if (num > 0 && num <= 16) {
+                sprintf(fmt, "%%.%d" BE_INT_FMTLEN "X", (int)num);
+            }
+        }
+        sprintf(buf, fmt, value);
+        be_pushstring(vm, buf);
+        be_return(vm);
+    }
+    be_return_nil(vm);
+}
+
 #if !BE_USE_PRECOMPILED_OBJECT
-be_native_module_attr_table(str_attr) {
-    be_native_module_function("format", str_format)
+be_native_module_attr_table(str_attr){
+    be_native_module_function("format", str_format),
+    be_native_module_function("hex", str_i2hex)
 };
 
 be_define_native_module(string, str_attr);
@@ -435,6 +455,7 @@ be_define_native_module(string, str_attr);
 /* @const_object_info_begin
 module string (scope: global, depend: BE_USE_STRING_MODULE) {
     format, func(str_format)
+    hex, func(str_i2hex)
 }
 @const_object_info_end */
 #include "../generate/be_fixed_string.h"
