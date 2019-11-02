@@ -76,10 +76,10 @@ static int iter_closure(bvm *vm)
 static int m_iter(bvm *vm)
 {
     be_pushntvclosure(vm, iter_closure, 2);
-    be_getmethod(vm, 1, "__lower__");
+    be_getmember(vm, 1, "__lower__");
     be_setupval(vm, -2, 0);
     be_pop(vm, 1);
-    be_getmethod(vm, 1, "__upper__");
+    be_getmember(vm, 1, "__upper__");
     be_setupval(vm, -2, 1);
     be_pop(vm, 1);
     be_return(vm);
