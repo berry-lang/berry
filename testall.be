@@ -7,7 +7,7 @@ var testcases = os.listdir(path)
 var total = 0, failed = 0
 
 for (i : testcases)
-    print('\033[0;36mrun test: ' + i + '\033[0m')
+    print('\033[0;36mrun testcase: ' + i + '\033[0m')
     var ret = os.system(exec, path + '/' + i)
     if (ret != 0)
         print('\033[0;31mreturn code:', ret, '\033[0m')
@@ -18,5 +18,7 @@ end
 
 print('\033[0;32mtest results: ' +
     str(total) + ' total, ' + str(failed) + ' failed' +
-    (failed ? '' : ' (all tests passed) ') +
+    (failed ? '' : ' (all tests passed)') +
     '.\033[0m')
+
+exit(failed == 0)

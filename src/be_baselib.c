@@ -64,8 +64,14 @@ static int l_input(bvm *vm)
 static int l_exit(bvm *vm)
 {
     int status = 0;
-    if (be_top(vm) && be_isint(vm, -1)) {
-        status = be_toindex(vm, -1);
+    if (be_top(vm)) {
+        if (be_isint(vm, 1)) {
+            status = be_toindex(vm, 1); /* get the exit code */
+        } else if (be_isbool(vm, 1)) {
+            status = be_tobool(vm, 1) - 1; /* true: 0, false: -1 */
+        } else {
+            status = -1;
+        }
     }
     be_exit(vm, status);
     be_return_nil(vm);
