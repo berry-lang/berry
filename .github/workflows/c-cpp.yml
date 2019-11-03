@@ -10,7 +10,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: configure
-      run: sudo apt install libreadline-dev
+      run: sudo apt-get install libreadline-dev
     - name: make
       run: make
     - name: install

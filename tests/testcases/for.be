@@ -24,8 +24,10 @@ for (i : 0 .. 20)
 end
 assert(global == 55)
 
-for (i : 0 .. 20)
-    if (i > 10)
-        return
-    end
-end
+assert(def ()
+        for (i : 0 .. 20)
+            if (i > 10)
+                return i
+            end
+        end
+    end() == 11)

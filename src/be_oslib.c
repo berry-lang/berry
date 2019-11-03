@@ -94,7 +94,7 @@ static int m_system(bvm *vm)
     be_return(vm);
 }
 
-static int m_isdir(bvm *vm)
+static int m_path_isdir(bvm *vm)
 {
     const char *path = NULL;
     if (be_top(vm) >= 1 && be_isstring(vm, 1)) {
@@ -104,7 +104,7 @@ static int m_isdir(bvm *vm)
     be_return(vm);
 }
 
-static int m_isfile(bvm *vm)
+static int m_path_isfile(bvm *vm)
 {
     const char *path = NULL;
     if (be_top(vm) >= 1 && be_isstring(vm, 1)) {
@@ -114,7 +114,7 @@ static int m_isfile(bvm *vm)
     be_return(vm);
 }
 
-static int m_splitext(bvm *vm)
+static int m_path_splitext(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isstring(vm, 1)) {
         const char *ptr, *dot, *str = be_tostring(vm, 1);
@@ -134,7 +134,7 @@ static int m_splitext(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_exists(bvm *vm)
+static int m_path_exists(bvm *vm)
 {
     const char *path = NULL;
     if (be_top(vm) >= 1 && be_isstring(vm, 1)) {
@@ -144,12 +144,40 @@ static int m_exists(bvm *vm)
     be_return(vm);
 }
 
+static int m_path_join(bvm *vm)
+{
+    char *buf, *p;
+    int i, len = 0, argc = be_top(vm);
+    for (i = 1; i <= argc; ++i) {
+        if (be_isstring(vm, i)) {
+            len += be_strlen(vm, i) + 1;
+        } /* TODO: error handling */
+    }
+    buf = p = be_malloc(vm, len + 1);
+    for (i = 1; i <= argc; ++i) {
+        int l = be_strlen(vm, i);
+        const char *s = be_tostring(vm, i);
+        if (s[0] == '/') {
+            p = buf;
+        }
+        strcpy(p, s);
+        p += l;
+        if (l && s[l - 1] != '/' && i != argc) {
+            *p++ = '/';
+        }
+    }
+    be_pushnstring(vm, buf, p - buf);
+    be_free(vm, buf, len + 1);
+    be_return(vm);
+}
+
 #if !BE_USE_PRECOMPILED_OBJECT
-be_native_module_attr_table(path_attr) {
-    be_native_module_function("isdir", m_isdir),
-    be_native_module_function("isfile", m_isfile),
-    be_native_module_function("exists", m_exists),
-    be_native_module_function("splitext", m_splitext)
+be_native_module_attr_table(path_attr){
+    be_native_module_function("isdir", m_path_isdir),
+    be_native_module_function("isfile", m_path_isfile),
+    be_native_module_function("exists", m_path_exists),
+    be_native_module_function("splitext", m_path_splitext),
+    be_native_module_function("join", m_path_join)
 };
 
 static be_define_native_module(path, path_attr);
@@ -168,10 +196,11 @@ be_define_native_module(os, os_attr);
 #else
 /* @const_object_info_begin
 module path (scope: local, depend: BE_USE_OS_MODULE) {
-    isdir, func(m_isdir)
-    isfile, func(m_isfile)
-    exists, func(m_exists)
-    splitext, func(m_splitext)
+    isdir, func(m_path_isdir)
+    isfile, func(m_path_isfile)
+    exists, func(m_path_exists)
+    splitext, func(m_path_splitext)
+    join, func(m_path_join)
 }
 @const_object_info_end */
 #include "../generate/be_fixed_path.h"
