@@ -1,4 +1,8 @@
 #include "be_object.h"
+#include "be_func.h"
+#include "be_exec.h"
+#include "be_map.h"
+#include "be_vm.h"
 
 #define map_check_data(vm, argc)                        \
     if (!be_ismap(vm, -1) || be_top(vm) - 1 < argc) {   \
@@ -122,52 +126,35 @@ static int m_size(bvm *vm)
     be_return(vm);
 }
 
-static int i_init(bvm *vm)
+static int iter_closure(bvm *vm)
 {
-    be_pushvalue(vm, 2);
-    be_setmember(vm, 1, ".obj");
-    be_pop(vm, 1);
-    be_getmember(vm, 2, ".data");
-    be_pushiter(vm, -1);
-    be_setmember(vm, 1, ".iter");
-    be_return_nil(vm);
-}
-
-static int i_hashnext(bvm *vm)
-{
-    be_getmember(vm, 1, ".obj");
-    be_getmember(vm, -1, ".data");
-    be_getmember(vm, 1, ".iter");
-    be_pushbool(vm, be_iter_hasnext(vm, -2));
+    /* for better performance, we operate the upvalues
+     * directly without using by the stack. */
+    bntvclos *func = var_toobj(vm->cf->func);
+    bvalue *uv0 = be_ntvclos_upval(func, 0)->value; /* list value */
+    bvalue *uv1 = be_ntvclos_upval(func, 1)->value; /* iter value */
+    bmapiter iter = var_toobj(uv1);
+    bmapnode *next = be_map_next(var_toobj(uv0), &iter);
+    if (next == NULL) {
+        be_pushstring(vm, "stop_iteration");
+        be_pushnil(vm);
+        be_raise(vm);
+    }
+    var_setobj(uv1, BE_COMPTR, iter); /* set upvale[1] (iter value) */
+    /* push next value to top */
+    var_setval(vm->top, &next->value);
+    be_incrtop(vm);
     be_return(vm);
-}
-
-static int i_next(bvm *vm)
-{
-    be_getmember(vm, 1, ".obj");
-    be_getmember(vm, -1, ".data");
-    be_getmember(vm, 1, ".iter");
-    be_iter_next(vm, -2); /* map next key and value */
-    be_pushvalue(vm, -3); /* push .iter to top */
-    be_setmember(vm, 1, ".iter");
-    be_pop(vm, 1);
-    be_return(vm); /* return value */
 }
 
 static int m_iter(bvm *vm)
 {
-    static const bnfuncinfo members[] = {
-        { ".obj", NULL },
-        { ".iter", NULL },
-        { "init", i_init },
-        { "hasnext", i_hashnext },
-        { "next", i_next },
-        { NULL, NULL }
-    };
-    be_pushclass(vm, "iterator", members);
-    be_pushvalue(vm, 1);
-    be_call(vm, 1);
-    be_pop(vm, 1);
+    be_pushntvclosure(vm, iter_closure, 2);
+    be_getmember(vm, 1, ".data");
+    be_setupval(vm, -2, 0);
+    be_pushiter(vm, -1);
+    be_setupval(vm, -3, 1);
+    be_pop(vm, 2);
     be_return(vm);
 }
 
