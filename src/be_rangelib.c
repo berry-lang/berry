@@ -64,9 +64,7 @@ static int iter_closure(bvm *vm)
     bint lower = var_toint(uv0); /* upvalue[0] => lower */
     bint upper = var_toint(uv1); /* upvalue[1] => upper */
     if (lower > upper) {
-        be_pushstring(vm, "stop_iteration");
-        be_pushnil(vm);
-        be_raise(vm);
+        be_stop_iteration(vm);
     }
     var_toint(uv0) = lower + 1; /* set upvale[0] */
     be_pushint(vm, lower); /* push the return value */

@@ -244,6 +244,9 @@ void be_raise(bvm *vm);
 void be_abort(void);
 void be_exit(bvm *vm, int status);
 
+/* raise exception APIs */
+void be_stop_iteration(bvm *vm);
+
 void be_regfunc(bvm *vm, const char *name, bntvfunc f);
 void be_regclass(bvm *vm, const char *name, const bnfuncinfo *lib);
 

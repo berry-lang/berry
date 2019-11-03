@@ -136,9 +136,8 @@ static int iter_closure(bvm *vm)
     bmapiter iter = var_toobj(uv1);
     bmapnode *next = be_map_next(var_toobj(uv0), &iter);
     if (next == NULL) {
-        be_pushstring(vm, "stop_iteration");
-        be_pushnil(vm);
-        be_raise(vm);
+        be_stop_iteration(vm);
+        be_return_nil(vm); /* will not be executed */
     }
     var_setobj(uv1, BE_COMPTR, iter); /* set upvale[1] (iter value) */
     /* push next value to top */

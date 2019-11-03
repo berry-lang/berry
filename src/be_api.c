@@ -837,3 +837,10 @@ void be_raise(bvm *vm)
     be_pop(vm, 2);
     be_throw(vm, BE_EXCEPTION);
 }
+
+void be_stop_iteration(bvm *vm)
+{
+    be_pushstring(vm, "stop_iteration");
+    be_pushnil(vm); /* no description message */
+    be_raise(vm);
+}

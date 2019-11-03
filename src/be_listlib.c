@@ -219,9 +219,7 @@ static int iter_closure(bvm *vm)
     bvalue *next = cast(bvalue*, var_toobj(uv1)) + 1;
     blist *list = var_toobj(uv0);
     if (next >= be_list_end(list)) {
-        be_pushstring(vm, "stop_iteration");
-        be_pushnil(vm);
-        be_raise(vm);
+        be_stop_iteration(vm);
     }
     var_toobj(uv1) = next; /* set upvale[1] (iter value) */
     /* push next value to top */
