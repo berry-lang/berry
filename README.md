@@ -1,4 +1,9 @@
-# Berry
+<p align="center">
+  <h1 align="center">
+    <img src="berry-logo.png" alt="logo" width=272 height=128>
+  </h1>
+  <p align="center">The Berry Script Language.</p>
+</p>
 
 ## Introduction
 
