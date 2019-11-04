@@ -1,9 +1,11 @@
 <p align="center">
   <h1 align="center">
-    <img src="berry-logo.png" alt="logo" width=272 height=128>
+    <img src="./blob/master/berry-logo.png?raw=true" alt="Berry" width=272 height=128>
   </h1>
   <p align="center">The Berry Script Language.</p>
 </p>
+
+![](berry-logo.png)
 
 ## Introduction
 
