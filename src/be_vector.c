@@ -75,8 +75,8 @@ void be_vector_remove_end(bvector *vector)
 void be_vector_resize(bvm *vm, bvector *vector, int count)
 {
     size_t size = vector->size;
-    int newcap = be_nextsize(count);
     if (count != be_vector_count(vector)) {
+        int newcap = be_nextsize(count);
         if (newcap > vector->capacity) {
             vector->data = be_realloc(vm,
                 vector->data, vector->capacity * size, newcap * size);

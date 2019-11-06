@@ -460,6 +460,7 @@ void load_global_info(bvm *vm, void *fp)
     for (i = 0; i < count; ++i) {
         be_global_new_anonymous(vm);
     }
+    be_global_release_space(vm);
 }
 
 bclosure* be_bytecode_load(bvm *vm, const char *filename)
