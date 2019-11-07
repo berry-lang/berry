@@ -1,5 +1,6 @@
 #include "be_module.h"
 #include "be_string.h"
+#include "be_exec.h"
 #include "be_map.h"
 #include "be_gc.h"
 #include "be_mem.h"
@@ -67,12 +68,13 @@ static void insert_attrs(bvm *vm, bmap *table, bntvmodule *nm)
     }
 }
 
-static bmodule* new_module(bvm *vm, bntvmodule *nm, bvalue *dst)
+static bmodule* new_module(bvm *vm, bntvmodule *nm)
 {
     bgcobject *gco = be_gcnew(vm, BE_MODULE, bmodule);
     bmodule *obj = cast_module(gco);
     if (obj) {
-        var_setmodule(dst, obj);
+        var_setmodule(vm->top, obj);
+        be_incrtop(vm);
         obj->info.native = nm;
         obj->table = NULL; /* gc protection */
         obj->table = be_map_new(vm);
@@ -80,6 +82,7 @@ static bmodule* new_module(bvm *vm, bntvmodule *nm, bvalue *dst)
         be_map_release(vm, obj->table); /* clear space */
         obj->mnext = vm->modulelist;
         vm->modulelist = obj;
+        be_stackpop(vm, 1);
     }
     return obj;
 }
@@ -93,20 +96,42 @@ static bmodule* load_module(bvm *vm, bntvmodule *nm, bvalue *dst)
         } else {
             obj = find_existed(vm, nm);
         }
-        if (obj) { /* existed module */
-            var_setmodule(dst, obj);
-        } else { /* new module */
-            obj = new_module(vm, nm, dst);
+        if (obj == NULL) { /* new module */
+            obj = new_module(vm, nm);
+            if (obj && dst) {
+                var_setmodule(dst, obj);
+            }
         }
         return obj;
     }
     return NULL;
 }
 
-bmodule* be_module_load(bvm *vm, bstring *path, bvalue *dst)
+static int _load_script_module(bvm *vm, bstring *path)
 {
-    bntvmodule *nm = find_native(path);
-    return load_module(vm, nm, dst);
+    int res = be_fileparser(vm, str(path), 1);
+    if (res == BE_OK) {
+        be_call(vm, 0);
+    } else {
+        be_pop(vm, 1);
+    }
+    return res;
+}
+
+/* load module to vm->top */
+bbool be_module_load(bvm *vm, bstring *path)
+{
+    if (_load_script_module(vm, path) != BE_OK) {
+        bntvmodule *nm = find_native(path);
+        bmodule *mod = load_module(vm, nm, NULL);
+        if (mod == NULL) {
+            return bfalse;
+        }
+        /* the pointer vm->top may be changed */
+        var_setmodule(vm->top, mod);
+        be_incrtop(vm);
+    }
+    return btrue;
 }
 
 void be_module_delete(bvm *vm, bmodule *module)

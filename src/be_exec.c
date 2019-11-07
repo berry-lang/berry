@@ -31,6 +31,7 @@ struct pparser {
     const char *fname;
     breader reader;
     void *data;
+    bbyte islocal;
 };
 
 struct pcall {
@@ -117,13 +118,14 @@ static void vm_state_restore(bvm *vm, const struct vmstate *state)
 static void m_parser(bvm *vm, void *data)
 {
     struct pparser *p = cast(struct pparser*, data);
-    bclosure *cl = be_parser_source(vm, p->fname, p->reader, p->data);
+    bclosure *cl = be_parser_source(vm,
+        p->fname, p->reader, p->data, p->islocal);
     var_setclosure(vm->top, cl);
     be_incrtop(vm);
 }
 
 int be_protectedparser(bvm *vm,
-    const char *fname, breader reader, void *data)
+    const char *fname, breader reader, void *data, int islocal)
 {
     int res;
     struct pparser s;
@@ -131,6 +133,7 @@ int be_protectedparser(bvm *vm,
     s.fname = fname;
     s.reader = reader;
     s.data = data;
+    s.islocal = islocal;
     vm_state_save(vm, &state);
     res = be_execprotected(vm, m_parser, &s);
     if (res) { /* restore call stack */
@@ -166,21 +169,28 @@ int be_loadbuffer(bvm *vm,
     struct strbuf sbuf;
     sbuf.s = buffer;
     sbuf.len = length;
-    return be_protectedparser(vm, name, _sgets, &sbuf);
+    return be_protectedparser(vm, name, _sgets, &sbuf, 0);
 }
 
-int be_loadfile(bvm *vm, const char *name)
+int be_fileparser(bvm *vm, const char *name, int islocal)
 {
     int res = BE_IO_ERROR;
     struct filebuf *fbuf = be_malloc(vm, sizeof(struct filebuf));
     fbuf->fp = be_fopen(name, "r");
     if (fbuf->fp) {
-        res = be_protectedparser(vm, name, _fgets, fbuf);
+        res = be_protectedparser(vm, name, _fgets, fbuf, islocal);
         be_fclose(fbuf->fp);
-    } else {
-        be_pushfstring(vm, "error: can not open file '%s'.", name);
     }
     be_free(vm, fbuf, sizeof(struct filebuf));
+    return res;
+}
+
+int be_loadfile(bvm *vm, const char *name)
+{
+    int res = be_fileparser(vm, name, 0);
+    if (res == BE_IO_ERROR) {
+        be_pushfstring(vm, "error: can not open file '%s'.", name);
+    }
     return res;
 }
 

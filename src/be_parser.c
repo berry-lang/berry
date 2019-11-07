@@ -52,6 +52,7 @@ typedef struct {
     bvm *vm;
     bfuncinfo *finfo;
     bclosure *cl;
+    bbyte islocal;
 } bparser;
 
 #if BE_USE_SCRIPT_COMPILER
@@ -342,7 +343,7 @@ static int new_upval(bvm *vm, bfuncinfo *finfo, bstring *name, bexpdesc *var)
 static void new_var(bparser *parser, bstring *name, bexpdesc *var)
 {
     bfuncinfo *finfo = parser->finfo;
-    if (finfo->prev || finfo->binfo->prev) {
+    if (finfo->prev || finfo->binfo->prev || parser->islocal) {
         init_exp(var, ETLOCAL, 0);
         var->v.idx = new_localvar(parser, name);
     } else {
@@ -355,13 +356,10 @@ static void new_class(bparser *parser, bstring *name, bclass *c, bexpdesc *e)
 {
     bvalue *var;
     bfuncinfo *finfo = parser->finfo;
-    if (finfo->prev || finfo->binfo->prev) {
-        init_exp(e, ETLOCAL, 0);
-        e->v.idx = new_localvar(parser, name);
+    new_var(parser, name, e);
+    if (e->type == ETLOCAL) {
         var = be_code_localobject(finfo, e->v.idx);
     } else {
-        init_exp(e, ETGLOBAL, 0);
-        e->v.idx = be_global_new(parser->vm, name);
         var = be_code_globalobject(finfo, e->v.idx);
     }
     var_settype(var, BE_CLASS);
@@ -1440,14 +1438,15 @@ static void mainfunc(bparser *parser, bclosure *cl)
     match_token(parser, TokenEOS); /* skip EOS */
 }
 
-bclosure* be_parser_source(bvm *vm,
-    const char *fname, breader reader, void *data)
+bclosure *be_parser_source(bvm *vm,
+    const char *fname, breader reader, void *data, int islocal)
 {
     bparser parser;
     bclosure *cl = be_newclosure(vm, 0);
     parser.vm = vm;
     parser.finfo = NULL;
     parser.cl = cl;
+    parser.islocal = islocal;
     var_setclosure(vm->top, cl);
     be_stackpush(vm);
     be_lexer_init(&parser.lexer, vm, fname, reader, data);

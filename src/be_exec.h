@@ -43,8 +43,9 @@ struct bexecptframe {
 void be_throw(bvm *vm, int errorcode);
 int be_execprotected(bvm *vm, bpfunc f, void *data);
 int be_protectedparser(bvm *vm,
-    const char *fname, breader reader, void *data);
+    const char *fname, breader reader, void *data, int islocal);
 int be_protectedcall(bvm *vm, bvalue *v, int argc);
+int be_fileparser(bvm *vm, const char *name, int islocal);
 void be_stackpush(bvm *vm);
 void be_stack_expansion(bvm *vm, int n);
 void be_except_block_setup(bvm *vm);

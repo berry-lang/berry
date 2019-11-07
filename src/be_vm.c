@@ -704,12 +704,15 @@ static void i_close(bvm *vm, binstruction ins)
 
 static void i_import(bvm *vm, binstruction ins)
 {
-    bvalue *dst = RA(ins), *b = RKB(ins);
+    bvalue *b = RKB(ins);
     if (var_isstr(b)) {
-        bmodule *m = be_module_load(vm, var_tostr(b), dst);
-        if (m == NULL) {
-            vm_error(vm, "module '%s' not found",
-                str(var_tostr(b)));
+        bstring *name = var_tostr(b);
+        bbool res = be_module_load(vm, name);
+        if (res) { /* find the module */
+            be_stackpop(vm, 1);
+            *RA(ins) = *vm->top;
+        } else {
+            vm_error(vm, "module '%s' not found", str(name));
         }
     } else {
         vm_error(vm,
