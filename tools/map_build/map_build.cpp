@@ -182,8 +182,7 @@ std::string map_build::module_tostring(const block &block)
     ostr << "static const bmodule " << name << " = {\n"
          << "    be_const_header_module(),\n"
          << "    .table = (bmap*)&" << map_name << ",\n"
-         << "    .info.name = \"" << block.name << "\",\n"
-         << "    .mnext = NULL\n"
+         << "    .info.name = \"" << block.name << "\"\n"
          << "};" << std::endl;
 	if (scope(block).empty()) { /* extern */
 		ostr << "\nbe_define_const_module(" << block.name << ");" << std::endl;

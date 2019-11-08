@@ -51,8 +51,8 @@ struct bvm {
     binstruction *ip; /* function instruction pointer */
     struct blongjmp *errjmp; /* error jump point */
     bstack refstack; /* object reference stack */
-    struct bmodule *modulelist;
-    struct bstringtable strtab;
+    bmap *loaded; /* loaded module map */
+    struct bstringtable strtab; /* short string table */
     struct bgc gc;
 };
 

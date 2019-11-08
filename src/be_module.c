@@ -23,15 +23,6 @@ static bntvmodule* find_native(bstring *path)
     return NULL;
 }
 
-static bmodule* find_existed(bvm *vm, bntvmodule *nm)
-{
-    bmodule *node  = vm->modulelist;
-    while (node && node->info.native != nm) {
-        node = node->mnext;
-    }
-    return node;
-}
-
 static void insert_attrs(bvm *vm, bmap *table, bntvmodule *nm)
 {
     size_t i;
@@ -80,8 +71,6 @@ static bmodule* new_module(bvm *vm, bntvmodule *nm)
         obj->table = be_map_new(vm);
         insert_attrs(vm, obj->table, nm);
         be_map_release(vm, obj->table); /* clear space */
-        obj->mnext = vm->modulelist;
-        vm->modulelist = obj;
         be_stackpop(vm, 1);
     }
     return obj;
@@ -93,14 +82,11 @@ static bmodule* load_module(bvm *vm, bntvmodule *nm, bvalue *dst)
         bmodule *obj;
         if (nm->module) {
             obj = (bmodule *)nm->module;
-        } else {
-            obj = find_existed(vm, nm);
-        }
-        if (obj == NULL) { /* new module */
+        } else { /* new module */
             obj = new_module(vm, nm);
-            if (obj && dst) {
-                var_setmodule(dst, obj);
-            }
+        }
+        if (obj && dst) {
+            var_setmodule(dst, obj);
         }
         return obj;
     }
@@ -118,9 +104,36 @@ static int _load_script_module(bvm *vm, bstring *path)
     return res;
 }
 
+static bvalue* load_cached(bvm *vm, bstring *path)
+{
+    bvalue *v = NULL;
+    if (vm->loaded) {
+        v = be_map_findstr(vm->loaded, path);
+        if (v) {
+            *vm->top = *v;
+            be_incrtop(vm);
+        }
+    }
+    return v;
+}
+
+static void cache_module(bvm *vm, bstring *name)
+{
+    bvalue *v;
+    if (vm->loaded == NULL) {
+        vm->loaded = be_map_new(vm);
+        be_gc_fix(vm, gc_object(vm->loaded));
+    }
+    v = be_map_insertstr(vm, vm->loaded, name, NULL);
+    *v = vm->top[-1];
+}
+
 /* load module to vm->top */
 bbool be_module_load(bvm *vm, bstring *path)
 {
+    if (load_cached(vm, path)) {
+        return btrue;
+    }
     if (_load_script_module(vm, path) != BE_OK) {
         bntvmodule *nm = find_native(path);
         bmodule *mod = load_module(vm, nm, NULL);
@@ -131,25 +144,12 @@ bbool be_module_load(bvm *vm, bstring *path)
         var_setmodule(vm->top, mod);
         be_incrtop(vm);
     }
+    cache_module(vm, path);
     return btrue;
 }
 
 void be_module_delete(bvm *vm, bmodule *module)
 {
-    if (module == vm->modulelist) {
-        /* remove module node from module-list */
-        vm->modulelist = module->mnext;
-    } else {
-        bmodule *prev = vm->modulelist;
-        /* find previous node */
-        while (prev && prev->mnext != module) {
-            prev = prev->mnext;
-        }
-        /* remove module node from module-list */
-        if (prev) {
-            prev->mnext = module->mnext;
-        }
-    }
     be_free(vm, module, sizeof(bmodule));
 }
 

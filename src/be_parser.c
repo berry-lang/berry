@@ -1242,15 +1242,21 @@ static void import_stmt(bparser *parser)
 {
     bstring *name;
     bexpdesc m, v;
-    /* 'import' ID ['as' ID] */
+    /* 'import' (ID ['as' ID] | STRING 'as' ID ) */
     scan_next_token(parser); /* skip 'import' */
-    name = next_token(parser).u.s;
-    match_token(parser, TokenId); /* match and skip ID */
     init_exp(&m, ETSTRING, 0);
-    m.v.s = name;
-    if (match_skip(parser, KeyAs)) { /* 'as' */
+    m.v.s = name = next_token(parser).u.s;
+    if (next_type(parser) == TokenString) { /* STRING 'as' ID */
+        scan_next_token(parser); /* skip the module path */
+        match_token(parser, KeyAs); /* match and skip 'as' */
         name = next_token(parser).u.s;
-        match_token(parser, TokenId);  /* match and skip ID */
+        match_token(parser, TokenId); /* match and skip ID */
+    } else { /* ID ['as' ID] */
+        match_token(parser, TokenId); /* match and skip ID */
+        if (match_skip(parser, KeyAs)) { /* 'as' */
+            name = next_token(parser).u.s;
+            match_token(parser, TokenId); /* match and skip ID */
+        }
     }
     new_var(parser, name, &v);
     be_code_import(parser->finfo, &m, &v);
@@ -1438,7 +1444,7 @@ static void mainfunc(bparser *parser, bclosure *cl)
     match_token(parser, TokenEOS); /* skip EOS */
 }
 
-bclosure *be_parser_source(bvm *vm,
+bclosure* be_parser_source(bvm *vm,
     const char *fname, breader reader, void *data, int islocal)
 {
     bparser parser;

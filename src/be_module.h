@@ -10,7 +10,6 @@ typedef struct bmodule {
         bntvmodule *native;
         const char *name;
     } info;
-    struct bmodule *mnext;
     bgcobject *gray; /* for gc gray list */
 } bmodule;
 

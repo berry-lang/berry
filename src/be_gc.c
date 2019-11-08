@@ -471,7 +471,7 @@ void be_gc_collect(bvm *vm)
     /* step 1: set root-set reference objects to unscanned */
     premark_global(vm); /* global objects */
     premark_stack(vm); /* stack objects */
-    premark_fixed(vm);
+    premark_fixed(vm); /* fixed objects */
     /* step 2: set unscanned objects to black */
     mark_unscanned(vm);
     /* step 3: destruct and delete unreachable objects */
