@@ -185,11 +185,9 @@ static void mark_proto(bvm *vm, bgcobject *obj)
         if (p->name) {
             gc_setdark(p->name);
         }
-#if BE_DEBUG_RUNTIME_INFO
         if (p->source) {
             gc_setdark(p->source);
         }
-#endif
     }
 }
 

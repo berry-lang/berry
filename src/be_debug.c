@@ -103,10 +103,8 @@ void be_dumpclosure(bclosure *cl)
     binstruction *code = proto->code;
 #if BE_DEBUG_RUNTIME_INFO
     blineinfo *lineinfo = proto->lineinfo;
-    if (proto->source) {
-        logfmt("source '%s', ", str(proto->source));
-    }
 #endif
+    logfmt("source '%s', ", str(proto->source));
     logfmt("function '%s':\n", str(proto->name));
     for (pc = 0; pc < proto->codesize; pc++) {
 #if BE_DEBUG_RUNTIME_INFO

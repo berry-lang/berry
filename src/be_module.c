@@ -1,5 +1,6 @@
 #include "be_module.h"
 #include "be_string.h"
+#include "be_strlib.h"
 #include "be_exec.h"
 #include "be_map.h"
 #include "be_gc.h"
@@ -93,9 +94,28 @@ static bmodule* load_module(bvm *vm, bntvmodule *nm, bvalue *dst)
     return NULL;
 }
 
-static int _load_script_module(bvm *vm, bstring *path)
+static char* fixpath(bvm *vm, bstring *path, size_t *len)
 {
-    int res = be_fileparser(vm, str(path), 1);
+    char *buffer;
+    const char *split, *base;
+    bvalue *func = vm->cf->func;
+    bclosure *cl = var_toobj(func);
+    be_assert(var_isclosure(func));
+    base = str(cl->proto->source); /* get the source file path */
+    split = be_splitpath(base);
+    *len = split - base + (size_t)str_len(path);
+    buffer = be_malloc(vm, *len + 1);
+    strncpy(buffer, base, split - base);
+    strcpy(buffer + (split - base), str(path));
+    return buffer;
+}
+
+static int load_script_module(bvm *vm, bstring *path)
+{
+    size_t len;
+    char *fullpath = fixpath(vm, path, &len);
+    int res = be_fileparser(vm, fullpath, 1);
+    be_free(vm, fullpath, len + 1);
     if (res == BE_OK) {
         be_call(vm, 0);
     } else {
@@ -134,7 +154,7 @@ bbool be_module_load(bvm *vm, bstring *path)
     if (load_cached(vm, path)) {
         return btrue;
     }
-    if (_load_script_module(vm, path) != BE_OK) {
+    if (load_script_module(vm, path) != BE_OK) {
         bntvmodule *nm = find_native(path);
         bmodule *mod = load_module(vm, nm, NULL);
         if (mod == NULL) {

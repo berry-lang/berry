@@ -306,6 +306,7 @@ const char* be_str2num(bvm *vm, const char *str)
     return sout;
 }
 
+/* string subscript operation */
 bstring* be_strindex(bvm *vm, bstring *str, bvalue *idx)
 {
     if (var_isint(idx)) {
@@ -319,12 +320,31 @@ bstring* be_strindex(bvm *vm, bstring *str, bvalue *idx)
     return NULL;
 }
 
+const char* be_splitpath(const char *path)
+{
+    const char *ptr;
+    for (ptr = path - 1; *path != '\0'; ++path) {
+        if (*path == '/') {
+            ptr = path;
+        }
+    }
+    return ptr + 1; /* return the file name pointer */
+}
+
+/* TODO: */
+const char* be_splitname(const char *str)
+{
+    (void)str;
+    return NULL;
+}
+
 #if BE_USE_STRING_MODULE
 
 #define MAX_FORMAT_MODE     32
 #define FLAGES              "+- #0"
 
-static const char* skip2dig(const char *s)
+    static const char *
+    skip2dig(const char *s)
 {
     if (is_digit(*s)) {
         ++s;

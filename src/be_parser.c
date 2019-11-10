@@ -160,6 +160,14 @@ static void end_block(bparser *parser)
     finfo->binfo = binfo->prev;
 }
 
+static bstring* parser_source(bparser *parser)
+{
+    if (parser->finfo) {
+        return parser->finfo->proto->source;
+    }
+    return be_newstr(parser->vm, parser->lexer.fname);
+}
+
 static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
 {
     bvm *vm = parser->vm;
@@ -175,6 +183,7 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     be_vector_init(vm, &finfo->pvec, sizeof(bproto*));
     proto->ptab = be_vector_data(&finfo->pvec);
     proto->nproto = be_vector_capacity(&finfo->pvec);
+    proto->source = parser_source(parser);
     finfo->local = be_list_new(vm);
     var_setlist(vm->top, finfo->local);
     be_stackpush(vm);
@@ -191,7 +200,6 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     parser->finfo = finfo;
 #if BE_DEBUG_RUNTIME_INFO
     be_vector_init(vm, &finfo->linevec, sizeof(blineinfo));
-    proto->source = be_newstr(vm, parser->lexer.fname);
     proto->lineinfo = be_vector_data(&finfo->linevec);
     proto->nlineinfo = be_vector_capacity(&finfo->linevec);
 #endif

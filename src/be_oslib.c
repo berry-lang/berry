@@ -1,4 +1,5 @@
 #include "be_object.h"
+#include "be_strlib.h"
 #include "be_mem.h"
 #include "be_sys.h"
 #include <string.h>
@@ -114,6 +115,20 @@ static int m_path_isfile(bvm *vm)
     be_return(vm);
 }
 
+static int m_path_split(bvm *vm)
+{
+    if (be_top(vm) >= 1 && be_isstring(vm, 1)) {
+        const char *path = be_tostring(vm, 1);
+        const char *split = be_splitpath(path);
+        be_getbuiltin(vm, "list");
+        be_pushnstring(vm, path, split - path);
+        be_pushstring(vm, split);
+        be_call(vm, 2);
+        be_return(vm);
+    }
+    be_return_nil(vm);
+}
+
 static int m_path_splitext(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isstring(vm, 1)) {
@@ -176,6 +191,7 @@ be_native_module_attr_table(path_attr){
     be_native_module_function("isdir", m_path_isdir),
     be_native_module_function("isfile", m_path_isfile),
     be_native_module_function("exists", m_path_exists),
+    be_native_module_function("split", m_path_split),
     be_native_module_function("splitext", m_path_splitext),
     be_native_module_function("join", m_path_join)
 };
@@ -199,6 +215,7 @@ module path (scope: local, depend: BE_USE_OS_MODULE) {
     isdir, func(m_path_isdir)
     isfile, func(m_path_isfile)
     exists, func(m_path_exists)
+    split, func(m_path_split)
     splitext, func(m_path_splitext)
     join, func(m_path_join)
 }
