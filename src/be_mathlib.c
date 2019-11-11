@@ -240,7 +240,7 @@ static int m_rand(bvm *vm)
 }
 
 #if !BE_USE_PRECOMPILED_OBJECT
-be_native_module_attr_table(attr_table) {
+be_native_module_attr_table(math) {
     be_native_module_function("abs", m_abs),
     be_native_module_function("ceil", m_ceil),
     be_native_module_function("floor", m_floor),
@@ -265,7 +265,7 @@ be_native_module_attr_table(attr_table) {
     be_native_module_real("pi", M_PI)
 };
 
-be_define_native_module(math, attr_table);
+be_define_native_module(math, NULL);
 #else
 /* @const_object_info_begin
 module math (scope: global, depend: BE_USE_MATH_MODULE) {

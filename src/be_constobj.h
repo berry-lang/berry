@@ -54,12 +54,13 @@
     .type = BE_MODULE \
 }
 
-#define be_define_const_module(_module)             \
+#define be_define_const_module(_module, _init)      \
 bntvmodule be_native_module(_module) = {            \
     .name = #_module,                               \
-    .table = NULL,                                  \
+    .attrs = NULL,                                  \
     .size = 0,                                      \
-    .module = (bmodule *)&(m_lib##_module)          \
+    .module = (bmodule *)&(m_lib##_module),         \
+    .init = _init                                   \
 }
 
 #endif

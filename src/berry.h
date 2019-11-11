@@ -94,10 +94,11 @@ typedef const struct {
 
 /* native module object */
 typedef const struct bntvmodule {
-    const char *name;
-    bntvmodule_obj *table;
-    size_t size;
-    const struct bmodule *module;
+    const char *name; /* native module name */
+    bntvmodule_obj *attrs; /* native module attributes */
+    size_t size; /* native module attribute count */
+    const struct bmodule *module; /* const module object */
+    bntvfunc init; /* initialization function */
 } bntvmodule;
 
 /* native module node definition macro */
@@ -125,20 +126,22 @@ typedef const struct bntvmodule {
 #define be_native_module(name)  be_native_module_##name
 
 #define be_native_module_attr_table(name)           \
-    static bntvmodule_obj name[] =
+    static bntvmodule_obj name##_attrs[] =
 
 /* native module declaration macro */
 #define be_extern_native_module(name)               \
     extern bntvmodule be_native_module(name)
 
 /* native module definition macro */
-#define be_define_native_module(_name, _attrs)      \
-bntvmodule be_native_module(_name) = {              \
-    .name = #_name,                                 \
-    .table = (_attrs),                              \
-    .size = (sizeof(_attrs) / sizeof((_attrs)[0])), \
-    .module = NULL                                  \
-}
+#define be_define_native_module(_name, _init)       \
+    bntvmodule be_native_module(_name) = {          \
+        .name = #_name,                             \
+        .attrs = _name##_attrs,                     \
+        .size = (sizeof(_name##_attrs)              \
+               / sizeof(_name##_attrs[0])),         \
+        .module = NULL,                             \
+        .init = _init                               \
+    }
 
 #if !BE_DEBUG
   #if defined(be_assert)

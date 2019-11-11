@@ -28,7 +28,7 @@ static void insert_attrs(bvm *vm, bmap *table, bntvmodule *nm)
 {
     size_t i;
     for (i = 0; i < nm->size; ++i) {
-        bntvmodule_obj *node = nm->table + i;
+        bntvmodule_obj *node = nm->attrs + i;
         bstring *name = be_newstr(vm, node->name);
         bvalue *v = be_map_insertstr(vm, table, name, NULL);
         be_assert(node->type <= BE_CMODULE);

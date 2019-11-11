@@ -187,7 +187,7 @@ static int m_path_join(bvm *vm)
 }
 
 #if !BE_USE_PRECOMPILED_OBJECT
-be_native_module_attr_table(path_attr){
+be_native_module_attr_table(path) {
     be_native_module_function("isdir", m_path_isdir),
     be_native_module_function("isfile", m_path_isfile),
     be_native_module_function("exists", m_path_exists),
@@ -196,9 +196,9 @@ be_native_module_attr_table(path_attr){
     be_native_module_function("join", m_path_join)
 };
 
-static be_define_native_module(path, path_attr);
+static be_define_native_module(path, NULL);
 
-be_native_module_attr_table(os_attr) {
+be_native_module_attr_table(os) {
     be_native_module_function("getcwd", m_getcwd),
     be_native_module_function("chdir", m_chdir),
     be_native_module_function("mkdir", m_mkdir),
@@ -208,7 +208,7 @@ be_native_module_attr_table(os_attr) {
     be_native_module_module("path", be_native_module(path))
 };
 
-be_define_native_module(os, os_attr);
+be_define_native_module(os, NULL);
 #else
 /* @const_object_info_begin
 module path (scope: local, depend: BE_USE_OS_MODULE) {

@@ -465,12 +465,12 @@ static int str_i2hex(bvm *vm)
 }
 
 #if !BE_USE_PRECOMPILED_OBJECT
-be_native_module_attr_table(str_attr){
+be_native_module_attr_table(string) {
     be_native_module_function("format", str_format),
     be_native_module_function("hex", str_i2hex)
 };
 
-be_define_native_module(string, str_attr);
+be_define_native_module(string, NULL);
 #else
 /* @const_object_info_begin
 module string (scope: global, depend: BE_USE_STRING_MODULE) {

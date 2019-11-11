@@ -185,7 +185,8 @@ std::string map_build::module_tostring(const block &block)
          << "    .info.name = \"" << block.name << "\"\n"
          << "};" << std::endl;
 	if (scope(block).empty()) { /* extern */
-		ostr << "\nbe_define_const_module(" << block.name << ");" << std::endl;
+		ostr << "\nbe_define_const_module(" << block.name << ", "
+		     << init(block) << ");" << std::endl;
 	}
 	return ostr.str();
 }
@@ -213,6 +214,14 @@ std::string map_build::name(const block &block)
         return block.name;
     }
     return block.attr.at("name");
+}
+
+std::string map_build::init(const block &block)
+{
+    if (block.attr.find("init") == block.attr.end()) {
+        return "NULL";
+    }
+    return block.attr.at("init");
 }
 
 bool map_build::block_depend(const block &block)
