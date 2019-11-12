@@ -266,7 +266,7 @@ void be_codedump(bvm *vm, int index);
 
 /* module path list APIs */
 void be_module_path(bvm *vm);
-void be_module_path_append(bvm *vm, const char *path);
+void be_module_path_set(bvm *vm, const char *path);
 
 /* basic character IO APIs */
 void be_writebuffer(const char *buffer, size_t length);

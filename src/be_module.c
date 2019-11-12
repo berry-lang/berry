@@ -278,7 +278,7 @@ void be_module_path(bvm *vm)
     var_setlist(reg, list);
 }
 
-void be_module_path_append(bvm *vm, const char *path)
+void be_module_path_set(bvm *vm, const char *path)
 {
     blist *list = pathlist(vm);
     bvalue *value = be_list_append(vm, list, NULL);
