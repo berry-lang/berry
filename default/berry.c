@@ -66,6 +66,8 @@
     "For more information, please see:\n"                           \
     "https://github.com/skiars/berry.git\n"
 
+#define array_count(a) (sizeof(a) / sizeof((a)[0]))
+
 #define arg_i       (1 << 0)
 #define arg_b       (1 << 1)
 #define arg_c       (1 << 2)
@@ -298,10 +300,25 @@ static int analysis_args(bvm *vm, int argc, char *argv[])
     return load_file(vm, argc - opt.idx, argv + opt.idx, args);
 }
 
+/* TODO: more paths & support more OS */
+#define BERRY_ROOT "/usr/local"
+static const char *module_paths[] = {
+    BERRY_ROOT "/lib/berry/packages",
+};
+
+static void berry_paths(bvm * vm)
+{
+    size_t i;
+    for (i = 0; i < array_count(module_paths); ++i) {
+        be_module_path_append(vm, module_paths[i]);
+    }
+}
+
 int main(int argc, char *argv[])
 {
     int res;
     bvm *vm = be_vm_new(); /* create a virtual machine instance */
+    berry_paths(vm);
     res = analysis_args(vm, argc, argv);
     be_vm_delete(vm); /* free all objects and vm */
     return res;

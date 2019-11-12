@@ -50,6 +50,16 @@ bstring* be_num2str(bvm *vm, bvalue *v)
     return be_newstr(vm, buf);
 }
 
+static void module2str(char *buf, bvalue *v)
+{
+    const char *name = be_module_name(cast(bmodule*, var_toobj(v)));
+    if (name) {
+        sprintf(buf, "<module: %s>", name);
+    } else {
+        sprintf(buf, "<module: %p>", var_toobj(v));
+    }
+}
+
 static void sim2str(bvm *vm, bvalue *v)
 {
     char sbuf[64]; /* BUG: memory overflow */
@@ -76,8 +86,7 @@ static void sim2str(bvm *vm, bvalue *v)
             str(be_class_name(cast(bclass*, var_toobj(v)))));
         break;
     case BE_MODULE:
-        sprintf(sbuf, "<module: %s>",
-            be_module_name(cast(bmodule*, var_toobj(v))));
+        module2str(sbuf, v);
         break;
     default:
         strcpy(sbuf, "(unknow value)");

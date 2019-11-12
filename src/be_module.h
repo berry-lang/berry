@@ -13,9 +13,11 @@ typedef struct bmodule {
     bgcobject *gray; /* for gc gray list */
 } bmodule;
 
-bbool be_module_load(bvm *vm, bstring *path);
+bmodule *be_module_new(bvm *vm);
 void be_module_delete(bvm *vm, bmodule *module);
+bbool be_module_load(bvm *vm, bstring *path);
 bvalue* be_module_attr(bmodule *module, bstring *attr);
+bvalue* be_module_bind(bvm *vm, bmodule *module, bstring *attr);
 const char* be_module_name(bmodule *module);
 
 #endif

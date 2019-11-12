@@ -220,6 +220,12 @@ static int l_size(bvm *vm)
     be_return_nil(vm);
 }
 
+static int l_module(bvm *vm)
+{
+    be_newmodule(vm);
+    be_return(vm);
+}
+
 #if BE_USE_SCRIPT_COMPILER
 static int raise_compile_error(bvm *vm)
 {
@@ -295,6 +301,7 @@ void be_load_baselib(bvm *vm)
     be_regfunc(vm, "str", l_str);
     be_regfunc(vm, "int", l_int);
     be_regfunc(vm, "real", l_real);
+    be_regfunc(vm, "module", l_module);
     be_regfunc(vm, "size", l_size);
     be_regfunc(vm, "compile", l_compile);
     be_regfunc(vm, "codedump", l_codedump);
@@ -320,6 +327,7 @@ vartab m_builtin (scope: local) {
     str, func(l_str)
     int, func(l_int)
     real, func(l_real)
+    module, func(l_module)
     size, func(l_size)
     compile, func(l_compile)
     codedump, func(l_codedump)

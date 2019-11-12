@@ -636,9 +636,19 @@ static void i_setmember(bvm *vm, binstruction ins)
             vm_error(vm, "class '%s' cannot assign to attribute '%s'",
                 str(be_instance_name(obj)), str(attr));
         }
-    } else {
-        attribute_error(vm, "writable attribute", a, b);
+        return;
     }
+    if (var_ismodule(a) && var_isstr(b)) {
+        bmodule *obj = var_toobj(a);
+        bstring *attr = var_tostr(b);
+        bvalue tmp = *c; /* stack may change */
+        bvalue *v = be_module_bind(vm, obj, attr);
+        if (v != NULL) {
+            *v = tmp;
+            return;
+        }
+    }
+    attribute_error(vm, "writable attribute", a, b);
 }
 
 static void i_getindex(bvm *vm, binstruction ins)

@@ -11,7 +11,7 @@
 
 extern bntvmodule* const be_module_table[];
 
-static bmodule* load_module(bvm *vm, bntvmodule *nm, bvalue *dst);
+static bmodule* native_module(bvm *vm, bntvmodule *nm, bvalue *dst);
 
 static bntvmodule* find_native(bstring *path)
 {
@@ -53,7 +53,7 @@ static void insert_attrs(bvm *vm, bmap *table, bntvmodule *nm)
             var_setstr(v, be_newstr(vm, node->u.s));
             break;
         case BE_CMODULE:
-            load_module(vm, node->u.m, v);
+            native_module(vm, node->u.m, v);
             break;
         default: /* error */
             break;
@@ -78,7 +78,7 @@ static bmodule* new_module(bvm *vm, bntvmodule *nm)
     return obj;
 }
 
-static bmodule* load_module(bvm *vm, bntvmodule *nm, bvalue *dst)
+static bmodule* native_module(bvm *vm, bntvmodule *nm, bvalue *dst)
 {
     if (nm) {
         bmodule *obj;
@@ -165,7 +165,7 @@ bbool load_script(bvm *vm, bstring *path)
 bbool load_native(bvm *vm, bstring *path)
 {
     bntvmodule *nm = find_native(path);
-    bmodule *mod = load_module(vm, nm, NULL);
+    bmodule *mod = native_module(vm, nm, NULL);
     if (mod == NULL)
         return bfalse;
     /* the pointer vm->top may be changed */
@@ -213,6 +213,21 @@ bbool be_module_load(bvm *vm, bstring *path)
     return btrue;
 }
 
+bmodule* be_module_new(bvm *vm)
+{
+    bgcobject *gco = be_gcnew(vm, BE_MODULE, bmodule);
+    bmodule *obj = cast_module(gco);
+    if (obj) {
+        var_setmodule(vm->top, obj);
+        be_incrtop(vm);
+        obj->info.native = NULL;
+        obj->table = NULL; /* gc protection */
+        obj->table = be_map_new(vm);
+        be_stackpop(vm, 1);
+    }
+    return obj;
+}
+
 void be_module_delete(bvm *vm, bmodule *module)
 {
     be_free(vm, module, sizeof(bmodule));
@@ -223,12 +238,28 @@ bvalue* be_module_attr(bmodule *module, bstring *attr)
     return be_map_findstr(module->table, attr);
 }
 
+bvalue* be_module_bind(bvm *vm, bmodule *module, bstring *attr)
+{
+    bmap *attrs = module->table;
+    if (!gc_isconst(attrs)) {
+        bvalue *v = be_map_findstr(attrs, attr);
+        if (v == NULL) {
+            v = be_map_insertstr(vm, attrs, attr, NULL);
+        }
+        return v;
+    }
+    return NULL;
+}
+
 const char* be_module_name(bmodule *module)
 {
     if (gc_isconst(module)) {
         return module->info.name;
     }
-    return module->info.native->name;
+    if (module->info.native) {
+        return module->info.native->name;
+    }
+    return NULL;
 }
 
 static blist* pathlist(bvm *vm)

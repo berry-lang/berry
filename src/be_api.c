@@ -10,6 +10,7 @@
 #include "be_debug.h"
 #include "be_exec.h"
 #include "be_strlib.h"
+#include "be_module.h"
 #include <string.h>
 
 #define retreg(vm)      ((vm)->cf->func)
@@ -433,6 +434,12 @@ void be_newmap(bvm *vm)
 {
     bvalue *top = be_incrtop(vm);
     var_setobj(top, BE_MAP, be_map_new(vm));
+}
+
+void be_newmodule(bvm *vm)
+{
+    bvalue *top = be_incrtop(vm);
+    var_setobj(top, BE_MODULE, be_module_new(vm));
 }
 
 void be_getglobal(bvm *vm, const char *name)
