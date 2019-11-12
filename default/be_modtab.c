@@ -8,6 +8,7 @@ be_extern_native_module(json);
 be_extern_native_module(math);
 be_extern_native_module(time);
 be_extern_native_module(os);
+be_extern_native_module(sys);
 
 /* user-defined modules declare start */
 
@@ -15,7 +16,7 @@ be_extern_native_module(os);
 
 /* module list declaration */
 bntvmodule* const be_module_table[] = {
-    /* default modules register */
+/* default modules register */
 #if BE_USE_STRING_MODULE
     &be_native_module(string),
 #endif
@@ -30,6 +31,9 @@ bntvmodule* const be_module_table[] = {
 #endif
 #if BE_USE_OS_MODULE
     &be_native_module(os),
+#endif
+#if BE_USE_SYS_MODULE
+    &be_native_module(sys),
 #endif
     /* user-defined modules register start */
 

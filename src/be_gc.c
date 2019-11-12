@@ -160,9 +160,9 @@ static void mark_list(bvm *vm, bgcobject *obj)
     blist *list = cast_list(obj);
     gc_try (list != NULL) {
         bvalue *val = be_list_data(list);
-        int count = be_list_count(list);
+        bvalue *end = be_list_end(list);
         vm->gc.gray = list->gray; /* remove object from gray list */
-        for (; count--; val++) {
+        for (; val < end; val++) {
             mark_gray_var(vm, val);
         }
     }
@@ -328,6 +328,16 @@ static void free_object(bvm *vm, bgcobject *obj)
     }
 }
 
+static void premark_internal(bvm *vm)
+{
+    if (vm->module.loaded) {
+        mark_gray(vm, gc_object(vm->module.loaded));
+    }
+    if (vm->module.path) {
+        mark_gray(vm, gc_object(vm->module.path));
+    }
+}
+
 static void premark_global(bvm *vm)
 {
     bvalue *v = vm->gbldesc.global.vlist.data;
@@ -467,6 +477,7 @@ void be_gc_collect(bvm *vm)
         return; /* the GC cannot run for some reason */
     }
     /* step 1: set root-set reference objects to unscanned */
+    premark_internal(vm); /* object internal the VM */
     premark_global(vm); /* global objects */
     premark_stack(vm); /* stack objects */
     premark_fixed(vm); /* fixed objects */

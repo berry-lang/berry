@@ -263,6 +263,11 @@ int be_loadexec(bvm *vm, const char *name);
 int be_saveexec(bvm *vm, const char *name);
 void be_codedump(bvm *vm, int index);
 
+/* module path list APIs */
+void be_module_path(bvm *vm);
+void be_module_path_append(bvm *vm, const char *path);
+
+/* basic character IO APIs */
 void be_writebuffer(const char *buffer, size_t length);
 char* be_readstring(char *buffer, size_t size);
 

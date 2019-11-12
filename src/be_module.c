@@ -1,6 +1,7 @@
 #include "be_module.h"
 #include "be_string.h"
 #include "be_strlib.h"
+#include "be_list.h"
 #include "be_exec.h"
 #include "be_map.h"
 #include "be_gc.h"
@@ -94,7 +95,7 @@ static bmodule* load_module(bvm *vm, bntvmodule *nm, bvalue *dst)
     return NULL;
 }
 
-static char* fixpath(bvm *vm, bstring *path, size_t *len)
+static char* fixpath(bvm *vm, bstring *path, size_t *size)
 {
     char *buffer;
     const char *split, *base;
@@ -103,32 +104,81 @@ static char* fixpath(bvm *vm, bstring *path, size_t *len)
     be_assert(var_isclosure(func));
     base = str(cl->proto->source); /* get the source file path */
     split = be_splitpath(base);
-    *len = split - base + (size_t)str_len(path);
-    buffer = be_malloc(vm, *len + 1);
+    *size = split - base + (size_t)str_len(path) + 1;
+    buffer = be_malloc(vm, *size);
     strncpy(buffer, base, split - base);
     strcpy(buffer + (split - base), str(path));
     return buffer;
 }
 
-static int load_script_module(bvm *vm, bstring *path)
+static char* conpath(bvm *vm, bstring *path1, bstring *path2, size_t *size)
 {
-    size_t len;
-    char *fullpath = fixpath(vm, path, &len);
-    int res = be_fileparser(vm, fullpath, 1);
-    be_free(vm, fullpath, len + 1);
-    if (res == BE_OK) {
+    char *buffer;
+    int len1 = str_len(path1);
+    *size = (size_t)len1 + (size_t)str_len(path2) + 1;
+    buffer = be_malloc(vm, *size);
+    strcpy(buffer, str(path1));
+    buffer[len1] = '/';
+    strcpy(buffer + len1 + 1, str(path2));
+    return buffer;
+}
+
+static int load_scriptfile(bvm *vm, char *path, size_t size)
+{
+    int res = be_fileparser(vm, path, 1);
+    be_free(vm, path, size);
+    if (res == BE_OK)
         be_call(vm, 0);
-    } else {
-        be_pop(vm, 1);
+    return res;
+}
+
+static int load_path(bvm *vm, bstring *path, bstring *mod)
+{
+    size_t size;
+    char *fullpath = conpath(vm, path, mod, &size);
+    return load_scriptfile(vm, fullpath, size);
+}
+
+static int load_cwd(bvm *vm, bstring *path)
+{
+    size_t size;
+    char *fullpath = fixpath(vm, path, &size);
+    return load_scriptfile(vm, fullpath, size);
+}
+
+bbool load_script(bvm *vm, bstring *path)
+{
+    bbool res = load_cwd(vm, path) == BE_OK; /* load from current directory */
+    if (!res && vm->module.path) {
+        blist *list = vm->module.path;
+        bvalue *v = be_list_end(list) - 1;
+        bvalue *first = be_list_data(list);
+        for (; !res && v >= first; v--) {
+            if (var_isstr(v)) {
+                res = load_path(vm, var_tostr(v), path) == BE_OK;
+            }
+        }
     }
     return res;
+}
+
+bbool load_native(bvm *vm, bstring *path)
+{
+    bntvmodule *nm = find_native(path);
+    bmodule *mod = load_module(vm, nm, NULL);
+    if (mod == NULL)
+        return bfalse;
+    /* the pointer vm->top may be changed */
+    var_setmodule(vm->top, mod);
+    be_incrtop(vm);
+    return btrue;
 }
 
 static bvalue* load_cached(bvm *vm, bstring *path)
 {
     bvalue *v = NULL;
-    if (vm->loaded) {
-        v = be_map_findstr(vm->loaded, path);
+    if (vm->module.loaded) {
+        v = be_map_findstr(vm->module.loaded, path);
         if (v) {
             *vm->top = *v;
             be_incrtop(vm);
@@ -140,31 +190,26 @@ static bvalue* load_cached(bvm *vm, bstring *path)
 static void cache_module(bvm *vm, bstring *name)
 {
     bvalue *v;
-    if (vm->loaded == NULL) {
-        vm->loaded = be_map_new(vm);
-        be_gc_fix(vm, gc_object(vm->loaded));
+    if (vm->module.loaded == NULL) {
+        vm->module.loaded = be_map_new(vm);
     }
-    v = be_map_insertstr(vm, vm->loaded, name, NULL);
+    v = be_map_insertstr(vm, vm->module.loaded, name, NULL);
     *v = vm->top[-1];
 }
 
 /* load module to vm->top */
 bbool be_module_load(bvm *vm, bstring *path)
 {
-    if (load_cached(vm, path)) {
-        return btrue;
+    if (!load_cached(vm, path)) {
+        do {
+            if (load_native(vm, path))
+                break;
+            if (load_script(vm, path))
+                break;
+            return bfalse; /* load failed */
+        } while (0);
+        cache_module(vm, path);
     }
-    if (load_script_module(vm, path) != BE_OK) {
-        bntvmodule *nm = find_native(path);
-        bmodule *mod = load_module(vm, nm, NULL);
-        if (mod == NULL) {
-            return bfalse;
-        }
-        /* the pointer vm->top may be changed */
-        var_setmodule(vm->top, mod);
-        be_incrtop(vm);
-    }
-    cache_module(vm, path);
     return btrue;
 }
 
@@ -178,10 +223,33 @@ bvalue* be_module_attr(bmodule *module, bstring *attr)
     return be_map_findstr(module->table, attr);
 }
 
-const char *be_module_name(bmodule *module)
+const char* be_module_name(bmodule *module)
 {
     if (gc_isconst(module)) {
         return module->info.name;
     }
     return module->info.native->name;
+}
+
+static blist* pathlist(bvm *vm)
+{
+    if (!vm->module.path) {
+        vm->module.path = be_list_new(vm);
+    }
+    return vm->module.path;
+}
+
+/* push the path list to the top */
+void be_module_path(bvm *vm)
+{
+    blist *list = pathlist(vm);
+    bvalue *reg = be_incrtop(vm);
+    var_setlist(reg, list);
+}
+
+void be_module_path_append(bvm *vm, const char *path)
+{
+    blist *list = pathlist(vm);
+    bvalue *value = be_list_append(vm, list, NULL);
+    var_setstr(value, be_newstr(vm, path))
 }

@@ -209,6 +209,15 @@ static int m_resize(bvm *vm)
     be_return_nil(vm);
 }
 
+static int m_clear(bvm *vm)
+{
+    be_getmember(vm, 1, ".data");
+    list_check_data(vm, 1);
+    be_pushint(vm, 0);
+    be_data_resize(vm, -2);
+    be_return_nil(vm);
+}
+
 static int iter_closure(bvm *vm)
 {
     /* for better performance, we operate the upvalues
@@ -253,6 +262,7 @@ void be_load_listlib(bvm *vm)
         { "setitem", m_setitem },
         { "size", m_size },
         { "resize", m_resize },
+        { "clear", m_clear },
         { "iter", m_iter },
         { NULL, NULL }
     };
@@ -271,6 +281,7 @@ class be_class_list (scope: global, name: list) {
     setitem, func(m_setitem)
     size, func(m_size)
     resize, func(m_resize)
+    clear, func(m_clear)
     iter, func(m_iter)
 }
 @const_object_info_end */

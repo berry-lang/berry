@@ -800,7 +800,8 @@ bvm* be_vm_new(void)
     vm->reg = vm->stack;
     vm->top = vm->reg;
     vm->errjmp = NULL;
-    vm->loaded = NULL;
+    vm->module.loaded = NULL;
+    vm->module.path = NULL;
     be_globalvar_init(vm);
     be_gc_setpause(vm, 1);
     be_loadlibs(vm);
