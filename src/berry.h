@@ -80,6 +80,9 @@ enum berrorcode {
   #define BERRY_API             extern
 #endif
 
+/* only linux */
+#define BERRY_LOCAL             __attribute__ ((visibility ("hidden")))
+
 typedef struct bvm bvm;        /* virtual machine structure */
 typedef int (*bntvfunc)(bvm*); /* native function pointer */
 

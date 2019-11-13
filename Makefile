@@ -1,4 +1,4 @@
-CFLAGS    = -Wall -Wextra -std=c99 -pedantic-errors -O2
+CFLAGS    = -Wall -Wextra -std=c99 -pedantic-errors -Wl,-E -O2
 LIBS      = -lm
 TARGET    = berry
 CC        = gcc
@@ -44,6 +44,7 @@ debug: all
 $(TARGET): $(OBJS)
 	$(MSG) [Linking...]
 	$(Q) $(CC) $(OBJS) $(CFLAGS) $(LIBS) -o $@
+	$(Q) $(AR) -r libberry.a $(OBJS)
 	$(MSG) done
 
 $(OBJS): %.o: %.c

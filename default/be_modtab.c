@@ -15,7 +15,7 @@ be_extern_native_module(sys);
 /* user-defined modules declare end */
 
 /* module list declaration */
-bntvmodule* const be_module_table[] = {
+BERRY_LOCAL bntvmodule *const be_module_table[] = {
 /* default modules register */
 #if BE_USE_STRING_MODULE
     &be_native_module(string),

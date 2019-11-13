@@ -393,7 +393,7 @@ BERRY_API int be_loadlib(bvm *vm, const char *path)
 {
     void *handle = dlopen(path, RTLD_LAZY);
     bntvfunc func = cast_func(dlsym(handle, "berry_export"));
-    if (dlerror() != NULL) {
+    if (func == NULL) {
         return BE_IO_ERROR;
     }
     be_pushntvfunction(vm, func);
