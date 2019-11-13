@@ -226,7 +226,7 @@ const char* be_pushvfstr(bvm *vm, const char *format, va_list arg)
  *    '-whitespace-'  +- + -+
  *                    '- - -'
  *******************************************************************/
-bint be_str2int(const char *str, const char **endstr)
+BERRY_API bint be_str2int(const char *str, const char **endstr)
 {
     int c, sign;
     bint sum = 0;
@@ -256,7 +256,7 @@ bint be_str2int(const char *str, const char **endstr)
  *      '-E-'  +- + -+             
  *             '- - -'  
  *******************************************************************/
-breal be_str2real(const char *str, const char **endstr)
+BERRY_API breal be_str2real(const char *str, const char **endstr)
 {
     int c, sign;
     breal sum = 0, deci = 0, point = (breal)0.1;
@@ -302,7 +302,7 @@ breal be_str2real(const char *str, const char **endstr)
  * 1. skip \s*[\+\-]?\d*
  * 2. matched [.eE]? yes: real, no: integer.
  **/
-const char* be_str2num(bvm *vm, const char *str)
+BERRY_API const char *be_str2num(bvm *vm, const char *str)
 {
     const char *sout; 
     bint c, vint = be_str2int(str, &sout);
@@ -331,20 +331,24 @@ bstring* be_strindex(bvm *vm, bstring *str, bvalue *idx)
 
 const char* be_splitpath(const char *path)
 {
-    const char *ptr;
-    for (ptr = path - 1; *path != '\0'; ++path) {
+    const char *p;
+    for (p = path - 1; *path != '\0'; ++path) {
         if (*path == '/') {
-            ptr = path;
+            p = path;
         }
     }
-    return ptr + 1; /* return the file name pointer */
+    return p + 1; /* return the file name pointer */
 }
 
-/* TODO: */
-const char* be_splitname(const char *str)
+const char* be_splitname(const char *path)
 {
-    (void)str;
-    return NULL;
+    const char *p, *q, *end = path + strlen(path);
+    for (p = end; *p != '.' && p > path; --p); /* skip [^\.] */
+    for (q = p; *q == '.' && q > path; --q); /* skip \. */
+    if (q == path || *q == '/') {
+        return end;
+    }
+    return p;
 }
 
 #if BE_USE_STRING_MODULE
@@ -352,8 +356,7 @@ const char* be_splitname(const char *str)
 #define MAX_FORMAT_MODE     32
 #define FLAGES              "+- #0"
 
-    static const char *
-    skip2dig(const char *s)
+static const char* skip2dig(const char *s)
 {
     if (is_digit(*s)) {
         ++s;
@@ -424,6 +427,12 @@ static int str_format(bvm *vm)
             case 'f': case 'g': case 'G':
                 if (be_isnumber(vm, index)) {
                     sprintf(buf, mode, be_toreal(vm, index));
+                }
+                be_pushstring(vm, buf);
+                break;
+            case 'c':
+                if (be_isint(vm, index)) {
+                    sprintf(buf, "%c", (int)be_toint(vm, index));
                 }
                 be_pushstring(vm, buf);
                 break;

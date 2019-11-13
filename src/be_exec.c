@@ -53,7 +53,7 @@ struct filebuf {
     char buf[FILE_BUFFER_SIZE];
 };
 
-void be_throw(bvm *vm, int errorcode)
+BERRY_API void be_throw(bvm *vm, int errorcode)
 {
     if (vm->errjmp) {
         vm->errjmp->status = errorcode;
@@ -63,7 +63,7 @@ void be_throw(bvm *vm, int errorcode)
     }
 }
 
-void be_exit(bvm *vm, int status)
+BERRY_API void be_exit(bvm *vm, int status)
 {
     if (vm->errjmp) {
         be_pushint(vm, status);
@@ -163,7 +163,7 @@ static const char* _fgets(void *data, size_t *size)
     return NULL;
 }
 
-int be_loadbuffer(bvm *vm,
+BERRY_API int be_loadbuffer(bvm *vm,
     const char *name, const char *buffer, size_t length)
 {
     struct strbuf sbuf;
@@ -185,7 +185,7 @@ int be_fileparser(bvm *vm, const char *name, int islocal)
     return res;
 }
 
-int be_loadfile(bvm *vm, const char *name)
+BERRY_API int be_loadfile(bvm *vm, const char *name)
 {
     int res = be_fileparser(vm, name, 0);
     if (res == BE_IO_ERROR) {
@@ -208,7 +208,7 @@ static void _bytecode_load(bvm *vm, void *data)
 }
 
 /* load bytecode file */
-int be_loadexec(bvm *vm, const char *name)
+BERRY_API int be_loadexec(bvm *vm, const char *name)
 {
     int res;
     struct vmstate state;
@@ -229,7 +229,7 @@ static void _bytecode_save(bvm *vm, void *data)
 }
 
 /* save bytecode file */
-int be_saveexec(bvm *vm, const char *name)
+BERRY_API int be_saveexec(bvm *vm, const char *name)
 {
     int res;
     struct vmstate state;
@@ -378,4 +378,24 @@ void be_except_block_close(bvm *vm, int count)
     frame = be_vector_at(&vm->exceptstack, size - count);
     vm->errjmp = frame->errjmp.prev;
     be_vector_resize(vm, &vm->exceptstack, size - count);
+}
+
+#include <dlfcn.h>
+
+#if defined(__GNUC__)
+  #define cast_func(f) (__extension__(bntvfunc)(f))
+#else
+  #define cast_func(f) ((bntvfunc)(f))
+#endif
+
+/* load shared library */
+BERRY_API int be_loadlib(bvm *vm, const char *path)
+{
+    void *handle = dlopen(path, RTLD_LAZY);
+    bntvfunc func = cast_func(dlsym(handle, "berry_export"));
+    if (dlerror() != NULL) {
+        return BE_IO_ERROR;
+    }
+    be_pushntvfunction(vm, func);
+    return BE_OK;
 }

@@ -40,7 +40,7 @@ static void class_init(bvm *vm, bclass *c, const bnfuncinfo *lib)
     be_map_release(vm, c->members); /* clear space */
 }
 
-void be_regfunc(bvm *vm, const char *name, bntvfunc f)
+BERRY_API void be_regfunc(bvm *vm, const char *name, bntvfunc f)
 {
     bvalue *var;
     bstring *s = be_newstr(vm, name);
@@ -60,7 +60,7 @@ void be_regfunc(bvm *vm, const char *name, bntvfunc f)
     } /* error case, do nothing */
 }
 
-void be_regclass(bvm *vm, const char *name, const bnfuncinfo *lib)
+BERRY_API void be_regclass(bvm *vm, const char *name, const bnfuncinfo *lib)
 {
     bvalue *var;
     bstring *s = be_newstr(vm, name);
@@ -82,18 +82,18 @@ void be_regclass(bvm *vm, const char *name, const bnfuncinfo *lib)
     } /* error case, do nothing */
 }
 
-int be_top(bvm *vm)
+BERRY_API int be_top(bvm *vm)
 {
     return cast_int(vm->top - vm->reg);
 }
 
-void be_pop(bvm *vm, int n)
+BERRY_API void be_pop(bvm *vm, int n)
 {
     be_assert(n <= vm->top - vm->reg);
     be_stackpop(vm, n);
 }
 
-int be_absindex(bvm *vm, int index)
+BERRY_API int be_absindex(bvm *vm, int index)
 {
     if (index > 0) {
         return index;
@@ -102,103 +102,103 @@ int be_absindex(bvm *vm, int index)
     return cast_int(vm->top + index - vm->reg + 1);
 }
 
-bbool be_isnil(bvm *vm, int index)
+BERRY_API bbool be_isnil(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isnil(v);
 }
 
-bbool be_isbool(bvm *vm, int index)
+BERRY_API bbool be_isbool(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isbool(v);
 }
 
-bbool be_isint(bvm *vm, int index)
+BERRY_API bbool be_isint(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isint(v);
 }
 
-bbool be_isreal(bvm *vm, int index)
+BERRY_API bbool be_isreal(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isreal(v);
 }
 
-bbool be_isnumber(bvm *vm, int index)
+BERRY_API bbool be_isnumber(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isnumber(v);
 }
 
-bbool be_isstring(bvm *vm, int index)
+BERRY_API bbool be_isstring(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isstr(v);
 }
 
-bbool be_isclosure(bvm *vm, int index)
+BERRY_API bbool be_isclosure(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isclosure(v);
 }
 
-bbool be_isntvclos(bvm *vm, int index)
+BERRY_API bbool be_isntvclos(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isntvclos(v);
 }
 
-bbool be_isfunction(bvm *vm, int index)
+BERRY_API bbool be_isfunction(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isfunction(v);
 }
 
-bbool be_isproto(bvm *vm, int index)
+BERRY_API bbool be_isproto(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isproto(v);
 }
 
-bbool be_isclass(bvm *vm, int index)
+BERRY_API bbool be_isclass(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isclass(v);
 }
 
-bbool be_isinstance(bvm *vm, int index)
+BERRY_API bbool be_isinstance(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_isinstance(v);
 }
 
-bbool be_islist(bvm *vm, int index)
+BERRY_API bbool be_islist(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_islist(v);
 }
 
-bbool be_ismap(bvm *vm, int index)
+BERRY_API bbool be_ismap(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_ismap(v);
 }
 
-bbool be_iscomptr(bvm *vm, int index)
+BERRY_API bbool be_iscomptr(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_istype(v, BE_COMPTR);
 }
 
-bint be_toint(bvm *vm, int index)
+BERRY_API bint be_toint(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_toint(v);
 }
 
-breal be_toreal(bvm *vm, int index)
+BERRY_API breal be_toreal(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     if (var_isreal(v)) {
@@ -210,19 +210,19 @@ breal be_toreal(bvm *vm, int index)
     return cast(breal, 0.0);
 }
 
-int be_toindex(bvm *vm, int index)
+BERRY_API int be_toindex(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_toidx(v);
 }
 
-bbool be_tobool(bvm *vm, int index)
+BERRY_API bbool be_tobool(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return be_value2bool(vm, v);
 }
 
-const char* be_tostring(bvm *vm, int index)
+BERRY_API const char* be_tostring(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     if (!var_isstr(v)) {
@@ -232,44 +232,44 @@ const char* be_tostring(bvm *vm, int index)
     return str(var_tostr(v));
 }
 
-void* be_tocomptr(bvm *vm, int index)
+BERRY_API void* be_tocomptr(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return var_toobj(v);
 }
 
-void be_moveto(bvm *vm, int from, int to)
+BERRY_API void be_moveto(bvm *vm, int from, int to)
 {
     bvalue *src = index2value(vm, from);
     bvalue *dst = index2value(vm, to);
     var_setval(dst, src);
 }
 
-void be_pushnil(bvm *vm)
+BERRY_API void be_pushnil(bvm *vm)
 {
     bvalue *reg = be_incrtop(vm);
     var_setnil(reg);
 }
 
-void be_pushbool(bvm *vm, int b)
+BERRY_API void be_pushbool(bvm *vm, int b)
 {
     bvalue *reg = be_incrtop(vm);
     var_setbool(reg, b != bfalse);
 }
 
-void be_pushint(bvm *vm, bint i)
+BERRY_API void be_pushint(bvm *vm, bint i)
 {
     bvalue *reg = be_incrtop(vm);
     var_setint(reg, i);
 }
 
-void be_pushreal(bvm *vm, breal r)
+BERRY_API void be_pushreal(bvm *vm, breal r)
 {
     bvalue *reg = be_incrtop(vm);
     var_setreal(reg, r);
 }
 
-void be_pushstring(bvm *vm, const char *str)
+BERRY_API void be_pushstring(bvm *vm, const char *str)
 {
     /* to create a string and then push the top registor,
      * otherwise the GC may crash due to uninitialized values.
@@ -280,7 +280,7 @@ void be_pushstring(bvm *vm, const char *str)
     var_setstr(reg, s);
 }
 
-void be_pushnstring(bvm *vm, const char *str, size_t n)
+BERRY_API void be_pushnstring(bvm *vm, const char *str, size_t n)
 {
     /* to create a string and then push the top registor,
      * otherwise the GC may crash due to uninitialized values.
@@ -290,7 +290,7 @@ void be_pushnstring(bvm *vm, const char *str, size_t n)
     var_setstr(reg, s);
 }
 
-const char* be_pushfstring(bvm *vm, const char *format, ...)
+BERRY_API const char* be_pushfstring(bvm *vm, const char *format, ...)
 {
     const char* s;
     va_list arg_ptr;
@@ -300,14 +300,14 @@ const char* be_pushfstring(bvm *vm, const char *format, ...)
     return s;
 }
 
-void be_pushvalue(bvm *vm, int index)
+BERRY_API void be_pushvalue(bvm *vm, int index)
 {
     bvalue *reg = vm->top;
     var_setval(reg, index2value(vm, index));
     be_incrtop(vm);
 }
 
-void be_pushntvclosure(bvm *vm, bntvfunc f, int nupvals)
+BERRY_API void be_pushntvclosure(bvm *vm, bntvfunc f, int nupvals)
 {
     /* to create a native closure and then push the top registor,
      * otherwise the GC may crash due to uninitialized values.
@@ -317,13 +317,13 @@ void be_pushntvclosure(bvm *vm, bntvfunc f, int nupvals)
     var_setntvclos(top, cl);
 }
 
-void be_pushntvfunction(bvm *vm, bntvfunc f)
+BERRY_API void be_pushntvfunction(bvm *vm, bntvfunc f)
 {
     bvalue *top = be_incrtop(vm);
     var_setntvfunc(top, f);
 }
 
-void be_pushclass(bvm *vm, const char *name, const bnfuncinfo *lib)
+BERRY_API void be_pushclass(bvm *vm, const char *name, const bnfuncinfo *lib)
 {
     bclass *c;
     bstring *s = be_newstr(vm, name);
@@ -334,13 +334,13 @@ void be_pushclass(bvm *vm, const char *name, const bnfuncinfo *lib)
     class_init(vm, c, lib); /* bind members */
 }
 
-void be_pushcomptr(bvm *vm, void *ptr)
+BERRY_API void be_pushcomptr(bvm *vm, void *ptr)
 {
     bvalue *top = be_incrtop(vm);
     var_setobj(top, BE_COMPTR, ptr);
 }
 
-void be_remove(bvm *vm, int index)
+BERRY_API void be_remove(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     bvalue *top = --vm->top;
@@ -350,7 +350,7 @@ void be_remove(bvm *vm, int index)
     }
 }
 
-void be_strconcat(bvm *vm, int index)
+BERRY_API void be_strconcat(bvm *vm, int index)
 {
     bstring *s;
     bvalue *dst = index2value(vm, index);
@@ -383,13 +383,13 @@ void be_getsuper(bvm *vm, int index)
     var_setnil(top);
 }
 
-const char* be_typename(bvm *vm, int index)
+BERRY_API const char *be_typename(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     return be_vtype2str(v);
 }
 
-const char* be_classname(bvm *vm, int index)
+BERRY_API const char *be_classname(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     if (var_isclass(v)) {
@@ -403,7 +403,7 @@ const char* be_classname(bvm *vm, int index)
     return NULL;
 }
 
-bbool be_classof(bvm *vm, int index)
+BERRY_API bbool be_classof(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     if (var_isinstance(v)) {
@@ -415,7 +415,7 @@ bbool be_classof(bvm *vm, int index)
     return bfalse;
 }
 
-int be_strlen(bvm *vm, int index)
+BERRY_API int be_strlen(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     if (var_isstr(v)) {
@@ -424,39 +424,39 @@ int be_strlen(bvm *vm, int index)
     return 0;
 }
 
-void be_newlist(bvm *vm)
+BERRY_API void be_newlist(bvm *vm)
 {
     bvalue *top = be_incrtop(vm);
     var_setlist(top, be_list_new(vm));
 }
 
-void be_newmap(bvm *vm)
+BERRY_API void be_newmap(bvm *vm)
 {
     bvalue *top = be_incrtop(vm);
     var_setobj(top, BE_MAP, be_map_new(vm));
 }
 
-void be_newmodule(bvm *vm)
+BERRY_API void be_newmodule(bvm *vm)
 {
     bvalue *top = be_incrtop(vm);
     var_setobj(top, BE_MODULE, be_module_new(vm));
 }
 
-void be_getglobal(bvm *vm, const char *name)
+BERRY_API void be_getglobal(bvm *vm, const char *name)
 {
     bvalue *top = be_incrtop(vm);
     int idx = be_global_find(vm, be_newstr(vm, name));
     *top = *be_global_var(vm, idx);
 }
 
-void be_getbuiltin(bvm *vm, const char *name)
+BERRY_API void be_getbuiltin(bvm *vm, const char *name)
 {
     bvalue *top = be_incrtop(vm);
     int idx = be_builtin_find(vm, be_newstr(vm, name));
     *top = *be_global_var(vm, idx);
 }
 
-bbool be_setmember(bvm *vm, int index, const char *k)
+BERRY_API bbool be_setmember(bvm *vm, int index, const char *k)
 {
     int res = BE_NIL;
     bvalue *o = index2value(vm, index);
@@ -481,17 +481,17 @@ static int ins_member(bvm *vm, int index, const char *k)
     return type;
 }
 
-bbool be_getmember(bvm *vm, int index, const char *k)
+BERRY_API bbool be_getmember(bvm *vm, int index, const char *k)
 {
     return ins_member(vm, index, k) != BE_NIL;
 }
 
-bbool be_getmethod(bvm *vm, int index, const char *k)
+BERRY_API bbool be_getmethod(bvm *vm, int index, const char *k)
 {
     return basetype(ins_member(vm, index, k)) == BE_FUNCTION;
 }
 
-bbool be_getindex(bvm *vm, int index)
+BERRY_API bbool be_getindex(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     bvalue *k = index2value(vm, -1);
@@ -543,7 +543,7 @@ static bvalue* map_setindex(bvm *vm, bmap *map, bvalue *key)
     return dst;
 }
 
-bbool be_setindex(bvm *vm, int index)
+BERRY_API bbool be_setindex(bvm *vm, int index)
 {
     bvalue *dst = NULL;
     bvalue *o = index2value(vm, index);
@@ -572,7 +572,7 @@ bbool be_setindex(bvm *vm, int index)
     return bfalse;
 }
 
-void be_getupval(bvm *vm, int index, int pos)
+BERRY_API void be_getupval(bvm *vm, int index, int pos)
 {
     bvalue *f = index ? index2value(vm, index) : vm->cf->func;
     bvalue *top = be_incrtop(vm);
@@ -586,7 +586,7 @@ void be_getupval(bvm *vm, int index, int pos)
     }
 }
 
-void be_setupval(bvm *vm, int index, int pos)
+BERRY_API void be_setupval(bvm *vm, int index, int pos)
 {
     bvalue *f = index ? index2value(vm, index) : vm->cf->func;
     bvalue *v = index2value(vm, -1);
@@ -598,7 +598,7 @@ void be_setupval(bvm *vm, int index, int pos)
     }
 }
 
-int be_data_size(bvm *vm, int index)
+BERRY_API int be_data_size(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     if (var_islist(v)) {
@@ -611,7 +611,7 @@ int be_data_size(bvm *vm, int index)
     return -1;
 }
 
-void be_data_append(bvm *vm, int index)
+BERRY_API void be_data_append(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     bvalue *v = index2value(vm, -1);
@@ -621,7 +621,7 @@ void be_data_append(bvm *vm, int index)
     }
 }
 
-bbool be_data_insert(bvm *vm, int index)
+BERRY_API bbool be_data_insert(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     bvalue *k = index2value(vm, -2);
@@ -645,7 +645,7 @@ bbool be_data_insert(bvm *vm, int index)
     return bfalse;
 }
 
-bbool be_data_remove(bvm *vm, int index)
+BERRY_API bbool be_data_remove(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     bvalue *k = index2value(vm, -1);
@@ -668,7 +668,7 @@ bbool be_data_remove(bvm *vm, int index)
     return bfalse;
 }
 
-void be_data_resize(bvm *vm, int index)
+BERRY_API void be_data_resize(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     bvalue *v = index2value(vm, -1);
@@ -680,7 +680,7 @@ void be_data_resize(bvm *vm, int index)
     }
 }
 
-bbool be_pushiter(bvm *vm, int index)
+BERRY_API bbool be_pushiter(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     if (var_ismap(v)) {
@@ -741,7 +741,7 @@ static bbool map_hasnext(bvm *vm, bvalue *v)
     return be_map_next(var_toobj(v), &iter) != NULL;
 }
 
-int be_iter_next(bvm *vm, int index)
+BERRY_API int be_iter_next(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     if (var_islist(o)) {
@@ -752,7 +752,7 @@ int be_iter_next(bvm *vm, int index)
     return 0;
 }
 
-bbool be_iter_hasnext(bvm *vm, int index)
+BERRY_API bbool be_iter_hasnext(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     if (var_islist(o)) {
@@ -763,7 +763,7 @@ bbool be_iter_hasnext(bvm *vm, int index)
     return bfalse;
 }
 
-bbool be_refcontains(bvm *vm, int index)
+BERRY_API bbool be_refcontains(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     binstance **ref = be_stack_base(&vm->refstack);
@@ -779,7 +779,7 @@ bbool be_refcontains(bvm *vm, int index)
     return bfalse;
 }
 
-void be_refpush(bvm *vm, int index)
+BERRY_API void be_refpush(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
     binstance *ins = var_toobj(v);
@@ -787,7 +787,7 @@ void be_refpush(bvm *vm, int index)
     be_stack_push(vm, &vm->refstack, &ins);
 }
 
-void be_refpop(bvm *vm)
+BERRY_API void be_refpop(bvm *vm)
 {
     be_stack_pop(&vm->refstack);
     if (be_stack_isempty(&vm->refstack)) {
@@ -795,7 +795,7 @@ void be_refpop(bvm *vm)
     }
 }
 
-int be_returnvalue(bvm *vm)
+BERRY_API int be_returnvalue(bvm *vm)
 {
     bvalue *src = vm->top - 1;
     bvalue *ret = retreg(vm);
@@ -803,28 +803,28 @@ int be_returnvalue(bvm *vm)
     return 0;
 }
 
-int be_returnnilvalue(bvm *vm)
+BERRY_API int be_returnnilvalue(bvm *vm)
 {
     bvalue *ret = retreg(vm);
     var_setnil(ret);
     return 0;
 }
 
-void be_call(bvm *vm, int argc)
+BERRY_API void be_call(bvm *vm, int argc)
 {
     bvalue *fval = vm->top - argc - 1;
     be_assert(fval >= vm->reg);
     be_dofunc(vm, fval, argc);
 }
 
-int be_pcall(bvm *vm, int argc)
+BERRY_API int be_pcall(bvm *vm, int argc)
 {
     bvalue *f = vm->top - argc - 1;
     int res = be_protectedcall(vm, f, argc);
     return res;
 }
 
-void be_codedump(bvm *vm, int index)
+BERRY_API void be_codedump(bvm *vm, int index)
 {
 #if BE_DEBUG_DUMP_LEVEL >= 1
     bvalue *v = index2value(vm, index);
@@ -839,13 +839,13 @@ void be_codedump(bvm *vm, int index)
 
 /* index -1: exception value,
  * index -2: exception argument */
-void be_raise(bvm *vm)
+BERRY_API void be_raise(bvm *vm)
 {
     be_pop(vm, 2);
     be_throw(vm, BE_EXCEPTION);
 }
 
-void be_stop_iteration(bvm *vm)
+BERRY_API void be_stop_iteration(bvm *vm)
 {
     be_pushstring(vm, "stop_iteration");
     be_pushnil(vm); /* no description message */

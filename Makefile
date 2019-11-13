@@ -18,7 +18,7 @@ ifeq ($(OS), Windows_NT) # Windows
     MAP_BUILD := $(MAP_BUILD).exe
 else
     CFLAGS += -DUSE_READLINE_LIB
-    LIBS += -lreadline
+    LIBS += -lreadline -ldl
 endif
 
 ifneq ($(V), 1)

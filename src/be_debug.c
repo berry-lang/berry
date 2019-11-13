@@ -210,7 +210,7 @@ static void addinfo(bvm *vm, const char *msg)
     tracestack(vm);
 }
 
-void be_pusherror(bvm *vm, const char *msg)
+BERRY_API void be_pusherror(bvm *vm, const char *msg)
 {
     addinfo(vm, msg);
     be_throw(vm, BE_EXEC_ERROR);

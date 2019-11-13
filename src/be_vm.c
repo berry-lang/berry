@@ -793,7 +793,7 @@ static void i_raise(bvm *vm, binstruction ins)
     be_throw(vm, BE_EXCEPTION);
 }
 
-bvm* be_vm_new(void)
+BERRY_API bvm* be_vm_new(void)
 {
     bvm *vm = be_os_malloc(sizeof(bvm));
     be_assert(vm != NULL);
@@ -818,7 +818,7 @@ bvm* be_vm_new(void)
     return vm;
 }
 
-void be_vm_delete(bvm *vm)
+BERRY_API void be_vm_delete(bvm *vm)
 {
     be_gc_deleteall(vm);
     be_string_deleteall(vm);

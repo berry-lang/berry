@@ -132,17 +132,11 @@ static int m_path_split(bvm *vm)
 static int m_path_splitext(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isstring(vm, 1)) {
-        const char *ptr, *dot, *str = be_tostring(vm, 1);
-        for (ptr = str; *ptr != '\0' && *ptr == '.'; ++ptr);
-        for (dot = str; *ptr != '\0'; ++ptr) {
-            if (*ptr == '.') {
-                dot = ptr;
-            }
-        }
-        dot = dot == str ? ptr : dot;
+        const char *path = be_tostring(vm, 1);
+        const char *split = be_splitname(path);
         be_getbuiltin(vm, "list");
-        be_pushnstring(vm, str, dot - str);
-        be_pushstring(vm, dot);
+        be_pushnstring(vm, path, split - path);
+        be_pushstring(vm, split);
         be_call(vm, 2);
         be_return(vm);
     }

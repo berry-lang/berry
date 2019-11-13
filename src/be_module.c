@@ -9,6 +9,8 @@
 #include "be_vm.h"
 #include <string.h>
 
+#define SUFFIX_LEN      5 /* length of (.be .bec .so .dll) + 1 */
+
 extern bntvmodule* const be_module_table[];
 
 static bmodule* native_module(bvm *vm, bntvmodule *nm, bvalue *dst);
@@ -104,7 +106,7 @@ static char* fixpath(bvm *vm, bstring *path, size_t *size)
     be_assert(var_isclosure(func));
     base = str(cl->proto->source); /* get the source file path */
     split = be_splitpath(base);
-    *size = split - base + (size_t)str_len(path) + 1;
+    *size = split - base + (size_t)str_len(path) + SUFFIX_LEN;
     buffer = be_malloc(vm, *size);
     strncpy(buffer, base, split - base);
     strcpy(buffer + (split - base), str(path));
@@ -115,7 +117,7 @@ static char* conpath(bvm *vm, bstring *path1, bstring *path2, size_t *size)
 {
     char *buffer;
     int len1 = str_len(path1);
-    *size = (size_t)len1 + (size_t)str_len(path2) + 1;
+    *size = (size_t)len1 + (size_t)str_len(path2) + SUFFIX_LEN;
     buffer = be_malloc(vm, *size);
     strcpy(buffer, str(path1));
     buffer[len1] = '/';
@@ -123,46 +125,69 @@ static char* conpath(bvm *vm, bstring *path1, bstring *path2, size_t *size)
     return buffer;
 }
 
-static int load_scriptfile(bvm *vm, char *path, size_t size)
+static bbool open_script(bvm *vm, char *path)
 {
     int res = be_fileparser(vm, path, 1);
-    be_free(vm, path, size);
     if (res == BE_OK)
         be_call(vm, 0);
-    return res;
+    return res == BE_OK;
 }
 
-static int load_path(bvm *vm, bstring *path, bstring *mod)
+static bbool open_dllib(bvm *vm, char *path)
+{
+    int res = be_loadlib(vm, path);
+    if (res == BE_OK)
+        be_call(vm, 0);
+    return res == BE_OK;
+}
+
+static bbool open_libfile(bvm *vm, char *path, size_t size)
+{
+    do {
+        strcpy(path + size - SUFFIX_LEN, ".be");
+        if (open_script(vm, path))
+            break;
+        strcpy(path + size - SUFFIX_LEN, ".so");
+        if (open_dllib(vm, path))
+            break;
+        be_free(vm, path, size);
+        return bfalse;
+    } while (0);
+    be_free(vm, path, size);
+    return btrue;
+}
+
+static bbool load_path(bvm *vm, bstring *path, bstring *mod)
 {
     size_t size;
     char *fullpath = conpath(vm, path, mod, &size);
-    return load_scriptfile(vm, fullpath, size);
+    return open_libfile(vm, fullpath, size);
 }
 
-static int load_cwd(bvm *vm, bstring *path)
+static bbool load_cwd(bvm *vm, bstring *path)
 {
     size_t size;
     char *fullpath = fixpath(vm, path, &size);
-    return load_scriptfile(vm, fullpath, size);
+    return open_libfile(vm, fullpath, size);
 }
 
-bbool load_script(bvm *vm, bstring *path)
+static bbool load_package(bvm *vm, bstring *path)
 {
-    bbool res = load_cwd(vm, path) == BE_OK; /* load from current directory */
+    bbool res = load_cwd(vm, path); /* load from current directory */
     if (!res && vm->module.path) {
         blist *list = vm->module.path;
         bvalue *v = be_list_end(list) - 1;
         bvalue *first = be_list_data(list);
         for (; !res && v >= first; v--) {
             if (var_isstr(v)) {
-                res = load_path(vm, var_tostr(v), path) == BE_OK;
+                res = load_path(vm, var_tostr(v), path);
             }
         }
     }
     return res;
 }
 
-bbool load_native(bvm *vm, bstring *path)
+static bbool load_native(bvm *vm, bstring *path)
 {
     bntvmodule *nm = find_native(path);
     bmodule *mod = native_module(vm, nm, NULL);
@@ -204,7 +229,7 @@ bbool be_module_load(bvm *vm, bstring *path)
         do {
             if (load_native(vm, path))
                 break;
-            if (load_script(vm, path))
+            if (load_package(vm, path))
                 break;
             return bfalse; /* load failed */
         } while (0);
@@ -271,14 +296,14 @@ static blist* pathlist(bvm *vm)
 }
 
 /* push the path list to the top */
-void be_module_path(bvm *vm)
+BERRY_API void be_module_path(bvm *vm)
 {
     blist *list = pathlist(vm);
     bvalue *reg = be_incrtop(vm);
     var_setlist(reg, list);
 }
 
-void be_module_path_set(bvm *vm, const char *path)
+BERRY_API void be_module_path_set(bvm *vm, const char *path)
 {
     blist *list = pathlist(vm);
     bvalue *value = be_list_append(vm, list, NULL);
