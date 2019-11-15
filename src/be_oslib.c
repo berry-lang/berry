@@ -162,7 +162,7 @@ static int m_path_join(bvm *vm)
             len += be_strlen(vm, i) + 1;
         } /* TODO: error handling */
     }
-    buf = p = be_malloc(vm, len + 1);
+    buf = p = be_malloc(vm, (size_t)len + 1);
     for (i = 1; i <= argc; ++i) {
         int l = be_strlen(vm, i);
         const char *s = be_tostring(vm, i);
@@ -176,7 +176,7 @@ static int m_path_join(bvm *vm)
         }
     }
     be_pushnstring(vm, buf, p - buf);
-    be_free(vm, buf, len + 1);
+    be_free(vm, buf, (size_t)len + 1);
     be_return(vm);
 }
 

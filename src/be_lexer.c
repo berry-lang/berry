@@ -308,7 +308,7 @@ static bint scan_hexadecimal(blexer *lexer)
     bint res = 0;
     int dig, num = 0;
     while ((dig = char2hex(lgetc(lexer))) >= 0) {
-        res = ((unsigned)res << 4) + dig;
+        res = ((bint)res << 4) + dig;
         next(lexer);
         ++num;
     }

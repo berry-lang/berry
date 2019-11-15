@@ -1,4 +1,4 @@
-CFLAGS    = -Wall -Wextra -std=c99 -pedantic-errors -Wl,-E -O2
+CFLAGS    = -Wall -Wextra -std=c99 -pedantic-errors -O2
 LIBS      = -lm
 TARGET    = berry
 CC        = gcc
@@ -17,7 +17,7 @@ ifeq ($(OS), Windows_NT) # Windows
     TARGET := $(TARGET).exe
     MAP_BUILD := $(MAP_BUILD).exe
 else
-    CFLAGS += -DUSE_READLINE_LIB
+    CFLAGS += -DUSE_READLINE_LIB -Wl,-E
     LIBS += -lreadline -ldl
 endif
 

@@ -81,7 +81,13 @@ enum berrorcode {
 #endif
 
 /* only linux */
-#define BERRY_LOCAL             __attribute__ ((visibility ("hidden")))
+#if defined(_MSC_VER)
+  #define BERRY_LOCAL
+#elif defined(__GNUC__) && !defined(_WIN32)
+  #define BERRY_LOCAL           __attribute__ ((visibility ("hidden")))
+#else
+  #define BERRY_LOCAL
+#endif
 
 typedef struct bvm bvm;        /* virtual machine structure */
 typedef int (*bntvfunc)(bvm*); /* native function pointer */

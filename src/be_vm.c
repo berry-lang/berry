@@ -833,7 +833,7 @@ BERRY_API void be_vm_delete(bvm *vm)
 static void vm_exec(bvm *vm)
 {
     vm->cf->status |= BASE_FRAME;
-    newframe:
+newframe: /* a new call frame */
     for (;;) {
         binstruction ins = *vm->ip;
         switch (IGET_OP(ins)) {

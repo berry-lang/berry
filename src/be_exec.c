@@ -133,7 +133,7 @@ int be_protectedparser(bvm *vm,
     s.fname = fname;
     s.reader = reader;
     s.data = data;
-    s.islocal = islocal;
+    s.islocal = (bbyte)islocal;
     vm_state_save(vm, &state);
     res = be_execprotected(vm, m_parser, &s);
     if (res) { /* restore call stack */
@@ -274,9 +274,9 @@ bvalue* be_incrtop(bvm *vm)
 
 void be_stackpush(bvm *vm)
 {
-    be_incrtop(vm);
     /* make sure there is enough stack space */
     be_stack_require(vm, 1 + BE_STACK_FREE_MIN);
+    be_incrtop(vm);
 }
 
 void be_stack_require(bvm *vm, int count)
@@ -321,11 +321,32 @@ void be_stack_expansion(bvm *vm, int n)
     stack_resize(vm, size + n);
 }
 
+static void fixup_exceptstack(bvm* vm, struct bexecptframe* lbase)
+{
+    struct bexecptframe *base = be_stack_base(&vm->exceptstack);
+    if (lbase != base) { /* the address has changed when the stack is expanded */
+        struct bexecptframe *top = be_stack_top(&vm->exceptstack);
+        bbyte *begin = (bbyte*)&lbase->errjmp;
+        bbyte *end = (bbyte*)&(lbase + (top - base))->errjmp;
+        intptr_t offset = (bbyte*)base - (bbyte*)lbase;
+        struct blongjmp *errjmp = vm->errjmp;
+        while (errjmp) {
+            bbyte *prev = (bbyte*)errjmp->prev;
+            if (prev >= begin && prev < end) {
+                prev += offset; /* fixup the prev pointer */
+                errjmp->prev = (struct blongjmp*)prev;
+            }
+            errjmp = (struct blongjmp*)prev;
+        }
+    }
+}
+
 /* set an exception handling recovery point. To do this, we have to
  * push some VM states into the exception stack. */
 void be_except_block_setup(bvm *vm)
 {
     struct bexecptframe *frame;
+    struct bexecptframe *lbase = be_stack_base(&vm->exceptstack);
     be_stack_push(vm, &vm->exceptstack, NULL);
     frame = be_stack_top(&vm->exceptstack);
     frame->depth = be_stack_count(&vm->callstack); /* the call stack depth */
@@ -334,6 +355,7 @@ void be_except_block_setup(bvm *vm)
     frame->errjmp.status = 0;
     frame->errjmp.prev = vm->errjmp; /* save long jump list */
     vm->errjmp = &frame->errjmp;
+    fixup_exceptstack(vm, lbase);
 }
 
 /* resumes to the state of the previous frame when an exception occurs. */
@@ -380,6 +402,7 @@ void be_except_block_close(bvm *vm, int count)
     be_vector_resize(vm, &vm->exceptstack, size - count);
 }
 
+#if defined(__linux)
 #include <dlfcn.h>
 
 #if defined(__GNUC__)
@@ -399,3 +422,10 @@ BERRY_API int be_loadlib(bvm *vm, const char *path)
     be_pushntvfunction(vm, func);
     return BE_OK;
 }
+#else
+BERRY_API int be_loadlib(bvm *vm, const char *path)
+{
+    (void)vm, (void)path;
+    return BE_IO_ERROR;
+}
+#endif

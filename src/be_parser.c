@@ -1460,7 +1460,7 @@ bclosure* be_parser_source(bvm *vm,
     parser.vm = vm;
     parser.finfo = NULL;
     parser.cl = cl;
-    parser.islocal = islocal;
+    parser.islocal = (bbyte)islocal;
     var_setclosure(vm->top, cl);
     be_stackpush(vm);
     be_lexer_init(&parser.lexer, vm, fname, reader, data);

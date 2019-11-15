@@ -32,13 +32,13 @@
 
 #define be_const_int(_val) \
 { \
-    .v.i = (_val), \
+    .v.i = (bint)(_val), \
     .type = BE_INT \
 }
 
 #define be_const_real(_val) \
 { \
-    .v.r = (_val), \
+    .v.r = (breal)(_val), \
     .type = BE_REAL \
 }
 

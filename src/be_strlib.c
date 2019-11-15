@@ -468,7 +468,7 @@ static int str_i2hex(bvm *vm)
     int top = be_top(vm);
     if (top && be_isint(vm, 1)) {
         bint value = be_toint(vm, 1);
-        char fmt[10] = "%" BE_INT_FMTLEN "X", buf[18];
+        char fmt[10] = { "%" BE_INT_FMTLEN "X" }, buf[18];
         if (top >= 2 && be_isint(vm, 2)) {
             bint num = be_toint(vm, 2);
             if (num > 0 && num <= 16) {
