@@ -11,7 +11,9 @@
 
 #define SUFFIX_LEN      5 /* length of (.be .bec .so .dll) + 1 */
 
-extern bntvmodule* const be_module_table[];
+#define DLL_SUFFIX ".so"
+
+extern BERRY_LOCAL bntvmodule *const be_module_table[];
 
 static bmodule* native_module(bvm *vm, bntvmodule *nm, bvalue *dst);
 
@@ -147,7 +149,7 @@ static bbool open_libfile(bvm *vm, char *path, size_t size)
         strcpy(path + size - SUFFIX_LEN, ".be");
         if (open_script(vm, path))
             break;
-        strcpy(path + size - SUFFIX_LEN, ".so");
+        strcpy(path + size - SUFFIX_LEN, DLL_SUFFIX);
         if (open_dllib(vm, path))
             break;
         be_free(vm, path, size);
