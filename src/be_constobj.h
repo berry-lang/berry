@@ -32,13 +32,13 @@
 
 #define be_const_int(_val) \
 { \
-    .v.i = (_val), \
+    .v.i = (bint)(_val), \
     .type = BE_INT \
 }
 
 #define be_const_real(_val) \
 { \
-    .v.r = (_val), \
+    .v.r = (breal)(_val), \
     .type = BE_REAL \
 }
 
@@ -54,12 +54,13 @@
     .type = BE_MODULE \
 }
 
-#define be_define_const_module(_module)             \
+#define be_define_const_module(_module, _init)      \
 bntvmodule be_native_module(_module) = {            \
     .name = #_module,                               \
-    .table = NULL,                                  \
+    .attrs = NULL,                                  \
     .size = 0,                                      \
-    .module = (bmodule *)&(m_lib##_module)          \
+    .module = (bmodule *)&(m_lib##_module),         \
+    .init = _init                                   \
 }
 
 #endif

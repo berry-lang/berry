@@ -44,6 +44,8 @@ function:
     information:
         function_name:
             string
+        source:
+            string
         argc: 1   -- arguments count
         nstack: 1 -- number of stack size by this function
         extra: 2  -- extra data

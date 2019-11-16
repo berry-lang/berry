@@ -221,6 +221,7 @@ static void save_proto(bvm *vm, void *fp, bproto *proto)
 {
     if (proto) {
         save_string(fp, proto->name); /* name */
+        save_string(fp, proto->source); /* source */
         save_byte(fp, proto->argc); /* argc */
         save_byte(fp, proto->nstack); /* nstack */
         save_bytecode(fp, proto); /* bytecode */
@@ -446,6 +447,7 @@ static void load_proto(bvm *vm, void *fp, bproto **proto)
 {
     *proto = be_newproto(vm);
     (*proto)->name = load_string(vm, fp);
+    (*proto)->source = load_string(vm, fp);
     (*proto)->argc = load_byte(fp);
     (*proto)->nstack = load_byte(fp);
     load_bytecode(vm, fp, *proto);
@@ -460,6 +462,7 @@ void load_global_info(bvm *vm, void *fp)
     for (i = 0; i < count; ++i) {
         be_global_new_anonymous(vm);
     }
+    be_global_release_space(vm);
 }
 
 bclosure* be_bytecode_load(bvm *vm, const char *filename)

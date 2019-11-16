@@ -10,15 +10,15 @@
 #define cstr(_s)    (cast(bcstring*, s)->s)
 
 #define be_define_const_str(_name, _s, _hash, _extra, _len, _next) \
-const bcstring be_const_str_##_name = { \
-    .next = (bgcobject *)_next, \
-    .type = BE_STRING, \
-    .marked = GC_CONST, \
-    .extra = _extra, \
-    .slen = _len, \
-    .hash = _hash, \
-    .s = _s \
-}
+    BERRY_LOCAL const bcstring be_const_str_##_name = {            \
+        .next = (bgcobject *)_next,                                \
+        .type = BE_STRING,                                         \
+        .marked = GC_CONST,                                        \
+        .extra = _extra,                                           \
+        .slen = _len,                                              \
+        .hash = _hash,                                             \
+        .s = _s                                                    \
+    }
 
 /* const string table */
 struct bconststrtab {

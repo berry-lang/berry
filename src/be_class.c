@@ -163,10 +163,10 @@ static binstance* newobjself(bvm *vm, bclass *c)
 static binstance* newobject(bvm *vm, bclass *c)
 {
     binstance *obj, *prev;
-    bvalue *buf = be_incrtop(vm); /* protect new objects from GC */
     be_assert(c != NULL);
     obj = prev = newobjself(vm, c);
-    var_setinstance(buf, obj);
+    var_setinstance(vm->top, obj);
+    be_incrtop(vm); /* protect new objects from GC */
     for (c = c->super; c; c = c->super) {
         prev->super = newobjself(vm, c);
         prev = prev->super;

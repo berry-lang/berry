@@ -17,8 +17,8 @@ ifeq ($(OS), Windows_NT) # Windows
     TARGET := $(TARGET).exe
     MAP_BUILD := $(MAP_BUILD).exe
 else
-    CFLAGS += -DUSE_READLINE_LIB
-    LIBS += -lreadline
+    CFLAGS += -DUSE_READLINE_LIB -Wl,-E
+    LIBS += -lreadline -ldl
 endif
 
 ifneq ($(V), 1)
@@ -44,6 +44,7 @@ debug: all
 $(TARGET): $(OBJS)
 	$(MSG) [Linking...]
 	$(Q) $(CC) $(OBJS) $(CFLAGS) $(LIBS) -o $@
+	$(Q) $(AR) -r libberry.a $(OBJS)
 	$(MSG) done
 
 $(OBJS): %.o: %.c

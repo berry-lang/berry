@@ -8,12 +8,12 @@
 
 /* standard input and output */
 
-void be_writebuffer(const char *buffer, size_t length)
+BERRY_API void be_writebuffer(const char *buffer, size_t length)
 {
     be_fwrite(stdout, buffer, length);
 }
 
-char* be_readstring(char *buffer, size_t size)
+BERRY_API char* be_readstring(char *buffer, size_t size)
 {
     return be_fgets(stdin, buffer, (int)size);
 }

@@ -32,6 +32,7 @@ private:
     std::string scope(const block &block);
     std::string super(const block &block);
     std::string name(const block &block);
+    std::string init(const block &block);
     bool block_depend(const block &block);
     std::string query_item(const std::string &str);
 

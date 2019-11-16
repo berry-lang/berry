@@ -38,6 +38,11 @@ struct bstringtable {
     int size;
 };
 
+struct bmoduledesc {
+    bmap *loaded; /* loaded module map */
+    blist *path; /* module load path list */
+};
+
 struct bvm {
     bglobaldesc gbldesc; /* global description */
     bvalue *stack; /* stack space */
@@ -51,8 +56,8 @@ struct bvm {
     binstruction *ip; /* function instruction pointer */
     struct blongjmp *errjmp; /* error jump point */
     bstack refstack; /* object reference stack */
-    struct bmodule *modulelist;
-    struct bstringtable strtab;
+    struct bmoduledesc module; /* module description */
+    struct bstringtable strtab; /* short string table */
     struct bgc gc;
 };
 

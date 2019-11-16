@@ -131,8 +131,8 @@ typedef struct bproto {
     int codesize; /* code size */
     int nconst; /* constants count */
     int nproto; /* proto count */
+    bstring *source; /* source file name */
 #if BE_DEBUG_RUNTIME_INFO /* debug information */
-    bstring *source;
     blineinfo *lineinfo;
     int nlineinfo;
 #endif

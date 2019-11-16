@@ -31,6 +31,7 @@ struct pparser {
     const char *fname;
     breader reader;
     void *data;
+    bbyte islocal;
 };
 
 struct pcall {
@@ -52,7 +53,7 @@ struct filebuf {
     char buf[FILE_BUFFER_SIZE];
 };
 
-void be_throw(bvm *vm, int errorcode)
+BERRY_API void be_throw(bvm *vm, int errorcode)
 {
     if (vm->errjmp) {
         vm->errjmp->status = errorcode;
@@ -62,7 +63,7 @@ void be_throw(bvm *vm, int errorcode)
     }
 }
 
-void be_exit(bvm *vm, int status)
+BERRY_API void be_exit(bvm *vm, int status)
 {
     if (vm->errjmp) {
         be_pushint(vm, status);
@@ -117,13 +118,14 @@ static void vm_state_restore(bvm *vm, const struct vmstate *state)
 static void m_parser(bvm *vm, void *data)
 {
     struct pparser *p = cast(struct pparser*, data);
-    bclosure *cl = be_parser_source(vm, p->fname, p->reader, p->data);
+    bclosure *cl = be_parser_source(vm,
+        p->fname, p->reader, p->data, p->islocal);
     var_setclosure(vm->top, cl);
     be_incrtop(vm);
 }
 
 int be_protectedparser(bvm *vm,
-    const char *fname, breader reader, void *data)
+    const char *fname, breader reader, void *data, int islocal)
 {
     int res;
     struct pparser s;
@@ -131,6 +133,7 @@ int be_protectedparser(bvm *vm,
     s.fname = fname;
     s.reader = reader;
     s.data = data;
+    s.islocal = (bbyte)islocal;
     vm_state_save(vm, &state);
     res = be_execprotected(vm, m_parser, &s);
     if (res) { /* restore call stack */
@@ -160,27 +163,34 @@ static const char* _fgets(void *data, size_t *size)
     return NULL;
 }
 
-int be_loadbuffer(bvm *vm,
+BERRY_API int be_loadbuffer(bvm *vm,
     const char *name, const char *buffer, size_t length)
 {
     struct strbuf sbuf;
     sbuf.s = buffer;
     sbuf.len = length;
-    return be_protectedparser(vm, name, _sgets, &sbuf);
+    return be_protectedparser(vm, name, _sgets, &sbuf, 0);
 }
 
-int be_loadfile(bvm *vm, const char *name)
+int be_fileparser(bvm *vm, const char *name, int islocal)
 {
     int res = BE_IO_ERROR;
     struct filebuf *fbuf = be_malloc(vm, sizeof(struct filebuf));
     fbuf->fp = be_fopen(name, "r");
     if (fbuf->fp) {
-        res = be_protectedparser(vm, name, _fgets, fbuf);
+        res = be_protectedparser(vm, name, _fgets, fbuf, islocal);
         be_fclose(fbuf->fp);
-    } else {
-        be_pushfstring(vm, "error: can not open file '%s'.", name);
     }
     be_free(vm, fbuf, sizeof(struct filebuf));
+    return res;
+}
+
+BERRY_API int be_loadfile(bvm *vm, const char *name)
+{
+    int res = be_fileparser(vm, name, 0);
+    if (res == BE_IO_ERROR) {
+        be_pushfstring(vm, "error: can not open file '%s'.", name);
+    }
     return res;
 }
 
@@ -198,7 +208,7 @@ static void _bytecode_load(bvm *vm, void *data)
 }
 
 /* load bytecode file */
-int be_loadexec(bvm *vm, const char *name)
+BERRY_API int be_loadexec(bvm *vm, const char *name)
 {
     int res;
     struct vmstate state;
@@ -219,7 +229,7 @@ static void _bytecode_save(bvm *vm, void *data)
 }
 
 /* save bytecode file */
-int be_saveexec(bvm *vm, const char *name)
+BERRY_API int be_saveexec(bvm *vm, const char *name)
 {
     int res;
     struct vmstate state;
@@ -264,9 +274,9 @@ bvalue* be_incrtop(bvm *vm)
 
 void be_stackpush(bvm *vm)
 {
-    be_incrtop(vm);
     /* make sure there is enough stack space */
     be_stack_require(vm, 1 + BE_STACK_FREE_MIN);
+    be_incrtop(vm);
 }
 
 void be_stack_require(bvm *vm, int count)
@@ -311,11 +321,32 @@ void be_stack_expansion(bvm *vm, int n)
     stack_resize(vm, size + n);
 }
 
+static void fixup_exceptstack(bvm* vm, struct bexecptframe* lbase)
+{
+    struct bexecptframe *base = be_stack_base(&vm->exceptstack);
+    if (lbase != base) { /* the address has changed when the stack is expanded */
+        struct bexecptframe *top = be_stack_top(&vm->exceptstack);
+        bbyte *begin = (bbyte*)&lbase->errjmp;
+        bbyte *end = (bbyte*)&(lbase + (top - base))->errjmp;
+        intptr_t offset = (bbyte*)base - (bbyte*)lbase;
+        struct blongjmp *errjmp = vm->errjmp;
+        while (errjmp) {
+            bbyte *prev = (bbyte*)errjmp->prev;
+            if (prev >= begin && prev < end) {
+                prev += offset; /* fixup the prev pointer */
+                errjmp->prev = (struct blongjmp*)prev;
+            }
+            errjmp = (struct blongjmp*)prev;
+        }
+    }
+}
+
 /* set an exception handling recovery point. To do this, we have to
  * push some VM states into the exception stack. */
 void be_except_block_setup(bvm *vm)
 {
     struct bexecptframe *frame;
+    struct bexecptframe *lbase = be_stack_base(&vm->exceptstack);
     be_stack_push(vm, &vm->exceptstack, NULL);
     frame = be_stack_top(&vm->exceptstack);
     frame->depth = be_stack_count(&vm->callstack); /* the call stack depth */
@@ -324,6 +355,7 @@ void be_except_block_setup(bvm *vm)
     frame->errjmp.status = 0;
     frame->errjmp.prev = vm->errjmp; /* save long jump list */
     vm->errjmp = &frame->errjmp;
+    fixup_exceptstack(vm, lbase);
 }
 
 /* resumes to the state of the previous frame when an exception occurs. */
@@ -369,3 +401,31 @@ void be_except_block_close(bvm *vm, int count)
     vm->errjmp = frame->errjmp.prev;
     be_vector_resize(vm, &vm->exceptstack, size - count);
 }
+
+#if defined(__linux)
+#include <dlfcn.h>
+
+#if defined(__GNUC__)
+  #define cast_func(f) (__extension__(bntvfunc)(f))
+#else
+  #define cast_func(f) ((bntvfunc)(f))
+#endif
+
+/* load shared library */
+BERRY_API int be_loadlib(bvm *vm, const char *path)
+{
+    void *handle = dlopen(path, RTLD_LAZY);
+    bntvfunc func = cast_func(dlsym(handle, "berry_export"));
+    if (func == NULL) {
+        return BE_IO_ERROR;
+    }
+    be_pushntvfunction(vm, func);
+    return BE_OK;
+}
+#else
+BERRY_API int be_loadlib(bvm *vm, const char *path)
+{
+    (void)vm, (void)path;
+    return BE_IO_ERROR;
+}
+#endif

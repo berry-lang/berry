@@ -31,3 +31,14 @@ assert(def ()
             end
         end
     end() == 11)
+
+# test for "stop_iteration" exception as recurrence
+def for_rec(depth)
+    for (i : 0 .. 10)
+        if (i == 4 && depth < 200)
+            for_rec(depth + 1)
+        end
+    end
+end
+
+for_rec(0)

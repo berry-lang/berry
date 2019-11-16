@@ -80,8 +80,8 @@ bproto* be_newproto(bvm *vm)
         p->codesize = 0;
         p->argc = 0;
         p->extra = 0;
-#if BE_DEBUG_RUNTIME_INFO
         p->source = NULL;
+#if BE_DEBUG_RUNTIME_INFO
         p->lineinfo = NULL;
         p->nlineinfo = 0;
 #endif

@@ -7,7 +7,7 @@
 #include "berry_conf.h"
 
 /* do not modify the version number! */
-#define BERRY_VERSION   "0.1.4"
+#define BERRY_VERSION   "0.1.6"
 
 #if BE_STACK_TOTAL_MAX < BE_STACK_FREE_MIN * 2
 #error "The value of the macro BE_STACK_TOTAL_MAX is too small."
@@ -69,6 +69,26 @@ enum berrorcode {
 #define BE_CSTRING              5
 #define BE_CMODULE              6
 
+/* API function mark */
+#ifdef BERRT_EXPORT_DLL
+  #if defined(BERRY_LIB)
+    #define BERRY_API           __declspec(dllexport)
+  #else
+    #define BERRY_API           __declspec(dllimport)
+  #endif
+#else
+  #define BERRY_API             extern
+#endif
+
+/* only linux */
+#if defined(_MSC_VER)
+  #define BERRY_LOCAL
+#elif defined(__GNUC__) && !defined(_WIN32)
+  #define BERRY_LOCAL           __attribute__ ((visibility ("hidden")))
+#else
+  #define BERRY_LOCAL
+#endif
+
 typedef struct bvm bvm;        /* virtual machine structure */
 typedef int (*bntvfunc)(bvm*); /* native function pointer */
 
@@ -94,10 +114,11 @@ typedef const struct {
 
 /* native module object */
 typedef const struct bntvmodule {
-    const char *name;
-    bntvmodule_obj *table;
-    size_t size;
-    const struct bmodule *module;
+    const char *name; /* native module name */
+    bntvmodule_obj *attrs; /* native module attributes */
+    size_t size; /* native module attribute count */
+    const struct bmodule *module; /* const module object */
+    bntvfunc init; /* initialization function */
 } bntvmodule;
 
 /* native module node definition macro */
@@ -125,20 +146,22 @@ typedef const struct bntvmodule {
 #define be_native_module(name)  be_native_module_##name
 
 #define be_native_module_attr_table(name)           \
-    static bntvmodule_obj name[] =
+    static bntvmodule_obj name##_attrs[] =
 
 /* native module declaration macro */
 #define be_extern_native_module(name)               \
     extern bntvmodule be_native_module(name)
 
 /* native module definition macro */
-#define be_define_native_module(_name, _attrs)      \
-bntvmodule be_native_module(_name) = {              \
-    .name = #_name,                                 \
-    .table = (_attrs),                              \
-    .size = (sizeof(_attrs) / sizeof((_attrs)[0])), \
-    .module = NULL                                  \
-}
+#define be_define_native_module(_name, _init)       \
+    bntvmodule be_native_module(_name) = {          \
+        .name = #_name,                             \
+        .attrs = _name##_attrs,                     \
+        .size = (sizeof(_name##_attrs)              \
+               / sizeof(_name##_attrs[0])),         \
+        .module = NULL,                             \
+        .init = _init                               \
+    }
 
 #if !BE_DEBUG
   #if defined(be_assert)
@@ -160,107 +183,113 @@ bntvmodule be_native_module(_name) = {              \
 #define be_dostring(vm, s) \
     (be_loadstring((vm), (s)) || be_pcall((vm), 0))
 
-bint be_str2int(const char *str, const char **endstr);
-breal be_str2real(const char *str, const char **endstr);
-const char* be_str2num(bvm *vm, const char *str);
+BERRY_API bint be_str2int(const char *str, const char **endstr);
+BERRY_API breal be_str2real(const char *str, const char **endstr);
+BERRY_API const char *be_str2num(bvm *vm, const char *str);
 
-int be_top(bvm *vm);
-const char* be_typename(bvm *vm, int index);
-const char* be_classname(bvm *vm, int index);
-bbool be_classof(bvm *vm, int index);
-int be_strlen(bvm *vm, int index);
-void be_strconcat(bvm *vm, int index);
-void be_pop(bvm *vm, int n);
-void be_remove(bvm *vm, int index);
-int be_absindex(bvm *vm, int index);
+BERRY_API int be_top(bvm *vm);
+BERRY_API const char *be_typename(bvm *vm, int index);
+BERRY_API const char *be_classname(bvm *vm, int index);
+BERRY_API bbool be_classof(bvm *vm, int index);
+BERRY_API int be_strlen(bvm *vm, int index);
+BERRY_API void be_strconcat(bvm *vm, int index);
+BERRY_API void be_pop(bvm *vm, int n);
+BERRY_API void be_remove(bvm *vm, int index);
+BERRY_API int be_absindex(bvm *vm, int index);
 
-bbool be_isnil(bvm *vm, int index);
-bbool be_isbool(bvm *vm, int index);
-bbool be_isint(bvm *vm, int index);
-bbool be_isreal(bvm *vm, int index);
-bbool be_isnumber(bvm *vm, int index);
-bbool be_isstring(bvm *vm, int index);
-bbool be_isclosure(bvm *vm, int index);
-bbool be_isntvclos(bvm *vm, int index);
-bbool be_isfunction(bvm *vm, int index);
-bbool be_isproto(bvm *vm, int index);
-bbool be_isclass(bvm *vm, int index);
-bbool be_isinstance(bvm *vm, int index);
-bbool be_islist(bvm *vm, int index);
-bbool be_ismap(bvm *vm, int index);
-bbool be_iscomptr(bvm *vm, int index);
+BERRY_API bbool be_isnil(bvm *vm, int index);
+BERRY_API bbool be_isbool(bvm *vm, int index);
+BERRY_API bbool be_isint(bvm *vm, int index);
+BERRY_API bbool be_isreal(bvm *vm, int index);
+BERRY_API bbool be_isnumber(bvm *vm, int index);
+BERRY_API bbool be_isstring(bvm *vm, int index);
+BERRY_API bbool be_isclosure(bvm *vm, int index);
+BERRY_API bbool be_isntvclos(bvm *vm, int index);
+BERRY_API bbool be_isfunction(bvm *vm, int index);
+BERRY_API bbool be_isproto(bvm *vm, int index);
+BERRY_API bbool be_isclass(bvm *vm, int index);
+BERRY_API bbool be_isinstance(bvm *vm, int index);
+BERRY_API bbool be_islist(bvm *vm, int index);
+BERRY_API bbool be_ismap(bvm *vm, int index);
+BERRY_API bbool be_iscomptr(bvm *vm, int index);
 
-bint be_toint(bvm *vm, int index);
-breal be_toreal(bvm *vm, int index);
-int be_toindex(bvm *vm, int index);
-bbool be_tobool(bvm *vm, int index);
-const char* be_tostring(bvm *vm, int index);
-void* be_tocomptr(bvm *vm, int index);
-void be_moveto(bvm *vm, int from, int to);
-void be_pushnil(bvm *vm);
-void be_pushbool(bvm *vm, int b);
-void be_pushint(bvm *vm, bint i);
-void be_pushreal(bvm *vm, breal r);
-void be_pushstring(bvm *vm, const char *str);
-void be_pushnstring(bvm *vm, const char *str, size_t n);
-const char* be_pushfstring(bvm *vm, const char *format, ...);
-void be_pushvalue(bvm *vm, int index);
-void be_pushntvclosure(bvm *vm, bntvfunc f, int nupvals);
-void be_pushntvfunction(bvm *vm, bntvfunc f);
-void be_pushclass(bvm *vm, const char *name, const bnfuncinfo *lib);
-void be_pushcomptr(bvm *vm, void *ptr);
-bbool be_pushiter(bvm *vm, int index);
-void be_pusherror(bvm *vm, const char *msg);
+BERRY_API bint be_toint(bvm *vm, int index);
+BERRY_API breal be_toreal(bvm *vm, int index);
+BERRY_API int be_toindex(bvm *vm, int index);
+BERRY_API bbool be_tobool(bvm *vm, int index);
+BERRY_API const char* be_tostring(bvm *vm, int index);
+BERRY_API void* be_tocomptr(bvm *vm, int index);
+BERRY_API void be_moveto(bvm *vm, int from, int to);
+BERRY_API void be_pushnil(bvm *vm);
+BERRY_API void be_pushbool(bvm *vm, int b);
+BERRY_API void be_pushint(bvm *vm, bint i);
+BERRY_API void be_pushreal(bvm *vm, breal r);
+BERRY_API void be_pushstring(bvm *vm, const char *str);
+BERRY_API void be_pushnstring(bvm *vm, const char *str, size_t n);
+BERRY_API const char* be_pushfstring(bvm *vm, const char *format, ...);
+BERRY_API void be_pushvalue(bvm *vm, int index);
+BERRY_API void be_pushntvclosure(bvm *vm, bntvfunc f, int nupvals);
+BERRY_API void be_pushntvfunction(bvm *vm, bntvfunc f);
+BERRY_API void be_pushclass(bvm *vm, const char *name, const bnfuncinfo *lib);
+BERRY_API void be_pushcomptr(bvm *vm, void *ptr);
+BERRY_API bbool be_pushiter(bvm *vm, int index);
+BERRY_API void be_pusherror(bvm *vm, const char *msg);
 
-void be_newlist(bvm *vm);
-void be_newmap(bvm *vm);
-void be_getglobal(bvm *vm, const char *name);
-void be_getbuiltin(bvm *vm, const char *name);
-bbool be_setmember(bvm *vm, int index, const char *k);
-bbool be_getmember(bvm *vm, int index, const char *k);
-bbool be_getmethod(bvm *vm, int index, const char *k);
-bbool be_getindex(bvm *vm, int index);
-bbool be_setindex(bvm *vm, int index);
-void be_getupval(bvm *vm, int index, int pos);
-void be_setupval(bvm *vm, int index, int pos);
-void be_getsuper(bvm *vm, int index);
-int be_data_size(bvm *vm, int index);
-void be_data_append(bvm *vm, int index);
-bbool be_data_insert(bvm *vm, int index);
-bbool be_data_remove(bvm *vm, int index);
-void be_data_resize(bvm *vm, int index);
-int be_iter_next(bvm *vm, int index);
-bbool be_iter_hasnext(bvm *vm, int index);
-bbool be_refcontains(bvm *vm, int index);
-void be_refpush(bvm *vm, int index);
-void be_refpop(bvm *vm);
-void be_stack_require(bvm *vm, int count);
+BERRY_API void be_newlist(bvm *vm);
+BERRY_API void be_newmap(bvm *vm);
+BERRY_API void be_newmodule(bvm *vm);
+BERRY_API void be_getglobal(bvm *vm, const char *name);
+BERRY_API void be_getbuiltin(bvm *vm, const char *name);
+BERRY_API bbool be_setmember(bvm *vm, int index, const char *k);
+BERRY_API bbool be_getmember(bvm *vm, int index, const char *k);
+BERRY_API bbool be_getmethod(bvm *vm, int index, const char *k);
+BERRY_API bbool be_getindex(bvm *vm, int index);
+BERRY_API bbool be_setindex(bvm *vm, int index);
+BERRY_API void be_getupval(bvm *vm, int index, int pos);
+BERRY_API void be_setupval(bvm *vm, int index, int pos);
+BERRY_API void be_getsuper(bvm *vm, int index);
+BERRY_API int be_data_size(bvm *vm, int index);
+BERRY_API void be_data_append(bvm *vm, int index);
+BERRY_API bbool be_data_insert(bvm *vm, int index);
+BERRY_API bbool be_data_remove(bvm *vm, int index);
+BERRY_API void be_data_resize(bvm *vm, int index);
+BERRY_API int be_iter_next(bvm *vm, int index);
+BERRY_API bbool be_iter_hasnext(bvm *vm, int index);
+BERRY_API bbool be_refcontains(bvm *vm, int index);
+BERRY_API void be_refpush(bvm *vm, int index);
+BERRY_API void be_refpop(bvm *vm);
+BERRY_API void be_stack_require(bvm *vm, int count);
 
-int be_returnvalue(bvm *vm);
-int be_returnnilvalue(bvm *vm);
-void be_call(bvm *vm, int argc);
-int be_pcall(bvm *vm, int argc);
-void be_raise(bvm *vm);
-void be_abort(void);
-void be_exit(bvm *vm, int status);
+BERRY_API int be_returnvalue(bvm *vm);
+BERRY_API int be_returnnilvalue(bvm *vm);
+BERRY_API void be_call(bvm *vm, int argc);
+BERRY_API int be_pcall(bvm *vm, int argc);
+BERRY_API void be_raise(bvm *vm);
+BERRY_API void be_exit(bvm *vm, int status);
 
 /* raise exception APIs */
-void be_stop_iteration(bvm *vm);
+BERRY_API void be_stop_iteration(bvm *vm);
 
-void be_regfunc(bvm *vm, const char *name, bntvfunc f);
-void be_regclass(bvm *vm, const char *name, const bnfuncinfo *lib);
+BERRY_API void be_regfunc(bvm *vm, const char *name, bntvfunc f);
+BERRY_API void be_regclass(bvm *vm, const char *name, const bnfuncinfo *lib);
 
-bvm* be_vm_new(void);
-void be_vm_delete(bvm *vm);
+BERRY_API bvm* be_vm_new(void);
+BERRY_API void be_vm_delete(bvm *vm);
 
-int be_loadbuffer(bvm *vm,
+BERRY_API int be_loadbuffer(bvm *vm,
     const char *name, const char *buffer, size_t length);
-int be_loadfile(bvm *vm, const char *name);
-int be_loadexec(bvm *vm, const char *name);
-int be_saveexec(bvm *vm, const char *name);
-void be_codedump(bvm *vm, int index);
+BERRY_API int be_loadfile(bvm *vm, const char *name);
+BERRY_API int be_loadlib(bvm *vm, const char *path);
+BERRY_API int be_loadexec(bvm *vm, const char *name);
+BERRY_API int be_saveexec(bvm *vm, const char *name);
+BERRY_API void be_codedump(bvm *vm, int index);
 
-void be_writebuffer(const char *buffer, size_t length);
-char* be_readstring(char *buffer, size_t size);
+/* module path list APIs */
+BERRY_API void be_module_path(bvm *vm);
+BERRY_API void be_module_path_set(bvm *vm, const char *path);
+
+/* basic character IO APIs */
+BERRY_API void be_writebuffer(const char *buffer, size_t length);
+BERRY_API char* be_readstring(char *buffer, size_t size);
 
 #endif

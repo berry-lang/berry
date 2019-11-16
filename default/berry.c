@@ -64,7 +64,9 @@
     "  -v        show version information\n"                        \
     "  -h        show help information\n\n"                         \
     "For more information, please see:\n"                           \
-    "https://github.com/skiars/berry.git\n"
+    "  <https://github.com/skiars/berry>.\n"
+
+#define array_count(a) (sizeof(a) / sizeof((a)[0]))
 
 #define arg_i       (1 << 0)
 #define arg_b       (1 << 1)
@@ -188,24 +190,21 @@ static int dofile(bvm *vm, const char *name, int args)
  * */
 static int load_file(bvm *vm, int argc, char *argv[], int args)
 {
+    int res = 0;
     int repl_mode = args & arg_i || (args == 0 && argc == 0);
     if (repl_mode) { /* enter the REPL mode after executing the script file */
         be_writestring(repl_prelude);
     }
     if (argc > 0) { /* check file path argument */
-        int res = dofile(vm, argv[0], args);
-        if (!repl_mode) {
-            return res;
-        }
+        res = dofile(vm, argv[0], args);
     }
     if (repl_mode) { /* enter the REPL mode */
-        int res = be_repl(vm, get_line);
+        res = be_repl(vm, get_line);
         if (res == -BE_MALLOC_FAIL) {
             be_writestring("error: memory allocation failed.\n");
         }
-        return res;
     }
-    return -1;
+    return res;
 }
 
 static int build_file(bvm *vm, const char *dst, const char *src)
@@ -298,10 +297,25 @@ static int analysis_args(bvm *vm, int argc, char *argv[])
     return load_file(vm, argc - opt.idx, argv + opt.idx, args);
 }
 
+/* TODO: more paths & support more OS */
+#define BERRY_ROOT "/usr/local"
+static const char *module_paths[] = {
+    BERRY_ROOT "/lib/berry/packages",
+};
+
+static void berry_paths(bvm * vm)
+{
+    size_t i;
+    for (i = 0; i < array_count(module_paths); ++i) {
+        be_module_path_set(vm, module_paths[i]);
+    }
+}
+
 int main(int argc, char *argv[])
 {
     int res;
     bvm *vm = be_vm_new(); /* create a virtual machine instance */
+    berry_paths(vm);
     res = analysis_args(vm, argc, argv);
     be_vm_delete(vm); /* free all objects and vm */
     return res;

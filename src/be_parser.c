@@ -52,6 +52,7 @@ typedef struct {
     bvm *vm;
     bfuncinfo *finfo;
     bclosure *cl;
+    bbyte islocal;
 } bparser;
 
 #if BE_USE_SCRIPT_COMPILER
@@ -159,6 +160,14 @@ static void end_block(bparser *parser)
     finfo->binfo = binfo->prev;
 }
 
+static bstring* parser_source(bparser *parser)
+{
+    if (parser->finfo) {
+        return parser->finfo->proto->source;
+    }
+    return be_newstr(parser->vm, parser->lexer.fname);
+}
+
 static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
 {
     bvm *vm = parser->vm;
@@ -174,6 +183,7 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     be_vector_init(vm, &finfo->pvec, sizeof(bproto*));
     proto->ptab = be_vector_data(&finfo->pvec);
     proto->nproto = be_vector_capacity(&finfo->pvec);
+    proto->source = parser_source(parser);
     finfo->local = be_list_new(vm);
     var_setlist(vm->top, finfo->local);
     be_stackpush(vm);
@@ -190,7 +200,6 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     parser->finfo = finfo;
 #if BE_DEBUG_RUNTIME_INFO
     be_vector_init(vm, &finfo->linevec, sizeof(blineinfo));
-    proto->source = be_newstr(vm, parser->lexer.fname);
     proto->lineinfo = be_vector_data(&finfo->linevec);
     proto->nlineinfo = be_vector_capacity(&finfo->linevec);
 #endif
@@ -342,7 +351,7 @@ static int new_upval(bvm *vm, bfuncinfo *finfo, bstring *name, bexpdesc *var)
 static void new_var(bparser *parser, bstring *name, bexpdesc *var)
 {
     bfuncinfo *finfo = parser->finfo;
-    if (finfo->prev || finfo->binfo->prev) {
+    if (finfo->prev || finfo->binfo->prev || parser->islocal) {
         init_exp(var, ETLOCAL, 0);
         var->v.idx = new_localvar(parser, name);
     } else {
@@ -355,13 +364,10 @@ static void new_class(bparser *parser, bstring *name, bclass *c, bexpdesc *e)
 {
     bvalue *var;
     bfuncinfo *finfo = parser->finfo;
-    if (finfo->prev || finfo->binfo->prev) {
-        init_exp(e, ETLOCAL, 0);
-        e->v.idx = new_localvar(parser, name);
+    new_var(parser, name, e);
+    if (e->type == ETLOCAL) {
         var = be_code_localobject(finfo, e->v.idx);
     } else {
-        init_exp(e, ETGLOBAL, 0);
-        e->v.idx = be_global_new(parser->vm, name);
         var = be_code_globalobject(finfo, e->v.idx);
     }
     var_settype(var, BE_CLASS);
@@ -1244,15 +1250,21 @@ static void import_stmt(bparser *parser)
 {
     bstring *name;
     bexpdesc m, v;
-    /* 'import' ID ['as' ID] */
+    /* 'import' (ID ['as' ID] | STRING 'as' ID ) */
     scan_next_token(parser); /* skip 'import' */
-    name = next_token(parser).u.s;
-    match_token(parser, TokenId); /* match and skip ID */
     init_exp(&m, ETSTRING, 0);
-    m.v.s = name;
-    if (match_skip(parser, KeyAs)) { /* 'as' */
+    m.v.s = name = next_token(parser).u.s;
+    if (next_type(parser) == TokenString) { /* STRING 'as' ID */
+        scan_next_token(parser); /* skip the module path */
+        match_token(parser, KeyAs); /* match and skip 'as' */
         name = next_token(parser).u.s;
-        match_token(parser, TokenId);  /* match and skip ID */
+        match_token(parser, TokenId); /* match and skip ID */
+    } else { /* ID ['as' ID] */
+        match_token(parser, TokenId); /* match and skip ID */
+        if (match_skip(parser, KeyAs)) { /* 'as' */
+            name = next_token(parser).u.s;
+            match_token(parser, TokenId); /* match and skip ID */
+        }
     }
     new_var(parser, name, &v);
     be_code_import(parser->finfo, &m, &v);
@@ -1441,13 +1453,14 @@ static void mainfunc(bparser *parser, bclosure *cl)
 }
 
 bclosure* be_parser_source(bvm *vm,
-    const char *fname, breader reader, void *data)
+    const char *fname, breader reader, void *data, int islocal)
 {
     bparser parser;
     bclosure *cl = be_newclosure(vm, 0);
     parser.vm = vm;
     parser.finfo = NULL;
     parser.cl = cl;
+    parser.islocal = (bbyte)islocal;
     var_setclosure(vm->top, cl);
     be_stackpush(vm);
     be_lexer_init(&parser.lexer, vm, fname, reader, data);

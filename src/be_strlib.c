@@ -50,6 +50,16 @@ bstring* be_num2str(bvm *vm, bvalue *v)
     return be_newstr(vm, buf);
 }
 
+static void module2str(char *buf, bvalue *v)
+{
+    const char *name = be_module_name(cast(bmodule*, var_toobj(v)));
+    if (name) {
+        sprintf(buf, "<module: %s>", name);
+    } else {
+        sprintf(buf, "<module: %p>", var_toobj(v));
+    }
+}
+
 static void sim2str(bvm *vm, bvalue *v)
 {
     char sbuf[64]; /* BUG: memory overflow */
@@ -76,8 +86,7 @@ static void sim2str(bvm *vm, bvalue *v)
             str(be_class_name(cast(bclass*, var_toobj(v)))));
         break;
     case BE_MODULE:
-        sprintf(sbuf, "<module: %s>",
-            be_module_name(cast(bmodule*, var_toobj(v))));
+        module2str(sbuf, v);
         break;
     default:
         strcpy(sbuf, "(unknow value)");
@@ -217,7 +226,7 @@ const char* be_pushvfstr(bvm *vm, const char *format, va_list arg)
  *    '-whitespace-'  +- + -+
  *                    '- - -'
  *******************************************************************/
-bint be_str2int(const char *str, const char **endstr)
+BERRY_API bint be_str2int(const char *str, const char **endstr)
 {
     int c, sign;
     bint sum = 0;
@@ -247,7 +256,7 @@ bint be_str2int(const char *str, const char **endstr)
  *      '-E-'  +- + -+             
  *             '- - -'  
  *******************************************************************/
-breal be_str2real(const char *str, const char **endstr)
+BERRY_API breal be_str2real(const char *str, const char **endstr)
 {
     int c, sign;
     breal sum = 0, deci = 0, point = (breal)0.1;
@@ -293,7 +302,7 @@ breal be_str2real(const char *str, const char **endstr)
  * 1. skip \s*[\+\-]?\d*
  * 2. matched [.eE]? yes: real, no: integer.
  **/
-const char* be_str2num(bvm *vm, const char *str)
+BERRY_API const char *be_str2num(bvm *vm, const char *str)
 {
     const char *sout; 
     bint c, vint = be_str2int(str, &sout);
@@ -306,6 +315,7 @@ const char* be_str2num(bvm *vm, const char *str)
     return sout;
 }
 
+/* string subscript operation */
 bstring* be_strindex(bvm *vm, bstring *str, bvalue *idx)
 {
     if (var_isint(idx)) {
@@ -317,6 +327,28 @@ bstring* be_strindex(bvm *vm, bstring *str, bvalue *idx)
     }
     be_pusherror(vm, "string indices must be integers");
     return NULL;
+}
+
+const char* be_splitpath(const char *path)
+{
+    const char *p;
+    for (p = path - 1; *path != '\0'; ++path) {
+        if (*path == '/') {
+            p = path;
+        }
+    }
+    return p + 1; /* return the file name pointer */
+}
+
+const char* be_splitname(const char *path)
+{
+    const char *p, *q, *end = path + strlen(path);
+    for (p = end; *p != '.' && p > path; --p); /* skip [^\.] */
+    for (q = p; *q == '.' && q > path; --q); /* skip \. */
+    if (q == path || *q == '/') {
+        return end;
+    }
+    return p;
 }
 
 #if BE_USE_STRING_MODULE
@@ -398,6 +430,12 @@ static int str_format(bvm *vm)
                 }
                 be_pushstring(vm, buf);
                 break;
+            case 'c':
+                if (be_isint(vm, index)) {
+                    sprintf(buf, "%c", (int)be_toint(vm, index));
+                }
+                be_pushstring(vm, buf);
+                break;
             case 's': {
                 const char *s = be_tostring(vm, index);
                 int len = be_strlen(vm, 2);
@@ -430,7 +468,7 @@ static int str_i2hex(bvm *vm)
     int top = be_top(vm);
     if (top && be_isint(vm, 1)) {
         bint value = be_toint(vm, 1);
-        char fmt[10] = "%" BE_INT_FMTLEN "X", buf[18];
+        char fmt[10] = { "%" BE_INT_FMTLEN "X" }, buf[18];
         if (top >= 2 && be_isint(vm, 2)) {
             bint num = be_toint(vm, 2);
             if (num > 0 && num <= 16) {
@@ -445,12 +483,12 @@ static int str_i2hex(bvm *vm)
 }
 
 #if !BE_USE_PRECOMPILED_OBJECT
-be_native_module_attr_table(str_attr){
+be_native_module_attr_table(string) {
     be_native_module_function("format", str_format),
     be_native_module_function("hex", str_i2hex)
 };
 
-be_define_native_module(string, str_attr);
+be_define_native_module(string, NULL);
 #else
 /* @const_object_info_begin
 module string (scope: global, depend: BE_USE_STRING_MODULE) {

@@ -160,9 +160,9 @@ static void mark_list(bvm *vm, bgcobject *obj)
     blist *list = cast_list(obj);
     gc_try (list != NULL) {
         bvalue *val = be_list_data(list);
-        int count = be_list_count(list);
+        bvalue *end = be_list_end(list);
         vm->gc.gray = list->gray; /* remove object from gray list */
-        for (; count--; val++) {
+        for (; val < end; val++) {
             mark_gray_var(vm, val);
         }
     }
@@ -185,11 +185,9 @@ static void mark_proto(bvm *vm, bgcobject *obj)
         if (p->name) {
             gc_setdark(p->name);
         }
-#if BE_DEBUG_RUNTIME_INFO
         if (p->source) {
             gc_setdark(p->source);
         }
-#endif
     }
 }
 
@@ -327,6 +325,16 @@ static void free_object(bvm *vm, bgcobject *obj)
     case BE_PROTO: free_proto(vm, obj); break;
     case BE_MODULE: be_module_delete(vm, cast_module(obj)); break;
     default: break; /* case BE_STRING: break; */
+    }
+}
+
+static void premark_internal(bvm *vm)
+{
+    if (vm->module.loaded) {
+        mark_gray(vm, gc_object(vm->module.loaded));
+    }
+    if (vm->module.path) {
+        mark_gray(vm, gc_object(vm->module.path));
     }
 }
 
@@ -469,9 +477,10 @@ void be_gc_collect(bvm *vm)
         return; /* the GC cannot run for some reason */
     }
     /* step 1: set root-set reference objects to unscanned */
+    premark_internal(vm); /* object internal the VM */
     premark_global(vm); /* global objects */
     premark_stack(vm); /* stack objects */
-    premark_fixed(vm);
+    premark_fixed(vm); /* fixed objects */
     /* step 2: set unscanned objects to black */
     mark_unscanned(vm);
     /* step 3: destruct and delete unreachable objects */

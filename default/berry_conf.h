@@ -120,6 +120,7 @@
 #define BE_USE_MATH_MODULE              1
 #define BE_USE_TIME_MODULE              1
 #define BE_USE_OS_MODULE                1
+#define BE_USE_SYS_MODULE               1
 
 /* Macro: BE_EXPLICIT_XXX
  * If these macros are defined, the corresponding function will

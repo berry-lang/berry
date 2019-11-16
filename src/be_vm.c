@@ -636,9 +636,19 @@ static void i_setmember(bvm *vm, binstruction ins)
             vm_error(vm, "class '%s' cannot assign to attribute '%s'",
                 str(be_instance_name(obj)), str(attr));
         }
-    } else {
-        attribute_error(vm, "writable attribute", a, b);
+        return;
     }
+    if (var_ismodule(a) && var_isstr(b)) {
+        bmodule *obj = var_toobj(a);
+        bstring *attr = var_tostr(b);
+        bvalue tmp = *c; /* stack may change */
+        bvalue *v = be_module_bind(vm, obj, attr);
+        if (v != NULL) {
+            *v = tmp;
+            return;
+        }
+    }
+    attribute_error(vm, "writable attribute", a, b);
 }
 
 static void i_getindex(bvm *vm, binstruction ins)
@@ -704,12 +714,15 @@ static void i_close(bvm *vm, binstruction ins)
 
 static void i_import(bvm *vm, binstruction ins)
 {
-    bvalue *dst = RA(ins), *b = RKB(ins);
+    bvalue *b = RKB(ins);
     if (var_isstr(b)) {
-        bmodule *m = be_module_load(vm, var_tostr(b), dst);
-        if (m == NULL) {
-            vm_error(vm, "module '%s' not found",
-                str(var_tostr(b)));
+        bstring *name = var_tostr(b);
+        bbool res = be_module_load(vm, name);
+        if (res) { /* find the module */
+            be_stackpop(vm, 1);
+            *RA(ins) = *vm->top;
+        } else {
+            vm_error(vm, "module '%s' not found", str(name));
         }
     } else {
         vm_error(vm,
@@ -780,7 +793,7 @@ static void i_raise(bvm *vm, binstruction ins)
     be_throw(vm, BE_EXCEPTION);
 }
 
-bvm* be_vm_new(void)
+BERRY_API bvm* be_vm_new(void)
 {
     bvm *vm = be_os_malloc(sizeof(bvm));
     be_assert(vm != NULL);
@@ -797,14 +810,15 @@ bvm* be_vm_new(void)
     vm->reg = vm->stack;
     vm->top = vm->reg;
     vm->errjmp = NULL;
-    vm->modulelist = NULL;
+    vm->module.loaded = NULL;
+    vm->module.path = NULL;
     be_globalvar_init(vm);
     be_gc_setpause(vm, 1);
     be_loadlibs(vm);
     return vm;
 }
 
-void be_vm_delete(bvm *vm)
+BERRY_API void be_vm_delete(bvm *vm)
 {
     be_gc_deleteall(vm);
     be_string_deleteall(vm);
@@ -819,7 +833,7 @@ void be_vm_delete(bvm *vm)
 static void vm_exec(bvm *vm)
 {
     vm->cf->status |= BASE_FRAME;
-    newframe:
+newframe: /* a new call frame */
     for (;;) {
         binstruction ins = *vm->ip;
         switch (IGET_OP(ins)) {
