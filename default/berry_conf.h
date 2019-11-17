@@ -115,7 +115,6 @@
  * otherwise disable the feature.
  * default: 1
  */
-
 #define BE_USE_SHARED_LIB               1
 
 /* Macro: BE_USE_XXX_MODULE
