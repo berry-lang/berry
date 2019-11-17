@@ -11,7 +11,16 @@
 
 #define SUFFIX_LEN      5 /* length of (.be .bec .so .dll) + 1 */
 
-#define DLL_SUFFIX ".so"
+#if BE_USE_SHARED_LIB
+  #if defined(__linux)
+    #define DLL_SUFFIX ".so"
+  #elif defined(_WIN32)
+    #define DLL_SUFFIX ".dll"
+  #else
+    #define DLL_SUFFIX ""
+    #warning module: unsuppord OS
+  #endif
+#endif
 
 extern BERRY_LOCAL bntvmodule *const be_module_table[];
 
@@ -135,6 +144,7 @@ static bbool open_script(bvm *vm, char *path)
     return res == BE_OK;
 }
 
+#if BE_USE_SHARED_LIB
 static bbool open_dllib(bvm *vm, char *path)
 {
     int res = be_loadlib(vm, path);
@@ -142,6 +152,7 @@ static bbool open_dllib(bvm *vm, char *path)
         be_call(vm, 0);
     return res == BE_OK;
 }
+#endif
 
 static bbool open_libfile(bvm *vm, char *path, size_t size)
 {
@@ -149,9 +160,11 @@ static bbool open_libfile(bvm *vm, char *path, size_t size)
         strcpy(path + size - SUFFIX_LEN, ".be");
         if (open_script(vm, path))
             break;
+#if BE_USE_SHARED_LIB
         strcpy(path + size - SUFFIX_LEN, DLL_SUFFIX);
         if (open_dllib(vm, path))
             break;
+#endif
         be_free(vm, path, size);
         return bfalse;
     } while (0);
@@ -311,3 +324,56 @@ BERRY_API void be_module_path_set(bvm *vm, const char *path)
     bvalue *value = be_list_append(vm, list, NULL);
     var_setstr(value, be_newstr(vm, path))
 }
+
+/* shared library support */
+#if BE_USE_SHARED_LIB
+
+#if defined(__linux)
+#include <dlfcn.h>
+
+#if defined(__GNUC__)
+  #define cast_func(f) (__extension__(bntvfunc)(f))
+#else
+  #define cast_func(f) ((bntvfunc)(f))
+#endif
+
+/* load shared library */
+BERRY_API int be_loadlib(bvm *vm, const char *path)
+{
+    void *handle = dlopen(path, RTLD_LAZY);
+    bntvfunc func = cast_func(dlsym(handle, "berry_export"));
+    if (func == NULL) {
+        return BE_IO_ERROR;
+    }
+    be_pushntvfunction(vm, func);
+    return BE_OK;
+}
+#elif defined(_WIN32)
+#include<wtypes.h>
+#include <winbase.h>
+
+BERRY_API int be_loadlib(bvm *vm, const char *path)
+{
+    HINSTANCE handle = LoadLibrary(path);
+    if (handle) {
+        union {
+            FARPROC proc;
+            bntvfunc func;
+        } u;
+        u.proc = GetProcAddress(handle, "berry_export");
+        if (u.func != NULL) {
+            be_pushntvfunction(vm, u.func);
+            return BE_OK;
+        }
+    }
+    return BE_IO_ERROR;
+}
+#else
+BERRY_API int be_loadlib(bvm *vm, const char *path)
+{
+    (void)vm, (void)path;
+    return BE_IO_ERROR;
+}
+#endif
+
+#endif /* BE_USE_SHARED_LIB */

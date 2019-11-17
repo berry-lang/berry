@@ -109,6 +109,15 @@
  **/
 #define BE_USE_BYTECODE_LOADER          1
 
+/*
+ * Macro: BE_USE_SHARED_LIB
+ * Enable shared library  when BE_USE_SHARED_LIB is not 0,
+ * otherwise disable the feature.
+ * default: 1
+ */
+
+#define BE_USE_SHARED_LIB               1
+
 /* Macro: BE_USE_XXX_MODULE
  * These macros control whether the related module is compiled.
  * When they are true, they will enable related modules. At this

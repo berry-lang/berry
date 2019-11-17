@@ -70,6 +70,7 @@ static int m_listdir(bvm *vm)
         }
         res = be_dirnext(&info);
     }
+    be_dirclose(&info);
     be_call(vm, 1);
     be_pop(vm, 1);
     be_return(vm);

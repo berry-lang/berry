@@ -14,6 +14,7 @@ MAKE_MAP_BUILD = $(MAKE) -C tools/map_build
 
 ifeq ($(OS), Windows_NT) # Windows
     CFLAGS += -Wno-format # for "%I64d" warning
+    CFLAGS += -Wl,--out-implib,berry.lib # export symbols lib for dll linked
     TARGET := $(TARGET).exe
     MAP_BUILD := $(MAP_BUILD).exe
 else
@@ -44,7 +45,6 @@ debug: all
 $(TARGET): $(OBJS)
 	$(MSG) [Linking...]
 	$(Q) $(CC) $(OBJS) $(CFLAGS) $(LIBS) -o $@
-	$(Q) $(AR) -r libberry.a $(OBJS)
 	$(MSG) done
 
 $(OBJS): %.o: %.c
@@ -80,6 +80,6 @@ prebuild: $(MAP_BUILD) $(GENERATE)
 
 clean:
 	$(MSG) [Clean...]
-	$(Q) $(RM) $(OBJS) $(DEPS) $(GENERATE)/*
+	$(Q) $(RM) $(OBJS) $(DEPS) $(GENERATE)/* berry.lib
 	$(Q) $(MAKE_MAP_BUILD) clean
 	$(MSG) done

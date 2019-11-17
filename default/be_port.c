@@ -293,6 +293,7 @@ int be_dirfirst(bdirinfo *info, const char *path)
 {
     char *buf = be_os_malloc(strlen(path) + 3);
     info->file = be_os_malloc(sizeof(struct _finddata_t));
+    info->dir = NULL;
     if (buf && info->file) {
         struct _finddata_t *cfile = info->file;
         strcat(strcpy(buf, path), "/*");

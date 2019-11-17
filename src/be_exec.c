@@ -53,7 +53,7 @@ struct filebuf {
     char buf[FILE_BUFFER_SIZE];
 };
 
-BERRY_API void be_throw(bvm *vm, int errorcode)
+void be_throw(bvm *vm, int errorcode)
 {
     if (vm->errjmp) {
         vm->errjmp->status = errorcode;
@@ -401,31 +401,3 @@ void be_except_block_close(bvm *vm, int count)
     vm->errjmp = frame->errjmp.prev;
     be_vector_resize(vm, &vm->exceptstack, size - count);
 }
-
-#if defined(__linux)
-#include <dlfcn.h>
-
-#if defined(__GNUC__)
-  #define cast_func(f) (__extension__(bntvfunc)(f))
-#else
-  #define cast_func(f) ((bntvfunc)(f))
-#endif
-
-/* load shared library */
-BERRY_API int be_loadlib(bvm *vm, const char *path)
-{
-    void *handle = dlopen(path, RTLD_LAZY);
-    bntvfunc func = cast_func(dlsym(handle, "berry_export"));
-    if (func == NULL) {
-        return BE_IO_ERROR;
-    }
-    be_pushntvfunction(vm, func);
-    return BE_OK;
-}
-#else
-BERRY_API int be_loadlib(bvm *vm, const char *path)
-{
-    (void)vm, (void)path;
-    return BE_IO_ERROR;
-}
-#endif

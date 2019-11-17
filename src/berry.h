@@ -70,14 +70,14 @@ enum berrorcode {
 #define BE_CMODULE              6
 
 /* API function mark */
-#ifdef BERRT_EXPORT_DLL
-  #if defined(BERRY_LIB)
-    #define BERRY_API           __declspec(dllexport)
-  #else
-    #define BERRY_API           __declspec(dllimport)
+#if defined(_WIN32) /* in Windows */
+  #if defined(BERRY_MODULE) /* berry extension module */
+    #define BERRY_API         __declspec(dllimport)
+  #else /* cerry core */
+    #define BERRY_API         __declspec(dllexport)
   #endif
 #else
-  #define BERRY_API             extern
+  #define BERRY_API           extern
 #endif
 
 /* only linux */
