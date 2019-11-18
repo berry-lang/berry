@@ -7,7 +7,7 @@ def list_iter(list)
     end
     return it
 end
-l = [0, 1, 2, 3, 4, 5]
+l = [0, 1, 2, 3, 4, 5.6]
 lout = []
 it = list_iter(l)
 v = it()
