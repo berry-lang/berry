@@ -432,7 +432,7 @@ void be_code_binop(bfuncinfo *finfo, int op, bexpdesc *e1, bexpdesc *e2)
         break;
     case OptAdd: case OptSub: case OptMul: case OptDiv:
     case OptMod: case OptLT: case OptLE: case OptEQ:
-    case OptNE: case OptGT: case OptGE: case OptRange:
+    case OptNE: case OptGT: case OptGE: case OptConnect:
     case OptBitAnd: case OptBitOr: case OptBitXor:
     case OptShiftL: case OptShiftR:
         binaryexp(finfo, (bopcode)(op - OptAdd), e1, e2);

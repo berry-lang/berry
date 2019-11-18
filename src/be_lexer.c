@@ -292,7 +292,7 @@ static btokentype scan_dot_real(blexer *lexer)
 {
     if (save(lexer) == '.') { /* is '..' */
         next(lexer);
-        return OptRange;
+        return OptConnect;
     }
     if (is_digit(lgetc(lexer))) {
         match(lexer, is_digit);
@@ -313,7 +313,7 @@ static bbool decimal_dots(blexer *lexer)
         }
         /* token '..' */
         next(lexer); /*  skip the second '.' */
-        lexer->cacheType = OptRange;
+        lexer->cacheType = OptConnect;
     }
     return bfalse; /* operator '..' */
 }

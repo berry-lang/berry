@@ -459,7 +459,7 @@ define_function(i_xor, bitwise_block(^))
 define_function(i_shl, bitwise_block(<<))
 define_function(i_shr, bitwise_block(>>))
 
-static void i_range(bvm *vm, binstruction ins)
+static void i_connect(bvm *vm, binstruction ins)
 {
     bvalue *b = RKB(ins), *c = RKC(ins);
     bvalue *top = vm->top;
@@ -857,7 +857,7 @@ newframe: /* a new call frame */
         case OP_NE: i_ne(vm, ins); break;
         case OP_GT: i_gt(vm, ins); break;
         case OP_GE: i_ge(vm, ins); break;
-        case OP_RANGE: i_range(vm, ins); break;
+        case OP_CONNECT: i_connect(vm, ins); break;
         case OP_AND: i_and(vm, ins); break;
         case OP_OR: i_or(vm, ins); break;
         case OP_XOR: i_xor(vm, ins); break;

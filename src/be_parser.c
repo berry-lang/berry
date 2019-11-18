@@ -1303,7 +1303,7 @@ static int except_case_list(bparser *parser, int *base)
     bexpdesc e;
     bfuncinfo *finfo = parser->finfo;
     /* expr {',' expr} | '..' */
-    if (match_skip(parser, OptRange)) { /* '..' */
+    if (match_skip(parser, OptConnect)) { /* '..' */
         *base = 0;
         return 0;
     }

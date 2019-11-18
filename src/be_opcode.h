@@ -74,7 +74,7 @@ typedef enum {
     OP_XOR,       /*  A, B, C  |   R(A) <- RK(B) ^ RK(C) */
     OP_SHL,       /*  A, B, C  |   R(A) <- RK(B) << RK(C) */
     OP_SHR,       /*  A, B, C  |   R(A) <- RK(B) >> RK(C) */
-    OP_RANGE,     /*  A, B, C  |   R(A) <- range(RK(B), RK(C)) */
+    OP_CONNECT,   /*  A, B, C  |   R(A) <- connect(RK(B), RK(C)) */
     OP_NEG,       /*  A, B     |   R(A) <- -RK(B) */
     OP_FLIP,      /*  A, B     |   R(A) <- ~RK(B) */
     OP_LDNIL,     /*  A        |   R(A) <- nil */

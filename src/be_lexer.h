@@ -40,7 +40,7 @@ typedef enum {
     OptBitXor,      /* operatoe, ^  */
     OptShiftL,      /* operatoe, <<  */
     OptShiftR,      /* operatoe, >>  */
-    OptRange,       /* operator, .. */
+    OptConnect,     /* operator, .. */
     OptAnd,         /* operator, && */
     OptOr,          /* operator, || */
     /* unary operator */
