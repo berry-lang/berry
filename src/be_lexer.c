@@ -303,6 +303,21 @@ static btokentype scan_dot_real(blexer *lexer)
     return OptDot;
 }
 
+/* check the dots is a decimal dot or '..' operator */
+static bbool decimal_dots(blexer *lexer)
+{
+    if (lgetc(lexer) == '.') { /* '..' or real */
+        if (save(lexer) != '.') { /* read numberic => \.\b* */
+            match(lexer, is_digit); /* match and skip numberic */
+            return btrue;
+        }
+        /* token '..' */
+        next(lexer); /*  skip the second '.' */
+        lexer->cacheType = OptRange;
+    }
+    return bfalse; /* operator '..' */
+}
+
 static bint scan_hexadecimal(blexer *lexer)
 {
     bint res = 0;
@@ -322,16 +337,7 @@ static btokentype scan_decimal(blexer *lexer)
 {
     btokentype type = TokenInteger;
     match(lexer, is_digit);
-    if (lgetc(lexer) == '.') { /* '..' or real */
-        if (save(lexer) == '.') { /* token  '..' */
-            next(lexer); /*  skip the second '.' */
-            lexer->cacheType = OptRange;
-        } else {
-            match(lexer, is_digit); /* read numberic */
-            type = TokenReal;
-        }
-    }
-    if (!lexer->cacheType && scan_realexp(lexer)) {
+    if (decimal_dots(lexer) || scan_realexp(lexer)) {
         type = TokenReal;
     }
     lexer->buf.s[lexer->buf.len] = '\0';
@@ -354,7 +360,8 @@ static btokentype scan_numeral(blexer *lexer)
     } else {
         type = scan_decimal(lexer);
     }
-    if (is_letter(lgetc(lexer))) {
+    /* can't follow decimal or letter after numeral */
+    if (is_letter(lgetc(lexer)) || decimal_dots(lexer)) {
         be_lexerror(lexer, "malformed number");
     }
     return type;
