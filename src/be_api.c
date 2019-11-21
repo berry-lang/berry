@@ -837,17 +837,19 @@ BERRY_API void be_codedump(bvm *vm, int index)
 #endif
 }
 
-/* index -1: exception value,
- * index -2: exception argument */
-BERRY_API void be_raise(bvm *vm)
+BERRY_API void be_raise(bvm *vm, const char *except, const char *msg)
 {
+    be_pushstring(vm, except);
+    if (msg) {
+        be_pushstring(vm, msg);
+    } else {
+        be_pushnil(vm);
+    }
     be_pop(vm, 2);
     be_throw(vm, BE_EXCEPTION);
 }
 
 BERRY_API void be_stop_iteration(bvm *vm)
 {
-    be_pushstring(vm, "stop_iteration");
-    be_pushnil(vm); /* no description message */
-    be_raise(vm);
+    be_raise(vm, "stop_iteration", NULL);
 }

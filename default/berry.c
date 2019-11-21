@@ -222,6 +222,11 @@ static int build_file(bvm *vm, const char *dst, const char *src)
         be_writestring(be_tostring(vm, -1)); /* print the error message */
         be_writenewline();
         return 1;
+    case BE_EXCEPTION: /* uncatched exception */
+        be_writestring(be_tostring(vm, -2)); /* print the error message */
+        be_writestring(be_tostring(vm, -1)); /* print the error message */
+        be_writenewline();
+        return 1;
     case BE_MALLOC_FAIL:
         be_writestring("error: memory allocation failed.\n");
         return -1;

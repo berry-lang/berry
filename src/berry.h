@@ -264,8 +264,8 @@ BERRY_API int be_returnvalue(bvm *vm);
 BERRY_API int be_returnnilvalue(bvm *vm);
 BERRY_API void be_call(bvm *vm, int argc);
 BERRY_API int be_pcall(bvm *vm, int argc);
-BERRY_API void be_raise(bvm *vm);
 BERRY_API void be_exit(bvm *vm, int status);
+BERRY_API void be_raise(bvm *vm, const char *except, const char *msg);
 
 /* raise exception APIs */
 BERRY_API void be_stop_iteration(bvm *vm);

@@ -99,13 +99,20 @@ static void vm_state_save(bvm *vm, struct vmstate *state)
     state->reg = cast_int(vm->reg - vm->stack);
 }
 
+static void copy_exception(bvm *vm, int dstindex)
+{
+    bvalue *src = vm->top;
+    bvalue *dst = vm->stack + dstindex;
+    *dst++ = *src++;
+    *dst++ = *src++;
+    vm->top = dst;
+}
+
 static void vm_state_restore(bvm *vm, const struct vmstate *state)
 {
-    int idx = cast_int(vm->top - (vm->stack + state->reg));
     vm->reg = vm->stack + state->reg;
-    /* copy error information to top */
-    be_moveto(vm, idx, state->top - state->reg + 1);
-    vm->top = vm->stack + state->top + 1;
+    /* copy exception information to top */
+    copy_exception(vm, state->top);
     be_assert(be_stack_count(&vm->callstack) >= state->depth);
     if (be_stack_count(&vm->callstack) > state->depth) {
         be_vector_resize(vm, &vm->callstack, state->depth);
@@ -376,8 +383,8 @@ void be_except_block_resume(bvm *vm)
             be_vector_resize(vm, &vm->callstack, frame->depth);
             /* copy the exception value and argument to the top of
              * the current function */
-            vm->top[0] = top[0];
-            vm->top[1] = top[1];
+            vm->top[0] = top[0]; /* exception value */
+            vm->top[1] = top[1]; /* exception argument */
         }
         be_stack_pop(&vm->exceptstack);
     } else { /* other errors cannot be catch by the except block */

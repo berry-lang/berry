@@ -229,9 +229,7 @@ static int l_module(bvm *vm)
 #if BE_USE_SCRIPT_COMPILER
 static int raise_compile_error(bvm *vm)
 {
-    be_pushstring(vm, "syntax_error");
-    be_pushvalue(vm, -2);
-    be_raise(vm);
+    be_raise(vm, "syntax_error", NULL);
     return 0;
 }
 

@@ -18,7 +18,7 @@
 #define NOT_METHOD      BE_NONE
 
 #define vm_error(vm, ...) \
-    be_pusherror(vm, be_pushfstring(vm, __VA_ARGS__))
+    be_raise(vm, "vm_error", be_pushfstring(vm, __VA_ARGS__))
 
 #define RA(i)   (vm->reg + IGET_RA(i))
 #define RKB(i)  ((isKB(i) ? curcl(vm)->proto->ktab \

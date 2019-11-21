@@ -37,11 +37,10 @@ static const char* const kwords_tab[] = {
 void be_lexerror(blexer *lexer, const char *msg)
 {
     bvm *vm = lexer->vm;
-    be_pushfstring(vm, "%s:%d: error: %s",
-                   lexer->fname, lexer->linenumber, msg);
+    const char *error = be_pushfstring(vm,
+        "%s:%d: %s", lexer->fname, lexer->linenumber, msg);
     be_lexer_deinit(lexer);
-    be_incrtop(lexer->vm); /* push the error message */
-    be_throw(vm, BE_SYNTAX_ERROR);
+    be_raise(vm, "syntax_error", error);
 }
 
 static void keyword_registe(bvm *vm)

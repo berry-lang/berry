@@ -6,11 +6,11 @@
 
 static int try_return(bvm *vm, const char *line)
 {
-    int res;
-    be_pushfstring(vm, "return (%s)", line);
-    line = be_tostring(vm, -1);
+    int res, idx;
+    line = be_pushfstring(vm, "return (%s)", line);
+    idx = be_absindex(vm, -1); /* get the source text absolute index */
     res = be_loadbuffer(vm, "stdin", line, strlen(line)); /* compile line */
-    be_remove(vm, -2); /* remove source string */
+    be_remove(vm, idx); /* remove source string */
     return res;
 }
 
@@ -53,9 +53,11 @@ int be_repl(bvm *vm, breadline getl)
     const char *line;
     while ((line = getl("> ")) != NULL) {
         if (compile(vm, line, getl)) {
+            be_writestring(be_tostring(vm, -2)); /* some error */
+            be_writestring(": ");
             be_writestring(be_tostring(vm, -1)); /* some error */
             be_writenewline();
-            be_pop(vm, 1);
+            be_pop(vm, 2);
         } else { /* compiled successfully */
             switch (be_pcall(vm, 0)) { /* call the main function */
             case BE_OK: /* execution succeed */
