@@ -50,7 +50,7 @@
         var_setbool(dst, res op 0); \
     } else if (var_isinstance(a)) { \
         binstance *obj = var_toobj(a); \
-        object_binop(vm, #op, ins, a, b); \
+        object_binop(vm, #op, ins); \
         check_bool(vm, obj, #op); \
     } else { \
         binop_error(vm, #op, a, b); \
@@ -86,7 +86,7 @@
     if (var_isint(a) && var_isint(b)) { \
         var_setint(dst, ibinop(op, a, b)); \
     } else if (var_isinstance(a)) { \
-        object_binop(vm, #op, ins, a, b); \
+        object_binop(vm, #op, ins); \
     } else { \
         binop_error(vm, #op, a, b); \
     }
@@ -254,13 +254,14 @@ static void object_eqop(bvm *vm,
 }
 
 static void object_binop(bvm *vm,
-    const char *op, binstruction ins, bvalue *a, bvalue *b)
+    const char *op, binstruction ins)
 {
-    bvalue *top = vm->top;
-    /* get operator method */
-    obj_method(vm, a, be_newstr(vm, op));
-    top[1] = *a; /* move self to argv[0] */
-    top[2] = *b; /* move other to argv[1] */
+    bvalue *top, self = *RKB(ins);
+    /* get operator method (possible GC) */
+    obj_method(vm, &self, be_newstr(vm, op));
+    top = vm->top;
+    top[1] = self; /* move self to argv[0] */
+    top[2] = *RKC(ins); /* move other to argv[1] */
     be_incrtop(vm); /* prevent collection results */
     be_dofunc(vm, top, 2); /* call method 'item' */
     be_stackpop(vm, 1);
@@ -268,12 +269,13 @@ static void object_binop(bvm *vm,
 }
 
 static void object_unop(bvm *vm,
-    const char *op, binstruction ins, bvalue *src)
+    const char *op, binstruction ins)
 {
-    bvalue *top = vm->top;
-    /* get operator method */
-    obj_method(vm, src, be_newstr(vm, op));
-    top[1] = *src; /* move self to argv[0] */
+    bvalue *top, self = *RKB(ins);
+    /* get operator method (possible GC) */
+    obj_method(vm, &self, be_newstr(vm, op));
+    top = vm->top;
+    top[1] = self; /* move self to argv[0] */
     be_dofunc(vm, top, 1); /* call method 'item' */
     *RA(ins) = *vm->top; /* copy result to dst */
 }
@@ -352,7 +354,7 @@ static void i_add(bvm *vm, binstruction ins)
         bstring *s = be_strcat(vm, var_tostr(a), var_tostr(b));
         var_setstr(dst, s);
     } else if (var_isinstance(a)) {
-        object_binop(vm, "+", ins, a, b);
+        object_binop(vm, "+", ins);
     } else {
         binop_error(vm, "+", a, b);
     }
@@ -367,7 +369,7 @@ static void i_sub(bvm *vm, binstruction ins)
         breal x = var2real(a), y = var2real(b);
         var_setreal(dst, x - y);
     } else if (var_isinstance(a)) {
-        object_binop(vm, "-", ins, a, b);
+        object_binop(vm, "-", ins);
     } else {
         binop_error(vm, "-", a, b);
     }
@@ -382,7 +384,7 @@ static void i_mul(bvm *vm, binstruction ins)
         breal x = var2real(a), y = var2real(b);
         var_setreal(dst, x * y);
     } else if (var_isinstance(a)) {
-        object_binop(vm, "*", ins, a, b);
+        object_binop(vm, "*", ins);
     } else {
         binop_error(vm, "*", a, b);
     }
@@ -405,7 +407,7 @@ static void i_div(bvm *vm, binstruction ins)
         }
         var_setreal(dst, x / y);
     } else if (var_isinstance(a)) {
-        object_binop(vm, "/", ins, a, b);
+        object_binop(vm, "/", ins);
     } else {
         binop_error(vm, "/", a, b);
     }
@@ -417,7 +419,7 @@ static void i_mod(bvm *vm, binstruction ins)
     if (var_isint(a) && var_isint(b)) {
         var_setint(dst, ibinop(%, a, b));
     } else if (var_isinstance(a)) {
-        object_binop(vm, "%", ins, a, b);
+        object_binop(vm, "%", ins);
     } else {
         binop_error(vm, "%", a, b);
     }
@@ -431,7 +433,7 @@ static void i_neg(bvm *vm, binstruction ins)
     } else if (var_isreal(a)) {
         var_setreal(dst, -a->v.r);
     } else if (var_isinstance(a)) {
-        object_unop(vm, "-*", ins, a);
+        object_unop(vm, "-*", ins);
     } else {
         unop_error(vm, "-", a);
     }
@@ -443,7 +445,7 @@ static void i_flip(bvm *vm, binstruction ins)
     if (var_isint(a)) {
         var_setint(dst, -a->v.i);
     } else if (var_isinstance(a)) {
-        object_unop(vm, "~", ins, a);
+        object_unop(vm, "~", ins);
     } else {
         unop_error(vm, "~", a);
     }
@@ -461,15 +463,16 @@ define_function(i_xor, bitwise_block(^))
 define_function(i_shl, bitwise_block(<<))
 define_function(i_shr, bitwise_block(>>))
 
-static void make_range(bvm *vm, bvalue *a, bvalue *b)
+static void make_range(bvm *vm, binstruction ins)
 {
-    /* get method 'item' */
+    /* get method 'item' (possible GC) */
     int idx = be_builtin_find(vm, be_newstr(vm, "range"));
-    vm->top[0] = *be_global_var(vm, idx);
-    vm->top[1] = *a; /* move lower to argv[0] */
-    vm->top[2] = *b; /* move upper to argv[1] */
+    bvalue *top = vm->top;
+    top[0] = *be_global_var(vm, idx);
+    top[1] = *RKB(ins); /* move lower to argv[0] */
+    top[2] = *RKC(ins); /* move upper to argv[1] */
     vm->top += 3; /* prevent collection results */
-    be_dofunc(vm, vm->top, 2); /* call method 'item' */
+    be_dofunc(vm, top, 2); /* call method 'item' */
     vm->top -= 3;
 }
 
@@ -493,11 +496,11 @@ static void i_connect(bvm *vm, binstruction ins)
 {
     bvalue *a = RKB(ins), *b = RKC(ins);
     if (var_isint(a) && var_isint(b)) {
-        make_range(vm, a, b);
+        make_range(vm, ins);
     } else if (var_isstr(a)) {
         connect_str(vm, var_tostr(a), b);
     } else if (var_isinstance(a)) {
-        object_binop(vm, "..", ins, a, b);
+        object_binop(vm, "..", ins);
         return;
     }
     *RA(ins) = *vm->top; /* copy result to R(A) */
