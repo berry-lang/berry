@@ -18,17 +18,17 @@
   #define realloc               BE_EXPLICIT_REALLOC
 #endif
 
-void* be_os_malloc(size_t size)
+BERRY_API void* be_os_malloc(size_t size)
 {
     return malloc(size);
 }
 
-void be_os_free(void *ptr)
+BERRY_API void be_os_free(void *ptr)
 {
     free(ptr);
 }
 
-void* be_os_realloc(void *ptr, size_t size)
+BERRY_API void* be_os_realloc(void *ptr, size_t size)
 {
     return realloc(ptr, size);
 }
@@ -50,7 +50,7 @@ static void* _realloc(void *ptr, size_t old_size, size_t new_size)
     return NULL;
 }
 
-void* be_realloc(bvm *vm, void *ptr, size_t old_size, size_t new_size)
+BERRY_API void* be_realloc(bvm *vm, void *ptr, size_t old_size, size_t new_size)
 {
     void *block = _realloc(ptr, old_size, new_size);
     if (!block && new_size) { /* allocation failure */
@@ -64,9 +64,4 @@ void* be_realloc(bvm *vm, void *ptr, size_t old_size, size_t new_size)
     }
     vm->gc.usage = vm->gc.usage + new_size - old_size; /* update allocated count */
     return block;
-}
-
-size_t be_memcount(bvm *vm)
-{
-    return vm->gc.usage;
 }

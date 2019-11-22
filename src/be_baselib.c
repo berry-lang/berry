@@ -1,6 +1,7 @@
 #include "be_object.h"
 #include "be_exec.h"
 #include "be_mem.h"
+#include "be_gc.h"
 #include <string.h>
 
 #define READLINE_STEP       100
@@ -80,7 +81,7 @@ static int l_exit(bvm *vm)
 
 static int l_memcount(bvm *vm)
 {
-    size_t count = be_memcount(vm);
+    size_t count = be_gc_memcount(vm);
     if (count < 0x80000000) {
         be_pushint(vm, (bint)count);
     } else {

@@ -6,6 +6,10 @@
 
 #include "berry_conf.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* do not modify the version number! */
 #define BERRY_VERSION   "0.1.6"
 
@@ -264,19 +268,21 @@ BERRY_API int be_returnnilvalue(bvm *vm);
 BERRY_API void be_call(bvm *vm, int argc);
 BERRY_API int be_pcall(bvm *vm, int argc);
 BERRY_API void be_exit(bvm *vm, int status);
+
+/* exception APIs */
 BERRY_API void be_raise(bvm *vm, const char *except, const char *msg);
 BERRY_API int be_getexcept(bvm *vm, int code);
 BERRY_API void be_dumpexcept(bvm *vm);
-
-/* raise exception APIs */
 BERRY_API void be_stop_iteration(bvm *vm);
 
 BERRY_API void be_regfunc(bvm *vm, const char *name, bntvfunc f);
 BERRY_API void be_regclass(bvm *vm, const char *name, const bnfuncinfo *lib);
 
+/* VM management APIs */
 BERRY_API bvm* be_vm_new(void);
 BERRY_API void be_vm_delete(bvm *vm);
 
+/* code load APIs */
 BERRY_API int be_loadbuffer(bvm *vm,
     const char *name, const char *buffer, size_t length);
 BERRY_API int be_loadfile(bvm *vm, const char *name);
@@ -292,5 +298,9 @@ BERRY_API void be_module_path_set(bvm *vm, const char *path);
 /* basic character IO APIs */
 BERRY_API void be_writebuffer(const char *buffer, size_t length);
 BERRY_API char* be_readstring(char *buffer, size_t size);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

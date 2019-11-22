@@ -471,6 +471,11 @@ void be_gc_auto(bvm *vm)
     }
 }
 
+size_t be_gc_memcount(bvm *vm)
+{
+    return vm->gc.usage;
+}
+
 void be_gc_collect(bvm *vm)
 {
     if (vm->gc.status & GC_HALT) {

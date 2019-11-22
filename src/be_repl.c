@@ -49,7 +49,7 @@ static int compile(bvm *vm, const char *line, breadline getl)
     return res;
 }
 
-int be_repl(bvm *vm, breadline getl)
+BERRY_API int be_repl(bvm *vm, breadline getl)
 {
     const char *line;
     while ((line = getl("> ")) != NULL) {

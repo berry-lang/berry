@@ -52,7 +52,7 @@ void be_gc_init(bvm *vm);
 void be_gc_deleteall(bvm *vm);
 void be_gc_setsteprate(bvm *vm, int rate);
 void be_gc_setpause(bvm *vm, int pause);
-size_t be_memcount(bvm *vm);
+size_t be_gc_memcount(bvm *vm);
 bgcobject *be_newgcobj(bvm *vm, int type, size_t size);
 bgcobject* be_gc_newstr(bvm *vm, size_t size, int islong);
 void be_gc_fix(bvm *vm, bgcobject *obj);
