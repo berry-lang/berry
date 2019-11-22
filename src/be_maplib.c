@@ -80,16 +80,6 @@ static int m_tostring(bvm *vm)
     be_return(vm);
 }
 
-static int m_insert(bvm *vm)
-{
-    be_getmember(vm, 1, ".data");
-    map_check_data(vm, 3);
-    be_pushvalue(vm, 2);
-    be_pushvalue(vm, 3);
-    be_data_insert(vm, -3);
-    be_return_nil(vm);
-}
-
 static int m_remove(bvm *vm)
 {
     be_getmember(vm, 1, ".data");
@@ -104,7 +94,9 @@ static int m_item(bvm *vm)
     be_getmember(vm, 1, ".data");
     map_check_data(vm, 2);
     be_pushvalue(vm, 2);
-    be_getindex(vm, -2);
+    if (!be_getindex(vm, -2)) {
+        be_raise(vm, "key_error", be_tostring(vm, 2));
+    }
     be_return(vm);
 }
 
@@ -164,7 +156,6 @@ void be_load_maplib(bvm *vm)
         { ".data", NULL },
         { "init", m_init },
         { "tostring", m_tostring },
-        { "insert", m_insert },
         { "remove", m_remove },
         { "item", m_item },
         { "setitem", m_setitem },
@@ -180,7 +171,6 @@ class be_class_map (scope: global, name: map) {
     .data, var
     init, func(m_init)
     tostring, func(m_tostring)
-    insert, func(m_insert)
     remove, func(m_remove)
     item, func(m_item)
     setitem, func(m_setitem)

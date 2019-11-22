@@ -99,6 +99,13 @@ static int m_remove(bvm *vm)
     be_return_nil(vm);
 }
 
+static void list_getindex(bvm *vm, int index)
+{
+    if (!be_getindex(vm, index)) {
+        be_raise(vm, "index_error", "list index out of range");
+    }
+}
+
 static int item_range(bvm *vm)
 {
     bint lower, upper;
@@ -121,7 +128,7 @@ static int item_range(bvm *vm)
     /* copy elements */
     for (; lower <= upper; ++lower) {
         be_pushint(vm, lower);
-        be_getindex(vm, -2);
+        list_getindex(vm, -2);
         be_data_append(vm, -4);
         be_pop(vm, 2);
     }
@@ -167,7 +174,7 @@ static int m_item(bvm *vm)
     list_check_data(vm, 2);
     if (be_isint(vm, 2)) {
         be_pushvalue(vm, 2);
-        be_getindex(vm, -2);
+        list_getindex(vm, -2);
         be_return(vm);
     }
     if (be_isinstance(vm, 2)) {
@@ -179,6 +186,7 @@ static int m_item(bvm *vm)
             return item_list(vm);
         }
     }
+    be_raise(vm, "index_error", "list index out of range");
     be_return_nil(vm);
 }
 
@@ -188,7 +196,9 @@ static int m_setitem(bvm *vm)
     list_check_data(vm, 3);
     be_pushvalue(vm, 2);
     be_pushvalue(vm, 3);
-    be_setindex(vm, -3);
+    if (!be_setindex(vm, -3)) {
+        be_raise(vm, "index_error", "list assignment index out of range");
+    }
     be_return_nil(vm);
 }
 

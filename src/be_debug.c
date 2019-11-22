@@ -206,7 +206,9 @@ void be_tracestack(bvm *vm)
         vm->ip = vm->snapshot.ip;
         vm->cf = vm->snapshot.cf;
         be_stack_top(&vm->callstack) = vm->cf;
-        tracestack(vm);
+        if (be_stack_count(&vm->callstack)) {
+            tracestack(vm);
+        }
         vm->ip = snapshot.ip;
         vm->cf = snapshot.cf;
         be_stack_top(&vm->callstack) = vm->cf;

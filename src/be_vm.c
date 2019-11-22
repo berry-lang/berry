@@ -17,8 +17,8 @@
 
 #define NOT_METHOD      BE_NONE
 
-#define vm_error(vm, ...) \
-    be_raise(vm, "runtime_error", be_pushfstring(vm, __VA_ARGS__))
+#define vm_error(vm, except, ...) \
+    be_raise(vm, except, be_pushfstring(vm, __VA_ARGS__))
 
 #define RA(i)   (vm->reg + IGET_RA(i))
 #define RKB(i)  ((isKB(i) ? curcl(vm)->proto->ktab \
@@ -99,35 +99,37 @@
 static void attribute_error(bvm *vm, const char *t, bvalue *b, bvalue *c)
 {
     const char *attr = var_isstr(c) ? str(var_tostr(c)) : be_vtype2str(c);
-    vm_error(vm, "'%s' value has no %s '%s'", be_vtype2str(b), t, attr);
+    vm_error(vm, "attribute_error",
+        "'%s' value has no %s '%s'", be_vtype2str(b), t, attr);
 }
 
 static void binop_error(bvm *vm, const char *op, bvalue *a, bvalue *b)
 {
-    vm_error(vm,
+    vm_error(vm, "type_error",
         "unsupported operand type(s) for %s: '%s' and '%s'",
         op, be_vtype2str(a), be_vtype2str(b));
 }
 
 static void unop_error(bvm *vm, const char *op, bvalue *a)
 {
-    vm_error(vm,
+    vm_error(vm, "type_error",
         "unsupported operand type(s) for %s: '%s'",
         op, be_vtype2str(a));
 }
 
 static void call_error(bvm *vm, bvalue *v)
 {
-    vm_error(vm, "'%s' value is not callable", be_vtype2str(v));
+    vm_error(vm, "type_error",
+        "'%s' value is not callable", be_vtype2str(v));
 }
 
 static void check_bool(bvm *vm, binstance *obj, const char *method)
 {
     if (!var_isbool(vm->top)) {
         const char *name = str(be_instance_name(obj));
-        be_raise(vm, "value_error", be_pushfstring(vm,
+        vm_error(vm, "type_error",
             "`%s::%s` return value error, the expected type is 'bool'",
-            strlen(name) ? name : "<anonymous>", method));
+            strlen(name) ? name : "<anonymous>", method);
     }
 }
 
@@ -206,7 +208,7 @@ static void obj_method(bvm *vm, bvalue *o, bstring *attr)
     binstance *obj = var_toobj(o);
     int type = be_instance_member(obj, attr, vm->top);
     if (basetype(type) != BE_FUNCTION) {
-        vm_error(vm,
+        vm_error(vm, "attribute_error",
             "the '%s' object has no method '%s'",
             str(be_instance_name(obj)), str(attr));
     }
@@ -217,7 +219,7 @@ static int obj_attribute(bvm *vm, bvalue *o, bstring *attr, bvalue *dst)
     binstance *obj = var_toobj(o);
     int type = be_instance_member(obj, attr, dst);
     if (basetype(type) == BE_NIL) {
-        vm_error(vm,
+        vm_error(vm, "attribute_error",
             "the '%s' object has no attribute '%s'",
             str(be_instance_name(obj)), str(attr));
     }
@@ -392,14 +394,14 @@ static void i_div(bvm *vm, binstruction ins)
     if (var_isint(a) && var_isint(b)) {
         bint x = var_toint(a), y = var_toint(b);
         if (y == 0) {
-            vm_error(vm, "division by zero");
+            vm_error(vm, "divzero_error", "division by zero");
         } else {
             var_setint(dst, x / y);
         }
     } else if (var_isnumber(a) && var_isnumber(b)) {
         breal x = var2real(a), y = var2real(b);
         if (y == cast(breal, 0)) {
-            vm_error(vm, "division by zero");
+            vm_error(vm, "divzero_error", "division by zero");
         }
         var_setreal(dst, x / y);
     } else if (var_isinstance(a)) {
@@ -585,7 +587,8 @@ static void i_getmember(bvm *vm, binstruction ins)
         if (v) {
             *a = *v;
         } else {
-            vm_error(vm, "module '%s' has no attribute '%s'",
+            vm_error(vm, "attribute_error",
+                "module '%s' has no attribute '%s'",
                 be_module_name(module), str(attr));
         }
     } else {
@@ -607,7 +610,8 @@ static void i_getmethod(bvm *vm, binstruction ins)
             a[1] = *a;
             var_settype(a, NOT_METHOD);
         } else {
-            vm_error(vm, "class '%s' has no method '%s'",
+            vm_error(vm, "attribute_error",
+                "class '%s' has no method '%s'",
                 str(be_instance_name(obj)), str(attr));
         }
     } else if (var_ismodule(b) && var_isstr(c)) {
@@ -618,7 +622,8 @@ static void i_getmethod(bvm *vm, binstruction ins)
             var_settype(a, NOT_METHOD);
             a[1] = *src;
         } else {
-            vm_error(vm, "module '%s' has no method '%s'",
+            vm_error(vm, "attribute_error",
+                "module '%s' has no method '%s'",
                 be_module_name(module), str(attr));
         }
     } else {
@@ -633,7 +638,8 @@ static void i_setmember(bvm *vm, binstruction ins)
         binstance *obj = var_toobj(a);
         bstring *attr = var_tostr(b);
         if (!be_instance_setmember(obj, attr, c)) {
-            vm_error(vm, "class '%s' cannot assign to attribute '%s'",
+            vm_error(vm, "attribute_error",
+                "class '%s' cannot assign to attribute '%s'",
                 str(be_instance_name(obj)), str(attr));
         }
         return;
@@ -668,7 +674,7 @@ static void i_getindex(bvm *vm, binstruction ins)
         bstring *s = be_strindex(vm, var_tostr(b), c);
         var_setstr(RA(ins), s);
     } else {
-        vm_error(vm,
+        vm_error(vm, "type_error",
             "value '%s' does not support subscriptable",
             be_vtype2str(b));
     }
@@ -688,7 +694,7 @@ static void i_setindex(bvm *vm, binstruction ins)
         be_dofunc(vm, top, 3); /* call method 'setitem' */
         vm->top -= 4;
     } else {
-        vm_error(vm,
+        vm_error(vm, "type_error",
             "value '%s' does not support index assignment",
             be_vtype2str(a));
     }
@@ -701,7 +707,7 @@ static void i_setsuper(bvm *vm, binstruction ins)
         bclass *obj = var_toobj(a);
         be_class_setsuper(obj, var_toobj(b));
     } else {
-        vm_error(vm,
+        vm_error(vm, "type_error",
             "value '%s' does not support set super",
             be_vtype2str(b));
     }
@@ -722,10 +728,10 @@ static void i_import(bvm *vm, binstruction ins)
             be_stackpop(vm, 1);
             *RA(ins) = *vm->top;
         } else {
-            vm_error(vm, "module '%s' not found", str(name));
+            vm_error(vm, "import_error", "module '%s' not found", str(name));
         }
     } else {
-        vm_error(vm,
+        vm_error(vm, "type_error",
             "import '%s' does not support import",
             be_vtype2str(b));
     }

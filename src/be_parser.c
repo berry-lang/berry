@@ -557,24 +557,16 @@ static void list_nextmember(bparser *parser, bexpdesc *l)
 
 static void map_nextmember(bparser *parser, bexpdesc *l)
 {
-    bexpdesc e, key, v = *l;
+    bexpdesc e, v = *l;
     bfuncinfo *finfo = parser->finfo;
-    int base;
-
-    init_exp(&key, ETSTRING, 0);
-    key.v.s = parser_newstr(parser, "insert");
-    be_code_member(finfo, &v, &key);
-    base = be_code_getmethod(finfo, &v);
     /* copy source value to next register */
     expr(parser, &e); /* key */
     check_var(parser, &e);
-    be_code_nextreg(finfo, &e);
+    be_code_index(finfo, &v, &e);
     match_token(parser, OptColon); /* ':' */
     expr(parser, &e); /* value */
     check_var(parser, &e);
-    be_code_nextreg(finfo, &e);
-    be_code_call(finfo, base, 3);
-    be_code_freeregs(finfo, 1); /* free return value */
+    be_code_setvar(finfo, &v, &e);
 }
 
 static void list_expr(bparser *parser, bexpdesc *e)
