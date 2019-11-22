@@ -80,8 +80,8 @@ std::string str_build::escape(const std::string &string)
             {"opt_le", "<="}, {"opt_ge", ">="},
             {"opt_eq", "=="}, {"opt_neq", "!="},
             {"opt_shl", "<<"}, {"opt_shr", ">>"},
-            {"opt_neg", "-*"}, {"opt_flip", "~" },
-            {"opt_call", "()"}
+            {"opt_neg", "-*"}, {"opt_flip", "~"},
+            {"opt_call", "()"}, {"opt_connect", ".."}
         };
         auto it = tab.find(string);
         if (it != tab.end()) {

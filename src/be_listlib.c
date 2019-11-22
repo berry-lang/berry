@@ -258,6 +258,18 @@ static int m_iter(bvm *vm)
     be_return(vm);
 }
 
+static int m_connect(bvm *vm)
+{
+    int argc = be_top(vm);
+    if (argc >= 2) {
+        be_getmember(vm, 1, ".data");
+        be_pushvalue(vm, 2);
+        be_data_append(vm, -2);
+        be_pop(vm, argc + 1);
+    }
+    be_return(vm); /* return self */
+}
+
 #if !BE_USE_PRECOMPILED_OBJECT
 void be_load_listlib(bvm *vm)
 {
@@ -274,6 +286,7 @@ void be_load_listlib(bvm *vm)
         { "resize", m_resize },
         { "clear", m_clear },
         { "iter", m_iter },
+        { "..", m_connect },
         { NULL, NULL }
     };
     be_regclass(vm, "list", members);
@@ -293,6 +306,7 @@ class be_class_list (scope: global, name: list) {
     resize, func(m_resize)
     clear, func(m_clear)
     iter, func(m_iter)
+    .., func(m_connect)
 }
 @const_object_info_end */
 #include "../generate/be_fixed_be_class_list.h"

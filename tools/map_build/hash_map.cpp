@@ -130,8 +130,10 @@ void hash_map::insert(const std::string &key, const std::string value)
 
 void hash_map::escape_str(std::string &string)
 {
-    if (string[0] == '.') {
-		string.replace(0, 1, "dot_");
+	if (string == "..") {
+        string = "opt_connect";
+    } else if (string[0] == '.') {
+        string.replace(0, 1, "dot_");
 	} else {
         const static std::map<std::string, std::string> tab = {
             {"+", "opt_add"}, {"-", "opt_sub"},

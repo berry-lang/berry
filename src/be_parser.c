@@ -539,27 +539,18 @@ static void new_primtype(bparser *parser, const char *type, bexpdesc *e)
 
 static void list_nextmember(bparser *parser, bexpdesc *l)
 {
-    bexpdesc e, key, v = *l;
+    bexpdesc e, v = *l;
     bfuncinfo *finfo = parser->finfo;
-    int base;
-
-    init_exp(&key, ETSTRING, 0);
-    key.v.s = parser_newstr(parser, "append");
-    be_code_member(finfo, &v, &key);
-    base = be_code_getmethod(finfo, &v);
-    /* copy source value to next register */
-    expr(parser, &e);
+    expr(parser, &e); /* value */
     check_var(parser, &e);
-    be_code_nextreg(finfo, &e);
-    be_code_call(finfo, base, 2);
-    be_code_freeregs(finfo, 1); /* free return value */
+    be_code_binop(finfo, OptConnect, &v, &e);
+    be_code_freeregs(finfo, 1);
 }
 
 static void map_nextmember(bparser *parser, bexpdesc *l)
 {
     bexpdesc e, v = *l;
     bfuncinfo *finfo = parser->finfo;
-    /* copy source value to next register */
     expr(parser, &e); /* key */
     check_var(parser, &e);
     be_code_index(finfo, &v, &e);
@@ -1112,7 +1103,7 @@ static bstring* func_name(bparser *parser, bexpdesc *e, int ismethod)
         }
         scan_next_token(parser); /* skip name */
         return name;
-    } else if (ismethod && type >= OptAdd && type <= OptShiftR) {
+    } else if (ismethod && type >= OptAdd && type <= OptConnect) {
         scan_next_token(parser); /* skip token */
         /* '-*' neg method */
         if (type == OptFlip || (type == OptSub

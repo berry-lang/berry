@@ -461,18 +461,45 @@ define_function(i_xor, bitwise_block(^))
 define_function(i_shl, bitwise_block(<<))
 define_function(i_shr, bitwise_block(>>))
 
-static void i_connect(bvm *vm, binstruction ins)
+static void make_range(bvm *vm, bvalue *a, bvalue *b)
 {
-    bvalue *b = RKB(ins), *c = RKC(ins);
-    bvalue *top = vm->top;
     /* get method 'item' */
     int idx = be_builtin_find(vm, be_newstr(vm, "range"));
-    top[0] = *be_global_var(vm, idx);
-    top[1] = *b; /* move lower to argv[0] */
-    top[2] = *c; /* move upper to argv[1] */
+    vm->top[0] = *be_global_var(vm, idx);
+    vm->top[1] = *a; /* move lower to argv[0] */
+    vm->top[2] = *b; /* move upper to argv[1] */
     vm->top += 3; /* prevent collection results */
-    be_dofunc(vm, top, 2); /* call method 'item' */
+    be_dofunc(vm, vm->top, 2); /* call method 'item' */
     vm->top -= 3;
+}
+
+static void connect_str(bvm *vm, bstring *a, bvalue *b)
+{
+    bstring *s;
+    if (var_isstr(b)) {
+        s = be_strcat(vm, a, var_tostr(b));
+        var_setstr(vm->top, s);
+    } else {
+        *vm->top++ = *b;
+        be_val2str(vm, -1);
+        b = vm->top - 1;
+        s = be_strcat(vm, a, var_tostr(b));
+        var_setstr(b, s);
+        vm->top -= 1;
+    }
+}
+
+static void i_connect(bvm *vm, binstruction ins)
+{
+    bvalue *a = RKB(ins), *b = RKC(ins);
+    if (var_isint(a) && var_isint(b)) {
+        make_range(vm, a, b);
+    } else if (var_isstr(a)) {
+        connect_str(vm, var_tostr(a), b);
+    } else if (var_isinstance(a)) {
+        object_binop(vm, "..", ins, a, b);
+        return;
+    }
     *RA(ins) = *vm->top; /* copy result to R(A) */
 }
 
