@@ -1,4 +1,5 @@
 #include "be_object.h"
+#include "be_exec.h"
 #include "be_mem.h"
 #include <string.h>
 
@@ -14,7 +15,7 @@ static int l_assert(bvm *vm)
         if (argc >= 2 && be_isstring(vm, 2)) {
             msg = be_tostring(vm, 2);
         }
-        be_pusherror(vm, msg);
+        be_raise(vm, "assert_failed", msg);
     }
     be_return_nil(vm);
 }
@@ -229,7 +230,8 @@ static int l_module(bvm *vm)
 #if BE_USE_SCRIPT_COMPILER
 static int raise_compile_error(bvm *vm)
 {
-    be_raise(vm, "syntax_error", NULL);
+    be_pop(vm, 2); /* pop the exception value and message */
+    be_throw(vm, BE_EXCEPTION);
     return 0;
 }
 

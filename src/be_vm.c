@@ -18,7 +18,7 @@
 #define NOT_METHOD      BE_NONE
 
 #define vm_error(vm, ...) \
-    be_raise(vm, "vm_error", be_pushfstring(vm, __VA_ARGS__))
+    be_raise(vm, "runtime_error", be_pushfstring(vm, __VA_ARGS__))
 
 #define RA(i)   (vm->reg + IGET_RA(i))
 #define RKB(i)  ((isKB(i) ? curcl(vm)->proto->ktab \
@@ -125,7 +125,7 @@ static void check_bool(bvm *vm, binstance *obj, const char *method)
 {
     if (!var_isbool(vm->top)) {
         const char *name = str(be_instance_name(obj));
-        be_pusherror(vm, be_pushfstring(vm,
+        be_raise(vm, "value_error", be_pushfstring(vm,
             "`%s::%s` return value error, the expected type is 'bool'",
             strlen(name) ? name : "<anonymous>", method));
     }
@@ -790,7 +790,7 @@ static void i_raise(bvm *vm, binstruction ins)
             var_setnil(top);
         }
     }
-    be_throw(vm, BE_EXCEPTION);
+    be_throw(vm, BE_EXCEPTION); /* throw / rethrow the exception */
 }
 
 BERRY_API bvm* be_vm_new(void)
@@ -812,6 +812,7 @@ BERRY_API bvm* be_vm_new(void)
     vm->errjmp = NULL;
     vm->module.loaded = NULL;
     vm->module.path = NULL;
+    vm->snapshot.cf = NULL;
     be_globalvar_init(vm);
     be_gc_setpause(vm, 1);
     be_loadlibs(vm);

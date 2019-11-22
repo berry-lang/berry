@@ -169,11 +169,8 @@ static int dofile(bvm *vm, const char *name, int args)
     switch (res) {
     case BE_OK: /* everything is OK */
         return 0;
-    case BE_IO_ERROR: /* IO error */
-    case BE_SYNTAX_ERROR: /* syntax error */
-    case BE_EXEC_ERROR: /* VM runtime error */
-        be_writestring(be_tostring(vm, -1)); /* print the error message */
-        be_writenewline();
+    case BE_EXCEPTION: /* uncatched exception */
+        be_dumpexcept(vm);
         return 1;
     case BE_EXIT: /* return exit code */
         return be_toindex(vm, -1);
@@ -217,15 +214,8 @@ static int build_file(bvm *vm, const char *dst, const char *src)
     switch (res) {
     case BE_OK:
         return 0;
-    case BE_IO_ERROR: /* IO error */
-    case BE_SYNTAX_ERROR: /* syntax error */
-        be_writestring(be_tostring(vm, -1)); /* print the error message */
-        be_writenewline();
-        return 1;
     case BE_EXCEPTION: /* uncatched exception */
-        be_writestring(be_tostring(vm, -2)); /* print the error message */
-        be_writestring(be_tostring(vm, -1)); /* print the error message */
-        be_writenewline();
+        be_dumpexcept(vm);
         return 1;
     case BE_MALLOC_FAIL:
         be_writestring("error: memory allocation failed.\n");

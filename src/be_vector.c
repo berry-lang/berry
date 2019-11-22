@@ -77,7 +77,7 @@ void be_vector_resize(bvm *vm, bvector *vector, int count)
     size_t size = vector->size;
     if (count != be_vector_count(vector)) {
         int newcap = be_nextsize(count);
-        if (newcap > vector->capacity) {
+        if (newcap > vector->capacity) { /* extended capacity */
             vector->data = be_realloc(vm,
                 vector->data, vector->capacity * size, newcap * size);
             vector->capacity = newcap;

@@ -67,6 +67,7 @@ BERRY_API void be_exit(bvm *vm, int status)
 {
     if (vm->errjmp) {
         be_pushint(vm, status);
+        be_pop(vm, 1);
         be_throw(vm, BE_EXIT);
     } else {
         exit(status);
@@ -99,20 +100,24 @@ static void vm_state_save(bvm *vm, struct vmstate *state)
     state->reg = cast_int(vm->reg - vm->stack);
 }
 
-static void copy_exception(bvm *vm, int dstindex)
+static void copy_exception(bvm *vm, int res, int dstindex)
 {
-    bvalue *src = vm->top;
     bvalue *dst = vm->stack + dstindex;
-    *dst++ = *src++;
-    *dst++ = *src++;
+    if (res == BE_EXCEPTION || res == BE_EXIT) {
+        bvalue *src = vm->top;
+        *dst++ = *src++;
+        if (res == BE_EXCEPTION) {
+            *dst++ = *src++;
+        }
+    }
     vm->top = dst;
 }
 
-static void vm_state_restore(bvm *vm, const struct vmstate *state)
+static void vm_state_restore(bvm *vm, const struct vmstate *state, int res)
 {
     vm->reg = vm->stack + state->reg;
     /* copy exception information to top */
-    copy_exception(vm, state->top);
+    copy_exception(vm, res, state->top);
     be_assert(be_stack_count(&vm->callstack) >= state->depth);
     if (be_stack_count(&vm->callstack) > state->depth) {
         be_vector_resize(vm, &vm->callstack, state->depth);
@@ -144,7 +149,7 @@ int be_protectedparser(bvm *vm,
     vm_state_save(vm, &state);
     res = be_execprotected(vm, m_parser, &s);
     if (res) { /* restore call stack */
-        vm_state_restore(vm, &state);
+        vm_state_restore(vm, &state, res);
     }
     return res;
 }
@@ -222,7 +227,7 @@ BERRY_API int be_loadexec(bvm *vm, const char *name)
     vm_state_save(vm, &state);
     res = be_execprotected(vm, _bytecode_load, (void *)name);
     if (res) { /* restore call stack */
-        vm_state_restore(vm, &state);
+        vm_state_restore(vm, &state, res);
     }
     return res;
 }
@@ -243,7 +248,7 @@ BERRY_API int be_saveexec(bvm *vm, const char *name)
     vm_state_save(vm, &state);
     res = be_execprotected(vm, _bytecode_save, (void *)name);
     if (res) { /* restore call stack */
-        vm_state_restore(vm, &state);
+        vm_state_restore(vm, &state, res);
     }
     return res;
 }
@@ -264,7 +269,7 @@ int be_protectedcall(bvm *vm, bvalue *v, int argc)
     vm_state_save(vm, &state);
     res = be_execprotected(vm, m_pcall, &s);
     if (res) { /* restore call stack */
-        vm_state_restore(vm, &state);
+        vm_state_restore(vm, &state, res);
     }
     return res;
 }
@@ -323,7 +328,7 @@ void be_stack_expansion(bvm *vm, int n)
     if (size + n > BE_STACK_TOTAL_MAX) {
         /* ensure the stack is enough when generating error messages. */
         stack_resize(vm, size + 1);
-        be_pusherror(vm, STACK_OVER_MSG(BE_STACK_TOTAL_MAX));
+        be_raise(vm, "runtime_error", STACK_OVER_MSG(BE_STACK));
     }
     stack_resize(vm, size + n);
 }

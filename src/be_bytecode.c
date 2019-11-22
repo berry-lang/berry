@@ -27,8 +27,7 @@
 
 static void bytecode_error(bvm *vm, const char *msg)
 {
-    be_pushstring(vm, msg);
-    be_throw(vm, BE_IO_ERROR);
+    be_raise(vm, "io_error", msg);
 }
 
 static uint8_t vm_sizeinfo(void)
@@ -242,7 +241,7 @@ void be_bytecode_save(bvm *vm, const char *filename, bproto *proto)
     void *fp = be_fopen(filename, "wb");
     if (fp == NULL) {
         bytecode_error(vm, be_pushfstring(vm,
-            "error: can not open file '%s'.", filename));
+            "can not open file '%s'.", filename));
     } else {
         save_header(fp);
         save_global_info(vm, fp);
@@ -470,7 +469,7 @@ bclosure* be_bytecode_load(bvm *vm, const char *filename)
     void *fp = be_fopen(filename, "rb");
     if (fp == NULL) {
         bytecode_error(vm, be_pushfstring(vm,
-            "error: can not open file '%s'.", filename));
+            "can not open file '%s'.", filename));
     } else if (load_head(fp)) {
         bclosure *cl = be_newclosure(vm, 0);
         var_setclosure(vm->top, cl);
@@ -482,7 +481,7 @@ bclosure* be_bytecode_load(bvm *vm, const char *filename)
         return cl;
     }
     bytecode_error(vm, be_pushfstring(vm,
-        "error: invalid bytecode file '%s'.", filename));
+        "invalid bytecode file '%s'.", filename));
     return NULL;
 }
 

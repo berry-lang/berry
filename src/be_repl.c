@@ -27,18 +27,19 @@ static int is_multline(bvm *vm)
 static int compile(bvm *vm, const char *line, breadline getl)
 {
     int res = try_return(vm, line);
-    if (res == BE_SYNTAX_ERROR) {
-        be_pop(vm, 1); /* pop error message */
+    if (be_getexcept(vm, res) == BE_SYNTAX_ERROR) {
+        be_pop(vm, 2); /* pop exception values */
         be_pushstring(vm, line);
         for (;;) {
-            const char *src = be_tostring(vm, -1);
+            const char *src = be_tostring(vm, -1); /* get source code */
+            int idx = be_absindex(vm, -1); /* get the source text absolute index */
             /* compile source line */
             res = be_loadbuffer(vm, "stdin", src, strlen(src));
             if (!res || !is_multline(vm)) {
-                be_remove(vm, -2);
+                be_remove(vm, idx); /* remove source code */
                 return res;
             }
-            be_pop(vm, 1); /* pop error message */
+            be_pop(vm, 2); /* pop exception values */
             line = getl(">> "); /* read a new input line */
             be_pushfstring(vm, "\n%s", line);
             be_strconcat(vm, -2);
@@ -53,11 +54,7 @@ int be_repl(bvm *vm, breadline getl)
     const char *line;
     while ((line = getl("> ")) != NULL) {
         if (compile(vm, line, getl)) {
-            be_writestring(be_tostring(vm, -2)); /* some error */
-            be_writestring(": ");
-            be_writestring(be_tostring(vm, -1)); /* some error */
-            be_writenewline();
-            be_pop(vm, 2);
+            be_dumpexcept(vm);
         } else { /* compiled successfully */
             switch (be_pcall(vm, 0)) { /* call the main function */
             case BE_OK: /* execution succeed */
@@ -65,12 +62,10 @@ int be_repl(bvm *vm, breadline getl)
                     be_writestring(be_tostring(vm, -1));
                     be_writenewline();
                 }
-                be_pop(vm, 1);
+                be_pop(vm, 1); /* pop the result value */
                 break;
-            case BE_EXEC_ERROR: /* vm run error */
-                be_writestring(be_tostring(vm, -1));
-                be_writenewline();
-                be_pop(vm, 2);
+            case BE_EXCEPTION: /* vm run error */
+                be_dumpexcept(vm);
                 break;
             case BE_EXIT:
                 return be_toindex(vm, -1);

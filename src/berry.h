@@ -52,12 +52,12 @@ enum {
 /* error code definition */
 enum berrorcode {
     BE_OK = 0,
-    BE_IO_ERROR,
+    BE_EXIT,
+    BE_MALLOC_FAIL,
+    BE_EXCEPTION,
     BE_SYNTAX_ERROR,
     BE_EXEC_ERROR,
-    BE_EXCEPTION,
-    BE_MALLOC_FAIL,
-    BE_EXIT
+    BE_IO_ERROR
 };
 
 /* native-module member type specifier */
@@ -233,7 +233,6 @@ BERRY_API void be_pushntvfunction(bvm *vm, bntvfunc f);
 BERRY_API void be_pushclass(bvm *vm, const char *name, const bnfuncinfo *lib);
 BERRY_API void be_pushcomptr(bvm *vm, void *ptr);
 BERRY_API bbool be_pushiter(bvm *vm, int index);
-BERRY_API void be_pusherror(bvm *vm, const char *msg);
 
 BERRY_API void be_newlist(bvm *vm);
 BERRY_API void be_newmap(bvm *vm);
@@ -266,6 +265,8 @@ BERRY_API void be_call(bvm *vm, int argc);
 BERRY_API int be_pcall(bvm *vm, int argc);
 BERRY_API void be_exit(bvm *vm, int status);
 BERRY_API void be_raise(bvm *vm, const char *except, const char *msg);
+BERRY_API int be_getexcept(bvm *vm, int code);
+BERRY_API void be_dumpexcept(bvm *vm);
 
 /* raise exception APIs */
 BERRY_API void be_stop_iteration(bvm *vm);

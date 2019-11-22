@@ -178,42 +178,39 @@ static void patch_native(bvm *vm, int deepth)
 static void tracestack(bvm *vm)
 {
     int deepth, size = be_stack_count(&vm->callstack);
+    be_writestring("stack traceback:\n");
     for (deepth = 1; deepth <= size; ++deepth) {
         bcallframe *cf = be_vector_at(&vm->callstack, size - deepth);
         if (var_isclosure(cf->func)) {
             char buf[100];
             bclosure *cl = var_toobj(cf->func);
-            be_pushfstring(vm, "\t%s in function `%s`\n",
-                sourceinfo(vm, buf, -deepth), str(cl->proto->name));
+            be_writestring("\t");
+            be_writestring(sourceinfo(vm, buf, -deepth));
+            be_writestring(" in function `");
+            be_writestring(str(cl->proto->name));
+            be_writestring("`\n");
         } else {
             patch_native(vm, -deepth);
-            be_pushstring(vm, "\t<native>: in native function\n");
+            be_writestring("\t<native>: in native function\n");
         }
-        be_strconcat(vm, -2);
-        be_stackpop(vm, 1);
     }
-    be_pushstring(vm, "\t[C]: in ?");
-    be_strconcat(vm, -2);
-    be_stackpop(vm, 1);
+    be_writestring("\t[C]: in ?\n");
 }
 
-static void addinfo(bvm *vm, const char *msg)
+void be_tracestack(bvm *vm)
 {
-    bcallframe *cf = vm->cf;
-    if (var_isclosure(cf->func)) {
-        char buf[100];
-        be_pushfstring(vm, "%s error: %s\nstack traceback:\n",
-            sourceinfo(vm, buf, -1), msg);
-    } else {
-        be_pushfstring(vm, "native error: %s\n", msg);
+    struct bstatesnapshot snapshot;
+    if (vm->snapshot.cf) {
+        snapshot.ip = vm->ip;
+        snapshot.cf = vm->cf;
+        vm->ip = vm->snapshot.ip;
+        vm->cf = vm->snapshot.cf;
+        be_stack_top(&vm->callstack) = vm->cf;
+        tracestack(vm);
+        vm->ip = snapshot.ip;
+        vm->cf = snapshot.cf;
+        be_stack_top(&vm->callstack) = vm->cf;
     }
-    tracestack(vm);
-}
-
-BERRY_API void be_pusherror(bvm *vm, const char *msg)
-{
-    addinfo(vm, msg);
-    be_throw(vm, BE_EXEC_ERROR);
 }
 
 #if BE_DEBUG_DUMP_LEVEL >= 3

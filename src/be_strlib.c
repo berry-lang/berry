@@ -118,7 +118,7 @@ static void ins2str(bvm *vm, int idx)
         /* check the return value */
         if (!var_isstr(vm->top)) {
             const char *name = str(be_instance_name(obj));
-            be_pusherror(vm, be_pushfstring(vm,
+            be_raise(vm, "runtime_error", be_pushfstring(vm,
                 "`%s::tostring` return value error, the expected type is 'string'",
                 strlen(name) ? name : "<anonymous>"));
         }
@@ -323,9 +323,9 @@ bstring* be_strindex(bvm *vm, bstring *str, bvalue *idx)
         if (pos < str_len(str)) {
             return be_newstrn(vm, str(str) + pos, 1);
         }
-        be_pusherror(vm, "string index out of range");
+        be_raise(vm, "index_error", "string index out of range");
     }
-    be_pusherror(vm, "string indices must be integers");
+    be_raise(vm, "index_error", "string indices must be integers");
     return NULL;
 }
 
@@ -411,7 +411,7 @@ static int str_format(bvm *vm)
             p = get_mode(p + 1, mode);
             buf[0] = '\0';
             if (index > top) {
-                be_pusherror(vm, be_pushfstring(vm,
+                be_raise(vm, "runtime_error", be_pushfstring(vm,
                     "bad argument #%d to 'format': no value", index));
             }
             switch (*p) {
@@ -448,7 +448,7 @@ static int str_format(bvm *vm)
                 break;
             }
             default: /* error */
-                be_pusherror(vm, be_pushfstring(vm,
+                be_raise(vm, "runtime_error", be_pushfstring(vm,
                     "invalid option '%%%c' to 'format'", *p));
                 break;
             }

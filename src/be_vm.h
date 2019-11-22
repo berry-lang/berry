@@ -43,6 +43,11 @@ struct bmoduledesc {
     blist *path; /* module load path list */
 };
 
+struct bstatesnapshot {
+    binstruction *ip;
+    bcallframe *cf;
+};
+
 struct bvm {
     bglobaldesc gbldesc; /* global description */
     bvalue *stack; /* stack space */
@@ -58,6 +63,7 @@ struct bvm {
     bstack refstack; /* object reference stack */
     struct bmoduledesc module; /* module description */
     struct bstringtable strtab; /* short string table */
+    struct bstatesnapshot snapshot; /* call state snapshot */
     struct bgc gc;
 };
 

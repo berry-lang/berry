@@ -833,7 +833,7 @@ BERRY_API void be_codedump(bvm *vm, int index)
     }
 #else
     (void)index;
-    be_pusherror(vm, "codedump unrealized");
+    be_raise(vm, "unrealized_error", "codedump unrealized");
 #endif
 }
 
@@ -846,10 +846,39 @@ BERRY_API void be_raise(bvm *vm, const char *except, const char *msg)
         be_pushnil(vm);
     }
     be_pop(vm, 2);
+    vm->snapshot.ip = vm->ip;
+    vm->snapshot.cf = vm->cf;
     be_throw(vm, BE_EXCEPTION);
 }
 
 BERRY_API void be_stop_iteration(bvm *vm)
 {
     be_raise(vm, "stop_iteration", NULL);
+}
+
+BERRY_API int be_getexcept(bvm *vm, int code)
+{
+    if (code == BE_EXCEPTION) {
+        if (be_isstring(vm, -2)) {
+            const char *except = be_tostring(vm, -2);
+            if (!strcmp(except, "syntax_error")) {
+                return BE_SYNTAX_ERROR;
+            }
+            if (!strcmp(except, "io_error")) {
+                return BE_IO_ERROR;
+            }
+        }
+        return BE_EXEC_ERROR;
+    }
+    return code;
+}
+
+BERRY_API void be_dumpexcept(bvm *vm)
+{
+    be_writestring(be_tostring(vm, -2)); /* exception value */
+    be_writestring(": ");
+    be_writestring(be_tostring(vm, -1)); /* exception argument */
+    be_writenewline();
+    be_pop(vm, 2); /* pop the exception value & argument */
+    be_tracestack(vm);
 }
