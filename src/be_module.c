@@ -206,12 +206,13 @@ static bbool load_native(bvm *vm, bstring *path)
 {
     bntvmodule *nm = find_native(path);
     bmodule *mod = native_module(vm, nm, NULL);
-    if (mod == NULL)
-        return bfalse;
-    /* the pointer vm->top may be changed */
-    var_setmodule(vm->top, mod);
-    be_incrtop(vm);
-    return btrue;
+    if (mod != NULL) {
+        /* the pointer vm->top may be changed */
+        var_setmodule(vm->top, mod);
+        be_incrtop(vm);
+        return btrue;
+    }
+    return bfalse;
 }
 
 static bvalue* load_cached(bvm *vm, bstring *path)

@@ -196,7 +196,6 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     finfo->freereg = 0;
     finfo->binfo = NULL;
     finfo->pc = 0;
-    finfo->flag = 0;
     parser->finfo = finfo;
 #if BE_DEBUG_RUNTIME_INFO
     be_vector_init(vm, &finfo->linevec, sizeof(blineinfo));
@@ -452,7 +451,6 @@ static bproto* funcbody(bparser *parser, bstring *name, int type)
     /* '(' varlist ')' block 'end' */
     begin_func(parser, &finfo, &binfo);
     finfo.proto->name = name;
-    finfo.flag = (bbyte)type;
     if (type & FUNC_METHOD) {
         new_localvar(parser, parser_newstr(parser, "self"));
     }
@@ -513,7 +511,6 @@ static void lambda_expr(bparser *parser, bexpdesc *e)
     scan_next_token(parser); /* skip '/' */
     begin_func(parser, &finfo, &binfo);
     finfo.proto->name = name;
-    finfo.flag = (bbyte)FUNC_ANONYMOUS;
     lambda_varlist(parser);
     expr(parser, &e1);
     check_var(parser, &e1);
