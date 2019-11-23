@@ -255,6 +255,7 @@ BERRY_API int be_data_size(bvm *vm, int index);
 BERRY_API void be_data_append(bvm *vm, int index);
 BERRY_API bbool be_data_insert(bvm *vm, int index);
 BERRY_API bbool be_data_remove(bvm *vm, int index);
+BERRY_API bbool be_data_merge(bvm *vm, int index);
 BERRY_API void be_data_resize(bvm *vm, int index);
 BERRY_API int be_iter_next(bvm *vm, int index);
 BERRY_API bbool be_iter_hasnext(bvm *vm, int index);

@@ -4,6 +4,7 @@
 #include "be_vm.h"
 #include "be_vector.h"
 #include "be_exec.h"
+#include <string.h>
 
 #define datasize(size)          ((size) * sizeof(bvalue))
 
@@ -117,5 +118,22 @@ void be_list_resize(bvm *vm, blist *list, int count)
             }
         }
         list->count = count;
+    }
+}
+
+void be_list_merge(bvm *vm, blist *list, const blist *other)
+{
+    int dst_len = list->count;
+    int src_len = other->count;
+    int length = src_len + dst_len;
+    if (length != 0) {
+        int newcap = be_nextsize(length);
+        if (newcap > list->capacity) {
+            list->data = be_realloc(vm, list->data,
+                datasize(list->capacity), datasize(newcap));
+            list->capacity = newcap;
+        }
+        memcpy(list->data + dst_len, other->data, src_len * sizeof(bvalue));
+        list->count = length;
     }
 }

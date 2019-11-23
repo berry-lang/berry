@@ -668,6 +668,18 @@ BERRY_API bbool be_data_remove(bvm *vm, int index)
     return bfalse;
 }
 
+BERRY_API bbool be_data_merge(bvm *vm, int index)
+{
+    bvalue *a = index2value(vm, index);
+    bvalue *b = index2value(vm, -1);
+    if (var_islist(a) && var_islist(b)) {
+        blist *dst = var_toobj(a), *src = var_toobj(b);
+        be_list_merge(vm, dst, src);
+        return btrue;
+    }
+    return bfalse;
+}
+
 BERRY_API void be_data_resize(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);

@@ -270,6 +270,21 @@ static int m_connect(bvm *vm)
     be_return(vm); /* return self */
 }
 
+static int m_merge(bvm *vm)
+{
+    int argc = be_top(vm);
+    if (argc >= 2) {
+        be_getmember(vm, 1, ".data");
+        be_getmember(vm, 2, ".data");
+        if (!be_islist(vm, -1)) {
+            be_raise(vm, "type_error", "operand must be a list");
+        }
+        be_data_merge(vm, -2);
+        be_pop(vm, argc + 1);
+    }
+    be_return(vm); /* return self */
+}
+
 #if !BE_USE_PRECOMPILED_OBJECT
 void be_load_listlib(bvm *vm)
 {
@@ -287,6 +302,7 @@ void be_load_listlib(bvm *vm)
         { "clear", m_clear },
         { "iter", m_iter },
         { "..", m_connect },
+        { "+", m_merge },
         { NULL, NULL }
     };
     be_regclass(vm, "list", members);
@@ -307,6 +323,7 @@ class be_class_list (scope: global, name: list) {
     clear, func(m_clear)
     iter, func(m_iter)
     .., func(m_connect)
+    +, func(m_merge)
 }
 @const_object_info_end */
 #include "../generate/be_fixed_be_class_list.h"
