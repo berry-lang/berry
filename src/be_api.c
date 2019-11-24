@@ -192,6 +192,12 @@ BERRY_API bbool be_iscomptr(bvm *vm, int index)
     return var_istype(v, BE_COMPTR);
 }
 
+BERRY_API bbool be_iscomobj(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    return var_istype(v, BE_COMOBJ);
+}
+
 BERRY_API bint be_toint(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
@@ -235,7 +241,14 @@ BERRY_API const char* be_tostring(bvm *vm, int index)
 BERRY_API void* be_tocomptr(bvm *vm, int index)
 {
     bvalue *v = index2value(vm, index);
-    return var_toobj(v);
+    if (var_istype(v, BE_COMPTR)) {
+        return var_toobj(v);
+    }
+    if (var_istype(v, BE_COMOBJ)) {
+        bcommomobj *obj = var_toobj(v);
+        return obj->data;
+    }
+    return NULL;
 }
 
 BERRY_API void be_moveto(bvm *vm, int from, int to)
@@ -426,33 +439,36 @@ BERRY_API int be_strlen(bvm *vm, int index)
 
 BERRY_API void be_newlist(bvm *vm)
 {
+    blist *list = be_list_new(vm);
     bvalue *top = be_incrtop(vm);
-    var_setlist(top, be_list_new(vm));
+    var_setlist(top, list);
 }
 
 BERRY_API void be_newmap(bvm *vm)
 {
+    bmap *map = be_map_new(vm);
     bvalue *top = be_incrtop(vm);
-    var_setobj(top, BE_MAP, be_map_new(vm));
+    var_setobj(top, BE_MAP, map);
 }
 
 BERRY_API void be_newmodule(bvm *vm)
 {
+    bmodule *mod = be_module_new(vm);
     bvalue *top = be_incrtop(vm);
-    var_setobj(top, BE_MODULE, be_module_new(vm));
+    var_setobj(top, BE_MODULE, mod);
 }
 
 BERRY_API void be_getglobal(bvm *vm, const char *name)
 {
-    bvalue *top = be_incrtop(vm);
     int idx = be_global_find(vm, be_newstr(vm, name));
+    bvalue *top = be_incrtop(vm);
     *top = *be_global_var(vm, idx);
 }
 
 BERRY_API void be_getbuiltin(bvm *vm, const char *name)
 {
-    bvalue *top = be_incrtop(vm);
     int idx = be_builtin_find(vm, be_newstr(vm, name));
+    bvalue *top = be_incrtop(vm);
     *top = *be_global_var(vm, idx);
 }
 
@@ -461,9 +477,18 @@ BERRY_API bbool be_setmember(bvm *vm, int index, const char *k)
     int res = BE_NIL;
     bvalue *o = index2value(vm, index);
     if (var_isinstance(o)) {
+        bstring *key = be_newstr(vm, k);
         bvalue *v = index2value(vm, -1);
         binstance *obj = var_toobj(o);
-        res = be_instance_setmember(obj, be_newstr(vm, k), v);
+        res = be_instance_setmember(obj, key, v);
+    } else if (var_ismodule(o)) {
+        bstring *key = be_newstr(vm, k);
+        bmodule *mod = var_toobj(o);
+        bvalue *v = be_module_bind(vm, mod, key);
+        if (v) {
+            *v = *index2value(vm, -1);
+            return btrue;
+        }
     }
     return res != BE_NIL;
 }

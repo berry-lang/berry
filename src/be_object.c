@@ -1,4 +1,10 @@
 #include "be_object.h"
+#include "be_exec.h"
+#include "be_mem.h"
+#include "be_gc.h"
+#include "be_vm.h"
+
+#define cast_comobj(o)      gc_cast(o, BE_COMOBJ, bcommomobj)
 
 const char* be_vtype2str(bvalue *v)
 {
@@ -17,5 +23,31 @@ const char* be_vtype2str(bvalue *v)
     case BE_INSTANCE: return "instance";
     case BE_MODULE: return "module";
     default: return "invalid type";
+    }
+}
+
+BERRY_API void be_newcomobj(bvm *vm, void *data, bntvfunc destory)
+{
+    bgcobject *gco = be_gcnew(vm, BE_COMOBJ, bcommomobj);
+    if (gco != NULL) {
+        bcommomobj *obj = cast_comobj(gco);
+        bvalue *top = be_incrtop(vm);
+        obj->data = data;
+        obj->destory = destory;
+        var_setobj(top, BE_COMOBJ, obj);
+    }
+}
+
+void be_commonobj_delete(bvm *vm, bgcobject *obj)
+{
+    bcommomobj *co = cast_comobj(obj);
+    if (co) {
+        if (co->destory && co->data) {
+            be_pushntvfunction(vm, co->destory);
+            be_pushcomptr(vm, co->data);
+            be_call(vm, 1);
+            be_pop(vm, 2);
+        }
+        be_free(vm, co, sizeof(bcommomobj));
     }
 }

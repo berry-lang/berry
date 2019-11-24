@@ -125,6 +125,7 @@ static void mark_gray(bvm *vm, bgcobject *obj)
         case BE_CLOSURE: link_gray(vm, cast_closure(obj)); break;
         case BE_NTVCLOS: link_gray(vm, cast_ntvclos(obj)); break;
         case BE_MODULE: link_gray(vm, cast_module(obj)); break;
+        case BE_COMOBJ: gc_setdark(obj); break; /* just set dark */
         default: break;
         }
     }
@@ -324,6 +325,7 @@ static void free_object(bvm *vm, bgcobject *obj)
     case BE_NTVCLOS: free_ntvclos(vm, obj); break;
     case BE_PROTO: free_proto(vm, obj); break;
     case BE_MODULE: be_module_delete(vm, cast_module(obj)); break;
+    case BE_COMOBJ: be_commonobj_delete(vm, obj); break;
     default: break; /* case BE_STRING: break; */
     }
 }

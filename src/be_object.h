@@ -18,6 +18,7 @@
 #define BE_LIST         9
 #define BE_MAP          10
 #define BE_MODULE       11
+#define BE_COMOBJ       12      /* common object */
 #define BE_NTVFUNC      ((0 << 5) | BE_FUNCTION)
 #define BE_CLOSURE      ((1 << 5) | BE_FUNCTION)
 #define BE_NTVCLOS      ((2 << 5) | BE_FUNCTION)
@@ -154,6 +155,13 @@ struct bntvclos {
     bntvfunc f;
 };
 
+/* common object */
+typedef struct {
+    bcommon_header;
+    void *data;
+    bntvfunc destory;
+} bcommomobj;
+
 typedef const char* (*breader)(void*, size_t*);
 
 #define cast(_T, _v)            ((_T)(_v))
@@ -210,5 +218,7 @@ typedef const char* (*breader)(void*, size_t*);
 #define var_toidx(_v)           cast_int(var_toint(_v))
 
 const char* be_vtype2str(bvalue *v);
+bgcobject* be_commomobj_new(bvm *vm, void *data, bntvfunc destory);
+void be_commonobj_delete(bvm *vm, bgcobject *obj);
 
 #endif

@@ -66,7 +66,7 @@ static void insert_attrs(bvm *vm, bmap *table, bntvmodule *nm)
             var_setstr(v, be_newstr(vm, node->u.s));
             break;
         case BE_CMODULE:
-            native_module(vm, node->u.m, v);
+            native_module(vm, node->u.o, v);
             break;
         default: /* error */
             break;

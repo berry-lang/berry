@@ -35,7 +35,7 @@ extern "C" {
 #else
   #error "Unsupported integer type for `bint`."
 #endif
-#define BE_INT_FORMAT       "%"BE_INT_FMTLEN"d"
+#define BE_INT_FORMAT       "%" BE_INT_FMTLEN "d"
 
 typedef int                 bbool;
 typedef uint8_t             bbyte;
@@ -112,12 +112,12 @@ typedef const struct {
         bbool b;
         bntvfunc f;
         const char *s;
-        const struct bntvmodule *m;
+        const void *o;
     } u;
 } bntvmodule_obj;
 
 /* native module object */
-typedef const struct bntvmodule {
+typedef const struct {
     const char *name; /* native module name */
     bntvmodule_obj *attrs; /* native module attributes */
     size_t size; /* native module attribute count */
@@ -145,7 +145,7 @@ typedef const struct bntvmodule {
     { .name = (_name), .type = BE_CSTRING, .u.s = (_s) }
 
 #define be_native_module_module(_name, _m)          \
-    { .name = (_name), .type = BE_CMODULE, .u.m = &(_m) }
+    { .name = (_name), .type = BE_CMODULE, .u.o = &(_m) }
 
 #define be_native_module(name)  be_native_module_##name
 
@@ -216,6 +216,7 @@ BERRY_API bbool be_isinstance(bvm *vm, int index);
 BERRY_API bbool be_islist(bvm *vm, int index);
 BERRY_API bbool be_ismap(bvm *vm, int index);
 BERRY_API bbool be_iscomptr(bvm *vm, int index);
+BERRY_API bbool be_iscomobj(bvm *vm, int index);
 
 BERRY_API bint be_toint(bvm *vm, int index);
 BERRY_API breal be_toreal(bvm *vm, int index);
@@ -241,6 +242,7 @@ BERRY_API bbool be_pushiter(bvm *vm, int index);
 BERRY_API void be_newlist(bvm *vm);
 BERRY_API void be_newmap(bvm *vm);
 BERRY_API void be_newmodule(bvm *vm);
+BERRY_API void be_newcomobj(bvm *vm, void *data, bntvfunc destory);
 BERRY_API void be_getglobal(bvm *vm, const char *name);
 BERRY_API void be_getbuiltin(bvm *vm, const char *name);
 BERRY_API bbool be_setmember(bvm *vm, int index, const char *k);
