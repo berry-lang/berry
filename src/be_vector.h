@@ -22,8 +22,8 @@
 /* ========================== function extern ========================== */
 void be_vector_init(bvm *vm, bvector *vector, int size);
 void be_vector_delete(bvm *vm, bvector *vector);
-int be_vector_count(bvector *vector);
-bbool be_vector_isempty(bvector *vector);
+int be_vector_count(const bvector *vector);
+bbool be_vector_isempty(const bvector *vector);
 void* be_vector_at(bvector *vector, int index);
 void be_vector_append(bvm *vm, bvector *vector, void *data);
 void be_vector_append_c(bvm *vm, bvector *vector, void *data);

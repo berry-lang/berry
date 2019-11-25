@@ -43,10 +43,10 @@ struct bmoduledesc {
     blist *path; /* module load path list */
 };
 
-struct bstatesnapshot {
+typedef struct {
+    bvalue func;
     binstruction *ip;
-    int cf;
-};
+} bcallsnapshot;
 
 struct bvm {
     bglobaldesc gbldesc; /* global description */
@@ -63,7 +63,7 @@ struct bvm {
     bstack refstack; /* object reference stack */
     struct bmoduledesc module; /* module description */
     struct bstringtable strtab; /* short string table */
-    struct bstatesnapshot snapshot; /* call state snapshot */
+    bvector tracestack; /* call state trace-stack */
     struct bgc gc;
 };
 

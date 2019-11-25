@@ -825,8 +825,7 @@ static void i_raise(bvm *vm, binstruction ins)
         } else {
             var_setnil(top);
         }
-        vm->snapshot.ip = vm->ip;
-        vm->snapshot.cf = be_stack_count(&vm->callstack);
+        be_save_stacktrace(vm);
     }
     be_throw(vm, BE_EXCEPTION); /* throw / rethrow the exception */
 }
@@ -840,6 +839,7 @@ BERRY_API bvm* be_vm_new(void)
     be_stack_init(vm, &vm->callstack, sizeof(bcallframe));
     be_stack_init(vm, &vm->refstack, sizeof(binstance*));
     be_stack_init(vm, &vm->exceptstack, sizeof(struct bexecptframe));
+    be_stack_init(vm, &vm->tracestack, sizeof(bcallsnapshot));
     vm->stack = be_malloc(vm, sizeof(bvalue) * BE_STACK_FREE_MIN);
     vm->stacktop = vm->stack + BE_STACK_FREE_MIN;
     vm->cf = NULL;
@@ -850,7 +850,6 @@ BERRY_API bvm* be_vm_new(void)
     vm->errjmp = NULL;
     vm->module.loaded = NULL;
     vm->module.path = NULL;
-    vm->snapshot.cf = 0;
     be_globalvar_init(vm);
     be_gc_setpause(vm, 1);
     be_loadlibs(vm);

@@ -413,3 +413,21 @@ void be_except_block_close(bvm *vm, int count)
     vm->errjmp = frame->errjmp.prev;
     be_vector_resize(vm, &vm->exceptstack, size - count);
 }
+
+/* TODO: consider GC */
+void be_save_stacktrace(bvm *vm)
+{
+    be_stack_clear(&vm->tracestack);
+    if (be_vector_count(&vm->callstack)) {
+        bcallframe *cf;
+        bcallframe *begin = be_vector_first(&vm->callstack);
+        bcallframe *end = be_vector_end(&vm->callstack);
+        for (cf = begin; cf <= end; ++cf) {
+            bcallsnapshot st = {
+                *cf->func,
+                cf == begin ? vm->ip : cf[-1].ip
+            };
+            be_stack_push(vm, &vm->tracestack, &st);
+        }
+    }
+}

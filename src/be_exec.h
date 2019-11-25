@@ -51,5 +51,6 @@ void be_stack_expansion(bvm *vm, int n);
 void be_except_block_setup(bvm *vm);
 void be_except_block_resume(bvm *vm);
 void be_except_block_close(bvm *vm, int count);
+void be_save_stacktrace(bvm *vm);
 
 #endif

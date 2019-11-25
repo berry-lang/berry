@@ -19,7 +19,7 @@ void be_vector_delete(bvm *vm, bvector *vector)
     be_free(vm, vector->data, (size_t)vector->capacity * vector->size);
 }
 
-int be_vector_count(bvector *vector)
+int be_vector_count(const bvector *vector)
 {
     size_t size = vector->size;
     return vector->data ?
@@ -27,7 +27,7 @@ int be_vector_count(bvector *vector)
         : 0;
 }
 
-bbool be_vector_isempty(bvector *vector)
+bbool be_vector_isempty(const bvector *vector)
 {
     return cast_bool(vector->data && vector->data > vector->end);
 }

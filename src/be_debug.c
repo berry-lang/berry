@@ -121,9 +121,10 @@ void be_dumpclosure(bclosure *cl)
 static const char* sourceinfo(bvm *vm, char *buf, int deepth)
 {
 #if BE_DEBUG_RUNTIME_INFO
-    int size = be_stack_count(&vm->callstack);
-    bcallframe *cf = be_vector_at(&vm->callstack, size + deepth);
-    bproto *proto = cast(bclosure*, var_toobj(cf->func))->proto;
+    bstack *stack = &vm->tracestack;
+    int size = be_stack_count(stack);
+    bcallsnapshot *cf = be_vector_at(stack, size + deepth);
+    bproto *proto = cast(bclosure*, var_toobj(&cf->func))->proto;
     if (proto->lineinfo && proto->nlineinfo) {
         blineinfo *start = proto->lineinfo;
         blineinfo *it = start + proto->nlineinfo - 1;
@@ -131,7 +132,7 @@ static const char* sourceinfo(bvm *vm, char *buf, int deepth)
         if (deepth == -1) {
             pc = cast_int(vm->ip - proto->code);
         } else {
-            cf = be_vector_at(&vm->callstack, size + deepth + 1);
+            cf = be_vector_at(stack, size + deepth + 1);
             pc = cast_int(cf->ip - proto->code);
         }
         while (it > start && it->endpc > pc) {
@@ -147,23 +148,6 @@ static const char* sourceinfo(bvm *vm, char *buf, int deepth)
 #endif
 }
 
-#if BE_DEBUG_DUMP_LEVEL >= 2
-void be_debug_ins_info(bvm *vm)
-{
-    char buf[100];
-    bcallframe *cf = vm->cf;
-    bproto *proto = cast(bclosure*, var_toobj(cf->func))->proto;
-    int pc = cast_int(vm->ip - proto->code);
-    const char *srcinfo = sourceinfo(vm, buf, -1);
-    size_t len = strlen(srcinfo) + strlen(str(proto->name)) + 1;
-    logfmt("%s %s", srcinfo, str(proto->name));
-    for (; len < 40 ; len += 8) {
-        be_writestring("\t");
-    }
-    print_inst(*vm->ip, pc);
-}
-#endif
-
 static void patch_native(bvm *vm, int deepth)
 {
     int size = be_stack_count(&vm->callstack);
@@ -177,13 +161,14 @@ static void patch_native(bvm *vm, int deepth)
 
 static void tracestack(bvm *vm)
 {
-    int deepth, size = be_stack_count(&vm->callstack);
+    bstack *stack = &vm->tracestack;
+    int deepth, size = be_stack_count(stack);
     be_writestring("stack traceback:\n");
     for (deepth = 1; deepth <= size; ++deepth) {
-        bcallframe *cf = be_vector_at(&vm->callstack, size - deepth);
-        if (var_isclosure(cf->func)) {
+        bcallsnapshot *cf = be_vector_at(stack, size - deepth);
+        if (var_isclosure(&cf->func)) {
             char buf[100];
-            bclosure *cl = var_toobj(cf->func);
+            bclosure *cl = var_toobj(&cf->func);
             be_writestring("\t");
             be_writestring(sourceinfo(vm, buf, -deepth));
             be_writestring(" in function `");
@@ -199,19 +184,8 @@ static void tracestack(bvm *vm)
 
 void be_tracestack(bvm *vm)
 {
-    struct bstatesnapshot snapshot;
-    if (vm->snapshot.cf) {
-        snapshot.ip = vm->ip;
-        snapshot.cf = be_vector_count(&vm->callstack);
-        be_vector_resize(vm, &vm->callstack, vm->snapshot.cf);
-        vm->cf = be_vector_at(&vm->callstack, vm->snapshot.cf);
-        vm->ip = vm->snapshot.ip;
-        if (be_stack_count(&vm->callstack)) {
-            tracestack(vm);
-        }
-        be_vector_resize(vm, &vm->callstack, snapshot.cf);
-        vm->cf = be_vector_end(&vm->callstack);
-        vm->ip = snapshot.ip;
+    if (be_stack_count(&vm->tracestack)) {
+        tracestack(vm);
     }
 }
 
