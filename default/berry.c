@@ -139,7 +139,7 @@ static const char* get_line(const char *prompt)
 {
 #if defined(USE_READLINE_LIB)
     const char *line = readline(prompt);
-    if (strlen(line)) {
+    if (line && strlen(line)) {
         add_history(line);
     }
     return line;

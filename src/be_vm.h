@@ -45,7 +45,7 @@ struct bmoduledesc {
 
 struct bstatesnapshot {
     binstruction *ip;
-    bcallframe *cf;
+    int cf;
 };
 
 struct bvm {

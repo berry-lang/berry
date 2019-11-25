@@ -884,7 +884,7 @@ BERRY_API void be_raise(bvm *vm, const char *except, const char *msg)
     }
     be_pop(vm, 2);
     vm->snapshot.ip = vm->ip;
-    vm->snapshot.cf = vm->cf;
+    vm->snapshot.cf = be_stack_count(&vm->callstack);
     be_throw(vm, BE_EXCEPTION);
 }
 

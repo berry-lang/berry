@@ -128,7 +128,7 @@ static char* conpath(bvm *vm, bstring *path1, bstring *path2, size_t *size)
 {
     char *buffer;
     int len1 = str_len(path1);
-    *size = (size_t)len1 + (size_t)str_len(path2) + SUFFIX_LEN;
+    *size = (size_t)len1 + (size_t)str_len(path2) + 1 + SUFFIX_LEN;
     buffer = be_malloc(vm, *size);
     strcpy(buffer, str(path1));
     buffer[len1] = '/';

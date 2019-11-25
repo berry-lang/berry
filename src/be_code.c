@@ -72,7 +72,7 @@ static int codeABx(bfuncinfo *finfo, bopcode op, int a, int bx)
 static void free_expreg(bfuncinfo *finfo, bexpdesc *e)
 {
     /* release temporary register */
-    if (e->type == ETREG) {
+    if (e && e->type == ETREG) {
         be_code_freeregs(finfo, 1);
     }
 }
@@ -735,6 +735,9 @@ void be_code_raise(bfuncinfo *finfo, bexpdesc *e1, bexpdesc *e2)
     } else {
         codeABC(finfo, OP_RAISE, 2, 0, 0);
     }
+    /* release the register occupied by the expression */
+    free_expreg(finfo, e1);
+    free_expreg(finfo, e2);
 }
 
 #endif

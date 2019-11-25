@@ -202,16 +202,16 @@ void be_tracestack(bvm *vm)
     struct bstatesnapshot snapshot;
     if (vm->snapshot.cf) {
         snapshot.ip = vm->ip;
-        snapshot.cf = vm->cf;
+        snapshot.cf = be_vector_count(&vm->callstack);
+        be_vector_resize(vm, &vm->callstack, vm->snapshot.cf);
+        vm->cf = be_vector_at(&vm->callstack, vm->snapshot.cf);
         vm->ip = vm->snapshot.ip;
-        vm->cf = vm->snapshot.cf;
-        be_stack_top(&vm->callstack) = vm->cf;
         if (be_stack_count(&vm->callstack)) {
             tracestack(vm);
         }
+        be_vector_resize(vm, &vm->callstack, snapshot.cf);
+        vm->cf = be_vector_end(&vm->callstack);
         vm->ip = snapshot.ip;
-        vm->cf = snapshot.cf;
-        be_stack_top(&vm->callstack) = vm->cf;
     }
 }
 

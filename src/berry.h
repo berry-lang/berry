@@ -76,12 +76,12 @@ enum berrorcode {
 /* API function mark */
 #if defined(_WIN32) /* in Windows */
   #if defined(BERRY_MODULE) /* berry extension module */
-    #define BERRY_API         __declspec(dllimport)
+    #define BERRY_API           __declspec(dllimport)
   #else /* cerry core */
-    #define BERRY_API         __declspec(dllexport)
+    #define BERRY_API           __declspec(dllexport)
   #endif
 #else
-  #define BERRY_API           extern
+  #define BERRY_API             extern
 #endif
 
 /* only linux */
