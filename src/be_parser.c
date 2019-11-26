@@ -1284,7 +1284,7 @@ static int except_case_list(bparser *parser, int *base)
     bfuncinfo *finfo = parser->finfo;
     /* expr {',' expr} | '..' */
     if (match_skip(parser, OptConnect)) { /* '..' */
-        *base = 0;
+        *base = finfo->freereg;
         return 0;
     }
     expr(parser, &e); /* first exception expression */

@@ -270,7 +270,7 @@ static void skip_comment(blexer *lexer)
     }
 }
 
-static int scan_realexp(blexer *lexer)
+static bbool scan_realexp(blexer *lexer)
 {
     int c = lgetc(lexer);
     if (c == 'e' || c == 'E') {
@@ -279,12 +279,12 @@ static int scan_realexp(blexer *lexer)
             c = save(lexer);
         }
         if (!is_digit(c)) {
-            be_lexerror(lexer, "number error.");
+            be_lexerror(lexer, "malformed number");
         }
         match(lexer, is_digit);
-        return 1;
+        return btrue;
     }
-    return 0;
+    return bfalse;
 }
 
 static btokentype scan_dot_real(blexer *lexer)
@@ -336,7 +336,7 @@ static btokentype scan_decimal(blexer *lexer)
 {
     btokentype type = TokenInteger;
     match(lexer, is_digit);
-    if (decimal_dots(lexer) || scan_realexp(lexer)) {
+    if (decimal_dots(lexer) | scan_realexp(lexer)) {
         type = TokenReal;
     }
     lexer->buf.s[lexer->buf.len] = '\0';
@@ -360,8 +360,10 @@ static btokentype scan_numeral(blexer *lexer)
         type = scan_decimal(lexer);
     }
     /* can't follow decimal or letter after numeral */
-    if (is_letter(lgetc(lexer)) || decimal_dots(lexer)) {
-        be_lexerror(lexer, "malformed number");
+    if (lexer->cacheType == TokenNone) {
+        if (is_letter(lgetc(lexer)) || decimal_dots(lexer)) {
+            be_lexerror(lexer, "malformed number");
+        }
     }
     return type;
 }
