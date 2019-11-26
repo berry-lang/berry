@@ -125,16 +125,11 @@ static const char* sourceinfo(bvm *vm, char *buf, int deepth)
     int size = be_stack_count(stack);
     bcallsnapshot *cf = be_vector_at(stack, size + deepth);
     bproto *proto = cast(bclosure*, var_toobj(&cf->func))->proto;
+    be_assert(proto != NULL);
     if (proto->lineinfo && proto->nlineinfo) {
         blineinfo *start = proto->lineinfo;
         blineinfo *it = start + proto->nlineinfo - 1;
-        int pc;
-        if (deepth == -1) {
-            pc = cast_int(vm->ip - proto->code);
-        } else {
-            cf = be_vector_at(stack, size + deepth + 1);
-            pc = cast_int(cf->ip - proto->code);
-        }
+        int pc = cast_int(cf->ip - proto->code);
         while (it > start && it->endpc > pc) {
             --it;
         }
