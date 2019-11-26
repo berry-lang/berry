@@ -7,6 +7,7 @@ end
 def test_source(src, msg)
     try
         compile(src)
+        assert(false, 'unexpected execution flow')
     except .. as e, m:
         assert(e == 'syntax_error')
         assert(m == 'string:1: ' + msg)
@@ -38,7 +39,7 @@ var malformed_numbers = [
     '45.e-1.',
     '45.5.',
     '0x45.',
-    '0x45.'
+    '0x45j'
 ]
 
 for (i : malformed_numbers)
