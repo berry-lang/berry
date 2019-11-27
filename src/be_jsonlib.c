@@ -233,7 +233,7 @@ static const char* parser_array(bvm *vm, const char *json)
             be_pop(vm, 1); /* pop map */
             return NULL;
         }
-        be_data_append(vm, -2);
+        be_data_push(vm, -2);
         be_pop(vm, 1); /* pop value */
         while ((s = match_char(json, ',')) != NULL) {
             json = parser_value(vm, s);
@@ -241,7 +241,7 @@ static const char* parser_array(bvm *vm, const char *json)
                 be_pop(vm, 1); /* pop map */
                 return NULL;
             }
-            be_data_append(vm, -2);
+            be_data_push(vm, -2);
             be_pop(vm, 1); /* pop value */
         }
     }

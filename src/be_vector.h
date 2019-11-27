@@ -12,7 +12,7 @@
 #define be_stack_init(vm, stack, size)  be_vector_init(vm, stack, size)
 #define be_stack_delete(vm, stack)      be_vector_delete(vm, stack)
 #define be_stack_clear(stack)           be_vector_clear(stack)
-#define be_stack_push(vm, stack, data)  be_vector_append(vm, stack, data)
+#define be_stack_push(vm, stack, data)  be_vector_push(vm, stack, data)
 #define be_stack_pop(stack)             be_vector_remove_end(stack)
 #define be_stack_top(stack)             be_vector_end(stack)
 #define be_stack_base(stack)            be_vector_first(stack)
@@ -25,8 +25,8 @@ void be_vector_delete(bvm *vm, bvector *vector);
 int be_vector_count(const bvector *vector);
 bbool be_vector_isempty(const bvector *vector);
 void* be_vector_at(bvector *vector, int index);
-void be_vector_append(bvm *vm, bvector *vector, void *data);
-void be_vector_append_c(bvm *vm, bvector *vector, void *data);
+void be_vector_push(bvm *vm, bvector *vector, void *data);
+void be_vector_push_c(bvm *vm, bvector *vector, void *data);
 void be_vector_remove_end(bvector *vector);
 void be_vector_resize(bvm *vm, bvector *vector, int count);
 void be_vector_clear(bvector *vector);

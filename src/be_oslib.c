@@ -65,7 +65,7 @@ static int m_listdir(bvm *vm)
         const char *fn = info.name;
         if (strcmp(fn, ".") && strcmp(fn, "..")) {
             be_pushstring(vm, fn);
-            be_data_append(vm, -2);
+            be_data_push(vm, -2);
             be_pop(vm, 1);
         }
         res = be_dirnext(&info);

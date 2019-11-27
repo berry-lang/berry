@@ -305,7 +305,7 @@ static int new_localvar(bparser *parser, bstring *s)
     if (reg == -1) {
         bvalue *var;
         reg = be_list_count(finfo->local); /* new local index */
-        var = be_list_append(parser->vm, finfo->local, NULL);
+        var = be_list_push(parser->vm, finfo->local, NULL);
         var_setstr(var, s);
         if (reg >= finfo->freereg) {
             be_code_allocregs(finfo, 1); /* use a register */

@@ -18,7 +18,7 @@ struct blist {
 blist* be_list_new(bvm *vm);
 void be_list_delete(bvm *vm, blist *list);
 bvalue* be_list_index(blist *list, int index);
-bvalue* be_list_append(bvm *vm, blist *list, bvalue *value);
+bvalue* be_list_push(bvm *vm, blist *list, bvalue *value);
 bvalue* be_list_insert(bvm *vm, blist *list, int index, bvalue *value);
 int be_list_remove(bvm *vm, blist *list, int index);
 void be_list_resize(bvm *vm, blist *list, int count);

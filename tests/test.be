@@ -54,17 +54,17 @@ print("obj[30] =", obj[20])
 
 l2 = list()
 print("list test...");
-l2.append(24)
-l2.append("2test")
-l2.append("2end")
-l2.append("2end")
+l2.push(24)
+l2.push("2test")
+l2.push("2end")
+l2.push("2end")
 l2.setitem(3, nil)
 
 l = [450 * 30, "hello", 666, l2, [4, 5, 6]]
 
 idx = -5
 while (idx <= 5)
-    l.append(idx * idx * idx)
+    l.push(idx * idx * idx)
     idx = idx + 1
 end
 

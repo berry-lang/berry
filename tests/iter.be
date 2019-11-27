@@ -33,7 +33,7 @@ l = []
 it = range_iter(0, 10)
 v = it()
 while (v != nil)
-    l.append(v)
+    l.push(v)
     v = it()
 end
 print(l)
@@ -72,7 +72,7 @@ print(range(-5, 5))
 l = []
 v = it()
 while (v != nil)
-    l.append(v)
+    l.push(v)
     v = it()
 end
 print(l)

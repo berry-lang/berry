@@ -22,7 +22,7 @@ class mylist : list
             upper = idx.upper()
             l = mylist()
             while (i <= upper)
-                l.append(self[i])
+                l.push(self[i])
                 i = i + 1
             end
             return l
@@ -61,10 +61,10 @@ class range
 end
 
 l = mylist()
-l.append(1)
-l.append(2)
-l.append(3)
-l.append(4)
+l.push(1)
+l.push(2)
+l.push(3)
+l.push(4)
 l.resize(5)
 l[4] = ['list index test', 0]
 it = l.iter()

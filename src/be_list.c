@@ -40,7 +40,7 @@ bvalue* be_list_index(blist *list, int index)
     return be_list_at(list, index);
 }
 
-bvalue* be_list_append(bvm *vm, blist *list, bvalue *value)
+bvalue* be_list_push(bvm *vm, blist *list, bvalue *value)
 {
     bvalue *slot;
     if (list->count >= list->capacity) {

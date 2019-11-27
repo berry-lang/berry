@@ -11,20 +11,20 @@ f = func(100, 20)
 print(f())
 f = nil
 
-testAppend = false
+testPush = false
 l = []
 i = 0
 c = time.clock()
-if (testAppend)
+if (testPush)
     while (i < 100000000) # need 64bit
-        l.append("hello world")
-        l.append(i)
+        l.push("hello world")
+        l.push(i)
         i = i + 1
     end
 else
     l.resize(4000, 100)
 end
-print("list resize/append", l.size(),
+print("list resize/push", l.size(),
     "values, time of use:", time.clock() - c, "s")
 
 def mcnt(a)

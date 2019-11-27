@@ -37,7 +37,7 @@ void* be_vector_at(bvector *vector, int index)
     return (char*)vector->data + (size_t)index * vector->size;
 }
 
-void be_vector_append(bvm *vm, bvector *vector, void *data)
+void be_vector_push(bvm *vm, bvector *vector, void *data)
 {
     size_t size = vector->size;
     size_t capacity = vector->capacity;
@@ -57,10 +57,10 @@ void be_vector_append(bvm *vm, bvector *vector, void *data)
 }
 
 /* clear the expanded portion if the memory expands */
-void be_vector_append_c(bvm *vm, bvector *vector, void *data)
+void be_vector_push_c(bvm *vm, bvector *vector, void *data)
 {
     int capacity = vector->capacity + 1;
-    be_vector_append(vm, vector, data);
+    be_vector_push(vm, vector, data);
     if (vector->capacity > capacity) {
         size_t size = ((size_t)vector->capacity - capacity) * vector->size;
         memset(be_vector_at(vector, capacity), 0, size);

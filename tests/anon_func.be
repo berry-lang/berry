@@ -2,7 +2,7 @@
 def count(x)
     var arr = []
     for (i : 0 .. x)
-        arr.append(
+        arr.push(
             def (n) # loop variable cannot be used directly as free variable
                 return def ()
                     return n * n

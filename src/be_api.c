@@ -636,13 +636,13 @@ BERRY_API int be_data_size(bvm *vm, int index)
     return -1;
 }
 
-BERRY_API void be_data_append(bvm *vm, int index)
+BERRY_API void be_data_push(bvm *vm, int index)
 {
     bvalue *o = index2value(vm, index);
     bvalue *v = index2value(vm, -1);
     if (var_islist(o)) {
         blist *list = var_toobj(o);
-        be_list_append(vm, list, v);
+        be_list_push(vm, list, v);
     }
 }
 

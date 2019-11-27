@@ -27,7 +27,7 @@ static int m_init(bvm *vm)
         be_setmember(vm, 1, ".data");
         for (i = 2; i <= argc; ++i) {
             be_pushvalue(vm, i);
-            be_data_append(vm, -2);
+            be_data_push(vm, -2);
             be_pop(vm, 1);
         }
     }
@@ -71,12 +71,12 @@ static int m_tostring(bvm *vm)
     be_return(vm);
 }
 
-static int m_append(bvm *vm)
+static int m_push(bvm *vm)
 {
     be_getmember(vm, 1, ".data");
     list_check_data(vm, 2);
     be_pushvalue(vm, 2);
-    be_data_append(vm, -2);
+    be_data_push(vm, -2);
     be_return_nil(vm);
 }
 
@@ -129,7 +129,7 @@ static int item_range(bvm *vm)
     for (; lower <= upper; ++lower) {
         be_pushint(vm, lower);
         list_getindex(vm, -2);
-        be_data_append(vm, -4);
+        be_data_push(vm, -4);
         be_pop(vm, 2);
     }
     be_pop(vm, 2);
@@ -161,7 +161,7 @@ static int item_list(bvm *vm)
         } else {
             be_pushnil(vm);
         }
-        be_data_append(vm, -5);
+        be_data_push(vm, -5);
         be_pop(vm, 3);
     }
     be_pop(vm, 2);
@@ -264,7 +264,7 @@ static int m_connect(bvm *vm)
     if (argc >= 2) {
         be_getmember(vm, 1, ".data");
         be_pushvalue(vm, 2);
-        be_data_append(vm, -2);
+        be_data_push(vm, -2);
         be_pop(vm, argc + 1);
     }
     be_return(vm); /* return self */
@@ -292,7 +292,7 @@ void be_load_listlib(bvm *vm)
         { ".data", NULL },
         { "init", m_init },
         { "tostring", m_tostring },
-        { "append", m_append },
+        { "push", m_push },
         { "insert", m_insert },
         { "remove", m_remove },
         { "item", m_item },
@@ -313,7 +313,7 @@ class be_class_list (scope: global, name: list) {
     .data, var
     init, func(m_init)
     tostring, func(m_tostring)
-    append, func(m_append)
+    push, func(m_push)
     insert, func(m_insert)
     remove, func(m_remove)
     item, func(m_item)
