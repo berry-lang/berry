@@ -65,6 +65,7 @@ typedef struct bfuncinfo {
 #endif
     int pc; /* program count */
     bbyte freereg; /* first free register */
+    bbyte flags; /* some flages */
 } bfuncinfo;
 
 /* code block type definitions */

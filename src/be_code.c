@@ -11,6 +11,7 @@
 
 #define NOT_MASK                (1 << 0)
 #define NOT_EXPR                (1 << 1)
+#define FUNC_RET_FLAG           (1 << 0)
 
 #define isset(v, mask)          (((v) & (mask)) != 0)
 #define min(a, b)               ((a) < (b) ? (a) : (b))
@@ -642,14 +643,21 @@ static void leave_function(bfuncinfo *finfo)
 
 void be_code_ret(bfuncinfo *finfo, bexpdesc *e)
 {
-    if (e == NULL) {
-        codeABC(finfo, OP_RET, 0, 0, 0);
-    } else {
+    if (finfo->binfo->prev == NULL) {
+        if (finfo->flags & FUNC_RET_FLAG) {
+            return;
+        }
+        finfo->flags |= FUNC_RET_FLAG;
+    }
+    if (e) {
         int reg = exp2anyreg(finfo, e);
         be_code_close(finfo, 1);
         leave_function(finfo);
         codeABC(finfo, OP_RET, e->type != ETVOID, reg, 0);
         free_expreg(finfo, e);
+    } else {
+        be_code_close(finfo, 1);
+        codeABC(finfo, OP_RET, 0, 0, 0);
     }
 }
 

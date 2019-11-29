@@ -196,6 +196,7 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     finfo->freereg = 0;
     finfo->binfo = NULL;
     finfo->pc = 0;
+    finfo->flags = 0;
     parser->finfo = finfo;
 #if BE_DEBUG_RUNTIME_INFO
     be_vector_init(vm, &finfo->linevec, sizeof(blineinfo));
