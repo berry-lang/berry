@@ -425,7 +425,7 @@ void be_save_stacktrace(bvm *vm)
         for (cf = begin; cf <= end; ++cf) {
             bcallsnapshot st = {
                 *cf->func,
-                cf == begin ? vm->ip : cf[1].ip
+                cf == end ? vm->ip : cf[1].ip
             };
             be_stack_push(vm, &vm->tracestack, &st);
         }
