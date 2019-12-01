@@ -174,7 +174,6 @@ static void tracestack(bvm *vm)
             be_writestring("\t<native>: in native function\n");
         }
     }
-    be_writestring("\t[C]: in ?\n");
 }
 
 void be_tracestack(bvm *vm)
