@@ -661,19 +661,23 @@ void be_code_ret(bfuncinfo *finfo, bexpdesc *e)
     }
 }
 
+static void package_suffix(bfuncinfo *finfo, bexpdesc *c, bexpdesc *k)
+{
+    int key = exp2anyreg(finfo, k);
+    c->v.ss.obj = exp2anyreg(finfo, c);
+    c->v.ss.tt = c->type;
+    c->v.ss.idx = key;
+}
+
 void be_code_member(bfuncinfo *finfo, bexpdesc *c, bexpdesc *k)
 {
-    c->v.ss.obj = exp2anyreg(finfo, c);
-    c->v.ss.idx = exp2anyreg(finfo, k);
-    c->v.ss.tt = c->type;
+    package_suffix(finfo, c, k);
     c->type = ETMEMBER;
 }
 
 void be_code_index(bfuncinfo *finfo, bexpdesc *c, bexpdesc *k)
 {
-    c->v.ss.obj = exp2anyreg(finfo, c);
-    c->v.ss.idx = exp2anyreg(finfo, k);
-    c->v.ss.tt = c->type;
+    package_suffix(finfo, c, k);
     c->type = ETINDEX;
 }
 
