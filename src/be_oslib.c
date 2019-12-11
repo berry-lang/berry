@@ -121,8 +121,16 @@ static int m_path_split(bvm *vm)
     if (be_top(vm) >= 1 && be_isstring(vm, 1)) {
         const char *path = be_tostring(vm, 1);
         const char *split = be_splitpath(path);
+        size_t len = split - path;
+        if (split > path + 1 && split[-1] == '/') {
+            const char *p = split - 1;
+            for (; *p == '/' && p >= path; --p);
+            if (p >= path) {
+                len = p - path + 1;
+            }
+        }
         be_getbuiltin(vm, "list");
-        be_pushnstring(vm, path, split - path);
+        be_pushnstring(vm, path, len);
         be_pushstring(vm, split);
         be_call(vm, 2);
         be_return(vm);

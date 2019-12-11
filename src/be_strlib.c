@@ -345,7 +345,7 @@ const char* be_splitname(const char *path)
     const char *p, *q, *end = path + strlen(path);
     for (p = end; *p != '.' && p > path; --p); /* skip [^\.] */
     for (q = p; *q == '.' && q > path; --q); /* skip \. */
-    if (q == path || *q == '/') {
+    if ((q == path && *q == '.') || *q == '/') {
         return end;
     }
     return p;
