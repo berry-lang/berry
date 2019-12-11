@@ -1,6 +1,7 @@
 #include "berry.h"
 #include "be_repl.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* using GNU/readline library */
@@ -135,10 +136,10 @@ static int arg_getopt(struct arg_opts *opt, int argc, char *argv[])
 }
 
 /* portable readline function package */
-static const char* get_line(const char *prompt)
+static char* get_line(const char *prompt)
 {
 #if defined(USE_READLINE_LIB)
-    const char *line = readline(prompt);
+    char *line = readline(prompt);
     if (line && strlen(line)) {
         add_history(line);
     }
@@ -154,6 +155,15 @@ static const char* get_line(const char *prompt)
     return NULL;
 #endif
 }
+
+#if defined(USE_READLINE_LIB)
+static void free_line(char *ptr)
+{
+    free(ptr);
+}
+#else
+#define free_line   NULL
+#endif
 
 /* execute a script file and output a result or error */
 static int dofile(bvm *vm, const char *name, int args)
@@ -198,7 +208,7 @@ static int load_file(bvm *vm, int argc, char *argv[], int args)
         res = dofile(vm, argv[0], args);
     }
     if (repl_mode) { /* enter the REPL mode */
-        res = be_repl(vm, get_line);
+        res = be_repl(vm, get_line, free_line);
         if (res == -BE_MALLOC_FAIL) {
             be_writestring("error: memory allocation failed.\n");
         }

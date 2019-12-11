@@ -24,12 +24,12 @@ static int is_multline(bvm *vm)
     return 0;
 }
 
-static int compile(bvm *vm, const char *line, breadline getl)
+static int compile(bvm *vm, char *l, breadline gl, bfreeline fl)
 {
-    int res = try_return(vm, line);
+    int res = try_return(vm, l);
     if (be_getexcept(vm, res) == BE_SYNTAX_ERROR) {
         be_pop(vm, 2); /* pop exception values */
-        be_pushstring(vm, line);
+        be_pushstring(vm, l);
         for (;;) {
             const char *src = be_tostring(vm, -1); /* get source code */
             int idx = be_absindex(vm, -1); /* get the source text absolute index */
@@ -40,8 +40,9 @@ static int compile(bvm *vm, const char *line, breadline getl)
                 return res;
             }
             be_pop(vm, 2); /* pop exception values */
-            line = getl(">> "); /* read a new input line */
-            be_pushfstring(vm, "\n%s", line);
+            fl(l); /* free line buffer */
+            l = gl(">> "); /* read a new input line */
+            be_pushfstring(vm, "\n%s", l);
             be_strconcat(vm, -2);
             be_pop(vm, 1); /* pop new line */
         }
@@ -49,31 +50,43 @@ static int compile(bvm *vm, const char *line, breadline getl)
     return res;
 }
 
-BERRY_API int be_repl(bvm *vm, breadline getl)
+static int call_script(bvm *vm)
 {
-    const char *line;
-    while ((line = getl("> ")) != NULL) {
-        if (compile(vm, line, getl)) {
+    switch (be_pcall(vm, 0)) { /* call the main function */
+    case BE_OK: /* execution succeed */
+        if (!be_isnil(vm, -1)) { /* output return value when it is not nil */
+            be_writestring(be_tostring(vm, -1));
+            be_writenewline();
+        }
+        be_pop(vm, 1); /* pop the result value */
+        break;
+    case BE_EXCEPTION: /* vm run error */
+        be_dumpexcept(vm);
+        break;
+    case BE_EXIT:
+        return be_toindex(vm, -1);
+    case BE_MALLOC_FAIL:
+        return -BE_MALLOC_FAIL;
+    default:
+        return -BE_EXEC_ERROR;
+    }
+    return 0;
+}
+
+BERRY_API int be_repl(bvm *vm, breadline getline, bfreeline freeline)
+{
+    char *line;
+    while ((line = getline("> ")) != NULL) {
+        if (compile(vm, line, getline, freeline)) {
             be_dumpexcept(vm);
         } else { /* compiled successfully */
-            switch (be_pcall(vm, 0)) { /* call the main function */
-            case BE_OK: /* execution succeed */
-                if (!be_isnil(vm, -1)) { /* output return value when it is not nil */
-                    be_writestring(be_tostring(vm, -1));
-                    be_writenewline();
-                }
-                be_pop(vm, 1); /* pop the result value */
-                break;
-            case BE_EXCEPTION: /* vm run error */
-                be_dumpexcept(vm);
-                break;
-            case BE_EXIT:
-                return be_toindex(vm, -1);
-            case BE_MALLOC_FAIL:
-                return -BE_MALLOC_FAIL;
-            default:
-                break;
+            int res = call_script(vm);
+            if (res) {
+                return res;
             }
+        }
+        if (freeline) {
+            freeline(line);
         }
     }
     be_writenewline();

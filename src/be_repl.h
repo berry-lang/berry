@@ -7,9 +7,10 @@
 extern "C" {
 #endif
 
-typedef const char* (*breadline)(const char *prompt);
+typedef char* (*breadline)(const char *prompt);
+typedef void (*bfreeline)(char *ptr);
 
-BERRY_API int be_repl(bvm *vm, breadline getl);
+BERRY_API int be_repl(bvm *vm, breadline getline, bfreeline freeline);
 
 #ifdef __cplusplus
 }
