@@ -863,6 +863,7 @@ BERRY_API void be_vm_delete(bvm *vm)
     be_stack_delete(vm, &vm->callstack);
     be_stack_delete(vm, &vm->refstack);
     be_stack_delete(vm, &vm->exceptstack);
+    be_stack_delete(vm, &vm->tracestack);
     be_free(vm, vm->stack, (vm->stacktop - vm->stack) * sizeof(bvalue));
     be_globalvar_deinit(vm);
     be_os_free(vm);

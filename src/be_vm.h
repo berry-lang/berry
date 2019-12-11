@@ -63,7 +63,7 @@ struct bvm {
     bstack refstack; /* object reference stack */
     struct bmoduledesc module; /* module description */
     struct bstringtable strtab; /* short string table */
-    bvector tracestack; /* call state trace-stack */
+    bstack tracestack; /* call state trace-stack */
     struct bgc gc;
 };
 

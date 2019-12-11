@@ -118,12 +118,12 @@ void be_dumpclosure(bclosure *cl)
 }
 #endif
 
-static const char* sourceinfo(bvm *vm, char *buf, int deepth)
+static const char* sourceinfo(bvm *vm, char *buf, int depth)
 {
 #if BE_DEBUG_RUNTIME_INFO
     bstack *stack = &vm->tracestack;
     int size = be_stack_count(stack);
-    bcallsnapshot *cf = be_vector_at(stack, size + deepth);
+    bcallsnapshot *cf = be_vector_at(stack, size + depth);
     bproto *proto = cast(bclosure*, var_toobj(&cf->func))->proto;
     be_assert(proto != NULL);
     if (proto->lineinfo && proto->nlineinfo) {
@@ -138,16 +138,16 @@ static const char* sourceinfo(bvm *vm, char *buf, int deepth)
     }
     return "<unknow source>:";
 #else
-    (void)vm; (void)buf; (void)deepth;
+    (void)vm; (void)buf; (void)depth;
     return "<unknow source>:";
 #endif
 }
 
-static void patch_native(bvm *vm, int deepth)
+static void patch_native(bvm *vm, int depth)
 {
-    int size = be_stack_count(&vm->callstack);
-    bcallframe *cf = be_vector_at(&vm->callstack, size + deepth);
-    if (deepth == -1) {
+    int size = be_stack_count(&vm->tracestack);
+    bcallsnapshot *cf = be_vector_at(&vm->tracestack, size + depth);
+    if (depth == -1) {
         cf->ip = vm->ip;
     } else {
         cf->ip = cf[1].ip;
@@ -157,20 +157,20 @@ static void patch_native(bvm *vm, int deepth)
 static void tracestack(bvm *vm)
 {
     bstack *stack = &vm->tracestack;
-    int deepth, size = be_stack_count(stack);
+    int depth, size = be_stack_count(stack);
     be_writestring("stack traceback:\n");
-    for (deepth = 1; deepth <= size; ++deepth) {
-        bcallsnapshot *cf = be_vector_at(stack, size - deepth);
+    for (depth = 1; depth <= size; ++depth) {
+        bcallsnapshot *cf = be_vector_at(stack, size - depth);
         if (var_isclosure(&cf->func)) {
             char buf[100];
             bclosure *cl = var_toobj(&cf->func);
             be_writestring("\t");
-            be_writestring(sourceinfo(vm, buf, -deepth));
+            be_writestring(sourceinfo(vm, buf, -depth));
             be_writestring(" in function `");
             be_writestring(str(cl->proto->name));
             be_writestring("`\n");
         } else {
-            patch_native(vm, -deepth);
+            patch_native(vm, -depth);
             be_writestring("\t<native>: in native function\n");
         }
     }
@@ -184,11 +184,11 @@ void be_tracestack(bvm *vm)
 }
 
 #if BE_DEBUG_DUMP_LEVEL >= 3
-void be_debug_dump_stack(bvm *vm, int deepth)
+void be_debug_dump_stack(bvm *vm, int depth)
 {
 
     bvalue *v = vm->top - 1;
-    bvalue *end = deepth > 0 ? v - deepth : vm->stack - 1;
+    bvalue *end = depth > 0 ? v - depth : vm->stack - 1;
     while (v > end) {
         logfmt("S[%3d]: <0x%.8x>, type(%d)\n",
             v - vm->top, (int)var_toint(v), var_type(v));
