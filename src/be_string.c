@@ -85,7 +85,7 @@ static void free_sstring(bvm *vm, bstring *str)
 }
 
 /* FNV-1a Hash */
-uint32_t str_hash(const char *str, size_t len)
+static uint32_t str_hash(const char *str, size_t len)
 {
     uint32_t hash = 2166136261u;
     be_assert(str || len);
