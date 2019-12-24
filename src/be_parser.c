@@ -99,9 +99,11 @@ static void check_var(bparser *parser, bexpdesc *e)
 {
     check_symbol(parser, e); /* check the token is a symbol */
     if (e->type == ETVOID) { /* error when symbol is undefined */
-        bstring *s = e->v.s;
+        int line = parser->lexer.linenumber;
+        parser->lexer.linenumber = parser->lexer.lastline;
         push_error(parser,
-            "'%s' undeclared (first use in this function)", str(s));
+            "'%s' undeclared (first use in this function)", str(e->v.s));
+        parser->lexer.linenumber = line;
     }
 }
 

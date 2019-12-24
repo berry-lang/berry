@@ -38,7 +38,6 @@ typedef struct {
 void be_string_init(bvm *vm);
 void be_string_deleteall(bvm *vm);
 int be_eqstr(bstring *s1, bstring *s2);
-uint32_t str_hash(const char *str, size_t len);
 bstring* be_newstr(bvm *vm, const char *str);
 bstring* be_newstrn(bvm *vm, const char *str, size_t len);
 void be_gcstrtab(bvm *vm);
