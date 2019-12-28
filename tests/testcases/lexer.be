@@ -8,7 +8,7 @@ def test_source(src, msg)
     try
         compile(src)
         assert(false, 'unexpected execution flow')
-    except .. as e, m:
+    except (.. as e, m)
         assert(e == 'syntax_error')
         assert(m == 'string:1: ' + msg)
     end

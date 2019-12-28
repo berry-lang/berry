@@ -21,7 +21,7 @@ import_stmt = 'import' (ID ['as' ID] | STRING 'as' ID);
 (* exceptional handling statement *)
 try_stmt = 'try' block except_block {except_block} 'end';
 except_block = except_stmt block;
-except_stmt = 'except' [(expr {',' expr} | '..') ['as' ID [',' ID]]] ':';
+except_stmt = 'except' '(' [(expr {',' expr} | '..') ['as' ID [',' ID]]] ')';
 throw_stmt = 'raise' expr [',' expr];
 (* variable define statement *)
 var_stmt = 'var' ID ['=' expr] {',' ID ['=' expr]};

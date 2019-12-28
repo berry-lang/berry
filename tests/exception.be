@@ -8,15 +8,15 @@ def test_func1()
         try
             break
             return 45
-        except:
+        except (..)
         end
         fraise()
         return
-    except 'exception' as e, v:
+    except ('exception' as e, v)
         print('exception 1')
-    except 'error' as e, v:
+    except ('error' as e, v)
         print('exception 2, msg: ' + str(v))
-    except '2':
+    except ('2')
         print('exception 3')
     end
 end
@@ -29,7 +29,7 @@ test_func1()
 def test_func2()
     try
         compile('def +() end')()
-    except .. as e, v:
+    except (.. as e, v)
         print('catch execption:', str(e) + ' >>>\n    ' + str(v))
     end
 end

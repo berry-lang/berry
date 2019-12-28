@@ -1030,7 +1030,7 @@ static void for_leave(bparser *parser, int jcatch)
  *         itvar = .it()
  *         stmtlist
  *     end
- * except 'stop_iteration':
+ * except ('stop_iteration')
  * end
  * */
 static void for_stmt(bparser *parser)
@@ -1332,16 +1332,17 @@ static void except_block(bparser *parser, int *jmp, int *jbrk)
     int vcnt = 0; /* exception variable count */
     bblockinfo binfo;
     bfuncinfo *finfo = parser->finfo;
-    /* 'except' [(expr {',' expr} | '..') ['as' ID [',' ID]]] ':' */
+    /* 'except' '(' [(expr {',' expr} | '..') ['as' ID [',' ID]]] ')' */
     match_token(parser, KeyExcept); /* skip 'except' */
+    match_token(parser, OptLBK); /* skip '(' */
     begin_block(finfo, &binfo, 0); /* begin catch block */
     /* link from the previous except failure point */
     be_code_conjump(finfo, jmp, finfo->pc);
-    if (!match_skip(parser, OptColon)) { /* not match ':' */
-        /* not ':' ==> (expr {',' expr} | '..') ['as' ID [, ID]] */
+    if (!match_skip(parser, OptRBK)) { /* not match ')' */
+        /* not ')' ==> (expr {',' expr} | '..') ['as' ID [, ID]] */
         ecnt = except_case_list(parser, &base);
         vcnt = except_var_list(parser, base);
-        match_token(parser, OptColon); /* ':' */
+        match_token(parser, OptRBK); /* ')' */
     }
     be_code_catch(finfo, base, ecnt, vcnt, jmp);
     stmtlist(parser);
