@@ -52,7 +52,8 @@ static int compile(bvm *vm, char *l, breadline gl, bfreeline fl)
 
 static int call_script(bvm *vm)
 {
-    switch (be_pcall(vm, 0)) { /* call the main function */
+    int res = be_pcall(vm, 0); /* call the main function */
+    switch (res) { 
     case BE_OK: /* execution succeed */
         if (!be_isnil(vm, -1)) { /* output return value when it is not nil */
             be_writestring(be_tostring(vm, -1));
@@ -63,12 +64,8 @@ static int call_script(bvm *vm)
     case BE_EXCEPTION: /* vm run error */
         be_dumpexcept(vm);
         break;
-    case BE_EXIT:
-        return be_toindex(vm, -1);
-    case BE_MALLOC_FAIL:
-        return -BE_MALLOC_FAIL;
-    default:
-        return -BE_EXEC_ERROR;
+    default: /* BE_EXIT or BE_MALLOC_FAIL */
+        return res;
     }
     return 0;
 }
@@ -82,7 +79,7 @@ BERRY_API int be_repl(bvm *vm, breadline getline, bfreeline freeline)
         } else { /* compiled successfully */
             int res = call_script(vm);
             if (res) {
-                return res;
+                return res == BE_EXIT ? be_toindex(vm, -1) : res;
             }
         }
         if (freeline) {
