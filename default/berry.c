@@ -156,14 +156,14 @@ static char* get_line(const char *prompt)
 #endif
 }
 
-#if defined(USE_READLINE_LIB)
 static void free_line(char *ptr)
 {
+#if defined(USE_READLINE_LIB)
     free(ptr);
-}
 #else
-#define free_line   NULL
+    (void)ptr;
 #endif
+}
 
 /* execute a script file and output a result or error */
 static int dofile(bvm *vm, const char *name, int args)

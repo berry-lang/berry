@@ -73,6 +73,7 @@ static int call_script(bvm *vm)
 BERRY_API int be_repl(bvm *vm, breadline getline, bfreeline freeline)
 {
     char *line;
+    be_assert(getline != NULL && freeline != NULL);
     while ((line = getline("> ")) != NULL) {
         if (compile(vm, line, getline, freeline)) {
             be_dumpexcept(vm);
