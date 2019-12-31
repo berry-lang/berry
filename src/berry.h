@@ -11,7 +11,7 @@ extern "C" {
 #endif
 
 /* do not modify the version number! */
-#define BERRY_VERSION   "0.1.6"
+#define BERRY_VERSION   "0.1.7"
 
 #if BE_STACK_TOTAL_MAX < BE_STACK_FREE_MIN * 2
 #error "The value of the macro BE_STACK_TOTAL_MAX is too small."
