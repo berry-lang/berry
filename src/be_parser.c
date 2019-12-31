@@ -31,6 +31,7 @@
 #define next_type(parser)       (next_token(parser).type)
 #define max(a, b)               ((a) > (b) ? (a) : (b))
 #define token2str(parser)       be_token2str((parser)->vm, &next_token(parser))
+#define funcname(parser)        ((parser)->islocal ? "loader" : "main")
 
 #define upval_index(v)          ((v) & 0xFF)
 #define upval_target(v)         ((bbyte)(((v) >> 8) & 0xFF))
@@ -1428,7 +1429,7 @@ static void mainfunc(bparser *parser, bclosure *cl)
     bfuncinfo finfo;
     begin_func(parser, &finfo, &binfo);
     finfo.proto->argc = 0; /* args */
-    finfo.proto->name = be_newstr(parser->vm, "main");
+    finfo.proto->name = be_newstr(parser->vm, funcname(parser));
     cl->proto = finfo.proto;
     be_remove(parser->vm, -3);  /* pop proto from stack */
     stmtlist(parser);

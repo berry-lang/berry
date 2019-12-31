@@ -136,64 +136,61 @@ static char* conpath(bvm *vm, bstring *path1, bstring *path2, size_t *size)
     return buffer;
 }
 
-static bbool open_script(bvm *vm, char *path)
+static int open_script(bvm *vm, char *path)
 {
     int res = be_fileparser(vm, path, 1);
     if (res == BE_OK)
         be_call(vm, 0);
-    return res == BE_OK;
+    return res;
 }
 
 #if BE_USE_SHARED_LIB
-static bbool open_dllib(bvm *vm, char *path)
+static int open_dllib(bvm *vm, char *path)
 {
     int res = be_loadlib(vm, path);
     if (res == BE_OK)
         be_call(vm, 0);
-    return res == BE_OK;
+    return res;
 }
 #endif
 
-static bbool open_libfile(bvm *vm, char *path, size_t size)
+static int open_libfile(bvm *vm, char *path, size_t size)
 {
-    do {
-        strcpy(path + size - SUFFIX_LEN, ".be");
-        if (open_script(vm, path))
-            break;
+    int res;
+    strcpy(path + size - SUFFIX_LEN, ".be");
+    res = open_script(vm, path);
+    if (res == BE_IO_ERROR) {
 #if BE_USE_SHARED_LIB
         strcpy(path + size - SUFFIX_LEN, DLL_SUFFIX);
-        if (open_dllib(vm, path))
-            break;
+        res = open_dllib(vm, path);
 #endif
-        be_free(vm, path, size);
-        return bfalse;
-    } while (0);
+    }
     be_free(vm, path, size);
-    return btrue;
+    return res;
 }
 
-static bbool load_path(bvm *vm, bstring *path, bstring *mod)
+static int load_path(bvm *vm, bstring *path, bstring *mod)
 {
     size_t size;
     char *fullpath = conpath(vm, path, mod, &size);
     return open_libfile(vm, fullpath, size);
 }
 
-static bbool load_cwd(bvm *vm, bstring *path)
+static int load_cwd(bvm *vm, bstring *path)
 {
     size_t size;
     char *fullpath = fixpath(vm, path, &size);
     return open_libfile(vm, fullpath, size);
 }
 
-static bbool load_package(bvm *vm, bstring *path)
+static int load_package(bvm *vm, bstring *path)
 {
-    bbool res = load_cwd(vm, path); /* load from current directory */
-    if (!res && vm->module.path) {
+    int res = load_cwd(vm, path); /* load from current directory */
+    if (res == BE_IO_ERROR && vm->module.path) {
         blist *list = vm->module.path;
         bvalue *v = be_list_end(list) - 1;
         bvalue *first = be_list_data(list);
-        for (; !res && v >= first; v--) {
+        for (; res == BE_IO_ERROR && v >= first; v--) {
             if (var_isstr(v)) {
                 res = load_path(vm, var_tostr(v), path);
             }
@@ -202,7 +199,7 @@ static bbool load_package(bvm *vm, bstring *path)
     return res;
 }
 
-static bbool load_native(bvm *vm, bstring *path)
+static int load_native(bvm *vm, bstring *path)
 {
     bntvmodule *nm = find_native(path);
     bmodule *mod = native_module(vm, nm, NULL);
@@ -210,9 +207,9 @@ static bbool load_native(bvm *vm, bstring *path)
         /* the pointer vm->top may be changed */
         var_setmodule(vm->top, mod);
         be_incrtop(vm);
-        return btrue;
+        return BE_OK;
     }
-    return bfalse;
+    return BE_IO_ERROR;
 }
 
 static bvalue* load_cached(bvm *vm, bstring *path)
@@ -239,19 +236,17 @@ static void cache_module(bvm *vm, bstring *name)
 }
 
 /* load module to vm->top */
-bbool be_module_load(bvm *vm, bstring *path)
+int be_module_load(bvm *vm, bstring *path)
 {
+    int res = BE_OK;
     if (!load_cached(vm, path)) {
-        do {
-            if (load_native(vm, path))
-                break;
-            if (load_package(vm, path))
-                break;
-            return bfalse; /* load failed */
-        } while (0);
-        cache_module(vm, path);
+        res = load_native(vm, path);
+        if (res == BE_IO_ERROR)
+            res = load_package(vm, path);
+        if (res == BE_OK)
+            cache_module(vm, path);
     }
-    return btrue;
+    return res;
 }
 
 bmodule* be_module_new(bvm *vm)

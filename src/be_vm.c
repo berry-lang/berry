@@ -753,11 +753,17 @@ static void i_import(bvm *vm, binstruction ins)
     bvalue *b = RKB(ins);
     if (var_isstr(b)) {
         bstring *name = var_tostr(b);
-        bbool res = be_module_load(vm, name);
-        if (res) { /* find the module */
+        int res = be_module_load(vm, name);
+        switch (res) {
+        case BE_OK: /* find the module */
             be_stackpop(vm, 1);
             *RA(ins) = *vm->top;
-        } else {
+            break;
+        case BE_EXCEPTION: /* pop the exception value and message */
+            be_pop(vm, 2);
+            be_throw(vm, BE_EXCEPTION);
+            break;
+        default:
             vm_error(vm, "import_error", "module '%s' not found", str(name));
         }
     } else {
