@@ -14,14 +14,17 @@ CONST_TAB = $(GENERATE)/be_const_strtab.h
 MAKE_MAP_BUILD = $(MAKE) -C tools/map_build
 
 ifeq ($(OS), Windows_NT) # Windows
-    CFLAGS += -Wno-format # for "%I64d" warning
-    LFLAGS += -Wl,--out-implib,berry.lib # export symbols lib for dll linked
-    TARGET := $(TARGET).exe
+    CFLAGS    += -Wno-format # for "%I64d" warning
+    LFLAGS    += -Wl,--out-implib,berry.lib # export symbols lib for dll linked
+    TARGET    := $(TARGET).exe
     MAP_BUILD := $(MAP_BUILD).exe
 else
-    CFLAGS += -DUSE_READLINE_LIB
-	LFLAGS += -WL,-E
-    LIBS += -lreadline -ldl
+    CFLAGS    += -DUSE_READLINE_LIB
+    LIBS      += -lreadline -ldl
+	OS        := $(shell uname)
+    ifeq ($(OS), Linux)
+        LFLAGS += -Wl,--export-dynamic
+    endif
 endif
 
 ifneq ($(V), 1)
