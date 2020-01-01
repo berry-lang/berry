@@ -20,7 +20,7 @@ ifeq ($(OS), Windows_NT) # Windows
     MAP_BUILD := $(MAP_BUILD).exe
 else
     CFLAGS += -DUSE_READLINE_LIB
-	LFLAGS += -Wl,--export-dynamic
+	LFLAGS += -WL,-E
     LIBS += -lreadline -ldl
 endif
 

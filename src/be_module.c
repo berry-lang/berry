@@ -11,8 +11,12 @@
 
 #define SUFFIX_LEN      5 /* length of (.be .bec .so .dll) + 1 */
 
+#if defined(__linux) || defined(__APPLE__)
+  #define __POSIX_OS__
+#endif
+
 #if BE_USE_SHARED_LIB
-  #if defined(__linux)
+  #if defined(__POSIX_OS__)
     #define DLL_SUFFIX ".so"
   #elif defined(_WIN32)
     #define DLL_SUFFIX ".dll"
@@ -324,7 +328,7 @@ BERRY_API void be_module_path_set(bvm *vm, const char *path)
 /* shared library support */
 #if BE_USE_SHARED_LIB
 
-#if defined(__linux)
+#if defined(__POSIX_OS__)
 #include <dlfcn.h>
 
 #if defined(__GNUC__)
