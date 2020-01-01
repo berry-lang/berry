@@ -3,6 +3,7 @@ LIBS      = -lm
 TARGET    = berry
 CC        = gcc
 MKDIR     = mkdir
+LFLAGS    = 
 
 INCPATH   = src default
 SRCPATH   = src default
@@ -14,11 +15,12 @@ MAKE_MAP_BUILD = $(MAKE) -C tools/map_build
 
 ifeq ($(OS), Windows_NT) # Windows
     CFLAGS += -Wno-format # for "%I64d" warning
-    CFLAGS += -Wl,--out-implib,berry.lib # export symbols lib for dll linked
+    LFLAGS += -Wl,--out-implib,berry.lib # export symbols lib for dll linked
     TARGET := $(TARGET).exe
     MAP_BUILD := $(MAP_BUILD).exe
 else
-    CFLAGS += -DUSE_READLINE_LIB -Wl,-E
+    CFLAGS += -DUSE_READLINE_LIB
+	LFLAGS += -Wl,--export-dynamic
     LIBS += -lreadline -ldl
 endif
 
@@ -44,7 +46,7 @@ debug: all
 
 $(TARGET): $(OBJS)
 	$(MSG) [Linking...]
-	$(Q) $(CC) $(OBJS) $(CFLAGS) $(LIBS) -o $@
+	$(Q) $(CC) $(OBJS) $(LFLAGS) $(LIBS) -o $@
 	$(MSG) done
 
 $(OBJS): %.o: %.c
