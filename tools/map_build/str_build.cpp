@@ -49,12 +49,12 @@ void str_build::keywords()
 uint32_t str_build::hashcode(const std::string &string)
 {
     size_t len = string.size();
-	const char *str = string.data();
-	uint32_t hash = 2166136261u;
-	while (len--) {
-		hash = (hash ^ *str++) * 16777619u;
-	}
-	return hash;
+    const char *str = string.data();
+    uint32_t hash = 2166136261u;
+    while (len--) {
+        hash = (hash ^ *str++) * 16777619u;
+    }
+    return hash;
 }
 
 void str_build::make_ceil(const std::string &string, int extra)
@@ -94,14 +94,14 @@ std::string str_build::escape(const std::string &string)
 void str_build::writefile(const std::string &filename, const std::string &text)
 {
     std::ostringstream buf;
-	std::ifstream fin(filename);
+    std::ifstream fin(filename);
     buf << fin.rdbuf();
-	if (buf.str() != text) {
-    	std::ofstream fout;
-		fout.open(filename, std::ios::out);
-		fout << text;
-		fout.close();
-	}
+    if (buf.str() != text) {
+        std::ofstream fout;
+        fout.open(filename, std::ios::out);
+        fout << text;
+        fout.close();
+    }
 }
 
 std::string str_build::build_table_def()

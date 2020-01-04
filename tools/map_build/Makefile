@@ -1,4 +1,4 @@
-TARGET	 = map_build
+TARGET   = map_build
 CXXFLAGS = -std=c++11 -O2
 CXX      = g++
 
@@ -10,7 +10,7 @@ OBJS    = hash_map.o            \
           str_map.o             \
 
 ifeq ($(OS), Windows_NT) # Windows
-	TARGET	:= $(TARGET).exe
+    TARGET  := $(TARGET).exe
 endif
 
 all: $(TARGET)

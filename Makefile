@@ -8,7 +8,7 @@ LFLAGS    =
 INCPATH   = src default
 SRCPATH   = src default
 GENERATE  = generate
-CONFIG	  = default/berry_conf.h
+CONFIG    = default/berry_conf.h
 MAP_BUILD = tools/map_build/map_build
 CONST_TAB = $(GENERATE)/be_const_strtab.h
 MAKE_MAP_BUILD = $(MAKE) -C tools/map_build
@@ -21,7 +21,7 @@ ifeq ($(OS), Windows_NT) # Windows
 else
     CFLAGS    += -DUSE_READLINE_LIB
     LIBS      += -lreadline -ldl
-	OS        := $(shell uname)
+    OS        := $(shell uname)
     ifeq ($(OS), Linux)
         LFLAGS += -Wl,--export-dynamic
     endif

@@ -13,19 +13,19 @@ map_build::map_build(const macro_table *macro, const std::string &path)
 
 void map_build::parse_block(const std::string &str)
 {
-	const std::string body;
-	std::regex reg("(\\w+)\\s+(\\w+)(?:\\s*\\(([^\\)]*)\\)\\s*|\\s+)\\{([^\\}]*)\\}");
-	std::sregex_iterator it(str.begin(), str.end(), reg);
-	std::sregex_iterator end;
-	while (it != end) {
-		block bl;
-		bl.type = it->str(1);
-		bl.name = it->str(2);
+    const std::string body;
+    std::regex reg("(\\w+)\\s+(\\w+)(?:\\s*\\(([^\\)]*)\\)\\s*|\\s+)\\{([^\\}]*)\\}");
+    std::sregex_iterator it(str.begin(), str.end(), reg);
+    std::sregex_iterator end;
+    while (it != end) {
+        block bl;
+        bl.type = it->str(1);
+        bl.name = it->str(2);
         bl.attr = parse_attr(it->str(3));
-		bl.data = parse_body(it->str(4));
-		m_block.push_back(bl);
-		++it;
-	}
+        bl.data = parse_body(it->str(4));
+        m_block.push_back(bl);
+        ++it;
+    }
 }
 
 std::map<std::string, std::string> map_build::parse_body(const std::string &str)
@@ -60,22 +60,22 @@ std::map<std::string, std::string> map_build::parse_attr(const std::string &str)
 void map_build::writefile(const std::string &filename, const std::string &text)
 {
     std::string pathname(m_outpath + "/" + filename);
-	std::string otext("#include \"be_constobj.h\"\n\n" + text);
+    std::string otext("#include \"be_constobj.h\"\n\n" + text);
 
     std::ostringstream buf;
-	std::ifstream fin(pathname);
+    std::ifstream fin(pathname);
     buf << fin.rdbuf();
-	if (buf.str() != otext) {
-    	std::ofstream fout;
-		fout.open(pathname, std::ios::out);
-		fout << otext;
-		fout.close();
-	}
+    if (buf.str() != otext) {
+        std::ofstream fout;
+        fout.open(pathname, std::ios::out);
+        fout << otext;
+        fout.close();
+    }
 }
 
 std::string map_build::block_tostring(const block &block)
 {
-	std::ostringstream ostr;
+    std::ostringstream ostr;
 
     if (block_depend(block)) {
         if (block.type == "map") {
@@ -88,8 +88,8 @@ std::string map_build::block_tostring(const block &block)
             ostr << module_tostring(block);
         }
     }
-	writefile("be_fixed_" + block.name + ".h", ostr.str());
-	return ostr.str();
+    writefile("be_fixed_" + block.name + ".h", ostr.str());
+    return ostr.str();
 }
 
 std::string map_build::class_tostring(const block &block)
@@ -97,7 +97,7 @@ std::string map_build::class_tostring(const block &block)
     bool empty_map = block.data.empty();
     std::ostringstream ostr;
     hash_map map(block.data);
-	std::string map_name(block.name + "_map");
+    std::string map_name(block.name + "_map");
 
     if (!empty_map) {
         ostr << map_tostring(block, map_name, true) << std::endl;
@@ -114,81 +114,81 @@ std::string map_build::class_tostring(const block &block)
 
 std::string map_build::map_tostring(const block &block, const std::string &name, bool local)
 {
-	std::ostringstream ostr;
-	hash_map map(block.data);
-	std::string map_name(name + "_slots");
+    std::ostringstream ostr;
+    hash_map map(block.data);
+    std::string map_name(name + "_slots");
 
-	hash_map::entry_table list = map.entry_list();
-	ostr << "static const bmapnode " << map_name << "[] = {\n";
-	for (auto it : list) {
-		int next = it.next;
-		std::string key = it.key;
-		std::string value = it.value;
-		ostr << "    { be_const_key(" << key << ", "
-			<< next << "), " << value << " }," << std::endl;
-	}
-	ostr << "};\n\n";
+    hash_map::entry_table list = map.entry_list();
+    ostr << "static const bmapnode " << map_name << "[] = {\n";
+    for (auto it : list) {
+        int next = it.next;
+        std::string key = it.key;
+        std::string value = it.value;
+        ostr << "    { be_const_key(" << key << ", "
+            << next << "), " << value << " }," << std::endl;
+    }
+    ostr << "};\n\n";
 
-	ostr << (local ? "static " : scope(block))
-		 << "const bmap " + name + " = {\n"
-		 << "    be_const_header_map(),\n"
-		 << "    .slots = (bmapnode *)" << map_name << ",\n"
-		 << "    .lastfree = (bmapnode *)&" << map_name <<
-		 			"[" << list.size() - 1 << "],\n"
-		 << "    .size = " << list.size() << ",\n"
-		 << "    .count = " << list.size() << "\n"
-		 << "};\n";
-	return ostr.str();
+    ostr << (local ? "static " : scope(block))
+         << "const bmap " + name + " = {\n"
+         << "    be_const_header_map(),\n"
+         << "    .slots = (bmapnode *)" << map_name << ",\n"
+         << "    .lastfree = (bmapnode *)&" << map_name <<
+                "[" << list.size() - 1 << "],\n"
+         << "    .size = " << list.size() << ",\n"
+         << "    .count = " << list.size() << "\n"
+         << "};\n";
+    return ostr.str();
 }
 
 std::string map_build::vartab_tostring(const block &block)
 {
-	std::ostringstream ostr;
-	struct block idxblk;
-	std::vector<std::string> varvec;
-	int index = 0;
+    std::ostringstream ostr;
+    struct block idxblk;
+    std::vector<std::string> varvec;
+    int index = 0;
 
-	idxblk = block;
-	idxblk.data.clear();
-	for (auto it : block.data) {
-		varvec.push_back(it.second);
-		it.second = "int(" + std::to_string(index++) + ")";
-		idxblk.data.insert(it);
-	}
+    idxblk = block;
+    idxblk.data.clear();
+    for (auto it : block.data) {
+        varvec.push_back(it.second);
+        it.second = "int(" + std::to_string(index++) + ")";
+        idxblk.data.insert(it);
+    }
 
-	ostr << map_tostring(idxblk, block.name + "_map", true) << std::endl;
-	ostr << "static const bvalue __vlist_array[] = {\n";
-	for (auto it : varvec) {
-		ostr << "    be_const_" << it << "," << std::endl;
-	}
-	ostr << "};\n\n";
+    ostr << map_tostring(idxblk, block.name + "_map", true) << std::endl;
+    ostr << "static const bvalue __vlist_array[] = {\n";
+    for (auto it : varvec) {
+        ostr << "    be_const_" << it << "," << std::endl;
+    }
+    ostr << "};\n\n";
 
-	ostr << "static const bvector " << block.name << "_vector = {\n"
-			"    .capacity = " << varvec.size() <<
-			", .size = sizeof(bvalue),\n" <<
-			"    .data = (void*)__vlist_array,\n" <<
-			"    .end = (void*)(__vlist_array + " << varvec.size() - 1 << ")\n" <<
-			"};" << std::endl;
-	return ostr.str();
+    ostr << "static const bvector " << block.name << "_vector = {\n"
+            "    .capacity = " << varvec.size() <<
+            ", .size = sizeof(bvalue),\n" <<
+            "    .data = (void*)__vlist_array,\n" <<
+            "    .end = (void*)(__vlist_array + " << varvec.size() - 1 << ")\n" <<
+            "};" << std::endl;
+    return ostr.str();
 }
 
 std::string map_build::module_tostring(const block &block)
 {
-	std::ostringstream ostr;
-	std::string name("m_lib" + block.name);
-	std::string map_name(name + "_map");
+    std::ostringstream ostr;
+    std::string name("m_lib" + block.name);
+    std::string map_name(name + "_map");
 
-	ostr << map_tostring(block, map_name, true) << std::endl;
+    ostr << map_tostring(block, map_name, true) << std::endl;
     ostr << "static const bmodule " << name << " = {\n"
          << "    be_const_header_module(),\n"
          << "    .table = (bmap*)&" << map_name << ",\n"
          << "    .info.name = \"" << block.name << "\"\n"
          << "};" << std::endl;
-	if (scope(block).empty()) { /* extern */
-		ostr << "\nbe_define_const_module(" << block.name << ", "
-		     << init(block) << ");" << std::endl;
-	}
-	return ostr.str();
+    if (scope(block).empty()) { /* extern */
+        ostr << "\nbe_define_const_module(" << block.name << ", "
+             << init(block) << ");" << std::endl;
+    }
+    return ostr.str();
 }
 
 std::string map_build::scope(const block &block)
@@ -234,12 +234,12 @@ bool map_build::block_depend(const block &block)
 
 std::string map_build::str()
 {
-	hash_map map;
-	std::ostringstream ostr;
-	for (auto it : m_block) {
-		ostr << block_tostring(it) << std::endl;
-	}
-	return ostr.str();
+    hash_map map;
+    std::ostringstream ostr;
+    for (auto it : m_block) {
+        ostr << block_tostring(it) << std::endl;
+    }
+    return ostr.str();
 }
 
 std::string map_build::query_item(const std::string &str)
