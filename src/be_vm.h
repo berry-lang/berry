@@ -65,6 +65,9 @@ struct bvm {
     struct bstringtable strtab; /* short string table */
     bstack tracestack; /* call state trace-stack */
     struct bgc gc;
+#if BE_USE_DEBUG_HOOK
+    struct bdebughook *debughook;
+#endif
 };
 
 #define NONE_FLAG           0

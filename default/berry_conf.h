@@ -117,6 +117,13 @@
  */
 #define BE_USE_SHARED_LIB               1
 
+/*
+ * Macro: BE_USE_DEBUGGER
+ * Berry debug hook switch.
+ * default: 0
+ */
+#define BE_USE_DEBUG_HOOK               0
+
 /* Macro: BE_USE_XXX_MODULE
  * These macros control whether the related module is compiled.
  * When they are true, they will enable related modules. At this

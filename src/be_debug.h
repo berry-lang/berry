@@ -5,6 +5,7 @@
 
 void be_dumpclosure(bclosure *cl);
 void be_tracestack(bvm *vm);
-void be_debug_ins_info(bvm *vm);
+void be_debug_hook_init(bvm *vm);
+void be_debug_hook(bvm *vm, binstruction ins);
 
 #endif

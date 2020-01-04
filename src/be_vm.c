@@ -857,6 +857,9 @@ BERRY_API bvm* be_vm_new(void)
     vm->module.loaded = NULL;
     vm->module.path = NULL;
     be_globalvar_init(vm);
+#if BE_USE_DEBUG_HOOK
+    be_debug_hook_init(vm);
+#endif
     be_gc_setpause(vm, 1);
     be_loadlibs(vm);
     return vm;
@@ -881,6 +884,9 @@ static void vm_exec(bvm *vm)
 newframe: /* a new call frame */
     for (;;) {
         binstruction ins = *vm->ip;
+#if BE_USE_DEBUGGER
+        be_debug_hook(vm, ins);
+#endif
         switch (IGET_OP(ins)) {
         case OP_LDNIL: i_ldnil(vm, ins); break;
         case OP_LDBOOL: i_ldbool(vm, ins); break;

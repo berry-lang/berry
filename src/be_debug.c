@@ -7,6 +7,7 @@
 #include "be_vector.h"
 #include "be_strlib.h"
 #include "be_exec.h"
+#include "be_mem.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -195,4 +196,24 @@ void be_debug_dump_stack(bvm *vm, int depth)
         --v;
     }
 }
+#endif
+
+#if BE_USE_DEBUG_HOOK
+
+typedef struct bdebughook {
+    int line;
+    const char *source;
+} bdebughook;
+
+void be_debug_hook_init(bvm *vm)
+{
+    vm->debughook = be_malloc(vm, sizeof(bdebughook));
+}
+
+void be_debug_hook(bvm *vm, binstruction ins)
+{
+    (void)vm;
+    (void)ins;
+}
+
 #endif
