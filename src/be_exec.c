@@ -197,13 +197,24 @@ int be_fileparser(bvm *vm, const char *name, int islocal)
     return res;
 }
 
-BERRY_API int be_loadfile(bvm *vm, const char *name)
+static int _loadmode(bvm *vm, const char *name, int islocal)
 {
-    int res = be_fileparser(vm, name, 0);
+    int res = be_fileparser(vm, name, islocal);
     if (res == BE_IO_ERROR) {
         be_pushfstring(vm, "error: can not open file '%s'.", name);
     }
     return res;
+}
+
+BERRY_API int be_loadfile(bvm *vm, const char *name)
+{
+    return _loadmode(vm, name, 0);
+}
+
+/* load file as local scope */
+BERRY_API int be_loadmodule(bvm *vm, const char *name)
+{
+    return _loadmode(vm, name, 1);
 }
 
 #endif

@@ -289,6 +289,7 @@ BERRY_API void be_vm_delete(bvm *vm);
 BERRY_API int be_loadbuffer(bvm *vm,
     const char *name, const char *buffer, size_t length);
 BERRY_API int be_loadfile(bvm *vm, const char *name);
+BERRY_API int be_loadmodule(bvm *vm, const char *name);
 BERRY_API int be_loadlib(bvm *vm, const char *path);
 BERRY_API int be_loadexec(bvm *vm, const char *name);
 BERRY_API int be_saveexec(bvm *vm, const char *name);
