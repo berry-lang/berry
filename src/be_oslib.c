@@ -169,7 +169,9 @@ static int m_path_join(bvm *vm)
     for (i = 1; i <= argc; ++i) {
         if (be_isstring(vm, i)) {
             len += be_strlen(vm, i) + 1;
-        } /* TODO: error handling */
+        } else {
+            be_raise(vm, "type_error", "arguments must be string");
+        }
     }
     buf = p = be_malloc(vm, (size_t)len + 1);
     for (i = 1; i <= argc; ++i) {

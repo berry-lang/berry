@@ -32,10 +32,14 @@ static int i_read(bvm *vm)
     if (be_iscomptr(vm, -1)) {
         void *fh = be_tocomptr(vm, -1);
         size_t size = readsize(vm, argc, fh);
-        char *buffer = be_malloc(vm, size);
-        size = be_fread(fh, buffer, size);
-        be_pushnstring(vm, buffer, size);
-        be_free(vm, buffer, size);
+        if (size) {
+            char *buffer = be_malloc(vm, size);
+            size = be_fread(fh, buffer, size);
+            be_pushnstring(vm, buffer, size);
+            be_free(vm, buffer, size);
+        } else {
+            be_pushstring(vm, "");
+        }
         be_return(vm);
     }
     be_return_nil(vm);
@@ -146,13 +150,13 @@ int be_nfunc_open(bvm *vm)
     mode = argc >= 2 && be_isstring(vm, 2) ? be_tostring(vm, 2) : "r";
     if (fname) {
         void *fh = be_fopen(fname, mode);
+        if (fh == NULL) {
+            be_raise(vm, "io_error",
+                be_pushfstring(vm, "cannot open file '%s'", fname));
+        }
         be_pushclass(vm, "file", members);
         be_call(vm, 0);
-        if (fh) {
-            be_pushcomptr(vm, fh);
-        } else {
-            be_pushnil(vm);
-        }
+        be_pushcomptr(vm, fh);
         be_setmember(vm, -2, ".data");
         be_pop(vm, 1);
         be_return(vm);
