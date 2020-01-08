@@ -561,7 +561,6 @@ static void i_call(bvm *vm, binstruction ins)
             ++var; /* to next register */
             goto recall; /* call constructor */
         }
-        ++vm->ip; /* to next instruction */
         break;
     case BE_CLOSURE: {
         bvalue *v, *end;
@@ -579,7 +578,6 @@ static void i_call(bvm *vm, binstruction ins)
         push_native(vm, var, argc, mode);
         f->f(vm); /* call C primitive function */
         ret_native(vm);
-        ++vm->ip; /* to next instruction */
         break;
     }
     case BE_NTVFUNC: {
@@ -587,7 +585,6 @@ static void i_call(bvm *vm, binstruction ins)
         push_native(vm, var, argc, mode);
         f(vm); /* call C primitive function */
         ret_native(vm);
-        ++vm->ip; /* to next instruction */
         break;
     }
     default:
@@ -883,8 +880,8 @@ static void vm_exec(bvm *vm)
     vm->cf->status |= BASE_FRAME;
 newframe: /* a new call frame */
     for (;;) {
-        binstruction ins = *vm->ip;
-#if BE_USE_DEBUGGER
+        binstruction ins = *vm->ip++;
+#if BE_USE_DEBUG_HOOK
         be_debug_hook(vm, ins);
 #endif
         switch (IGET_OP(ins)) {
@@ -932,8 +929,8 @@ newframe: /* a new call frame */
         case OP_CATCH: i_catch(vm, ins); break;
         case OP_RAISE: i_raise(vm, ins); break;
         case OP_EXBLK: i_exblc(vm, ins); break;
-        case OP_RET: i_return(vm, ins); goto retpoint;
-        default: retpoint:
+        case OP_RET:
+            i_return(vm, ins);
             if (vm->cf == NULL) {
                 bstack *cs = &vm->callstack;
                 if (!be_stack_isempty(cs)) {
@@ -943,7 +940,6 @@ newframe: /* a new call frame */
             }
             break;
         }
-        ++vm->ip;
     }
 }
 

@@ -373,7 +373,7 @@ void be_except_block_setup(bvm *vm)
     be_stack_push(vm, &vm->exceptstack, NULL);
     frame = be_stack_top(&vm->exceptstack);
     frame->depth = be_stack_count(&vm->callstack); /* the call stack depth */
-    frame->ip = vm->ip; /* instruction pointer */
+    frame->ip = vm->ip; /* OP_EXBLK's next instruction pointer */
     /* set longjmp() jump point */
     frame->errjmp.status = 0;
     frame->errjmp.prev = vm->errjmp; /* save long jump list */
@@ -389,7 +389,7 @@ void be_except_block_resume(bvm *vm)
     if (errorcode == BE_EXCEPTION) {
         vm->errjmp = vm->errjmp->prev;
         /* jump to except instruction */
-        vm->ip = frame->ip + IGET_sBx(*frame->ip);
+        vm->ip = frame->ip + IGET_sBx(frame->ip[-1]);
         if (be_stack_count(&vm->callstack) > frame->depth) {
             bvalue *top = vm->top;
             bcallframe *cf = be_vector_at(&vm->callstack, frame->depth);
