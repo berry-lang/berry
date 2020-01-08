@@ -130,7 +130,7 @@ static const char* sourceinfo(bvm *vm, char *buf, int depth)
     if (proto->lineinfo && proto->nlineinfo) {
         blineinfo *start = proto->lineinfo;
         blineinfo *it = start + proto->nlineinfo - 1;
-        int pc = cast_int(cf->ip - proto->code);
+        int pc = cast_int(cf->ip - proto->code - 1);
         while (it > start && it->endpc > pc) {
             --it;
         }

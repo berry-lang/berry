@@ -304,7 +304,7 @@ static void i_ldbool(bvm *vm, binstruction ins)
     bvalue *v = RA(ins);
     var_setbool(v, IGET_RKB(ins));
     if (IGET_RKC(ins)) { /* skip next instruction */
-        vm->ip++;
+        vm->ip += 1;
     }
 }
 
