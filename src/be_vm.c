@@ -32,6 +32,20 @@
 #define val2bool(v)        ((v) ? btrue : bfalse)
 #define ibinop(op, a, b)   ((a)->v.i op (b)->v.i)
 
+#if BE_USE_DEBUG_HOOK
+  #define DEBUG_HOOK()     be_debug_hook(vm, ins);
+#else
+  #define DEBUG_HOOK()
+#endif
+
+#define vm_exec_loop() \
+    loop: \
+        DEBUG_HOOK(); \
+        switch (IGET_OP(ins = *vm->ip++))
+
+#define opcase(opcode)    case OP_##opcode
+#define dispatch()        goto loop
+
 #define define_function(name, block) \
     static void name(bvm *vm, binstruction ins) { \
         block \
@@ -877,69 +891,64 @@ BERRY_API void be_vm_delete(bvm *vm)
 
 static void vm_exec(bvm *vm)
 {
+    binstruction ins;
     vm->cf->status |= BASE_FRAME;
 newframe: /* a new call frame */
-    for (;;) {
-        binstruction ins = *vm->ip++;
-#if BE_USE_DEBUG_HOOK
-        be_debug_hook(vm, ins);
-#endif
-        switch (IGET_OP(ins)) {
-        case OP_LDNIL: i_ldnil(vm, ins); break;
-        case OP_LDBOOL: i_ldbool(vm, ins); break;
-        case OP_LDINT: i_ldint(vm, ins); break;
-        case OP_LDCONST: i_ldconst(vm, ins); break;
-        case OP_GETGBL: i_getglobal(vm, ins); break;
-        case OP_SETGBL: i_setglobal(vm, ins); break;
-        case OP_GETUPV: i_getupval(vm, ins); break;
-        case OP_SETUPV: i_setupval(vm, ins); break;
-        case OP_MOVE: i_move(vm, ins); break;
-        case OP_ADD: i_add(vm, ins); break;
-        case OP_SUB: i_sub(vm, ins); break;
-        case OP_MUL: i_mul(vm, ins); break;
-        case OP_DIV: i_div(vm, ins); break;
-        case OP_MOD: i_mod(vm, ins); break;
-        case OP_LT: i_lt(vm, ins); break;
-        case OP_LE: i_le(vm, ins); break;
-        case OP_EQ: i_eq(vm, ins); break;
-        case OP_NE: i_ne(vm, ins); break;
-        case OP_GT: i_gt(vm, ins); break;
-        case OP_GE: i_ge(vm, ins); break;
-        case OP_CONNECT: i_connect(vm, ins); break;
-        case OP_AND: i_and(vm, ins); break;
-        case OP_OR: i_or(vm, ins); break;
-        case OP_XOR: i_xor(vm, ins); break;
-        case OP_SHL: i_shl(vm, ins); break;
-        case OP_SHR: i_shr(vm, ins); break;
-        case OP_NEG: i_neg(vm, ins); break;
-        case OP_FLIP: i_flip(vm, ins); break;
-        case OP_JMP: i_jump(vm, ins); break;
-        case OP_JMPT: i_jumptrue(vm, ins); break;
-        case OP_JMPF: i_jumpfalse(vm, ins); break;
-        case OP_CALL: i_call(vm, ins); goto newframe;
-        case OP_CLOSURE: i_closure(vm, ins); break;
-        case OP_GETMBR: i_getmember(vm, ins); break;
-        case OP_GETMET: i_getmethod(vm, ins); break;
-        case OP_SETMBR: i_setmember(vm, ins); break;
-        case OP_GETIDX: i_getindex(vm, ins); break;
-        case OP_SETIDX: i_setindex(vm, ins); break;
-        case OP_SETSUPER: i_setsuper(vm, ins); break;
-        case OP_CLOSE: i_close(vm, ins); break;
-        case OP_IMPORT: i_import(vm, ins); break;
-        case OP_CATCH: i_catch(vm, ins); break;
-        case OP_RAISE: i_raise(vm, ins); break;
-        case OP_EXBLK: i_exblc(vm, ins); break;
-        case OP_RET:
-            i_return(vm, ins);
-            if (vm->cf == NULL) {
-                bstack *cs = &vm->callstack;
-                if (!be_stack_isempty(cs)) {
-                    vm->cf = be_stack_top(cs);
-                }
-                return;
+    vm_exec_loop() {
+    opcase(LDNIL): i_ldnil(vm, ins); dispatch();
+    opcase(LDBOOL): i_ldbool(vm, ins); dispatch();
+    opcase(LDINT): i_ldint(vm, ins); dispatch();
+    opcase(LDCONST): i_ldconst(vm, ins); dispatch();
+    opcase(GETGBL): i_getglobal(vm, ins); dispatch();
+    opcase(SETGBL): i_setglobal(vm, ins); dispatch();
+    opcase(GETUPV): i_getupval(vm, ins); dispatch();
+    opcase(SETUPV): i_setupval(vm, ins); dispatch();
+    opcase(MOVE): i_move(vm, ins); dispatch();
+    opcase(ADD): i_add(vm, ins); dispatch();
+    opcase(SUB): i_sub(vm, ins); dispatch();
+    opcase(MUL): i_mul(vm, ins); dispatch();
+    opcase(DIV): i_div(vm, ins); dispatch();
+    opcase(MOD): i_mod(vm, ins); dispatch();
+    opcase(LT): i_lt(vm, ins); dispatch();
+    opcase(LE): i_le(vm, ins); dispatch();
+    opcase(EQ): i_eq(vm, ins); dispatch();
+    opcase(NE): i_ne(vm, ins); dispatch();
+    opcase(GT): i_gt(vm, ins); dispatch();
+    opcase(GE): i_ge(vm, ins); dispatch();
+    opcase(CONNECT): i_connect(vm, ins); dispatch();
+    opcase(AND): i_and(vm, ins); dispatch();
+    opcase(OR): i_or(vm, ins); dispatch();
+    opcase(XOR): i_xor(vm, ins); dispatch();
+    opcase(SHL): i_shl(vm, ins); dispatch();
+    opcase(SHR): i_shr(vm, ins); dispatch();
+    opcase(NEG): i_neg(vm, ins); dispatch();
+    opcase(FLIP): i_flip(vm, ins); dispatch();
+    opcase(JMP): i_jump(vm, ins); dispatch();
+    opcase(JMPT): i_jumptrue(vm, ins); dispatch();
+    opcase(JMPF): i_jumpfalse(vm, ins); dispatch();
+    opcase(CLOSURE): i_closure(vm, ins); dispatch();
+    opcase(GETMBR): i_getmember(vm, ins); dispatch();
+    opcase(GETMET): i_getmethod(vm, ins); dispatch();
+    opcase(SETMBR): i_setmember(vm, ins); dispatch();
+    opcase(GETIDX): i_getindex(vm, ins); dispatch();
+    opcase(SETIDX): i_setindex(vm, ins); dispatch();
+    opcase(SETSUPER): i_setsuper(vm, ins); dispatch();
+    opcase(CLOSE): i_close(vm, ins); dispatch();
+    opcase(IMPORT): i_import(vm, ins); dispatch();
+    opcase(CATCH): i_catch(vm, ins); dispatch();
+    opcase(RAISE): i_raise(vm, ins); dispatch();
+    opcase(EXBLK): i_exblc(vm, ins); dispatch();
+    opcase(CALL): i_call(vm, ins); goto newframe;
+    opcase(RET):
+        i_return(vm, ins);
+        if (vm->cf == NULL) {
+            bstack *cs = &vm->callstack;
+            if (!be_stack_isempty(cs)) {
+                vm->cf = be_stack_top(cs);
             }
-            break;
+            return;
         }
+        dispatch();
     }
 }
 
