@@ -9,7 +9,7 @@
 #define INDENT_CHAR     ' '
 
 static const char* parser_value(bvm *vm, const char *json);
-static void json2str(bvm *vm, int *indent, int idx, int fmt);
+static void value_dump(bvm *vm, int *indent, int idx, int fmt);
 
 static const char* skip_space(const char *s)
 {
@@ -303,7 +303,7 @@ static void make_indent(bvm *vm, int stridx, int indent)
     }
 }
 
-static void object_tostr(bvm *vm, int *indent, int idx, int fmt)
+static void object_dump(bvm *vm, int *indent, int idx, int fmt)
 {
     be_getmember(vm, idx, ".data");
     be_pushstring(vm, fmt ? "{\n" : "{");
@@ -320,7 +320,7 @@ static void object_tostr(bvm *vm, int *indent, int idx, int fmt)
         be_strconcat(vm, -5);
         be_pop(vm, 1);
         /* value.tostring() */
-        json2str(vm, indent, -1, fmt);
+        value_dump(vm, indent, -1, fmt);
         be_strconcat(vm, -5);
         be_pop(vm, 3);
         if (be_iter_hasnext(vm, -3)) {
@@ -342,7 +342,7 @@ static void object_tostr(bvm *vm, int *indent, int idx, int fmt)
     be_pop(vm, 2);
 }
 
-static void array_tostr(bvm *vm, int *indent, int idx, int fmt)
+static void array_dump(bvm *vm, int *indent, int idx, int fmt)
 {
     be_getmember(vm, idx, ".data");
     be_pushstring(vm, fmt ? "[\n" : "[");
@@ -351,7 +351,7 @@ static void array_tostr(bvm *vm, int *indent, int idx, int fmt)
     while (be_iter_hasnext(vm, -3)) {
         make_indent(vm, -2,  fmt ? *indent : 0);
         be_iter_next(vm, -3);
-        json2str(vm, indent, -1, fmt);
+        value_dump(vm, indent, -1, fmt);
         be_strconcat(vm, -4);
         be_pop(vm, 2);
         if (be_iter_hasnext(vm, -3)) {
@@ -373,12 +373,12 @@ static void array_tostr(bvm *vm, int *indent, int idx, int fmt)
     be_pop(vm, 2);
 }
 
-static void json2str(bvm *vm, int *indent, int idx, int fmt)
+static void value_dump(bvm *vm, int *indent, int idx, int fmt)
 {
     if (is_object(vm, "map", idx)) { /* convert to json object */
-        object_tostr(vm, indent, idx, fmt);
+        object_dump(vm, indent, idx, fmt);
     } else if (is_object(vm, "list", idx)) { /* convert to json array */
-        array_tostr(vm, indent, idx, fmt);
+        array_dump(vm, indent, idx, fmt);
     } else if (be_isnil(vm, idx)) { /* convert to json null */
         be_pushstring(vm, "null");
     } else if (be_isnumber(vm, idx) || be_isbool(vm, idx)) { /* convert to json number and boolean */
@@ -396,7 +396,7 @@ static int m_json_dump(bvm *vm)
     if (argc > 1) {
         fmt = !strcmp(be_tostring(vm, 2), "format");
     }
-    json2str(vm, &indent, 1, fmt);
+    value_dump(vm, &indent, 1, fmt);
     be_return(vm);
 }
 
