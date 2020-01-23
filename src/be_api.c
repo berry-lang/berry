@@ -313,6 +313,14 @@ BERRY_API const char* be_pushfstring(bvm *vm, const char *format, ...)
     return s;
 }
 
+BERRY_API void* be_pushbuffer(bvm *vm, size_t size)
+{
+    bstring *s = be_newlongstr(vm, NULL, size);
+    bvalue *reg = be_incrtop(vm);
+    var_setstr(reg, s);
+    return (void*)str(s);
+}
+
 BERRY_API void be_pushvalue(bvm *vm, int index)
 {
     bvalue *reg = vm->top;

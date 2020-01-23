@@ -232,6 +232,7 @@ BERRY_API void be_pushreal(bvm *vm, breal r);
 BERRY_API void be_pushstring(bvm *vm, const char *str);
 BERRY_API void be_pushnstring(bvm *vm, const char *str, size_t n);
 BERRY_API const char* be_pushfstring(bvm *vm, const char *format, ...);
+BERRY_API void* be_pushbuffer(bvm *vm, size_t size);
 BERRY_API void be_pushvalue(bvm *vm, int index);
 BERRY_API void be_pushntvclosure(bvm *vm, bntvfunc f, int nupvals);
 BERRY_API void be_pushntvfunction(bvm *vm, bntvfunc f);

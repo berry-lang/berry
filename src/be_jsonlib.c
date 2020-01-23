@@ -303,6 +303,41 @@ static void make_indent(bvm *vm, int stridx, int indent)
     }
 }
 
+static void string_dump(bvm *vm, int idx)
+{
+    char *buf, *q;
+    const char *p;
+    const char *s = be_tostring(vm, idx);
+    size_t len = be_strlen(vm, idx) + 2;
+    for (p = s; *p != '\0'; ++p) {
+        switch (*p) {
+        case '\"': case '\\': case '\b': case '\f':
+        case '\n': case '\r': case '\t':
+            len += 1;
+            break;
+        default:
+            break;
+        }
+    }
+    buf = q = be_pushbuffer(vm, len);
+    *q++ = '"'; /* add first '"' */
+    for (p = s; *p != '\0'; ++p, ++q) {
+        switch (*p) {
+        case '\"': *q++ = '\\'; *q = '"'; break;
+        case '\\': *q++ = '\\'; *q = '\\'; break;
+        case '\b': *q++ = '\\'; *q = 'b'; break;
+        case '\f': *q++ = '\\'; *q = 'f'; break;
+        case '\n': *q++ = '\\'; *q = 'n'; break;
+        case '\r': *q++ = '\\'; *q = 'r'; break;
+        case '\t': *q++ = '\\'; *q = 't'; break;
+        default: *q = *p; break;
+        }
+    }
+    *q = '"'; /* add last '"' */
+    be_pushnstring(vm, buf, len);
+    be_remove(vm, -2);
+}
+
 static void object_dump(bvm *vm, int *indent, int idx, int fmt)
 {
     be_getmember(vm, idx, ".data");
@@ -313,7 +348,7 @@ static void object_dump(bvm *vm, int *indent, int idx, int fmt)
         make_indent(vm, -2, fmt ? *indent : 0);
         be_iter_next(vm, -3);
         /* key.tostring() */
-        be_pushfstring(vm, "\"%s\"", be_tostring(vm, -2));
+        string_dump(vm, -2);
         be_strconcat(vm, -5);
         be_pop(vm, 1);
         be_pushstring(vm, fmt ? ": " : ":"); /* add ': ' */
@@ -384,8 +419,8 @@ static void value_dump(bvm *vm, int *indent, int idx, int fmt)
     } else if (be_isnumber(vm, idx) || be_isbool(vm, idx)) { /* convert to json number and boolean */
         be_tostring(vm, idx);
         be_pushvalue(vm, idx); /* push to top */
-    } else { /* convert to string and add '"" to string */
-        be_pushfstring(vm, "\"%s\"", be_tostring(vm, idx));
+    } else { /* convert to string */
+        string_dump(vm, idx);
     }
 }
 

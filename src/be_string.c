@@ -182,7 +182,7 @@ static bstring* newshortstr(bvm *vm, const char *str, size_t len)
     return s;
 }
 
-static bstring* newlongstr(bvm *vm, const char *str, size_t len)
+bstring* be_newlongstr(bvm *vm, const char *str, size_t len)
 {
     bstring *s;
     blstring *ls;
@@ -211,7 +211,7 @@ bstring *be_newstrn(bvm *vm, const char *str, size_t len)
         return newshortstr(vm, str, len);
 #endif
     }
-    return newlongstr(vm, str, len); /* long string */
+    return be_newlongstr(vm, str, len); /* long string */
 }
 
 void be_gcstrtab(bvm *vm)

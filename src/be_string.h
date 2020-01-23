@@ -40,6 +40,7 @@ void be_string_deleteall(bvm *vm);
 int be_eqstr(bstring *s1, bstring *s2);
 bstring* be_newstr(bvm *vm, const char *str);
 bstring* be_newstrn(bvm *vm, const char *str, size_t len);
+bstring* be_newlongstr(bvm *vm, const char *str, size_t len);
 void be_gcstrtab(bvm *vm);
 uint32_t be_strhash(bstring *s);
 const char* be_str2cstr(bstring *s);
