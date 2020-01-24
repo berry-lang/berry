@@ -7,26 +7,7 @@
 #define clousersize(n) \
     (sizeof(bclosure) + sizeof(bupval*) * ((size_t)(n) - 1))
 
-void be_initupvals(bvm *vm, bclosure *cl)
-{
-    int i, count = cl->proto->nupvals;
-    bupvaldesc *desc = cl->proto->upvals;
-    bvalue *stack = vm->reg;
-    bupval **superuv = curcl(vm)->upvals;
-    for (i = 0; i < count; ++i) {
-        bvalue *ref;
-        if (desc->instack) {
-            ref = stack + desc->idx;
-        } else {
-            ref = superuv[desc->idx]->value;
-        }
-        desc++;
-        cl->upvals[i] = be_findupval(vm, ref);
-        cl->upvals[i]->refcnt++;
-    }
-}
-
-bupval* be_findupval(bvm *vm, bvalue *level)
+static bupval* findupval(bvm *vm, bvalue *level)
 {
     bupval *node = vm->upvalist;
     while (node != NULL && node->value > level) {
@@ -42,6 +23,24 @@ bupval* be_findupval(bvm *vm, bvalue *level)
         vm->upvalist = node;
     }
     return node;
+}
+
+void be_initupvals(bvm *vm, bclosure *cl)
+{
+    int count = cl->proto->nupvals;
+    bupvaldesc *desc = cl->proto->upvals;
+    bvalue *stack = vm->reg;
+    bupval **uv = cl->upvals;
+    bupval **superuv = curcl(vm)->upvals;
+    for (; count--; desc++, uv++) {
+        if (desc->instack) {
+            bvalue *ref = stack + desc->idx;
+            *uv = findupval(vm, ref);
+        } else {
+            *uv = superuv[desc->idx];
+        }
+        (*uv)->refcnt++;
+    }
 }
 
 void be_upvals_close(bvm *vm, bvalue *level)

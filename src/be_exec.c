@@ -309,27 +309,40 @@ void be_stack_require(bvm *vm, int count)
     }
 }
 
-static void update_callstack(bvm *vm, bvalue *oldstack)
+static void update_callstack(bvm *vm, intptr_t offset)
 {
     bcallframe *cf = be_stack_top(&vm->callstack);
     bcallframe *base = be_stack_base(&vm->callstack);
-    bvalue *stack = vm->stack;
     for (; cf >= base; --cf) {
-        cf->func = stack + (cf->func - oldstack);
-        cf->top = stack + (cf->top - oldstack);
-        cf->reg = stack + (cf->reg - oldstack);
+        cf->func += offset;
+        cf->top += offset;
+        cf->reg += offset;
     }
-    vm->top = stack + (vm->top - oldstack);
-    vm->reg = stack + (vm->reg - oldstack);
+    vm->top += offset;
+    vm->reg += offset;
+}
+
+static void update_upvalues(bvm *vm, intptr_t offset)
+{
+    bupval *node = vm->upvalist;
+    /* update the value referenced by open upvalues */
+    for (; node != NULL; node = node->u.next) {
+        node->value += offset;
+    }
 }
 
 static void stack_resize(bvm *vm, size_t size)
 {
+    intptr_t offset;
     bvalue *old = vm->stack;
     size_t os = (vm->stacktop - old) * sizeof(bvalue);
     vm->stack = be_realloc(vm, old, os, sizeof(bvalue) * size);
     vm->stacktop = vm->stack + size;
-    update_callstack(vm, old);
+    offset = vm->stack - old;
+    /* update callframes */
+    update_callstack(vm, offset);
+    /* update open upvalues */
+    update_upvalues(vm, offset);
 }
 
 void be_stack_expansion(bvm *vm, int n)
