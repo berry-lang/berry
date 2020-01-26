@@ -242,7 +242,7 @@ void be_gcstrtab(bvm *vm)
     }
 }
 
-uint32_t be_strhash(bstring *s)
+uint32_t be_strhash(const bstring *s)
 {
     if (gc_isconst(s)) {
         return cast(bcstring*, s)->hash;
@@ -255,7 +255,7 @@ uint32_t be_strhash(bstring *s)
     return str_hash(str(s), str_len(s));
 }
 
-const char* be_str2cstr(bstring *s)
+const char* be_str2cstr(const bstring *s)
 {
     be_assert(cast_str(s) != NULL);
     if (gc_isconst(s)) {

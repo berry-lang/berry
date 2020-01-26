@@ -254,6 +254,9 @@ static void mark_module(bvm *vm, bgcobject *obj)
     gc_try (o != NULL) {
         vm->gc.gray = o->gray; /* remove object from gray list */
         mark_gray(vm, gc_object(o->table));
+        if (!gc_isconst(o) && gc_exmark(o) & BE_MODULE_NAME) {
+            mark_gray(vm, gc_object(o->info.sname));
+        }
     }
 }
 

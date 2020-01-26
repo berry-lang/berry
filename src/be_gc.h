@@ -35,17 +35,21 @@ if (!gc_isconst(o)) { \
 #define gc_setfixed(o)      ((o)->marked |= GC_FIXED)
 #define gc_clearfixed(o)    ((o)->marked &= ~GC_FIXED)
 #define gc_isconst(o)       (((o)->marked & GC_CONST) != 0)
+#define gc_exmark(o)        (((o)->marked >> 4) & 0x0F)
+#define gc_setexmark(o, k)  ((o)->marked |= (k) << 4)
 
 #define be_isgctype(t)      (t >= BE_GCOBJECT)
 #define be_isgcobj(o)       be_isgctype(var_type(o))
 #define be_gcnew(v, t, s)   be_newgcobj((v), (t), sizeof(s))
 
+/* the GC mark uses bit4:0 of the `object->marked` field,
+ * so other bits can be used for special flags (ex-mark). */
 typedef enum {
     GC_WHITE = 0x00, /* unreachable object */
     GC_GRAY = 0x01,  /* unscanned object */
     GC_DARK = 0x02,  /* scanned object */
-    GC_FIXED = 0x04,
-    GC_CONST = 0x08
+    GC_FIXED = 0x04, /* disable collection mark */
+    GC_CONST = 0x08  /* constant object mark */
 } bgcmark;
 
 void be_gc_init(bvm *vm);

@@ -296,10 +296,23 @@ const char* be_module_name(bmodule *module)
     if (gc_isconst(module)) {
         return module->info.name;
     }
+    if (gc_exmark(module) & BE_MODULE_NAME) {
+        return str(module->info.sname);
+    }
     if (module->info.native) {
         return module->info.native->name;
     }
     return NULL;
+}
+
+bbool be_module_setname(bmodule *module, bstring *name)
+{
+    if (!gc_isconst(module)) {
+        module->info.sname = name;
+        gc_setexmark(module, BE_MODULE_NAME);
+        return btrue;
+    }
+    return bfalse;
 }
 
 static blist* pathlist(bvm *vm)

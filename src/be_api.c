@@ -466,18 +466,50 @@ BERRY_API void be_newmodule(bvm *vm)
     var_setobj(top, BE_MODULE, mod);
 }
 
-BERRY_API void be_getglobal(bvm *vm, const char *name)
+BERRY_API bbool be_setname(bvm *vm, int index)
+{
+    bvalue *v = index2value(vm, index);
+    bvalue *top = index2value(vm, -1);
+    if (var_ismodule(v) && var_isstr(top)) {
+        bmodule *module = var_toobj(v);
+        return be_module_setname(module, var_tostr(top));
+    }
+    return bfalse;
+}
+
+BERRY_API bbool be_getglobal(bvm *vm, const char *name)
 {
     int idx = be_global_find(vm, be_newstr(vm, name));
     bvalue *top = be_incrtop(vm);
-    *top = *be_global_var(vm, idx);
+    if (idx > -1) {
+        *top = *be_global_var(vm, idx);
+        return btrue;
+    }
+    var_setnil(top);
+    return bfalse;
 }
 
-BERRY_API void be_getbuiltin(bvm *vm, const char *name)
+BERRY_API bbool be_setglobal(bvm *vm, const char *name)
+{
+    int idx = be_global_find(vm, be_newstr(vm, name));
+    bvalue *top = index2value(vm, -1);
+    if (idx >= be_builtin_count(vm)) {
+        *be_global_var(vm, idx) = *top;
+        return btrue;
+    }
+    return bfalse;
+}
+
+BERRY_API bbool be_getbuiltin(bvm *vm, const char *name)
 {
     int idx = be_builtin_find(vm, be_newstr(vm, name));
     bvalue *top = be_incrtop(vm);
-    *top = *be_global_var(vm, idx);
+    if (idx > -1) {
+        *top = *be_global_var(vm, idx);
+        return btrue;
+    }
+    var_setnil(top);
+    return bfalse;
 }
 
 BERRY_API bbool be_setmember(bvm *vm, int index, const char *k)
@@ -608,11 +640,12 @@ BERRY_API bbool be_setindex(bvm *vm, int index)
 BERRY_API void be_getupval(bvm *vm, int index, int pos)
 {
     bvalue *f = index ? index2value(vm, index) : vm->cf->func;
-    bvalue *top = be_incrtop(vm);
+    bvalue *uv, *top = be_incrtop(vm);
     be_assert(var_istype(f, BE_NTVCLOS));
     if (var_istype(f, BE_NTVCLOS)) {
         bntvclos *nf = var_toobj(f);
-        bvalue *uv = be_ntvclos_upval(nf, pos)->value;
+        be_assert(pos >= 0 && pos < nf->nupvals);
+        uv = be_ntvclos_upval(nf, pos)->value;
         var_setval(top, uv);
     } else {
         var_setnil(top);
@@ -622,11 +655,12 @@ BERRY_API void be_getupval(bvm *vm, int index, int pos)
 BERRY_API void be_setupval(bvm *vm, int index, int pos)
 {
     bvalue *f = index ? index2value(vm, index) : vm->cf->func;
-    bvalue *v = index2value(vm, -1);
+    bvalue *uv, *v = index2value(vm, -1);
     be_assert(var_istype(f, BE_NTVCLOS));
     if (var_istype(f, BE_NTVCLOS)) {
         bntvclos *nf = var_toobj(f);
-        bvalue *uv = be_ntvclos_upval(nf, pos)->value;
+        be_assert(pos >= 0 && pos < nf->nupvals);
+        uv = be_ntvclos_upval(nf, pos)->value;
         var_setval(uv, v);
     }
 }
