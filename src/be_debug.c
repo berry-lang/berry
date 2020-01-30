@@ -24,7 +24,7 @@
         be_writestring(__lbuf);         \
     } while (0)
 
-#if BE_DEBUG_DUMP_LEVEL >= 1
+#if BE_USE_DEBUG_MODULE
 static void print_inst(binstruction ins, int pc)
 {
     char __lbuf[INST_BUF_SIZE];
@@ -71,7 +71,7 @@ static void print_inst(binstruction ins, int pc)
     case OP_CLOSURE:
         logbuf("%s\tR%d\tP:%d", be_opcode2str(op), IGET_RA(ins), IGET_Bx(ins));
         break;
-    case OP_CLOSE:
+    case OP_CLOSE: case OP_LDNIL:
         logbuf("%s\t%d", be_opcode2str(op), IGET_RA(ins));
         break;
     case OP_RAISE:
@@ -96,7 +96,7 @@ static void print_inst(binstruction ins, int pc)
 }
 #endif
 
-#if BE_DEBUG_DUMP_LEVEL >= 1
+#if BE_USE_DEBUG_MODULE
 void be_dumpclosure(bclosure *cl)
 {
     int pc;
@@ -183,20 +183,6 @@ void be_tracestack(bvm *vm)
         tracestack(vm);
     }
 }
-
-#if BE_DEBUG_DUMP_LEVEL >= 3
-void be_debug_dump_stack(bvm *vm, int depth)
-{
-
-    bvalue *v = vm->top - 1;
-    bvalue *end = depth > 0 ? v - depth : vm->stack - 1;
-    while (v > end) {
-        logfmt("S[%3d]: <0x%.8x>, type(%d)\n",
-            v - vm->top, (int)var_toint(v), var_type(v));
-        --v;
-    }
-}
-#endif
 
 #if BE_USE_DEBUG_HOOK
 

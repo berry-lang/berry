@@ -26,6 +26,17 @@ const char* be_vtype2str(bvalue *v)
     }
 }
 
+bvalue* be_indexof(bvm *vm, int idx)
+{
+    if (idx > 0) { /* absolute index */
+        be_assert(vm->reg + idx <= vm->top);
+        return vm->reg + idx - 1;
+    }
+    /* relative index */
+    be_assert(vm->top + idx >= vm->reg);
+    return vm->top + idx;
+}
+
 BERRY_API void be_newcomobj(bvm *vm, void *data, bntvfunc destory)
 {
     bgcobject *gco = be_gcnew(vm, BE_COMOBJ, bcommomobj);

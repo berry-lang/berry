@@ -9,6 +9,7 @@ be_extern_native_module(math);
 be_extern_native_module(time);
 be_extern_native_module(os);
 be_extern_native_module(sys);
+be_extern_native_module(debug);
 
 /* user-defined modules declare start */
 
@@ -34,6 +35,9 @@ BERRY_LOCAL bntvmodule *const be_module_table[] = {
 #endif
 #if BE_USE_SYS_MODULE
     &be_native_module(sys),
+#endif
+#if BE_USE_DEBUG_MODULE
+    &be_native_module(debug),
 #endif
     /* user-defined modules register start */
 

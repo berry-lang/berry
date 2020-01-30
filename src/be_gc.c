@@ -374,6 +374,15 @@ static void premark_stack(bvm *vm)
     }
 }
 
+static void premark_tracestack(bvm *vm)
+{
+    bcallsnapshot *cf = be_vector_data(&vm->tracestack);
+    bcallsnapshot *end = be_vector_data(&vm->tracestack);
+    for (; cf <= end; ++cf) {
+        mark_gray_var(vm, &cf->func);
+    }
+}
+
 static void premark_fixed(bvm *vm)
 {
     bgcobject *node = vm->gc.list;
@@ -490,6 +499,7 @@ void be_gc_collect(bvm *vm)
     premark_internal(vm); /* object internal the VM */
     premark_global(vm); /* global objects */
     premark_stack(vm); /* stack objects */
+    premark_tracestack(vm); /* trace stack objects */
     premark_fixed(vm); /* fixed objects */
     /* step 2: set unscanned objects to black */
     mark_unscanned(vm);

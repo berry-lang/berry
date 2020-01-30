@@ -4,8 +4,8 @@
 
 #if BE_USE_JSON_MODULE
 
-#define MAX_INDENT      12
-#define INDENT_WIDTH    4
+#define MAX_INDENT      24
+#define INDENT_WIDTH    2
 #define INDENT_CHAR     ' '
 
 static const char* parser_value(bvm *vm, const char *json);
@@ -282,7 +282,8 @@ static int m_json_load(bvm *vm)
 {
     if (be_isstring(vm, 1)) {
         const char *json = be_tostring(vm, 1);
-        if (parser_value(vm, json)) {
+        json = parser_value(vm, json);
+        if (json != NULL && *json == '\0') {
             be_return(vm);
         }
     }
@@ -303,39 +304,71 @@ static void make_indent(bvm *vm, int stridx, int indent)
     }
 }
 
+static unsigned escape_length(const char *s)
+{
+    unsigned c, len = 0;
+    for (; (c = *s) != '\0'; ++s) {
+        switch (c) {
+        case '\"': case '\\': case '\b': case '\f':
+        case '\n': case '\r': case '\t':
+            len += 1;
+            break;
+        default:
+            if (c < 0x20) {
+                len += 5;
+            }
+            break;
+        }
+    }
+    return len;
+}
+
+static unsigned eschex(unsigned num)
+{
+    return num <= 9 ? '0' + num : 'a' + num - 10;
+}
+
+/* escape as JSON */
+static char* escape(char *q, unsigned c)
+{
+    switch (c) {
+    case '\"': *q++ = '\\'; *q = '"'; break;
+    case '\\': *q++ = '\\'; *q = '\\'; break;
+    case '\b': *q++ = '\\'; *q = 'b'; break;
+    case '\f': *q++ = '\\'; *q = 'f'; break;
+    case '\n': *q++ = '\\'; *q = 'n'; break;
+    case '\r': *q++ = '\\'; *q = 'r'; break;
+    case '\t': *q++ = '\\'; *q = 't'; break;
+    default:
+        if (c < 0x20) { /* other characters are escaped using '\uxxxx' */
+            *q++ = '\\'; *q++ = 'u';
+            *q++ = '0'; *q++ = '0';
+            *q++ = eschex(c >> 4);
+            *q = eschex(c & 0x0F);
+        } else { /* unescaped characters */
+            *q = c;
+        }
+        break;
+    }
+    return q;
+}
+
 static void string_dump(bvm *vm, int idx)
 {
     char *buf, *q;
     const char *p;
     const char *s = be_tostring(vm, idx);
     size_t len = be_strlen(vm, idx) + 2;
-    for (p = s; *p != '\0'; ++p) {
-        switch (*p) {
-        case '\"': case '\\': case '\b': case '\f':
-        case '\n': case '\r': case '\t':
-            len += 1;
-            break;
-        default:
-            break;
-        }
-    }
+    len += escape_length(s); /* get escaped length */
     buf = q = be_pushbuffer(vm, len);
     *q++ = '"'; /* add first '"' */
+    /* generate JSON string */
     for (p = s; *p != '\0'; ++p, ++q) {
-        switch (*p) {
-        case '\"': *q++ = '\\'; *q = '"'; break;
-        case '\\': *q++ = '\\'; *q = '\\'; break;
-        case '\b': *q++ = '\\'; *q = 'b'; break;
-        case '\f': *q++ = '\\'; *q = 'f'; break;
-        case '\n': *q++ = '\\'; *q = 'n'; break;
-        case '\r': *q++ = '\\'; *q = 'r'; break;
-        case '\t': *q++ = '\\'; *q = 't'; break;
-        default: *q = *p; break;
-        }
+        q = escape(q, *p);
     }
     *q = '"'; /* add last '"' */
-    be_pushnstring(vm, buf, len);
-    be_remove(vm, -2);
+    be_pushnstring(vm, buf, len); /* make JSON string from buffer */
+    be_remove(vm, -2); /* remove buffer */
 }
 
 static void object_dump(bvm *vm, int *indent, int idx, int fmt)

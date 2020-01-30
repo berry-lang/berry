@@ -15,17 +15,6 @@
 
 #define retreg(vm)      ((vm)->cf->func)
 
-static bvalue* index2value(bvm *vm, int idx)
-{
-    if (idx > 0) { /* absolute index */
-        be_assert(vm->reg + idx <= vm->top);
-        return vm->reg + idx - 1;
-    }
-    /* relative index */
-    be_assert(vm->top + idx >= vm->reg);
-    return vm->top + idx;
-}
-
 static void class_init(bvm *vm, bclass *c, const bnfuncinfo *lib)
 {
     while (lib->name) {
@@ -104,109 +93,109 @@ BERRY_API int be_absindex(bvm *vm, int index)
 
 BERRY_API bbool be_isnil(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     return var_isnil(v);
 }
 
 BERRY_API bbool be_isbool(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     return var_isbool(v);
 }
 
 BERRY_API bbool be_isint(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     return var_isint(v);
 }
 
 BERRY_API bbool be_isreal(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     return var_isreal(v);
 }
 
 BERRY_API bbool be_isnumber(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     return var_isnumber(v);
 }
 
 BERRY_API bbool be_isstring(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     return var_isstr(v);
 }
 
 BERRY_API bbool be_isclosure(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     return var_isclosure(v);
 }
 
 BERRY_API bbool be_isntvclos(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     return var_isntvclos(v);
 }
 
 BERRY_API bbool be_isfunction(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     return var_isfunction(v);
 }
 
 BERRY_API bbool be_isproto(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     return var_isproto(v);
 }
 
 BERRY_API bbool be_isclass(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     return var_isclass(v);
 }
 
 BERRY_API bbool be_isinstance(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     return var_isinstance(v);
 }
 
 BERRY_API bbool be_islist(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     return var_islist(v);
 }
 
 BERRY_API bbool be_ismap(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     return var_ismap(v);
 }
 
 BERRY_API bbool be_iscomptr(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     return var_istype(v, BE_COMPTR);
 }
 
 BERRY_API bbool be_iscomobj(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     return var_istype(v, BE_COMOBJ);
 }
 
 BERRY_API bint be_toint(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     return var_toint(v);
 }
 
 BERRY_API breal be_toreal(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     if (var_isreal(v)) {
         return var_toreal(v);
     }
@@ -218,29 +207,29 @@ BERRY_API breal be_toreal(bvm *vm, int index)
 
 BERRY_API int be_toindex(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     return var_toidx(v);
 }
 
 BERRY_API bbool be_tobool(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     return be_value2bool(vm, v);
 }
 
 BERRY_API const char* be_tostring(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     if (!var_isstr(v)) {
         be_val2str(vm, index);
-        v = index2value(vm, index);
+        v = be_indexof(vm, index);
     }
     return str(var_tostr(v));
 }
 
 BERRY_API void* be_tocomptr(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     if (var_istype(v, BE_COMPTR)) {
         return var_toobj(v);
     }
@@ -253,8 +242,8 @@ BERRY_API void* be_tocomptr(bvm *vm, int index)
 
 BERRY_API void be_moveto(bvm *vm, int from, int to)
 {
-    bvalue *src = index2value(vm, from);
-    bvalue *dst = index2value(vm, to);
+    bvalue *src = be_indexof(vm, from);
+    bvalue *dst = be_indexof(vm, to);
     var_setval(dst, src);
 }
 
@@ -324,7 +313,7 @@ BERRY_API void* be_pushbuffer(bvm *vm, size_t size)
 BERRY_API void be_pushvalue(bvm *vm, int index)
 {
     bvalue *reg = vm->top;
-    var_setval(reg, index2value(vm, index));
+    var_setval(reg, be_indexof(vm, index));
     be_incrtop(vm);
 }
 
@@ -363,7 +352,7 @@ BERRY_API void be_pushcomptr(bvm *vm, void *ptr)
 
 BERRY_API void be_remove(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     bvalue *top = --vm->top;
     while (v < top) {
         *v = v[1];
@@ -374,8 +363,8 @@ BERRY_API void be_remove(bvm *vm, int index)
 BERRY_API void be_strconcat(bvm *vm, int index)
 {
     bstring *s;
-    bvalue *dst = index2value(vm, index);
-    bvalue *src = index2value(vm, -1);
+    bvalue *dst = be_indexof(vm, index);
+    bvalue *src = be_indexof(vm, -1);
     be_assert(var_isstr(src) && var_isstr(dst));
     s = be_strcat(vm, var_tostr(dst), var_tostr(src));
     var_setstr(dst, s);
@@ -383,7 +372,7 @@ BERRY_API void be_strconcat(bvm *vm, int index)
 
 void be_getsuper(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     bvalue *top = be_incrtop(vm);
 
     if (var_isclass(v)) {
@@ -406,13 +395,13 @@ void be_getsuper(bvm *vm, int index)
 
 BERRY_API const char *be_typename(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     return be_vtype2str(v);
 }
 
 BERRY_API const char *be_classname(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     if (var_isclass(v)) {
         bclass *c = var_toobj(v);
         return str(be_class_name(c));
@@ -426,7 +415,7 @@ BERRY_API const char *be_classname(bvm *vm, int index)
 
 BERRY_API bbool be_classof(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     if (var_isinstance(v)) {
         bvalue *top = be_incrtop(vm);
         binstance *ins = var_toobj(v);
@@ -438,7 +427,7 @@ BERRY_API bbool be_classof(bvm *vm, int index)
 
 BERRY_API int be_strlen(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     if (var_isstr(v)) {
         return str_len(var_tostr(v));
     }
@@ -468,8 +457,8 @@ BERRY_API void be_newmodule(bvm *vm)
 
 BERRY_API bbool be_setname(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
-    bvalue *top = index2value(vm, -1);
+    bvalue *v = be_indexof(vm, index);
+    bvalue *top = be_indexof(vm, -1);
     if (var_ismodule(v) && var_isstr(top)) {
         bmodule *module = var_toobj(v);
         return be_module_setname(module, var_tostr(top));
@@ -492,7 +481,7 @@ BERRY_API bbool be_getglobal(bvm *vm, const char *name)
 BERRY_API bbool be_setglobal(bvm *vm, const char *name)
 {
     int idx = be_global_find(vm, be_newstr(vm, name));
-    bvalue *top = index2value(vm, -1);
+    bvalue *top = be_indexof(vm, -1);
     if (idx >= be_builtin_count(vm)) {
         *be_global_var(vm, idx) = *top;
         return btrue;
@@ -515,10 +504,10 @@ BERRY_API bbool be_getbuiltin(bvm *vm, const char *name)
 BERRY_API bbool be_setmember(bvm *vm, int index, const char *k)
 {
     int res = BE_NIL;
-    bvalue *o = index2value(vm, index);
+    bvalue *o = be_indexof(vm, index);
     if (var_isinstance(o)) {
         bstring *key = be_newstr(vm, k);
-        bvalue *v = index2value(vm, -1);
+        bvalue *v = be_indexof(vm, -1);
         binstance *obj = var_toobj(o);
         res = be_instance_setmember(obj, key, v);
     } else if (var_ismodule(o)) {
@@ -526,7 +515,7 @@ BERRY_API bbool be_setmember(bvm *vm, int index, const char *k)
         bmodule *mod = var_toobj(o);
         bvalue *v = be_module_bind(vm, mod, key);
         if (v) {
-            *v = *index2value(vm, -1);
+            *v = *be_indexof(vm, -1);
             return btrue;
         }
     }
@@ -536,7 +525,7 @@ BERRY_API bbool be_setmember(bvm *vm, int index, const char *k)
 static int ins_member(bvm *vm, int index, const char *k)
 {
     int type = BE_NIL;
-    bvalue *o = index2value(vm, index);
+    bvalue *o = be_indexof(vm, index);
     bvalue *top = be_incrtop(vm);
     var_setnil(top);
     if (var_isinstance(o)) {
@@ -558,8 +547,8 @@ BERRY_API bbool be_getmethod(bvm *vm, int index, const char *k)
 
 BERRY_API bbool be_getindex(bvm *vm, int index)
 {
-    bvalue *o = index2value(vm, index);
-    bvalue *k = index2value(vm, -1);
+    bvalue *o = be_indexof(vm, index);
+    bvalue *k = be_indexof(vm, -1);
     bvalue *dst = be_incrtop(vm);
     switch (var_type(o)) {
     case BE_LIST:
@@ -611,9 +600,9 @@ static bvalue* map_setindex(bvm *vm, bmap *map, bvalue *key)
 BERRY_API bbool be_setindex(bvm *vm, int index)
 {
     bvalue *dst = NULL;
-    bvalue *o = index2value(vm, index);
-    bvalue *k = index2value(vm, -2);
-    bvalue *v = index2value(vm, -1);
+    bvalue *o = be_indexof(vm, index);
+    bvalue *k = be_indexof(vm, -2);
+    bvalue *v = be_indexof(vm, -1);
     switch (var_type(o)) {
     case BE_LIST:
         if (var_isint(k)) {
@@ -639,7 +628,7 @@ BERRY_API bbool be_setindex(bvm *vm, int index)
 
 BERRY_API void be_getupval(bvm *vm, int index, int pos)
 {
-    bvalue *f = index ? index2value(vm, index) : vm->cf->func;
+    bvalue *f = index ? be_indexof(vm, index) : vm->cf->func;
     bvalue *uv, *top = be_incrtop(vm);
     be_assert(var_istype(f, BE_NTVCLOS));
     if (var_istype(f, BE_NTVCLOS)) {
@@ -654,8 +643,8 @@ BERRY_API void be_getupval(bvm *vm, int index, int pos)
 
 BERRY_API void be_setupval(bvm *vm, int index, int pos)
 {
-    bvalue *f = index ? index2value(vm, index) : vm->cf->func;
-    bvalue *uv, *v = index2value(vm, -1);
+    bvalue *f = index ? be_indexof(vm, index) : vm->cf->func;
+    bvalue *uv, *v = be_indexof(vm, -1);
     be_assert(var_istype(f, BE_NTVCLOS));
     if (var_istype(f, BE_NTVCLOS)) {
         bntvclos *nf = var_toobj(f);
@@ -667,7 +656,7 @@ BERRY_API void be_setupval(bvm *vm, int index, int pos)
 
 BERRY_API int be_data_size(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     if (var_islist(v)) {
         blist *list = var_toobj(v);
         return be_list_count(list);
@@ -680,8 +669,8 @@ BERRY_API int be_data_size(bvm *vm, int index)
 
 BERRY_API void be_data_push(bvm *vm, int index)
 {
-    bvalue *o = index2value(vm, index);
-    bvalue *v = index2value(vm, -1);
+    bvalue *o = be_indexof(vm, index);
+    bvalue *v = be_indexof(vm, -1);
     if (var_islist(o)) {
         blist *list = var_toobj(o);
         be_list_push(vm, list, v);
@@ -690,9 +679,9 @@ BERRY_API void be_data_push(bvm *vm, int index)
 
 BERRY_API bbool be_data_insert(bvm *vm, int index)
 {
-    bvalue *o = index2value(vm, index);
-    bvalue *k = index2value(vm, -2);
-    bvalue *v = index2value(vm, -1);
+    bvalue *o = be_indexof(vm, index);
+    bvalue *k = be_indexof(vm, -2);
+    bvalue *v = be_indexof(vm, -1);
     switch (var_type(o)) {
     case BE_MAP:
         if (!var_isnil(k)) {
@@ -714,8 +703,8 @@ BERRY_API bbool be_data_insert(bvm *vm, int index)
 
 BERRY_API bbool be_data_remove(bvm *vm, int index)
 {
-    bvalue *o = index2value(vm, index);
-    bvalue *k = index2value(vm, -1);
+    bvalue *o = be_indexof(vm, index);
+    bvalue *k = be_indexof(vm, -1);
     switch (var_type(o)) {
     case BE_MAP:
         if (!var_isnil(k)) {
@@ -737,8 +726,8 @@ BERRY_API bbool be_data_remove(bvm *vm, int index)
 
 BERRY_API bbool be_data_merge(bvm *vm, int index)
 {
-    bvalue *a = index2value(vm, index);
-    bvalue *b = index2value(vm, -1);
+    bvalue *a = be_indexof(vm, index);
+    bvalue *b = be_indexof(vm, -1);
     if (var_islist(a) && var_islist(b)) {
         blist *dst = var_toobj(a), *src = var_toobj(b);
         be_list_merge(vm, dst, src);
@@ -749,8 +738,8 @@ BERRY_API bbool be_data_merge(bvm *vm, int index)
 
 BERRY_API void be_data_resize(bvm *vm, int index)
 {
-    bvalue *o = index2value(vm, index);
-    bvalue *v = index2value(vm, -1);
+    bvalue *o = be_indexof(vm, index);
+    bvalue *v = be_indexof(vm, -1);
     if (var_islist(o)) {
         blist *list = var_toobj(o);
         if (var_isint(v)) {
@@ -761,7 +750,7 @@ BERRY_API void be_data_resize(bvm *vm, int index)
 
 BERRY_API bbool be_pushiter(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     if (var_ismap(v)) {
         bvalue *iter = be_incrtop(vm);
         var_setobj(iter, BE_COMPTR, NULL);
@@ -777,7 +766,7 @@ BERRY_API bbool be_pushiter(bvm *vm, int index)
 
 static int list_next(bvm *vm)
 {
-    bvalue *iter = index2value(vm, -1);
+    bvalue *iter = be_indexof(vm, -1);
     bvalue *next, *dst = be_incrtop(vm);
     next = cast(bvalue*, var_toobj(iter)) + 1;
     var_setobj(iter, BE_COMPTR, next);
@@ -788,7 +777,7 @@ static int list_next(bvm *vm)
 static bbool list_hasnext(bvm *vm, bvalue *v)
 {
     bvalue *next;
-    bvalue *iter = index2value(vm, -1);
+    bvalue *iter = be_indexof(vm, -1);
     blist *obj = var_toobj(v);
     next = cast(bvalue*, var_toobj(iter)) + 1;
     return next >= be_list_data(obj) && next < be_list_end(obj);
@@ -799,7 +788,7 @@ static int map_next(bvm *vm, bvalue *v)
     bmapiter iter;
     bmapnode *entry;
     bvalue *dst = vm->top;
-    bvalue *itvar = index2value(vm, -1);
+    bvalue *itvar = be_indexof(vm, -1);
     iter = var_toobj(itvar);
     entry = be_map_next(var_toobj(v), &iter);
     var_setobj(itvar, BE_COMPTR, iter);
@@ -815,14 +804,14 @@ static int map_next(bvm *vm, bvalue *v)
 
 static bbool map_hasnext(bvm *vm, bvalue *v)
 {
-    bvalue *node = index2value(vm, -1);
+    bvalue *node = be_indexof(vm, -1);
     bmapiter iter = var_toobj(node);
     return be_map_next(var_toobj(v), &iter) != NULL;
 }
 
 BERRY_API int be_iter_next(bvm *vm, int index)
 {
-    bvalue *o = index2value(vm, index);
+    bvalue *o = be_indexof(vm, index);
     if (var_islist(o)) {
         return list_next(vm);
     } else if (var_ismap(o)) {
@@ -833,7 +822,7 @@ BERRY_API int be_iter_next(bvm *vm, int index)
 
 BERRY_API bbool be_iter_hasnext(bvm *vm, int index)
 {
-    bvalue *o = index2value(vm, index);
+    bvalue *o = be_indexof(vm, index);
     if (var_islist(o)) {
         return list_hasnext(vm, o);
     } else if (var_ismap(o)) {
@@ -844,7 +833,7 @@ BERRY_API bbool be_iter_hasnext(bvm *vm, int index)
 
 BERRY_API bbool be_refcontains(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     binstance **ref = be_stack_base(&vm->refstack);
     binstance **top = be_stack_top(&vm->refstack);
     binstance *ins = var_toobj(v);
@@ -860,7 +849,7 @@ BERRY_API bbool be_refcontains(bvm *vm, int index)
 
 BERRY_API void be_refpush(bvm *vm, int index)
 {
-    bvalue *v = index2value(vm, index);
+    bvalue *v = be_indexof(vm, index);
     binstance *ins = var_toobj(v);
     be_assert(var_isinstance(v));
     be_stack_push(vm, &vm->refstack, &ins);
@@ -901,19 +890,6 @@ BERRY_API int be_pcall(bvm *vm, int argc)
     bvalue *f = vm->top - argc - 1;
     int res = be_protectedcall(vm, f, argc);
     return res;
-}
-
-BERRY_API void be_codedump(bvm *vm, int index)
-{
-#if BE_DEBUG_DUMP_LEVEL >= 1
-    bvalue *v = index2value(vm, index);
-    if (var_isclosure(v)) {
-        be_dumpclosure(var_toobj(v));
-    }
-#else
-    (void)index;
-    be_raise(vm, "unrealized_error", "codedump unrealized");
-#endif
 }
 
 BERRY_API void be_raise(bvm *vm, const char *except, const char *msg)

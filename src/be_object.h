@@ -218,7 +218,7 @@ typedef const char* (*breader)(void*, size_t*);
 #define var_toidx(_v)           cast_int(var_toint(_v))
 
 const char* be_vtype2str(bvalue *v);
-bgcobject* be_commomobj_new(bvm *vm, void *data, bntvfunc destory);
+bvalue* be_indexof(bvm *vm, int idx);
 void be_commonobj_delete(bvm *vm, bgcobject *obj);
 
 #endif

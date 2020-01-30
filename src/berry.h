@@ -296,7 +296,6 @@ BERRY_API int be_loadmodule(bvm *vm, const char *name);
 BERRY_API int be_loadlib(bvm *vm, const char *path);
 BERRY_API int be_loadexec(bvm *vm, const char *name);
 BERRY_API int be_saveexec(bvm *vm, const char *name);
-BERRY_API void be_codedump(bvm *vm, int index);
 
 /* module path list APIs */
 BERRY_API void be_module_path(bvm *vm);

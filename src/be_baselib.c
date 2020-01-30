@@ -284,14 +284,6 @@ static int l_compile(bvm *vm)
     be_return_nil(vm);
 }
 
-static int l_codedump(bvm *vm)
-{
-    if (be_top(vm) >= 1) {
-        be_codedump(vm, 1);
-    }
-    be_return_nil(vm);
-}
-
 #if !BE_USE_PRECOMPILED_OBJECT
 void be_load_baselib(bvm *vm)
 {
@@ -311,7 +303,6 @@ void be_load_baselib(bvm *vm)
     be_regfunc(vm, "module", l_module);
     be_regfunc(vm, "size", l_size);
     be_regfunc(vm, "compile", l_compile);
-    be_regfunc(vm, "codedump", l_codedump);
     be_regfunc(vm, "__iterator__", l_iterator);
 }
 #else
@@ -337,7 +328,6 @@ vartab m_builtin (scope: local) {
     module, func(l_module)
     size, func(l_size)
     compile, func(l_compile)
-    codedump, func(l_codedump)
     __iterator__, func(l_iterator)
     open, func(be_nfunc_open)
     list, class(be_class_list)
