@@ -1,30 +1,44 @@
-print("for iterator test:")
-for (i : 0 .. 5)
-    print(i)
-end
+var global
 
-print("\nequivalent while iterator:")
-do
-    it = __iterator__(0..5)
-    while (__hasnext__(it))
-        i = __next__(it)
-        print(i)
+global = 0
+for (i : 0 .. 10)
+    global += i
+end
+assert(global == 55)
+
+global = 0
+for (i : 0 .. 20)
+    if (i > 10)
+        break
+    end
+    global += i
+end
+assert(global == 55)
+
+global = 0
+for (i : 0 .. 20)
+    if (i > 10)
+        continue
+    end
+    global += i
+end
+assert(global == 55)
+
+assert(def ()
+        for (i : 0 .. 20)
+            if (i > 10)
+                return i
+            end
+        end
+    end() == 11)
+
+# test for "stop_iteration" exception as recurrence
+def for_rec(depth)
+    for (i : 0 .. 10)
+        if (i == 4 && depth < 200)
+            for_rec(depth + 1)
+        end
     end
 end
 
-# list iterator
-print("\nlist iterator:")
-for (i : [0, -10..10, 5, [5, {'t':'f'}]])
-    print(i)
-end
-
-# map iterator
-print("\nmap iterator:")
-for (i : {'a': 15, 
-          'b': {'list': [1, 2, 3],
-                'map': {'str': 'this is a str', 'number': 0x100}
-               }
-         }
-    )
-    print(i)
-end
+for_rec(0)

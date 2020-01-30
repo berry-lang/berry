@@ -139,6 +139,7 @@ typedef struct bproto {
 #endif
 } bproto;
 
+/* berry closure */
 struct bclosure {
     bcommon_header;
     bbyte nupvals;

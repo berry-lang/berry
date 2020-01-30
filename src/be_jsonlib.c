@@ -272,6 +272,10 @@ static const char* parser_value(bvm *vm, const char *json)
         return parser_null(vm, json);
     default: /* number */
         if (*json == '-' || is_digit(*json)) {
+            /* check invalid JSON syntax: 0\d+ */
+            if (json[0] == '0' && is_digit(json[1])) {
+                return NULL;
+            }
             return be_str2num(vm, json);
         }
     }

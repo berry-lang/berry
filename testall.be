@@ -2,7 +2,7 @@
 import os
 
 var exec = './berry'
-var path = 'tests/testcases'
+var path = 'tests'
 var testcases = os.listdir(path)
 var total = 0, failed = 0
 

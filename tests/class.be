@@ -1,49 +1,22 @@
-class Base
-    var b
-    def init(a)
-        self.b = a * 3
+class Test
+    var maximum
+    def init(maximum)
+        self.maximum = maximum
     end
-end
-class A : Base
-    var c
-    def init(c)
-        self.c = c
-        super(self).init(c)
-    end
-    def func(a, b)
-        return 1 + a + b
-    end
-    def -*(other)
-    end
-end
-
-obj = A(2)
-print(obj.func(5, 6))
-
-assert(obj.func(5, 6) == 12)
-
-# class method with closure
-
-class Count
-    var __count
-    def init(n)
-        self.__count = n
-    end
-    def iter()
-        var i = 0, count = self.__count
-        class Iter
-            def hasnext()
-                return i < count
+    def iter() # method closure upvalues test
+        var i = -1, maximum = self.maximum
+        return def ()
+            i += 1
+            if (i > maximum)
+                raise 'stop_iteration'
             end
-            def next()
-                i += 1
-                return i
-            end
+            return i
         end
-        return Iter()
     end
 end
 
-for (i : Count(5))
-    print(i)
+var sum = 0
+for (i : Test(10))
+    sum += i
 end
+assert(sum == 55, 'iteraion sum is ' + str(sum) + ' (expected 55).')
