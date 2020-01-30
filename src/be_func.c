@@ -120,15 +120,15 @@ bntvclos* be_newntvclosure(bvm *vm, bntvfunc cf, int nupvals)
     size_t size = sizeof(bntvclos) + sizeof(bupval*) * nupvals;
     bgcobject *gco = be_newgcobj(vm, BE_NTVCLOS, size);
     bntvclos *f = cast_ntvclos(gco);
-    var_setntvclos(vm->top, f);
-    be_incrtop(vm);
     if (f) {
         f->f = cf;
         f->nupvals = (bbyte)nupvals;
         if (nupvals) {
-            init_upvals(vm, f);
+            var_setntvclos(vm->top, f);
+            be_incrtop(vm);
+            init_upvals(vm, f); /* may be GC */
+            be_stackpop(vm, 1);
         }
     }
-    be_stackpop(vm, 1);
     return f;
 }

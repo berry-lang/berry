@@ -9,6 +9,7 @@
 #include "be_vm.h"
 #include <string.h>
 
+/* the maximum suffix length */
 #define SUFFIX_LEN      5 /* length of (.be .bec .so .dll) + 1 */
 
 #if defined(__linux) || defined(__APPLE__)
