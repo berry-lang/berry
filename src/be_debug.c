@@ -119,82 +119,47 @@ void be_dumpclosure(bclosure *cl)
 }
 #endif
 
-static const char* sourceinfo(bvm *vm, char *buf, int depth)
+static void sourceinfo(bproto *proto, binstruction *ip)
 {
 #if BE_DEBUG_RUNTIME_INFO
-    bstack *stack = &vm->tracestack;
-    int size = be_stack_count(stack);
-    bcallsnapshot *cf = be_vector_at(stack, size + depth);
-    bproto *proto = cast(bclosure*, var_toobj(&cf->func))->proto;
+    char buf[24];
     be_assert(proto != NULL);
     if (proto->lineinfo && proto->nlineinfo) {
         blineinfo *start = proto->lineinfo;
         blineinfo *it = start + proto->nlineinfo - 1;
-        int pc = cast_int(cf->ip - proto->code - 1);
-        while (it > start && it->endpc > pc) {
-            --it;
-        }
-        sprintf(buf, "%s:%d:", str(proto->source), it->linenumber);
-        return buf;
-    }
-    return "<unknow source>:";
-#else
-    (void)vm; (void)buf; (void)depth;
-    return "<unknow source>:";
-#endif
-}
-
-static void patch_native(bvm *vm, int depth)
-{
-    int size = be_stack_count(&vm->tracestack);
-    bcallsnapshot *cf = be_vector_at(&vm->tracestack, size + depth);
-    if (depth == -1) {
-        cf->ip = vm->ip;
+        int pc = cast_int(ip - proto->code - 1);
+        for (; it > start && it->endpc > pc; --it);
+        sprintf(buf, ":%d:", it->linenumber);
+        be_writestring(str(proto->source));
+        be_writestring(buf);
     } else {
-        cf->ip = cf[1].ip;
+        be_writestring("<unknow source>:");
     }
-}
-
-/* repair ip */
-static void repair_stack(bvm *vm)
-{
-    bcallsnapshot *cf;
-    bstack *stack = &vm->tracestack;
-    bcallsnapshot *base = be_stack_base(stack);
-    bcallsnapshot *top = be_stack_top(stack);
-    /* Because the native function does not push `ip` to the
-     * stack, the ip on the native function frame corresponds
-     * to the previous Berry closure. */
-    for (cf = top; cf >= base; --cf) {
-        if (!var_isclosure(&cf->func)) {
-            /* the last native function stack frame has the `ip` of
-             * the previous Berry frame */
-            binstruction *ip = cf->ip;
-            /* skip native function stack frames */
-            for (; !var_isclosure(&cf->func); --cf);
-            /* fixed `ip` of Berry closure frame near native function frame */
-            cf->ip = ip;
-        }
-    }
+#else
+    (void)proto; (void)ip;
+    be_writestring("<unknow source>:");
+#endif
 }
 
 static void tracestack(bvm *vm)
 {
+    bcallsnapshot *cf;
+    binstruction *ip = NULL;
     bstack *stack = &vm->tracestack;
-    int depth, size = be_stack_count(stack);
+    bcallsnapshot *base = be_stack_base(stack);
+    bcallsnapshot *top = be_stack_top(stack);
     be_writestring("stack traceback:\n");
-    for (depth = 1; depth <= size; ++depth) {
-        bcallsnapshot *cf = be_vector_at(stack, size - depth);
+    for (cf = top; cf >= base; --cf) {
+        if (!ip) ip = cf->ip;
         if (var_isclosure(&cf->func)) {
-            char buf[100];
             bclosure *cl = var_toobj(&cf->func);
             be_writestring("\t");
-            be_writestring(sourceinfo(vm, buf, -depth));
+            sourceinfo(cl->proto, ip);
             be_writestring(" in function `");
             be_writestring(str(cl->proto->name));
             be_writestring("`\n");
+            ip = NULL;
         } else {
-            patch_native(vm, -depth);
             be_writestring("\t<native>: in native function\n");
         }
     }
@@ -203,7 +168,6 @@ static void tracestack(bvm *vm)
 void be_tracestack(bvm *vm)
 {
     if (be_stack_count(&vm->tracestack)) {
-        repair_stack(vm);
         tracestack(vm);
     }
 }

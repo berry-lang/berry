@@ -440,17 +440,18 @@ void be_except_block_close(bvm *vm, int count)
 
 void be_save_stacktrace(bvm *vm)
 {
-    be_stack_clear(&vm->tracestack);
-    if (be_vector_count(&vm->callstack)) {
+    bstack *stack = &vm->tracestack;
+    be_stack_clear(stack);
+    if (be_stack_count(&vm->callstack)) {
         bcallframe *cf;
-        bcallframe *begin = be_vector_first(&vm->callstack);
-        bcallframe *end = be_vector_end(&vm->callstack);
-        for (cf = begin; cf <= end; ++cf) {
-            bcallsnapshot st = {
-                *cf->func,
-                cf == end ? vm->ip : cf[1].ip
-            };
-            be_stack_push(vm, &vm->tracestack, &st);
+        bcallframe *base = be_stack_base(&vm->callstack);
+        bcallframe *top = be_stack_top(&vm->callstack);
+        for (cf = base; cf <= top; ++cf) {
+            bcallsnapshot *st;
+            be_stack_push(vm, stack, &st);
+            st = be_stack_top(stack);
+            st->func = *cf->func;
+            st->ip = cf == top ? vm->ip : cf[1].ip;
         }
     }
 }

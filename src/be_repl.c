@@ -2,6 +2,8 @@
 #include "be_repl.h"
 #include <string.h>
 
+#define safecall(func, ...) if (func) { func(__VA_ARGS__); }
+
 #if BE_USE_SCRIPT_COMPILER
 
 static int try_return(bvm *vm, const char *line)
@@ -14,22 +16,23 @@ static int try_return(bvm *vm, const char *line)
     return res;
 }
 
-static int is_multline(bvm *vm)
+static bbool is_multline(bvm *vm)
 {
     const char *msg = be_tostring(vm, -1);
     size_t len = strlen(msg);
     if (len > 5) { /* multi-line text if the error message is 'EOS' at the end */
         return !strcmp(msg + len - 5, "'EOS'");
     }
-    return 0;
+    return bfalse;
 }
 
-static int compile(bvm *vm, char *l, breadline gl, bfreeline fl)
+static int compile(bvm *vm, char *line, breadline getl, bfreeline freel)
 {
-    int res = try_return(vm, l);
+    int res = try_return(vm, line);
     if (be_getexcept(vm, res) == BE_SYNTAX_ERROR) {
         be_pop(vm, 2); /* pop exception values */
-        be_pushstring(vm, l);
+        be_pushstring(vm, line);
+        safecall(freel, line); /* free line buffer */
         for (;;) {
             const char *src = be_tostring(vm, -1); /* get source code */
             int idx = be_absindex(vm, -1); /* get the source text absolute index */
@@ -40,12 +43,14 @@ static int compile(bvm *vm, char *l, breadline gl, bfreeline fl)
                 return res;
             }
             be_pop(vm, 2); /* pop exception values */
-            fl(l); /* free line buffer */
-            l = gl(">> "); /* read a new input line */
-            be_pushfstring(vm, "\n%s", l);
+            line = getl(">> "); /* read a new input line */
+            be_pushfstring(vm, "\n%s", line);
+            safecall(freel, line); /* free line buffer */
             be_strconcat(vm, -2);
             be_pop(vm, 1); /* pop new line */
         }
+    } else {
+        safecall(freel, line); /* free line buffer */
     }
     return res;
 }
@@ -73,7 +78,7 @@ static int call_script(bvm *vm)
 BERRY_API int be_repl(bvm *vm, breadline getline, bfreeline freeline)
 {
     char *line;
-    be_assert(getline != NULL && freeline != NULL);
+    be_assert(getline != NULL);
     while ((line = getline("> ")) != NULL) {
         if (compile(vm, line, getline, freeline)) {
             be_dumpexcept(vm);
@@ -82,9 +87,6 @@ BERRY_API int be_repl(bvm *vm, breadline getline, bfreeline freeline)
             if (res) {
                 return res == BE_EXIT ? be_toindex(vm, -1) : res;
             }
-        }
-        if (freeline) {
-            freeline(line);
         }
     }
     be_writenewline();
