@@ -82,6 +82,9 @@ static void allocstack(bfuncinfo *finfo, int count)
 {
     int nstack = finfo->freereg + count;
     if (nstack > finfo->proto->nstack) {
+        if (nstack >= 255) {
+            be_lexerror(finfo->lexer, "register overflow (more than 255)");
+        }
         finfo->proto->nstack = (bbyte)nstack;
     }
 }

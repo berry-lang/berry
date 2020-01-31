@@ -15,7 +15,7 @@
 
 #define next(node)          ((node)->key.next)
 #define pos2slot(map, n)    ((n) != LASTNODE ? ((map)->slots + (n)) : NULL)
-#define pos(map, node)      ((uint16_t)((node) - (map)->slots))
+#define pos(map, node)      ((int)((node) - (map)->slots))
 #define setkey(node, _v)    { (node)->key.type = (bbyte)(_v)->type; \
                               (node)->key.v = (_v)->v; }
 
@@ -118,7 +118,7 @@ static bmapnode* insert(bmap *map, bvalue *key, uint32_t hash)
             /* insert in first */
             setkey(new, key);
             next(new) = next(slot);
-            next(slot) = pos(map, new);;
+            next(slot) = pos(map, new);
             slot = new;
         } else {
             bmapnode *prev = findprev(map, mainslot, slot);

@@ -302,15 +302,15 @@ static int find_localvar(bfuncinfo *finfo, bstring *s, int begin)
     return -1; /* not found */
 }
 
-static int new_localvar(bparser *parser, bstring *s)
+static int new_localvar(bparser *parser, bstring *name)
 {
     bfuncinfo *finfo = parser->finfo;
-    int reg = find_localvar(finfo, s, finfo->binfo->nactlocals);
+    int reg = find_localvar(finfo, name, finfo->binfo->nactlocals);
     if (reg == -1) {
         bvalue *var;
         reg = be_list_count(finfo->local); /* new local index */
         var = be_list_push(parser->vm, finfo->local, NULL);
-        var_setstr(var, s);
+        var_setstr(var, name);
         if (reg >= finfo->freereg) {
             be_code_allocregs(finfo, 1); /* use a register */
         }
@@ -346,6 +346,10 @@ static int new_upval(bvm *vm, bfuncinfo *finfo, bstring *name, bexpdesc *var)
         mark_upval(finfo, target);
     }
     index = be_map_count(finfo->upval);
+    if (index >= 255) {
+        be_lexerror(finfo->lexer, be_pushfstring(vm,
+            "too many upvalues (in '%s')", str(name)));
+    }
     desc = be_map_insertstr(vm, finfo->upval, name, NULL);
     var_setint(desc, upval_desc(index, target, instack));
     return index;
@@ -360,6 +364,10 @@ static void new_var(bparser *parser, bstring *name, bexpdesc *var)
     } else {
         init_exp(var, ETGLOBAL, 0);
         var->v.idx = be_global_new(parser->vm, name);
+        if (var->v.idx > (int)IBx_MASK) {
+            push_error(parser,
+                "too many global variables (in '%s')", str(name));
+        }
     }
 }
 
@@ -1267,7 +1275,7 @@ static void var_field(bparser *parser)
     } else {
         init_exp(&e2, ETNIL, 0);
     }
-    new_var(parser, name, &e1); /* new local variable */
+    new_var(parser, name, &e1); /* new variable */
     be_code_setvar(parser->finfo, &e1, &e2);
 }
 
