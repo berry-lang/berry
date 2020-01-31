@@ -438,7 +438,6 @@ void be_except_block_close(bvm *vm, int count)
     be_vector_resize(vm, &vm->exceptstack, size - count);
 }
 
-/* TODO: consider GC */
 void be_save_stacktrace(bvm *vm)
 {
     be_stack_clear(&vm->tracestack);

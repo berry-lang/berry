@@ -377,7 +377,7 @@ static void premark_stack(bvm *vm)
 static void premark_tracestack(bvm *vm)
 {
     bcallsnapshot *cf = be_vector_data(&vm->tracestack);
-    bcallsnapshot *end = be_vector_data(&vm->tracestack);
+    bcallsnapshot *end = be_vector_end(&vm->tracestack);
     for (; cf <= end; ++cf) {
         mark_gray_var(vm, &cf->func);
     }

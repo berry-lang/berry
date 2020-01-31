@@ -155,6 +155,29 @@ static void patch_native(bvm *vm, int depth)
     }
 }
 
+/* repair ip */
+static void repair_stack(bvm *vm)
+{
+    bcallsnapshot *cf;
+    bstack *stack = &vm->tracestack;
+    bcallsnapshot *base = be_stack_base(stack);
+    bcallsnapshot *top = be_stack_top(stack);
+    /* Because the native function does not push `ip` to the
+     * stack, the ip on the native function frame corresponds
+     * to the previous Berry closure. */
+    for (cf = top; cf >= base; --cf) {
+        if (!var_isclosure(&cf->func)) {
+            /* the last native function stack frame has the `ip` of
+             * the previous Berry frame */
+            binstruction *ip = cf->ip;
+            /* skip native function stack frames */
+            for (; !var_isclosure(&cf->func); --cf);
+            /* fixed `ip` of Berry closure frame near native function frame */
+            cf->ip = ip;
+        }
+    }
+}
+
 static void tracestack(bvm *vm)
 {
     bstack *stack = &vm->tracestack;
@@ -180,6 +203,7 @@ static void tracestack(bvm *vm)
 void be_tracestack(bvm *vm)
 {
     if (be_stack_count(&vm->tracestack)) {
+        repair_stack(vm);
         tracestack(vm);
     }
 }

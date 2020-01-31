@@ -60,7 +60,7 @@ static void module2str(char *buf, bvalue *v)
     }
 }
 
-static void sim2str(bvm *vm, bvalue *v)
+static bstring* sim2str(bvm *vm, bvalue *v)
 {
     char sbuf[64]; /* BUG: memory overflow */
     switch (var_type(v)) {
@@ -76,8 +76,6 @@ static void sim2str(bvm *vm, bvalue *v)
     case BE_REAL:
         sprintf(sbuf, "%g", var_toreal(v));
         break;
-    case BE_STRING:
-        return;
     case BE_CLOSURE: case BE_NTVCLOS: case BE_NTVFUNC:
         sprintf(sbuf, "<function: %p>", var_toobj(v));
         break;
@@ -92,11 +90,12 @@ static void sim2str(bvm *vm, bvalue *v)
         strcpy(sbuf, "(unknow value)");
         break;
     }
-    var_setstr(v, be_newstr(vm, sbuf));
+    return be_newstr(vm, sbuf);
 }
 
-static void ins2str(bvm *vm, int idx)
+static bstring* ins2str(bvm *vm, int idx)
 {
+    bstring *s;
     bvalue *v = vm->reg + idx;
     bvalue *top = be_incrtop(vm);
     binstance *obj = var_toobj(v);
@@ -107,14 +106,13 @@ static void ins2str(bvm *vm, int idx)
         char *sbuf = be_malloc(vm, (size_t)str_len(name) + 16);
         sprintf(sbuf, "<instance: %s()>", str(name));
         --vm->top; /* free the result register */
-        var_setstr(v, be_newstr(vm, sbuf));
+        s = be_newstr(vm, sbuf);
         be_free(vm, sbuf, (size_t)str_len(name) + 16);
     } else {
         be_incrtop(vm);
         var_setval(top + 1, v);
         be_dofunc(vm, top, 1);
         vm->top -= 2;
-        var_setval(vm->reg + idx, vm->top);
         /* check the return value */
         if (!var_isstr(vm->top)) {
             const char *name = str(be_instance_name(obj));
@@ -122,18 +120,20 @@ static void ins2str(bvm *vm, int idx)
                 "`%s::tostring` return value error, the expected type is 'string'",
                 strlen(name) ? name : "<anonymous>"));
         }
+        s = var_tostr(vm->top);
     }
+    return s;
 }
 
 void be_val2str(bvm *vm, int index)
 {
-    int absidx = be_absindex(vm, index) - 1;
-    bvalue *v = vm->reg + absidx;
-    if (var_isinstance(v)) {
-        ins2str(vm, absidx);
-    } else {
-        sim2str(vm, v);
-    }
+    bstring *s;
+    int idx = be_absindex(vm, index) - 1;
+    bvalue *v = vm->reg + idx;
+    if (var_isstr(v)) return; /* do nothing */
+    s = var_isinstance(v) ? ins2str(vm, idx) : sim2str(vm, v);
+    v = vm->reg + idx; /* the stack may change */
+    var_setstr(v, s);
 }
 
 static void pushstr(bvm *vm, const char *s, size_t len)
@@ -153,7 +153,7 @@ static const char* concat2(bvm *vm)
     bstring *s2 = var_tostr(dst + 1);
     bstring *s = be_strcat(vm, s1, s2);
     be_assert(var_isstr(vm->top - 2) && var_isstr(vm->top - 1));
-    dst = vm->top - 2; /* maybe GC (stack change) */
+    dst = vm->top - 2; /* the stack may change */
     var_setstr(dst, s);
     --vm->top;
     return str(s);
