@@ -1240,9 +1240,9 @@ static void class_stmt(bparser *parser)
 
 static void import_stmt(bparser *parser)
 {
-    bstring *name;
+    bstring *name; /* variable name */
     bexpdesc m, v;
-    /* 'import' (ID ['as' ID] | STRING 'as' ID ) */
+    /* 'import' (ID (['as' ID] | {',' ID}) | STRING 'as' ID ) */
     scan_next_token(parser); /* skip 'import' */
     init_exp(&m, ETSTRING, 0);
     m.v.s = name = next_token(parser).u.s;
@@ -1251,11 +1251,19 @@ static void import_stmt(bparser *parser)
         match_token(parser, KeyAs); /* match and skip 'as' */
         name = next_token(parser).u.s;
         match_token(parser, TokenId); /* match and skip ID */
-    } else { /* ID ['as' ID] */
+    } else { /* ID (['as' ID] | {',' ID}) */
         match_token(parser, TokenId); /* match and skip ID */
         if (match_skip(parser, KeyAs)) { /* 'as' */
             name = next_token(parser).u.s;
             match_token(parser, TokenId); /* match and skip ID */
+        } else { /* {',' ID} */
+            while (match_skip(parser, OptComma)) { /* ',' */
+                new_var(parser, name, &v);
+                be_code_import(parser->finfo, &m, &v); /* code import */
+                init_exp(&m, ETSTRING, 0); /* scanning for next node */
+                m.v.s = name = next_token(parser).u.s;
+                match_token(parser, TokenId); /* match and skip ID */
+            }
         }
     }
     new_var(parser, name, &v);

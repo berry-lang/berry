@@ -18,16 +18,19 @@
             "include": "#keywords"
         },
         {
-            "include": "#number"
-        },
-        {
-            "include": "#operator"
+            "include": "#function"
         },
         {
             "include": "#member"
         },
         {
-            "include": "#function"
+            "include": "#identifier"
+        },
+        {
+            "include": "#number"
+        },
+        {
+            "include": "#operator"
         }
     ],
     "repository": {
@@ -65,6 +68,12 @@
             "patterns": [{
                 "name": "keyword.berry",
                 "match": "\\b(var|def|class|true|false|nil|self|super|import|as)\\b"
+            }]
+        },
+        "identifier": {
+            "patterns": [{
+                "name": "identifier.berry",
+                "match": "\\b[_A-Za-z]\\w+\\b"
             }]
         },
         "number": {
