@@ -1,4 +1,6 @@
 #include "be_object.h"
+#include "be_string.h"
+#include "be_strlib.h"
 #include "be_list.h"
 #include "be_func.h"
 #include "be_exec.h"
@@ -285,6 +287,57 @@ static int m_merge(bvm *vm)
     be_return(vm); /* return self */
 }
 
+static void connect(bvm *vm, bvalue *begin, bvalue *end)
+{
+    size_t l0 = be_strlen(vm, -1), len = l0;
+    char *buf, *p;
+    bvalue *it;
+    for (it = begin; it < end; ++it) {
+        len += str_len(var_tostr(it));
+    }
+    buf = be_pushbuffer(vm, len);
+    memcpy(buf, be_tostring(vm, -2), l0);
+    p = buf + l0;
+    for (it = begin; it < end; ++it) {
+        bstring *s = var_tostr(it);
+        size_t l = str_len(s);
+        memcpy(p, str(s), l);
+        p += l;
+    }
+    be_pushstring(vm, buf);
+    be_moveto(vm, -1, -3);
+    be_pop(vm, 2);
+}
+
+static void list_concat(bvm *vm, blist *list)
+{
+    bvalue *it, *begin = be_list_data(list);
+    bvalue *end = be_list_end(list);
+    be_pushstring(vm, ""); /* push a empty string */
+    for (it = begin; it < end;) {
+        for (; it < end && var_isstr(it); ++it);
+        connect(vm, begin, it); /* connect string list */
+        if (it < end) {
+            /* connect other value */
+            var_setval(vm->top, it);
+            be_incrtop(vm);
+            be_val2str(vm, -1);
+            be_strconcat(vm, -2);
+            be_pop(vm, 1);
+            begin = ++it;
+        }
+    }
+}
+
+static int m_concat(bvm *vm)
+{
+    bvalue *value;
+    be_getmember(vm, 1, ".data");
+    value = be_indexof(vm, -1);
+    list_concat(vm, var_toobj(value));
+    be_return(vm);
+}
+
 #if !BE_USE_PRECOMPILED_OBJECT
 void be_load_listlib(bvm *vm)
 {
@@ -301,6 +354,7 @@ void be_load_listlib(bvm *vm)
         { "resize", m_resize },
         { "clear", m_clear },
         { "iter", m_iter },
+        { "concat", m_concat },
         { "..", m_connect },
         { "+", m_merge },
         { NULL, NULL }
@@ -322,6 +376,7 @@ class be_class_list (scope: global, name: list) {
     resize, func(m_resize)
     clear, func(m_clear)
     iter, func(m_iter)
+    concat, func(m_concat)
     .., func(m_connect)
     +, func(m_merge)
 }

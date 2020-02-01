@@ -144,23 +144,45 @@ static void sourceinfo(bproto *proto, binstruction *ip)
 static void tracestack(bvm *vm)
 {
     bcallsnapshot *cf;
-    binstruction *ip = NULL;
-    bstack *stack = &vm->tracestack;
-    bcallsnapshot *base = be_stack_base(stack);
-    bcallsnapshot *top = be_stack_top(stack);
+    bcallsnapshot *base = be_stack_base(&vm->tracestack);
+    bcallsnapshot *top = be_stack_top(&vm->tracestack);
     be_writestring("stack traceback:\n");
     for (cf = top; cf >= base; --cf) {
-        if (!ip) ip = cf->ip;
+        if (cf <= top - 10 && cf > base + 10) {
+            if (cf == top - 10)
+                be_writestring("\t...\n");
+            continue;
+        }
         if (var_isclosure(&cf->func)) {
             bclosure *cl = var_toobj(&cf->func);
             be_writestring("\t");
-            sourceinfo(cl->proto, ip);
+            sourceinfo(cl->proto, cf->ip);
             be_writestring(" in function `");
             be_writestring(str(cl->proto->name));
             be_writestring("`\n");
-            ip = NULL;
         } else {
             be_writestring("\t<native>: in native function\n");
+        }
+    }
+}
+
+static void repair_stack(bvm *vm)
+{
+    bcallsnapshot *cf;
+    bcallsnapshot *base = be_stack_base(&vm->tracestack);
+    bcallsnapshot *top = be_stack_top(&vm->tracestack);
+    /* Because the native function does not push `ip` to the
+     * stack, the ip on the native function frame corresponds
+     * to the previous Berry closure. */
+    for (cf = top; cf >= base; --cf) {
+        if (!var_isclosure(&cf->func)) {
+            /* the last native function stack frame has the `ip` of
+             * the previous Berry frame */
+            binstruction *ip = cf->ip;
+            /* skip native function stack frames */
+            for (; cf >= base && !var_isclosure(&cf->func); --cf);
+            /* fixed `ip` of Berry closure frame near native function frame */
+            if (cf >= base) cf->ip = ip;
         }
     }
 }
@@ -168,6 +190,7 @@ static void tracestack(bvm *vm)
 void be_tracestack(bvm *vm)
 {
     if (be_stack_count(&vm->tracestack)) {
+        repair_stack(vm);
         tracestack(vm);
     }
 }
