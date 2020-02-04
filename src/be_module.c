@@ -143,7 +143,7 @@ static char* conpath(bvm *vm, bstring *path1, bstring *path2, size_t *size)
 
 static int open_script(bvm *vm, char *path)
 {
-    int res = be_fileparser(vm, path, 1);
+    int res = be_loadmodule(vm, path);
     if (res == BE_OK)
         be_call(vm, 0);
     return res;
@@ -161,9 +161,12 @@ static int open_dllib(bvm *vm, char *path)
 
 static int open_libfile(bvm *vm, char *path, size_t size)
 {
-    int res;
-    strcpy(path + size - SUFFIX_LEN, ".be");
-    res = open_script(vm, path);
+    int res, idx = 0;
+    const char *sfxs[] = { "", ".bec", ".be" };
+    do {
+        strcpy(path + size - SUFFIX_LEN, sfxs[idx]);
+        res = open_script(vm, path);
+    } while (idx++ < 2 && res == BE_IO_ERROR);
     if (res == BE_IO_ERROR) {
 #if BE_USE_SHARED_LIB
         strcpy(path + size - SUFFIX_LEN, DLL_SUFFIX);

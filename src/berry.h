@@ -11,7 +11,7 @@ extern "C" {
 #endif
 
 /* do not modify the version number! */
-#define BERRY_VERSION   "0.1.7"
+#define BERRY_VERSION   "0.1.8"
 
 #if BE_STACK_TOTAL_MAX < BE_STACK_FREE_MIN * 2
 #error "The value of the macro BE_STACK_TOTAL_MAX is too small."
@@ -294,7 +294,6 @@ BERRY_API int be_loadbuffer(bvm *vm,
 BERRY_API int be_loadfile(bvm *vm, const char *name);
 BERRY_API int be_loadmodule(bvm *vm, const char *name);
 BERRY_API int be_loadlib(bvm *vm, const char *path);
-BERRY_API int be_loadexec(bvm *vm, const char *name);
 BERRY_API int be_saveexec(bvm *vm, const char *name);
 
 /* module path list APIs */

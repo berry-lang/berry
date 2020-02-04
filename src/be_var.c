@@ -55,12 +55,6 @@ static int global_new_anonymous(bvm *vm)
     return idx;
 }
 
-int be_global_new_anonymous(bvm *vm)
-{
-    int idx = global_new_anonymous(vm);
-    return idx + be_builtin_count(vm);
-}
-
 int be_global_new(bvm *vm, bstring *name)
 {
     int idx = global_find(vm, name);

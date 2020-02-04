@@ -26,7 +26,6 @@
 #endif
 
 #if BE_USE_BYTECODE_SAVER || BE_USE_BYTECODE_LOADER
-
 static void bytecode_error(bvm *vm, const char *msg)
 {
     be_raise(vm, "io_error", msg);
@@ -38,11 +37,9 @@ static uint8_t vm_sizeinfo(void)
     res |= (sizeof(breal) == 8) << 1;
     return res;
 }
-
 #endif
 
 #if BE_USE_BYTECODE_SAVER
-
 static void save_proto(bvm *vm, void *fp, bproto *proto);
 
 static void save_byte(void *fp, uint8_t value)
@@ -272,11 +269,9 @@ void be_bytecode_save(bvm *vm, const char *filename, bproto *proto)
         be_fclose(fp);
     }
 }
-
-#endif
+#endif /* BE_USE_BYTECODE_SAVER */
 
 #if BE_USE_BYTECODE_LOADER
-
 static void load_proto(bvm *vm, void *fp, bproto **proto);
 
 static uint8_t load_byte(void *fp)
@@ -429,7 +424,7 @@ static void load_bytecode(bvm *vm, void *fp, bproto *proto)
             /* fix global variable index */
             if (op == OP_GETGBL || op == OP_SETGBL) {
                 int idx = IGET_Bx(ins);
-                if (idx > bcnt) { /* does not fix builtin index */
+                if (idx >= bcnt) { /* does not fix builtin index */
                     bvalue *name = be_list_at(list, idx - bcnt);
                     idx = be_global_find(vm, var_tostr(name));
                     ins = (ins & ~IBx_MASK) | ISET_Bx(idx);
@@ -535,5 +530,4 @@ bclosure* be_bytecode_load(bvm *vm, const char *filename)
         "invalid bytecode file '%s'.", filename));
     return NULL;
 }
-
-#endif
+#endif /* BE_USE_BYTECODE_LOADER */

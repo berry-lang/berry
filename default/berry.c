@@ -10,11 +10,6 @@
     #include <readline/history.h>
 #endif
 
-#if !BE_USE_SCRIPT_COMPILER || \
-    !BE_USE_BYTECODE_SAVER || !BE_USE_BYTECODE_LOADER
-#error incomplete function configuration
-#endif
-
 /* detect operating system name */
 #if defined(__linux)
     #define OS_NAME   "Linux"
@@ -59,7 +54,6 @@
     "Usage: berry [options] [script [args]]\n"                      \
     "Avilable options are:\n"                                       \
     "  -i        enter interactive mode after executing 'file'\n"   \
-    "  -b        load code from bytecode 'file'\n"                  \
     "  -c <file> compile script 'file' to bytecode file\n"          \
     "  -o <file> save bytecode to 'file'\n"                         \
     "  -v        show version information\n"                        \
@@ -70,11 +64,10 @@
 #define array_count(a) (sizeof(a) / sizeof((a)[0]))
 
 #define arg_i       (1 << 0)
-#define arg_b       (1 << 1)
-#define arg_c       (1 << 2)
-#define arg_o       (1 << 3)
-#define arg_h       (1 << 4)
-#define arg_v       (1 << 5)
+#define arg_c       (1 << 1)
+#define arg_o       (1 << 2)
+#define arg_h       (1 << 3)
+#define arg_v       (1 << 4)
 #define arg_err     (1 << 7)
 
 struct arg_opts {
@@ -165,19 +158,8 @@ static void free_line(char *ptr)
 #endif
 }
 
-/* execute a script file and output a result or error */
-static int dofile(bvm *vm, const char *name, int args)
+static int handle_result(bvm *vm, int res)
 {
-    int res;
-    /* load bytecode file or compile script file */
-    if (args & arg_b) { /* load a bytecode file */
-        res = be_loadexec(vm, name);
-    } else { /* load a script file */
-        res = be_loadfile(vm, name);
-    }
-    if (res == BE_OK) { /* parsing succeeded */
-        res = be_pcall(vm, 0); /* execute */
-    }
     switch (res) {
     case BE_OK: /* everything is OK */
         return 0;
@@ -186,12 +168,27 @@ static int dofile(bvm *vm, const char *name, int args)
         return 1;
     case BE_EXIT: /* return exit code */
         return be_toindex(vm, -1);
+    case BE_IO_ERROR:
+        be_writestring(be_tostring(vm, -1));
+        be_writenewline();
+        return -2;
     case BE_MALLOC_FAIL:
         be_writestring("error: memory allocation failed.\n");
         return -1;
     default: /* unkonw result */
         return 2;
     }
+}
+
+/* execute a script file and output a result or error */
+static int dofile(bvm *vm, const char *name)
+{
+    /* load bytecode file or compile script file */
+    int res = be_loadfile(vm, name);
+    if (res == BE_OK) { /* parsing succeeded */
+        res = be_pcall(vm, 0); /* execute */
+    }
+    return handle_result(vm, res);
 }
 
 /* load a Berry file and execute
@@ -205,7 +202,7 @@ static int load_file(bvm *vm, int argc, char *argv[], int args)
         be_writestring(repl_prelude);
     }
     if (argc > 0) { /* check file path argument */
-        res = dofile(vm, argv[0], args);
+        res = dofile(vm, argv[0]);
     }
     if (repl_mode) { /* enter the REPL mode */
         res = be_repl(vm, get_line, free_line);
@@ -221,20 +218,9 @@ static int build_file(bvm *vm, const char *dst, const char *src)
     int res = be_loadfile(vm, src); /* compile script file */
     if (res == BE_OK) {
         if (!dst) dst = "a.out"; /* the default output file name */
-        res = be_saveexec(vm, dst); /* execute */
+        res = be_saveexec(vm, dst); /* save bytecode file */
     }
-    switch (res) {
-    case BE_OK:
-        return 0;
-    case BE_EXCEPTION: /* uncatched exception */
-        be_dumpexcept(vm);
-        return 1;
-    case BE_MALLOC_FAIL:
-        be_writestring("error: memory allocation failed.\n");
-        return -1;
-    default: /* unkonw result */
-        return 2;
-    }
+    return handle_result(vm, res);
 }
 
 static int parse_arg(struct arg_opts *opt, int argc, char *argv[])
@@ -246,7 +232,6 @@ static int parse_arg(struct arg_opts *opt, int argc, char *argv[])
         case 'h': args |= arg_h; break;
         case 'v': args |= arg_v; break;
         case 'i': args |= arg_i; break;
-        case 'b': args |= arg_b; break;
         case '?': return args | arg_err;
         case 'c':
             args |= arg_c;
