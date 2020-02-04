@@ -1,9 +1,11 @@
 #include "be_bytecode.h"
 #include "be_vector.h"
 #include "be_string.h"
+#include "be_opcode.h"
 #include "be_class.h"
 #include "be_func.h"
 #include "be_exec.h"
+#include "be_list.h"
 #include "be_map.h"
 #include "be_mem.h"
 #include "be_sys.h"
@@ -230,10 +232,31 @@ static void save_proto(bvm *vm, void *fp, bproto *proto)
     }
 }
 
+static void save_globals(bvm *vm, void *fp)
+{
+    bmapnode *node;
+    bmapiter iter = be_map_iter();
+    bmap *map = vm->gbldesc.global.vtab;
+    int i, count = be_global_count(vm);
+    bstring **list = be_malloc(vm, sizeof(bstring*) * count);
+    while ((node = be_map_next(map, &iter)) != NULL) {
+        if (var_isstr(&node->key)) {
+            int idx = var_toidx(&node->value);
+            be_assert(idx < count);
+            list[idx] = var_tostr(&node->key);
+        }
+    }
+    for (i = 0; i < count; ++i) {
+        save_string(fp, list[i]);
+    }
+    be_free(vm, list, sizeof(bstring*) * count);
+}
+
 static void save_global_info(bvm *vm, void *fp)
 {
-    int count = be_global_count(vm);
-    save_long(fp, count);
+    save_long(fp, be_builtin_count(vm));
+    save_long(fp, be_global_count(vm));
+    save_globals(vm, fp);
 }
 
 void be_bytecode_save(bvm *vm, const char *filename, bproto *proto)
@@ -345,6 +368,14 @@ static bstring* load_string(bvm *vm, void *fp)
     return be_newstr(vm, "");
 }
 
+static bstring* cache_string(bvm *vm, void *fp)
+{
+    bstring *str = load_string(vm, fp);
+    var_setstr(vm->top, str);
+    be_incrtop(vm);
+    return str;
+}
+
 static void load_class(bvm *vm, void *fp, bvalue *v)
 {
     int nvar, count;
@@ -355,22 +386,18 @@ static void load_class(bvm *vm, void *fp, bvalue *v)
     count = load_long(fp);
     while (count--) { /* load method table */
         bvalue *value;
-        bstring *name = load_string(vm, fp);
-        var_setstr(vm->top, name);
-        be_stackpush(vm);
+        bstring *name = cache_string(vm, fp);
         value = vm->top;
         var_setproto(value, NULL);
-        be_stackpush(vm);
+        be_incrtop(vm);
         load_proto(vm, fp, cast(bproto**, &var_toobj(value)));
         be_method_bind(vm, c, name, var_toobj(value));
-        be_stackpop(vm, 2);
+        be_stackpop(vm, 2); /* pop the cached string and proto */
     }
     for (count = 0; count < nvar; ++count) { /* load member-variable table */
-        bstring *name = load_string(vm, fp);
-        var_setstr(vm->top, name);
-        be_stackpush(vm);
+        bstring *name = cache_string(vm, fp);
         be_member_bind(vm, c, name);
-        be_stackpop(vm, 1);
+        be_stackpop(vm, 1); /* pop the cached string */
     }
 }
 
@@ -390,11 +417,25 @@ static void load_bytecode(bvm *vm, void *fp, bproto *proto)
     int size = (int)load_long(fp);
     if (size) {
         binstruction *code, *end;
+        int bcnt = be_builtin_count(vm);
+        blist *list = var_toobj(be_indexof(vm, -1));
+        be_assert(be_islist(vm, -1));
         proto->code = be_malloc(vm, sizeof(binstruction) * size);
         proto->codesize = size;
         code = proto->code;
         for (end = code + size; code < end; ++code) {
-            *code = (binstruction)load_long(fp);
+            binstruction ins = (binstruction)load_long(fp);
+            binstruction op = IGET_OP(ins);
+            /* fix global variable index */
+            if (op == OP_GETGBL || op == OP_SETGBL) {
+                int idx = IGET_Bx(ins);
+                if (idx > bcnt) { /* does not fix builtin index */
+                    bvalue *name = be_list_at(list, idx - bcnt);
+                    idx = be_global_find(vm, var_tostr(name));
+                    ins = (ins & ~IBx_MASK) | ISET_Bx(idx);
+                }
+            }
+            *code = ins;
         }
     }
 }
@@ -457,9 +498,19 @@ static void load_proto(bvm *vm, void *fp, bproto **proto)
 
 void load_global_info(bvm *vm, void *fp)
 {
-    int i, count = load_long(fp) - be_global_count(vm);
-    for (i = 0; i < count; ++i) {
-        be_global_new_anonymous(vm);
+    int i;
+    int bcnt = (int)load_long(fp); /* builtin count */
+    int gcnt = (int)load_long(fp); /* global count */
+    if (bcnt != be_builtin_count(vm)) {
+        bytecode_error(vm, be_pushfstring(vm,
+            "inconsistent number of builtin objects."));
+    }
+    be_newlist(vm);
+    for (i = 0; i < gcnt; ++i) {
+        bstring *name = cache_string(vm, fp);
+        be_global_new(vm, name);
+        be_data_push(vm, -2); /* push the variable name to list */
+        be_stackpop(vm, 1); /* pop the cached string */
     }
     be_global_release_space(vm);
 }
@@ -476,7 +527,7 @@ bclosure* be_bytecode_load(bvm *vm, const char *filename)
         be_stackpush(vm);
         load_global_info(vm, fp);
         load_proto(vm, fp, &cl->proto);
-        be_stackpop(vm, 1);
+        be_stackpop(vm, 2); /* pop the closure and list */
         be_fclose(fp);
         return cl;
     }

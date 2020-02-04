@@ -35,6 +35,7 @@ header: 8
 main_function -> function
 
 global_desc:
+    builtin_count: 4
     global_count: 4
     global_name -> [
             string
