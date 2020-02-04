@@ -77,7 +77,7 @@ enum berrorcode {
 #if defined(_WIN32) /* in Windows */
   #if defined(BERRY_MODULE) /* berry extension module */
     #define BERRY_API           __declspec(dllimport)
-  #else /* cerry core */
+  #else /* berry core */
     #define BERRY_API           __declspec(dllexport)
   #endif
 #else
@@ -244,7 +244,7 @@ BERRY_API void be_newlist(bvm *vm);
 BERRY_API void be_newmap(bvm *vm);
 BERRY_API void be_newmodule(bvm *vm);
 BERRY_API void be_newcomobj(bvm *vm, void *data, bntvfunc destory);
-BERRY_API bbool be_setname(bvm *vm, int index);
+BERRY_API bbool be_setname(bvm *vm, int index, const char *name);
 BERRY_API bbool be_getglobal(bvm *vm, const char *name);
 BERRY_API bbool be_setglobal(bvm *vm, const char *name);
 BERRY_API bbool be_getbuiltin(bvm *vm, const char *name);

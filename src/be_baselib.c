@@ -227,9 +227,7 @@ static int l_module(bvm *vm)
     int argc = be_top(vm);
     be_newmodule(vm);
     if (argc > 0 && be_isstring(vm, 1)) {
-        be_pushvalue(vm, 1);
-        be_setname(vm, -2);
-        be_pop(vm, 1);
+        be_setname(vm, -1, be_tostring(vm, 1));
     }
     be_return(vm);
 }

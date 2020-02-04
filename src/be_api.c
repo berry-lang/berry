@@ -455,13 +455,12 @@ BERRY_API void be_newmodule(bvm *vm)
     var_setobj(top, BE_MODULE, mod);
 }
 
-BERRY_API bbool be_setname(bvm *vm, int index)
+BERRY_API bbool be_setname(bvm *vm, int index, const char *name)
 {
     bvalue *v = be_indexof(vm, index);
-    bvalue *top = be_indexof(vm, -1);
-    if (var_ismodule(v) && var_isstr(top)) {
+    if (var_ismodule(v)) {
         bmodule *module = var_toobj(v);
-        return be_module_setname(module, var_tostr(top));
+        return be_module_setname(module, be_newstr(vm, name));
     }
     return bfalse;
 }
