@@ -79,5 +79,11 @@ struct bvm {
 
 void be_dofunc(bvm *vm, bvalue *v, int argc);
 bbool be_value2bool(bvm *vm, bvalue *v);
+bbool be_vm_iseq(bvm *vm, bvalue *a, bvalue *b);
+bbool be_vm_isneq(bvm *vm, bvalue *a, bvalue *b);
+bbool be_vm_islt(bvm *vm, bvalue *a, bvalue *b);
+bbool be_vm_isle(bvm *vm, bvalue *a, bvalue *b);
+bbool be_vm_isgt(bvm *vm, bvalue *a, bvalue *b);
+bbool be_vm_isge(bvm *vm, bvalue *a, bvalue *b);
 
 #endif

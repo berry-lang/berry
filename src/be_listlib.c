@@ -338,6 +338,42 @@ static int m_concat(bvm *vm)
     be_return(vm);
 }
 
+static int list_equal(bvm *vm, bbool iseq)
+{
+    int i, j, res;
+    bbool (*eqfunc)(bvm*) = iseq ? be_iseq : be_isneq;
+    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 2, ".data");
+    i = be_data_size(vm, -2);
+    j = be_data_size(vm, -1);
+    if (i == j) {
+        res = iseq;
+        for (i = 0; res == iseq && i < j; ++i) {
+            be_pushint(vm, i);
+            be_getindex(vm, -3);
+            be_pushint(vm, i);
+            be_getindex(vm, -4);
+            be_remove(vm, -2);
+            res = eqfunc(vm);
+            be_pop(vm, 3);
+        }
+    } else {
+        res = !iseq;
+    }
+    be_pushbool(vm, res);
+    be_return(vm);
+}
+
+static int m_equal(bvm *vm)
+{
+    return list_equal(vm, btrue);
+}
+
+static int m_nequal(bvm *vm)
+{
+    return list_equal(vm, bfalse);
+}
+
 #if !BE_USE_PRECOMPILED_OBJECT
 void be_load_listlib(bvm *vm)
 {
@@ -357,6 +393,8 @@ void be_load_listlib(bvm *vm)
         { "concat", m_concat },
         { "..", m_connect },
         { "+", m_merge },
+        { "==", m_equal },
+        { "!=", m_nequal },
         { NULL, NULL }
     };
     be_regclass(vm, "list", members);
@@ -379,6 +417,8 @@ class be_class_list (scope: global, name: list) {
     concat, func(m_concat)
     .., func(m_connect)
     +, func(m_merge)
+    ==, func(m_equal)
+    !=, func(m_nequal)
 }
 @const_object_info_end */
 #include "../generate/be_fixed_be_class_list.h"

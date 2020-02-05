@@ -968,3 +968,39 @@ BERRY_API void be_dumpexcept(bvm *vm)
     } while (0);
     be_pop(vm, 2); /* pop the exception value & argument */
 }
+
+BERRY_API bbool be_iseq(bvm *vm)
+{
+    be_assert(vm->reg + 2 <= vm->top);
+    return be_vm_iseq(vm, vm->top - 2, vm->top - 1);
+}
+
+BERRY_API bbool be_isneq(bvm *vm)
+{
+    be_assert(vm->reg + 2 <= vm->top);
+    return be_vm_isneq(vm, vm->top - 2, vm->top - 1);
+}
+
+BERRY_API bbool be_islt(bvm *vm)
+{
+    be_assert(vm->reg + 2 <= vm->top);
+    return be_vm_islt(vm, vm->top - 2, vm->top - 1);
+}
+
+BERRY_API bbool be_isle(bvm *vm)
+{
+    be_assert(vm->reg + 2 <= vm->top);
+    return be_vm_isle(vm, vm->top - 2, vm->top - 1);
+}
+
+BERRY_API bbool be_isgt(bvm *vm)
+{
+    be_assert(vm->reg + 2 <= vm->top);
+    return be_vm_isgt(vm, vm->top - 2, vm->top - 1);
+}
+
+BERRY_API bbool be_isge(bvm *vm)
+{
+    be_assert(vm->reg + 2 <= vm->top);
+    return be_vm_isge(vm, vm->top - 2, vm->top - 1);
+}

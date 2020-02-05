@@ -51,56 +51,58 @@
         block \
     }
 
-#define relop_block(op) \
-    bvalue *dst = RA(ins), *a = RKB(ins), *b = RKC(ins); \
+#define equal_rule(op, iseq) \
+    bbool res; \
     if (var_isint(a) && var_isint(b)) { \
-        var_setbool(dst, ibinop(op, a, b)); \
+        res = ibinop(op, a, b); \
     } else if (var_isnumber(a) && var_isnumber(b)) { \
-        breal x = var2real(a), y = var2real(b); \
-        var_setbool(dst, x op y); \
-    } else if (var_isstr(a) && var_isstr(b)) { \
-        bstring *s1 = var_tostr(a), *s2 = var_tostr(b); \
-        int res = be_strcmp(s1, s2); \
-        var_setbool(dst, res op 0); \
-    } else if (var_isinstance(a)) { \
-        binstance *obj = var_toobj(a); \
-        object_binop(vm, #op, ins); \
-        check_bool(vm, obj, #op); \
-    } else { \
-        binop_error(vm, #op, a, b); \
-    }
-
-#define equal_block(op) \
-    bvalue *dst = RA(ins), *a = RKB(ins), *b = RKC(ins); \
-    if (var_isint(a) && var_isint(b)) { \
-        var_setbool(dst, ibinop(op, a, b)); \
-    } else if (var_isnumber(a) && var_isnumber(b)) { \
-        breal x = var2real(a), y = var2real(b); \
-        var_setbool(dst, x op y); \
+        res = var2real(a) op var2real(b); \
     } else if (var_type(a) == var_type(b)) { /* same types */ \
-        if (var_isnil(a)) { /* nil op nil */\
-            var_setbool(dst, 1 op 1); \
+        if (var_isnil(a)) { /* nil op nil */ \
+            res = 1 op 1; \
         } else if (var_isbool(a)) { /* bool op bool */ \
-            var_setbool(dst, var_tobool(a) op var_tobool(b)); \
+            res = var_tobool(a) op var_tobool(b); \
         } else if (var_isstr(a)) { /* string op string */ \
-            var_setbool(dst, 1 op be_eqstr(a->v.s, b->v.s)); \
+            res = 1 op be_eqstr(a->v.s, b->v.s); \
         } else if (var_isclass(a) || var_isfunction(a)) { \
-            var_setbool(dst, var_toobj(a) op var_toobj(b)); \
+            res = var_toobj(a) op var_toobj(b); \
         } else if (var_isinstance(a)) { \
-            object_eqop(vm, #op, ins, a, b); \
+            res = object_eqop(vm, #op, iseq, a, b); \
         } else { \
             binop_error(vm, #op, a, b); \
+            res = bfalse; /* will not be executed */ \
         } \
     } else { /* different types */ \
-        var_setbool(dst, 1 op 0); \
-    }
+        res = 1 op 0; \
+    } \
+    return res
+
+#define relop_rule(op) \
+    bbool res; \
+    if (var_isint(a) && var_isint(b)) { \
+        res = ibinop(op, a, b); \
+    } else if (var_isnumber(a) && var_isnumber(b)) { \
+        res = var2real(a) op var2real(b); \
+    } else if (var_isstr(a) && var_isstr(b)) { \
+        bstring *s1 = var_tostr(a), *s2 = var_tostr(b); \
+        res = be_strcmp(s1, s2) op 0; \
+    } else if (var_isinstance(a)) { \
+        binstance *obj = var_toobj(a); \
+        object_binop(vm, #op, *a, *b); \
+        check_bool(vm, obj, #op); \
+        res = var_tobool(vm->top); \
+    } else { \
+        binop_error(vm, #op, a, b); \
+        res = bfalse; /* will not be executed */ \
+    } \
+    return res
 
 #define bitwise_block(op) \
     bvalue *dst = RA(ins), *a = RKB(ins), *b = RKC(ins); \
     if (var_isint(a) && var_isint(b)) { \
         var_setint(dst, ibinop(op, a, b)); \
     } else if (var_isinstance(a)) { \
-        object_binop(vm, #op, ins); \
+        ins_binop(vm, #op, ins); \
     } else { \
         binop_error(vm, #op, a, b); \
     }
@@ -240,50 +242,48 @@ static int obj_attribute(bvm *vm, bvalue *o, bstring *attr, bvalue *dst)
     return type;
 }
 
-static void object_eqop(bvm *vm,
-    const char *op, binstruction ins, bvalue *a, bvalue *b)
+static bbool object_eqop(bvm *vm,
+    const char *op, bbool iseq, bvalue *a, bvalue *b)
 {
     binstance *obj = var_toobj(a);
-    /* get operator method */
-    int type = be_instance_member(obj, be_newstr(vm, op), vm->top);
-    if (basetype(type) == BE_FUNCTION) { /* call method */
-        bvalue *top = vm->top;
-        top[1] = *a; /* move self to argv[0] */
-        top[2] = *b; /* move other to argv[1] */
-        be_incrtop(vm); /* prevent collection results */
-        be_dofunc(vm, top, 2); /* call method 'item' */
-        be_stackpop(vm, 1);
-        *RA(ins) = *vm->top; /* copy result to dst */
-        check_bool(vm, obj, op); /* check return value */
-    } else { /* default implementation */
-        int opt = IGET_OP(ins) == OP_EQ; /* operator is '==' */
-        int eqv = var_toobj(a) == var_toobj(b); /* are the same object */
-        /* if the operator is the '==', the expression is equivalent to:
-         *     RA(ins) = address(a) == address(b)
-         * else the operator is the '!=', the expression is equivalent to:
-         *     RA(ins) = address(a) != address(b)
-         **/
-        var_setbool(RA(ins), opt == eqv);
+    bbool res = iseq && obj == var_toobj(b); /* same object */
+    if (!res) { /* not the same object */
+        bvalue self = *a, other = *b;
+        int type = be_instance_member(obj, be_newstr(vm, op), vm->top);
+        if (basetype(type) == BE_FUNCTION) { /* call method */
+            bvalue *top = vm->top;
+            top[1] = self;  /* move self to argv[0] */
+            top[2] = other; /* move other to argv[1] */
+            be_incrtop(vm); /* prevent collection results */
+            be_dofunc(vm, top, 2); /* call method 'item' */
+            be_stackpop(vm, 1);
+            check_bool(vm, obj, op); /* check return value */
+            res = var_tobool(vm->top); /* copy result to dst */
+        }
     }
+    return res;
 }
 
-static void object_binop(bvm *vm,
-    const char *op, binstruction ins)
+static void object_binop(bvm *vm, const char *op, bvalue self, bvalue other)
 {
-    bvalue *top, self = *RKB(ins);
+    bvalue *top;
     /* get operator method (possible GC) */
     obj_method(vm, &self, be_newstr(vm, op));
     top = vm->top;
     top[1] = self; /* move self to argv[0] */
-    top[2] = *RKC(ins); /* move other to argv[1] */
+    top[2] = other; /* move other to argv[1] */
     be_incrtop(vm); /* prevent collection results */
     be_dofunc(vm, top, 2); /* call method 'item' */
     be_stackpop(vm, 1);
+}
+
+static void ins_binop(bvm *vm, const char *op, binstruction ins)
+{
+    object_binop(vm, op, *RKB(ins), *RKC(ins));
     *RA(ins) = *vm->top; /* copy result to dst */
 }
 
-static void object_unop(bvm *vm,
-    const char *op, binstruction ins)
+static void ins_unop(bvm *vm, const char *op, binstruction ins)
 {
     bvalue *top, self = *RKB(ins);
     /* get operator method (possible GC) */
@@ -292,6 +292,36 @@ static void object_unop(bvm *vm,
     top[1] = self; /* move self to argv[0] */
     be_dofunc(vm, top, 1); /* call method 'item' */
     *RA(ins) = *vm->top; /* copy result to dst */
+}
+
+bbool be_vm_iseq(bvm *vm, bvalue *a, bvalue *b)
+{
+    equal_rule(==, btrue);
+}
+
+bbool be_vm_isneq(bvm *vm, bvalue *a, bvalue *b)
+{
+    equal_rule(!=, bfalse);
+}
+
+bbool be_vm_islt(bvm *vm, bvalue *a, bvalue *b)
+{
+    relop_rule(<);
+}
+
+bbool be_vm_isle(bvm *vm, bvalue *a, bvalue *b)
+{
+    relop_rule(<=);
+}
+
+bbool be_vm_isgt(bvm *vm, bvalue *a, bvalue *b)
+{
+    relop_rule(>);
+}
+
+bbool be_vm_isge(bvm *vm, bvalue *a, bvalue *b)
+{
+    relop_rule(>=);
 }
 
 static void i_ldnil(bvm *vm, binstruction ins)
@@ -368,7 +398,7 @@ static void i_add(bvm *vm, binstruction ins)
         bstring *s = be_strcat(vm, var_tostr(a), var_tostr(b));
         var_setstr(dst, s);
     } else if (var_isinstance(a)) {
-        object_binop(vm, "+", ins);
+        ins_binop(vm, "+", ins);
     } else {
         binop_error(vm, "+", a, b);
     }
@@ -383,7 +413,7 @@ static void i_sub(bvm *vm, binstruction ins)
         breal x = var2real(a), y = var2real(b);
         var_setreal(dst, x - y);
     } else if (var_isinstance(a)) {
-        object_binop(vm, "-", ins);
+        ins_binop(vm, "-", ins);
     } else {
         binop_error(vm, "-", a, b);
     }
@@ -398,7 +428,7 @@ static void i_mul(bvm *vm, binstruction ins)
         breal x = var2real(a), y = var2real(b);
         var_setreal(dst, x * y);
     } else if (var_isinstance(a)) {
-        object_binop(vm, "*", ins);
+        ins_binop(vm, "*", ins);
     } else {
         binop_error(vm, "*", a, b);
     }
@@ -421,7 +451,7 @@ static void i_div(bvm *vm, binstruction ins)
         }
         var_setreal(dst, x / y);
     } else if (var_isinstance(a)) {
-        object_binop(vm, "/", ins);
+        ins_binop(vm, "/", ins);
     } else {
         binop_error(vm, "/", a, b);
     }
@@ -433,7 +463,7 @@ static void i_mod(bvm *vm, binstruction ins)
     if (var_isint(a) && var_isint(b)) {
         var_setint(dst, ibinop(%, a, b));
     } else if (var_isinstance(a)) {
-        object_binop(vm, "%", ins);
+        ins_binop(vm, "%", ins);
     } else {
         binop_error(vm, "%", a, b);
     }
@@ -447,7 +477,7 @@ static void i_neg(bvm *vm, binstruction ins)
     } else if (var_isreal(a)) {
         var_setreal(dst, -a->v.r);
     } else if (var_isinstance(a)) {
-        object_unop(vm, "-*", ins);
+        ins_unop(vm, "-*", ins);
     } else {
         unop_error(vm, "-", a);
     }
@@ -459,18 +489,54 @@ static void i_flip(bvm *vm, binstruction ins)
     if (var_isint(a)) {
         var_setint(dst, -a->v.i);
     } else if (var_isinstance(a)) {
-        object_unop(vm, "~", ins);
+        ins_unop(vm, "~", ins);
     } else {
         unop_error(vm, "~", a);
     }
 }
 
-define_function(i_lt, relop_block(<))
-define_function(i_le, relop_block(<=))
-define_function(i_gt, relop_block(>))
-define_function(i_ge, relop_block(>=))
-define_function(i_eq, equal_block(==))
-define_function(i_ne, equal_block(!=))
+static void i_eq(bvm *vm, binstruction ins)
+{
+    bbool res = be_vm_iseq(vm, RKB(ins), RKC(ins));
+    bvalue *dst = RA(ins);
+    var_setbool(dst, res);
+}
+
+static void i_ne(bvm *vm, binstruction ins)
+{
+    bbool res = be_vm_isneq(vm, RKB(ins), RKC(ins));
+    bvalue *dst = RA(ins);
+    var_setbool(dst, res);
+}
+
+static void i_lt(bvm *vm, binstruction ins)
+{
+    bbool res = be_vm_islt(vm, RKB(ins), RKC(ins));
+    bvalue *dst = RA(ins);
+    var_setbool(dst, res);
+}
+
+static void i_le(bvm *vm, binstruction ins)
+{
+    bbool res = be_vm_isle(vm, RKB(ins), RKC(ins));
+    bvalue *dst = RA(ins);
+    var_setbool(dst, res);
+}
+
+static void i_gt(bvm *vm, binstruction ins)
+{
+    bbool res = be_vm_isgt(vm, RKB(ins), RKC(ins));
+    bvalue *dst = RA(ins);
+    var_setbool(dst, res);
+}
+
+static void i_ge(bvm *vm, binstruction ins)
+{
+    bbool res = be_vm_isge(vm, RKB(ins), RKC(ins));
+    bvalue *dst = RA(ins);
+    var_setbool(dst, res);
+}
+
 define_function(i_and, bitwise_block(&))
 define_function(i_or, bitwise_block(|))
 define_function(i_xor, bitwise_block(^))
@@ -514,8 +580,7 @@ static void i_connect(bvm *vm, binstruction ins)
     } else if (var_isstr(a)) {
         connect_str(vm, var_tostr(a), b);
     } else if (var_isinstance(a)) {
-        object_binop(vm, "..", ins);
-        return;
+        object_binop(vm, "..", *RKB(ins), *RKC(ins));
     }
     *RA(ins) = *vm->top; /* copy result to R(A) */
 }
@@ -795,36 +860,15 @@ static void i_import(bvm *vm, binstruction ins)
     }                                            \
 }
 
-static bbool except_iseq(bvalue *a, bvalue *b)
-{
-    bbool res = bfalse;
-    if (var_isint(a) && var_isint(b)) {
-        res = ibinop(==, a, b);
-    } else if (var_isnumber(a) && var_isnumber(b)) {
-        res = var2real(a) == var2real(b);
-    } else if (var_type(a) == var_type(b)) { /* same types */
-        if (var_isnil(a)) { /* nil op nil */
-            res = btrue;
-        } else if (var_isbool(a)) { /* bool op bool */
-            res = var_tobool(a) == var_tobool(b);
-        } else if (var_isstr(a)) { /* string op string */
-            res = be_eqstr(a->v.s, b->v.s);
-        } else if (var_isclass(a) || var_isfunction(a)) {
-            res = var_toobj(a) == var_toobj(b);
-        }
-        /* in other cases, it is considered to be unequal */
-    }
-    return res;
-}
-
 static void i_catch(bvm *vm, binstruction ins)
 {
     bvalue *base = RA(ins), *top = vm->top;
     int i = 0, ecnt = IGET_RKB(ins), vcnt = IGET_RKC(ins);
-    while (i < ecnt && !except_iseq(top, base + i)) {
+    while (i < ecnt && !be_vm_iseq(vm, top, base + i)) {
         ++i;
     }
     if (!ecnt || i < ecnt) { /* exception catched */
+        base = RA(ins), top = vm->top;
         for (i = 0; i < vcnt; ++i) {
             *base++ = *top++;
         }

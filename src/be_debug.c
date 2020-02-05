@@ -148,7 +148,7 @@ static void tracestack(bvm *vm)
     bcallsnapshot *top = be_stack_top(&vm->tracestack);
     be_writestring("stack traceback:\n");
     for (cf = top; cf >= base; --cf) {
-        if (cf <= top - 10 && cf > base + 10) {
+        if (cf <= top - 10 && cf >= base + 10) {
             if (cf == top - 10)
                 be_writestring("\t...\n");
             continue;

@@ -272,6 +272,15 @@ BERRY_API void be_refpush(bvm *vm, int index);
 BERRY_API void be_refpop(bvm *vm);
 BERRY_API void be_stack_require(bvm *vm, int count);
 
+/* relop operation APIs */
+BERRY_API bbool be_iseq(bvm *vm);
+BERRY_API bbool be_isneq(bvm *vm);
+BERRY_API bbool be_islt(bvm *vm);
+BERRY_API bbool be_isle(bvm *vm);
+BERRY_API bbool be_isgt(bvm *vm);
+BERRY_API bbool be_isge(bvm *vm);
+
+/* Function call/return APIs */
 BERRY_API int be_returnvalue(bvm *vm);
 BERRY_API int be_returnnilvalue(bvm *vm);
 BERRY_API void be_call(bvm *vm, int argc);
