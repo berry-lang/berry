@@ -14,9 +14,10 @@
 #include "be_gc.h"
 #include <string.h>
 
-#define BYTECODE_VERSION    0
-#define VERIFY_CODE         0x5A
-#define MAGIC_NUMBER        0xBECD
+#define MAGIC_NUMBER1       0xBE
+#define MAGIC_NUMBER2       0xCD
+#define MAGIC_NUMBER3       0xFE
+#define BYTECODE_VERSION    1
 
 #define USE_64BIT_INT       (BE_INTGER_TYPE == 2 \
     || BE_INTGER_TYPE == 1 && LONG_MAX == 9223372036854775807L)
@@ -68,10 +69,10 @@ static void save_long(void *fp, uint32_t value)
 static void save_header(void *fp)
 {
     uint8_t buffer[8] = { 0 };
-    buffer[0] = MAGIC_NUMBER & 0xff;
-    buffer[1] = MAGIC_NUMBER >> 8;
-    buffer[2] = BYTECODE_VERSION;
-    buffer[3] = VERIFY_CODE;
+    buffer[0] = MAGIC_NUMBER1;
+    buffer[1] = MAGIC_NUMBER2;
+    buffer[2] = MAGIC_NUMBER3;
+    buffer[3] = BYTECODE_VERSION;
     buffer[4] = vm_sizeinfo();
     be_fwrite(fp, buffer, sizeof(buffer));
 }
@@ -309,12 +310,28 @@ static int load_head(void *fp)
     int res;
     uint8_t buffer[8] = { 0 };
     be_fread(fp, buffer, sizeof(buffer));
-    res = buffer[0] == (MAGIC_NUMBER & 0xff) &&
-          buffer[1] == (MAGIC_NUMBER >> 8) &&
-          buffer[2] == BYTECODE_VERSION &&
-          buffer[3] == VERIFY_CODE &&
+    res = buffer[0] == MAGIC_NUMBER1 &&
+          buffer[1] == MAGIC_NUMBER2 &&
+          buffer[2] == MAGIC_NUMBER3 &&
+          buffer[3] == BYTECODE_VERSION &&
           buffer[4] == vm_sizeinfo();
     return res;
+}
+
+bbool be_bytecode_check(const char *path)
+{
+    void *fp = be_fopen(path, "r");
+    if (fp) {
+        uint8_t buffer[3], rb;
+        rb = (uint8_t)be_fread(fp, buffer, 3);
+        be_fclose(fp);
+        /* check magic number */
+        return rb == 3 &&
+            buffer[0] == MAGIC_NUMBER1 &&
+            buffer[1] == MAGIC_NUMBER2 &&
+            buffer[2] == MAGIC_NUMBER3;
+    }
+    return bfalse;
 }
 
 static bint load_int(void *fp)

@@ -836,11 +836,11 @@ static void i_raise(bvm *vm, binstruction ins)
 {
     if (IGET_RA(ins) < 2) {
         bvalue *top = vm->top;
-        *top++ = *RKB(ins); /* push the exception value to top */
+        top[0] = *RKB(ins); /* push the exception value to top */
         if (IGET_RA(ins)) { /* has exception argument? */
-            *top = *RKC(ins); /* push the exception argument to top + 1 */
+            top[1] = *RKC(ins); /* push the exception argument to top + 1 */
         } else {
-            var_setnil(top);
+            var_setnil(top + 1);
         }
         be_save_stacktrace(vm);
     }

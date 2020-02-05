@@ -54,6 +54,7 @@
     "Usage: berry [options] [script [args]]\n"                      \
     "Avilable options are:\n"                                       \
     "  -i        enter interactive mode after executing 'file'\n"   \
+    "  -l        all variables in 'file' are parsed as local\n"     \
     "  -c <file> compile script 'file' to bytecode file\n"          \
     "  -o <file> save bytecode to 'file'\n"                         \
     "  -v        show version information\n"                        \
@@ -66,8 +67,9 @@
 #define arg_i       (1 << 0)
 #define arg_c       (1 << 1)
 #define arg_o       (1 << 2)
-#define arg_h       (1 << 3)
-#define arg_v       (1 << 4)
+#define arg_l       (1 << 3)
+#define arg_h       (1 << 4)
+#define arg_v       (1 << 5)
 #define arg_err     (1 << 7)
 
 struct arg_opts {
@@ -181,10 +183,10 @@ static int handle_result(bvm *vm, int res)
 }
 
 /* execute a script file and output a result or error */
-static int dofile(bvm *vm, const char *name)
+static int dofile(bvm *vm, const char *name, int args)
 {
     /* load bytecode file or compile script file */
-    int res = be_loadfile(vm, name);
+    int res = be_loadmode(vm, name, args & arg_l);
     if (res == BE_OK) { /* parsing succeeded */
         res = be_pcall(vm, 0); /* execute */
     }
@@ -202,7 +204,7 @@ static int load_file(bvm *vm, int argc, char *argv[], int args)
         be_writestring(repl_prelude);
     }
     if (argc > 0) { /* check file path argument */
-        res = dofile(vm, argv[0]);
+        res = dofile(vm, argv[0], args);
     }
     if (repl_mode) { /* enter the REPL mode */
         res = be_repl(vm, get_line, free_line);
@@ -213,12 +215,13 @@ static int load_file(bvm *vm, int argc, char *argv[], int args)
     return res;
 }
 
-static int build_file(bvm *vm, const char *dst, const char *src)
+/* compile the source code to a bytecode file */
+static int build_file(bvm *vm, const char *dst, const char *src, int args)
 {
-    int res = be_loadfile(vm, src); /* compile script file */
+    int res = be_loadmode(vm, src, args & arg_l); /* compile script file */
     if (res == BE_OK) {
         if (!dst) dst = "a.out"; /* the default output file name */
-        res = be_saveexec(vm, dst); /* save bytecode file */
+        res = be_savecode(vm, dst); /* save bytecode file */
     }
     return handle_result(vm, res);
 }
@@ -232,6 +235,7 @@ static int parse_arg(struct arg_opts *opt, int argc, char *argv[])
         case 'h': args |= arg_h; break;
         case 'v': args |= arg_v; break;
         case 'i': args |= arg_i; break;
+        case 'l': args |= arg_l; break;
         case '?': return args | arg_err;
         case 'c':
             args |= arg_c;
@@ -266,7 +270,7 @@ static int analysis_args(bvm *vm, int argc, char *argv[])
 {
     int args = 0;
     struct arg_opts opt = { 0 };
-    opt.pattern = "vhibc?o?";
+    opt.pattern = "vhilc?o?";
     args = parse_arg(&opt, argc, argv);
     if (args & arg_err) {
         be_writestring(be_pushfstring(vm,
@@ -284,7 +288,7 @@ static int analysis_args(bvm *vm, int argc, char *argv[])
         if (!opt.src && opt.idx < argc) {
             opt.src = argv[opt.idx];
         }
-        return build_file(vm, opt.dst, opt.src);
+        return build_file(vm, opt.dst, opt.src, args);
     }
     return load_file(vm, argc - opt.idx, argv + opt.idx, args);
 }

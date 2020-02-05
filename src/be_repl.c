@@ -60,14 +60,14 @@ static int call_script(bvm *vm)
     int res = be_pcall(vm, 0); /* call the main function */
     switch (res) { 
     case BE_OK: /* execution succeed */
-        if (!be_isnil(vm, -1)) { /* output return value when it is not nil */
-            be_writestring(be_tostring(vm, -1));
-            be_writenewline();
+        if (!be_isnil(vm, -1)) { /* print return value when it's not nil */
+            be_dumpvalue(vm, -1);
         }
         be_pop(vm, 1); /* pop the result value */
         break;
     case BE_EXCEPTION: /* vm run error */
         be_dumpexcept(vm);
+        be_pop(vm, 1); /* pop the function value */
         break;
     default: /* BE_EXIT or BE_MALLOC_FAIL */
         return res;

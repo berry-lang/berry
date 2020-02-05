@@ -1454,7 +1454,7 @@ static void mainfunc(bparser *parser, bclosure *cl)
 }
 
 bclosure* be_parser_source(bvm *vm,
-    const char *fname, breader reader, void *data, int islocal)
+    const char *fname, breader reader, void *data, bbool islocal)
 {
     bparser parser;
     bclosure *cl = be_newclosure(vm, 0);

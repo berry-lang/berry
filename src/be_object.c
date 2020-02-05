@@ -39,10 +39,10 @@ bvalue* be_indexof(bvm *vm, int idx)
 
 BERRY_API void be_newcomobj(bvm *vm, void *data, bntvfunc destory)
 {
+    bcommomobj *obj;
     bgcobject *gco = be_gcnew(vm, BE_COMOBJ, bcommomobj);
-    if (gco != NULL) {
-        bcommomobj *obj = cast_comobj(gco);
-        bvalue *top = be_incrtop(vm);
+    if ((obj = cast_comobj(gco)) != NULL) {
+        bvalue* top = be_incrtop(vm);
         obj->data = data;
         obj->destory = destory;
         var_setobj(top, BE_COMOBJ, obj);

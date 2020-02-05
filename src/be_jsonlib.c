@@ -362,7 +362,7 @@ static void string_dump(bvm *vm, int idx)
     char *buf, *q;
     const char *p;
     const char *s = be_tostring(vm, idx);
-    size_t len = be_strlen(vm, idx) + 2;
+    size_t len = (size_t)be_strlen(vm, idx) + 2;
     len += escape_length(s); /* get escaped length */
     buf = q = be_pushbuffer(vm, len);
     *q++ = '"'; /* add first '"' */

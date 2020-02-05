@@ -73,6 +73,6 @@ typedef struct bfuncinfo {
 #define BLOCK_EXCEPT    2
 
 bclosure *be_parser_source(bvm *vm,
-    const char *fname, breader reader, void *data, int islocal);
+    const char *fname, breader reader, void *data, bbool islocal);
 
 #endif

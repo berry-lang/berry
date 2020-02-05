@@ -926,12 +926,45 @@ BERRY_API int be_getexcept(bvm *vm, int code)
     return code;
 }
 
+static int _dvfunc(bvm *vm)
+{
+    be_writestring(be_tostring(vm, 1));
+    be_return_nil(vm);
+}
+
+static int dump_value(bvm *vm, int index)
+{
+    int res, top = be_top(vm) + 1;
+    index = be_absindex(vm, index);
+    be_pushntvfunction(vm, _dvfunc);
+    be_pushvalue(vm, index);
+    res = be_pcall(vm, 1); /* using index to store result  */
+    be_remove(vm, top); /* remove '_dumpvalue' function */
+    be_remove(vm, top); /* remove the value */
+    if (res == BE_EXCEPTION) {
+        be_dumpexcept(vm);
+    }
+    return res;
+}
+
+BERRY_API void be_dumpvalue(bvm *vm, int index)
+{
+    if (dump_value(vm, index) == BE_OK) {
+        be_writenewline();
+    }
+}
+
 BERRY_API void be_dumpexcept(bvm *vm)
 {
-    be_writestring(be_tostring(vm, -2)); /* exception value */
-    be_writestring(": ");
-    be_writestring(be_tostring(vm, -1)); /* exception argument */
-    be_writenewline();
+    do {
+        /* print exception value */
+        if (dump_value(vm, -2)) break;
+        be_writestring(": ");
+        /* print exception argument */
+        if (dump_value(vm, -1)) break;
+        be_writenewline();
+        /* print stack traceback */
+        be_tracestack(vm);
+    } while (0);
     be_pop(vm, 2); /* pop the exception value & argument */
-    be_tracestack(vm);
 }

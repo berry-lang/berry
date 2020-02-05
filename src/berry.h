@@ -181,6 +181,9 @@ typedef const struct {
 #define be_return(vm)           return be_returnvalue(vm)
 #define be_return_nil(vm)       return be_returnnilvalue(vm)
 
+#define be_loadfile(vm, name)   be_loadmode((vm), (name), 0)
+#define be_loadmodule(vm, name) be_loadmode((vm), (name), 1)
+
 #define be_loadstring(vm, str) \
     be_loadbuffer((vm), "string", (str), strlen(str))
 
@@ -278,6 +281,7 @@ BERRY_API void be_exit(bvm *vm, int status);
 /* exception APIs */
 BERRY_API void be_raise(bvm *vm, const char *except, const char *msg);
 BERRY_API int be_getexcept(bvm *vm, int code);
+BERRY_API void be_dumpvalue(bvm *vm, int index);
 BERRY_API void be_dumpexcept(bvm *vm);
 BERRY_API void be_stop_iteration(bvm *vm);
 
@@ -291,10 +295,9 @@ BERRY_API void be_vm_delete(bvm *vm);
 /* code load APIs */
 BERRY_API int be_loadbuffer(bvm *vm,
     const char *name, const char *buffer, size_t length);
-BERRY_API int be_loadfile(bvm *vm, const char *name);
-BERRY_API int be_loadmodule(bvm *vm, const char *name);
+BERRY_API int be_loadmode(bvm *vm, const char *name, bbool islocal);
 BERRY_API int be_loadlib(bvm *vm, const char *path);
-BERRY_API int be_saveexec(bvm *vm, const char *name);
+BERRY_API int be_savecode(bvm *vm, const char *name);
 
 /* module path list APIs */
 BERRY_API void be_module_path(bvm *vm);

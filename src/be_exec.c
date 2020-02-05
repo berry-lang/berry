@@ -140,7 +140,7 @@ static void m_parser(bvm *vm, void *data)
 }
 
 int be_protectedparser(bvm *vm,
-    const char *fname, breader reader, void *data, int islocal)
+    const char *fname, breader reader, void *data, bbool islocal)
 {
     int res;
     struct pparser s;
@@ -148,7 +148,7 @@ int be_protectedparser(bvm *vm,
     s.fname = fname;
     s.reader = reader;
     s.data = data;
-    s.islocal = (bbyte)islocal;
+    s.islocal = (bbyte)(islocal != 0);
     vm_state_save(vm, &state);
     res = be_execprotected(vm, m_parser, &s);
     if (res) { /* restore call stack */
@@ -184,10 +184,10 @@ BERRY_API int be_loadbuffer(bvm *vm,
     struct strbuf sbuf;
     sbuf.s = buffer;
     sbuf.len = length;
-    return be_protectedparser(vm, name, _sgets, &sbuf, 0);
+    return be_protectedparser(vm, name, _sgets, &sbuf, bfalse);
 }
 
-int be_fileparser(bvm *vm, const char *name, int islocal)
+static int fileparser(bvm *vm, const char *name, bbool islocal)
 {
     int res = BE_IO_ERROR;
     struct filebuf *fbuf = be_malloc(vm, sizeof(struct filebuf));
@@ -213,26 +213,11 @@ static void bytecode_loader(bvm *vm, void *data)
     be_incrtop(vm);
 }
 
-static int checkhead(const char *name)
-{
-    uint8_t buf[2];
-    int res = BE_IO_ERROR;
-    void *fp = be_fopen(name, "r");
-    if (fp) {
-        res = be_fread(fp, buf, 2) == 2;
-        /* check magic number */
-        res = res && buf[0] == 0xCD &&
-            buf[1] == 0xBE ? BE_OK : BE_SYNTAX_ERROR;
-        be_fclose(fp);
-    }
-    return res;
-}
-
 /* load bytecode file */
 static int load_bytecode(bvm *vm, const char *name)
 {
-    int res = checkhead(name);
-    if (res == BE_OK) {
+    int res = BE_SYNTAX_ERROR;
+    if (be_bytecode_check(name)) {
         struct vmstate state;
         vm_state_save(vm, &state);
         res = be_execprotected(vm, bytecode_loader, (void*)name);
@@ -247,12 +232,12 @@ static int load_bytecode(bvm *vm, const char *name)
 #define load_bytecode(vm, name) BE_SYNTAX_ERROR
 #endif /* BE_USE_BYTECODE_LOADER */
 
-static int _loadmode(bvm *vm, const char *name, int islocal)
+BERRY_API int be_loadmode(bvm *vm, const char *name, bbool islocal)
 {
     int res = load_bytecode(vm, name);
 #if BE_USE_SCRIPT_COMPILER
     if (res && res != BE_IO_ERROR) {
-        res = be_fileparser(vm, name, islocal);
+        res = fileparser(vm, name, islocal);
     }
 #else
     (void)islocal;
@@ -261,17 +246,6 @@ static int _loadmode(bvm *vm, const char *name, int islocal)
         be_pushfstring(vm, "error: can not open file '%s'.", name);
     }
     return res;
-}
-
-BERRY_API int be_loadfile(bvm *vm, const char *name)
-{
-    return _loadmode(vm, name, 0);
-}
-
-/* load file as local scope */
-BERRY_API int be_loadmodule(bvm *vm, const char *name)
-{
-    return _loadmode(vm, name, 1);
 }
 
 #if BE_USE_BYTECODE_SAVER
@@ -284,7 +258,7 @@ static void _bytecode_save(bvm *vm, void *data)
 }
 
 /* save bytecode file */
-BERRY_API int be_saveexec(bvm *vm, const char *name)
+BERRY_API int be_savecode(bvm *vm, const char *name)
 {
     int res;
     struct vmstate state;

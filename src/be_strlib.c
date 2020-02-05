@@ -95,29 +95,27 @@ static bstring* sim2str(bvm *vm, bvalue *v)
 
 static bstring* ins2str(bvm *vm, int idx)
 {
-    bstring *s;
-    bvalue *v = vm->reg + idx;
-    bvalue *top = be_incrtop(vm);
-    binstance *obj = var_toobj(v);
+    bstring *s = be_newstr(vm, "tostring");
+    binstance *obj = var_toobj(vm->reg + idx);
     /* get method 'tostring' */
-    int type = be_instance_member(obj, be_newstr(vm, "tostring"), top);
+    int type = be_instance_member(obj, s, vm->top);
+    be_incrtop(vm); /* push the obj::tostring to stack */
     if (basetype(type) != BE_FUNCTION) {
         bstring *name = be_class_name(be_instance_class(obj));
         char *sbuf = be_malloc(vm, (size_t)str_len(name) + 16);
         sprintf(sbuf, "<instance: %s()>", str(name));
-        --vm->top; /* free the result register */
+        be_stackpop(vm, 1); /* pop the obj::tostring */
         s = be_newstr(vm, sbuf);
         be_free(vm, sbuf, (size_t)str_len(name) + 16);
     } else {
-        be_incrtop(vm);
-        var_setval(top + 1, v);
-        be_dofunc(vm, top, 1);
-        vm->top -= 2;
+        *vm->top = vm->reg[idx];
+        be_dofunc(vm, vm->top - 1, 1);
+        be_stackpop(vm, 1); /* pop the obj::tostring */
         /* check the return value */
         if (!var_isstr(vm->top)) {
             const char *name = str(be_instance_name(obj));
             be_raise(vm, "runtime_error", be_pushfstring(vm,
-                "`%s::tostring` return value error, the expected type is 'string'",
+                "the value of `%s::tostring()` is not a 'string'",
                 strlen(name) ? name : "<anonymous>"));
         }
         s = var_tostr(vm->top);
