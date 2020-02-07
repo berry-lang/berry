@@ -17,16 +17,18 @@
 
 static void class_init(bvm *vm, bclass *c, const bnfuncinfo *lib)
 {
-    while (lib->name) {
-        bstring *s = be_newstr(vm, lib->name);
-        if (lib->function) { /* method */
-            be_prim_method_bind(vm, c, s, lib->function);
-        } else {
-            be_member_bind(vm, c, s); /* member */
+    if (lib) {
+        while (lib->name) {
+            bstring *s = be_newstr(vm, lib->name);
+            if (lib->function) { /* method */
+                be_prim_method_bind(vm, c, s, lib->function);
+            } else {
+                be_member_bind(vm, c, s); /* member */
+            }
+            ++lib;
         }
-        ++lib;
+        be_map_release(vm, c->members); /* clear space */
     }
-    be_map_release(vm, c->members); /* clear space */
 }
 
 BERRY_API void be_regfunc(bvm *vm, const char *name, bntvfunc f)

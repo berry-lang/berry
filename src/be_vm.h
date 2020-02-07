@@ -74,9 +74,6 @@ struct bvm {
 #define BASE_FRAME          (1 << 0)
 #define PRIM_FUNC           (1 << 1)
 
-#define var2cl(_v)          cast(bclosure*, var_toobj(_v))
-#define curcl(_vm)          var2cl((_vm)->cf->func)
-
 void be_dofunc(bvm *vm, bvalue *v, int argc);
 bbool be_value2bool(bvm *vm, bvalue *v);
 bbool be_vm_iseq(bvm *vm, bvalue *a, bvalue *b);

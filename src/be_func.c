@@ -31,7 +31,7 @@ void be_initupvals(bvm *vm, bclosure *cl)
     bupvaldesc *desc = cl->proto->upvals;
     bvalue *stack = vm->reg;
     bupval **uv = cl->upvals;
-    bupval **superuv = curcl(vm)->upvals;
+    bupval **superuv = cast(bclosure*, var_toobj(vm->cf->func))->upvals;
     for (; count--; desc++, uv++) {
         if (desc->instack) {
             bvalue *ref = stack + desc->idx;
