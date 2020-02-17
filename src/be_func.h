@@ -11,6 +11,7 @@
 
 void be_initupvals(bvm *vm, bclosure *cl);
 void be_upvals_close(bvm *vm, bvalue *level);
+void be_release_upvalues(bvm *vm, bclosure *cl);
 bproto* be_newproto(bvm *vm);
 bclosure* be_newclosure(bvm *vm, int nupval);
 bntvclos* be_newntvclosure(bvm *vm, bntvfunc cf, int nupvals);

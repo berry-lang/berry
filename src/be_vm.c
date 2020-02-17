@@ -666,6 +666,11 @@ newframe: /* a new call frame */
             be_initupvals(vm, cl);
             dispatch();
         }
+        opcase(CLASS): {
+            bclass *c = var_toobj(ktab + IGET_Bx(ins));
+            be_class_upvalue_init(vm, c);
+            dispatch();
+        }
         opcase(GETMBR): {
             bvalue *a = RA(ins), *b = RKB(ins), *c = RKC(ins);
             if (var_isinstance(b) && var_isstr(c)) {
@@ -730,7 +735,7 @@ newframe: /* a new call frame */
                         "class '%s' cannot assign to attribute '%s'",
                         str(be_instance_name(obj)), str(attr));
                 }
-                return;
+                dispatch();
             }
             if (var_ismodule(a) && var_isstr(b)) {
                 bmodule *obj = var_toobj(a);
@@ -739,7 +744,7 @@ newframe: /* a new call frame */
                 bvalue *v = be_module_bind(vm, obj, attr);
                 if (v != NULL) {
                     *v = tmp;
-                    return;
+                    dispatch();
                 }
             }
             attribute_error(vm, "writable attribute", a, b);

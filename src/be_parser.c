@@ -371,20 +371,6 @@ static void new_var(bparser *parser, bstring *name, bexpdesc *var)
     }
 }
 
-static void new_class(bparser *parser, bstring *name, bclass *c, bexpdesc *e)
-{
-    bvalue *var;
-    bfuncinfo *finfo = parser->finfo;
-    new_var(parser, name, e);
-    if (e->type == ETLOCAL) {
-        var = be_code_localobject(finfo, e->v.idx);
-    } else {
-        var = be_code_globalobject(finfo, e->v.idx);
-    }
-    var_settype(var, BE_CLASS);
-    var->v.p = c;
-}
-
 static int singlevaraux(bvm *vm, bfuncinfo *finfo, bstring *s, bexpdesc *var)
 {
     if (finfo == NULL) {
@@ -1224,7 +1210,8 @@ static void class_stmt(bparser *parser)
     if (match_id(parser, name) != NULL) {
         bexpdesc e;
         bclass *c = be_newclass(parser->vm, name, NULL);
-        new_class(parser, name, c, &e);
+        new_var(parser, name, &e);
+        be_code_class(parser->finfo, &e, c);
         class_inherit(parser, &e);
         class_block(parser, c);
         be_class_compress(parser->vm, c); /* compress class size */

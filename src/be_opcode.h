@@ -102,7 +102,8 @@ typedef enum {
     OP_IMPORT,    /*  A, B     |   R(A) <- import module from name RK(B) */
     OP_EXBLK,     /*  sBx      | */
     OP_CATCH,     /*  A        | */
-    OP_RAISE      /*  B        |   raise RK(B) */
+    OP_RAISE,     /*  B        |   raise RK(B) */
+    OP_CLASS      /*  Bx       |   init class in K[Bx] */
 } bopcode;
 
 const char *be_opcode2str(bopcode op);

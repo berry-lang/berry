@@ -1,7 +1,7 @@
 #include "be_opcode.h"
 #include "be_object.h"
 
-const char *be_opcode2str(bopcode op)
+const char* be_opcode2str(bopcode op)
 {
     static const char* const opcode_tab[] = {
         "ADD", "SUB", "MUL", "DIV", "MOD",
@@ -13,7 +13,7 @@ const char *be_opcode2str(bopcode op)
         "JMP", "JMPT", "JMPF", "CALL", "RET",
         "CLOSURE", "GETMBR", "GETMET", "SETMBR",
         "GETIDX", "SETIDX", "SETSUPER", "CLOSE",
-        "IMPORT", "EXBLK", "CATCH", "RAISE"
+        "IMPORT", "EXBLK", "CATCH", "RAISE", "CLASS"
     };
     return op < array_count(opcode_tab) ? opcode_tab[op] : "ERROP";
 }

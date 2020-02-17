@@ -59,6 +59,23 @@ void be_upvals_close(bvm *vm, bvalue *level)
     vm->upvalist = node;
 }
 
+void be_release_upvalues(bvm *vm, bclosure *cl)
+{
+    int i, count = cl->nupvals;
+    for (i = 0; i < count; ++i) {
+        bupval *uv = cl->upvals[i];
+        if (uv) {
+            if (uv->refcnt) {
+                --uv->refcnt;
+            }
+            /* delete non-referenced closed upvalue */
+            if (uv->value == &uv->u.value && !uv->refcnt) {
+                be_free(vm, uv, sizeof(bupval));
+            }
+        }
+    }
+}
+
 bproto* be_newproto(bvm *vm)
 {
     bgcobject *gco = be_gcnew(vm, BE_PROTO, bproto);
@@ -78,7 +95,6 @@ bproto* be_newproto(bvm *vm)
         p->nstack = 0;
         p->codesize = 0;
         p->argc = 0;
-        p->extra = 0;
         p->source = NULL;
 #if BE_DEBUG_RUNTIME_INFO
         p->lineinfo = NULL;

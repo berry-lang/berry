@@ -684,19 +684,19 @@ void be_code_index(bfuncinfo *finfo, bexpdesc *c, bexpdesc *k)
     c->type = ETINDEX;
 }
 
-bvalue* be_code_localobject(bfuncinfo *finfo, int dst)
+void be_code_class(bfuncinfo *finfo, bexpdesc *dst, bclass *c)
 {
-    int src = newconst(finfo, NULL);
-    code_move(finfo, dst, setK(src));
-    return be_vector_end(&finfo->kvec);
-}
-
-bvalue* be_code_globalobject(bfuncinfo *finfo, int dst)
-{
-    int src = newconst(finfo, NULL);
-    code_move(finfo, finfo->freereg, setK(src));
-    codeABx(finfo, OP_SETGBL, finfo->freereg, dst);
-    return be_vector_end(&finfo->kvec);
+    int src;
+    bvalue var;
+    var_setclass(&var, c);
+    src = newconst(finfo, &var);
+    if (dst->type == ETLOCAL) {
+        codeABx(finfo, OP_LDCONST, dst->v.idx, src);
+    } else {
+        codeABx(finfo, OP_LDCONST, finfo->freereg, src);
+        codeABx(finfo, OP_SETGBL, finfo->freereg, dst->v.idx);
+    }
+    codeABx(finfo, OP_CLASS, 0, src);
 }
 
 void be_code_setsuper(bfuncinfo *finfo, bexpdesc *c, bexpdesc *s)
