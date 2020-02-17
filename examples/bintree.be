@@ -8,14 +8,14 @@ class node
         self.r = r
     end
     def insert(v)
-        if (v < self.v)
-            if (self.l)
+        if v < self.v
+            if self.l
                 self.l.insert(v)
             else
                 self.l = node(v)
             end
         else
-            if (self.r)
+            if self.r
                 self.r.insert(v)
             else
                 self.r = node (v)
@@ -32,7 +32,7 @@ end
 class btree
     var root
     def insert(v)
-        if (self.root)
+        if self.root
             self.root.insert(v)
         else
             self.root = node(v)
@@ -40,7 +40,7 @@ class btree
     end
     def sort()
         var l = []
-        if (self.root)
+        if self.root
             self.root.sort(l)
         end
         return l

@@ -1,7 +1,7 @@
 # anonymous function and closure
 def count(x)
     var arr = []
-    for (i : 0 .. x)
+    for i : 0 .. x
         arr.push(
             def (n) # loop variable cannot be used directly as free variable
                 return def ()
@@ -13,7 +13,7 @@ def count(x)
     return arr
 end
 
-for (xx : count(6))
+for xx : count(6)
     print(xx()) # 0, 1, 4 ... n * n
 end
 
