@@ -991,7 +991,8 @@ static void do_class(bvm *vm, bvalue *reg, int argc)
 
 void be_dofunc(bvm *vm, bvalue *v, int argc)
 {
-    be_assert(vm->stack <= vm->reg);
+    be_assert(vm->reg <= v && v < vm->stacktop);
+    be_assert(vm->stack <= vm->reg && vm->reg < vm->stacktop);
     switch (var_type(v)) {
     case BE_CLASS: do_class(vm, v, argc); break;
     case BE_CLOSURE: do_closure(vm, v, argc); break;

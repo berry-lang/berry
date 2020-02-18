@@ -155,19 +155,19 @@ static binstance* newobject(bvm *vm, bclass *c)
     return obj;
 }
 
-int be_class_newobj(bvm *vm, bclass *c, bvalue *argv, int argc)
+int be_class_newobj(bvm *vm, bclass *c, bvalue *reg, int argc)
 {
     bvalue init;
+    size_t pos = reg - vm->reg;
     binstance *obj = newobject(vm, c);
-    var_setinstance(argv, obj);
+    reg = vm->reg + pos; /* the stack may have changed  */
+    var_setinstance(reg, obj);
     /* find constructor */
     obj = instance_member(obj, be_newstr(vm, "init"), &init);
     if (obj && var_type(&init) != MT_VARIABLE) {
-        /* user constructor */
-        bvalue *reg = argv + 1;
         /* copy argv */
-        for (; argc > 0; --argc) {
-            reg[argc] = argv[argc - 1];
+        for (reg = vm->reg + pos + 1; argc > 0; --argc) {
+            reg[argc] = reg[argc - 2];
         }
         *reg = init; /* set constructor */
         return 1;
