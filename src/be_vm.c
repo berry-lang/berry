@@ -871,8 +871,8 @@ newframe: /* a new call frame */
                 be_except_block_setup(vm);
                 if (be_setjmp(vm->errjmp->b)) {
                     be_except_block_resume(vm);
+                    goto newframe;
                 }
-                reg = vm->reg;
             } else {
                 be_except_block_close(vm, IGET_Bx(ins));
             }
