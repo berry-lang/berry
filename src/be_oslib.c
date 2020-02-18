@@ -96,6 +96,22 @@ static int m_system(bvm *vm)
     be_return(vm);
 }
 
+static int m_exit(bvm *vm)
+{
+    int status = 0;
+    if (be_top(vm)) {
+        if (be_isint(vm, 1)) {
+            status = be_toindex(vm, 1); /* get the exit code */
+        } else if (be_isbool(vm, 1)) {
+            status = be_tobool(vm, 1) - 1; /* true: 0, false: -1 */
+        } else {
+            status = -1;
+        }
+    }
+    be_exit(vm, status);
+    be_return_nil(vm);
+}
+
 static int m_path_isdir(bvm *vm)
 {
     const char *path = NULL;
@@ -210,6 +226,7 @@ be_native_module_attr_table(os) {
     be_native_module_function("remove", m_remove),
     be_native_module_function("listdir", m_listdir),
     be_native_module_function("system", m_system),
+    be_native_module_function("exit", m_exit),
     be_native_module_module("path", be_native_module(path))
 };
 
@@ -235,6 +252,7 @@ module os (scope: global, depend: BE_USE_OS_MODULE) {
     remove, func(m_remove)
     listdir, func(m_listdir)
     system, func(m_system)
+    exit, func(m_exit)
     path, module(m_libpath)
 }
 @const_object_info_end */

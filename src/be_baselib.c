@@ -63,22 +63,6 @@ static int l_input(bvm *vm)
     return m_readline(vm);
 }
 
-static int l_exit(bvm *vm)
-{
-    int status = 0;
-    if (be_top(vm)) {
-        if (be_isint(vm, 1)) {
-            status = be_toindex(vm, 1); /* get the exit code */
-        } else if (be_isbool(vm, 1)) {
-            status = be_tobool(vm, 1) - 1; /* true: 0, false: -1 */
-        } else {
-            status = -1;
-        }
-    }
-    be_exit(vm, status);
-    be_return_nil(vm);
-}
-
 static int l_memcount(bvm *vm)
 {
     size_t count = be_gc_memcount(vm);
@@ -288,7 +272,6 @@ void be_load_baselib(bvm *vm)
     be_regfunc(vm, "assert", l_assert);
     be_regfunc(vm, "print", l_print);
     be_regfunc(vm, "input", l_input);
-    be_regfunc(vm, "exit", l_exit);
     be_regfunc(vm, "super", l_super);
     be_regfunc(vm, "memcount", l_memcount);
     be_regfunc(vm, "type", l_type);
@@ -313,7 +296,6 @@ vartab m_builtin (scope: local) {
     assert, func(l_assert)
     print, func(l_print)
     input, func(l_input)
-    exit, func(l_exit)
     super, func(l_super)
     memcount, func(l_memcount)
     type, func(l_type)

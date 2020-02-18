@@ -23,4 +23,4 @@ print('\033[0;32mtest results: ' +
     (failed ? '' : ' (all tests passed)') +
     '.\033[0m')
 
-exit(failed == 0)
+os.exit(failed == 0)
