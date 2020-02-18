@@ -29,6 +29,23 @@ void be_list_delete(bvm *vm, blist *list)
     be_free(vm, list, sizeof(blist));
 }
 
+blist* be_list_copy(bvm *vm, blist *original)
+{
+    bgcobject *gco = be_gcnew(vm, BE_LIST, blist);
+    blist *list = cast_list(gco);
+    if (list) {
+        size_t size = datasize(original->capacity);
+        list->count = original->count;
+        list->capacity = original->capacity;
+        var_setlist(vm->top, list);
+        be_incrtop(vm);
+        list->data = be_malloc(vm, size);
+        be_stackpop(vm, 1);
+        memcpy(list->data, original->data, size);
+    }
+    return list;
+}
+
 bvalue* be_list_index(blist *list, int index)
 {
     if (index < 0) {
@@ -135,5 +152,16 @@ void be_list_merge(bvm *vm, blist *list, const blist *other)
         }
         memcpy(list->data + dst_len, other->data, src_len * sizeof(bvalue));
         list->count = length;
+    }
+}
+
+void be_list_reverse(blist *list)
+{
+    bvalue *left = list->data;
+    bvalue *right = left + list->count - 1;
+    for (; left < right; ++left, --right) {
+        bvalue temp = *left;
+        *left = *right;
+        *right = temp;
     }
 }

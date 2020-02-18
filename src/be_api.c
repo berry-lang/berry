@@ -523,6 +523,19 @@ BERRY_API bbool be_setmember(bvm *vm, int index, const char *k)
     return res != BE_NIL;
 }
 
+BERRY_API bbool be_copy(bvm *vm, int index)
+{
+    bvalue *v = be_indexof(vm, index);
+    bvalue *top = be_incrtop(vm);
+    if (var_type(v) == BE_LIST) {
+        blist *list = be_list_copy(vm, var_toobj(v));
+        var_setlist(top, list)
+        return btrue;
+    }
+    var_setnil(top);
+    return bfalse;
+}
+
 static int ins_member(bvm *vm, int index, const char *k)
 {
     int type = BE_NIL;
@@ -749,6 +762,14 @@ BERRY_API void be_data_resize(bvm *vm, int index)
     }
 }
 
+BERRY_API void be_data_reverse(bvm *vm, int index)
+{
+    bvalue *v = be_indexof(vm, index);
+    if (var_type(v) == BE_LIST) {
+        be_list_reverse(var_toobj(v));
+    }
+}
+
 BERRY_API bbool be_pushiter(bvm *vm, int index)
 {
     bvalue *v = be_indexof(vm, index);
@@ -882,15 +903,13 @@ BERRY_API int be_returnnilvalue(bvm *vm)
 BERRY_API void be_call(bvm *vm, int argc)
 {
     bvalue *fval = vm->top - argc - 1;
-    be_assert(fval >= vm->reg);
     be_dofunc(vm, fval, argc);
 }
 
 BERRY_API int be_pcall(bvm *vm, int argc)
 {
     bvalue *f = vm->top - argc - 1;
-    int res = be_protectedcall(vm, f, argc);
-    return res;
+    return be_protectedcall(vm, f, argc);
 }
 
 BERRY_API void be_raise(bvm *vm, const char *except, const char *msg)
