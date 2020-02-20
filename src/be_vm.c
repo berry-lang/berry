@@ -393,6 +393,7 @@ static void vm_exec(bvm *vm)
     binstruction ins;
     vm->cf->status |= BASE_FRAME;
 newframe: /* a new call frame */
+    be_assert(var_isclosure(vm->cf->func));
     clos = var_toobj(vm->cf->func);
     ktab = clos->proto->ktab;
     reg = vm->reg;
@@ -885,7 +886,8 @@ newframe: /* a new call frame */
         recall: /* goto: instantiation class and call constructor */
             switch (var_type(var)) {
             case NOT_METHOD:
-                ++var; --argc; mode = 1;
+                var[0] = var[1];
+                ++var, --argc, mode = 1;
                 goto recall;
             case BE_CLASS:
                 if (be_class_newobj(vm, var_toobj(var), var, ++argc)) {
@@ -901,7 +903,7 @@ newframe: /* a new call frame */
                 reg = vm->reg;
                 v = reg + argc;
                 end = reg + proto->argc;
-                for (; v <= end; ++v) {
+                for (; v < end; ++v) {
                     var_setnil(v);
                 }
                 goto newframe;

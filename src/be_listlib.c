@@ -123,9 +123,7 @@ static int item_range(bvm *vm)
     upper = upper < size ? upper : size - 1;
     lower = lower < 0 ? 0 : lower;
     /* construction result list instance */
-    be_getbuiltin(vm, "list");
-    be_call(vm, 0);
-    be_getmember(vm, -1, ".data"); /* result list */
+    be_newobject(vm, "list"); /* result list */
     be_getmember(vm, 1, ".data"); /* source list */
     /* copy elements */
     for (; lower <= upper; ++lower) {
@@ -145,9 +143,7 @@ static int item_list(bvm *vm)
     srcsize = be_data_size(vm, -2); /* get source list size */
     idxsize = be_data_size(vm, -1); /* get index list size */
     /* construction result list instance */
-    be_getbuiltin(vm, "list");
-    be_call(vm, 0);
-    be_getmember(vm, -1, ".data"); /* result list */
+    be_newobject(vm, "list"); /* result list */
     be_getmember(vm, 1, ".data"); /* source list */
     /* copy elements */
     for (i = 0; i < idxsize; ++i) {

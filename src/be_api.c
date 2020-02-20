@@ -457,6 +457,13 @@ BERRY_API void be_newmodule(bvm *vm)
     var_setobj(top, BE_MODULE, mod);
 }
 
+BERRY_API void be_newobject(bvm *vm, const char *name)
+{
+    be_getbuiltin(vm, name);
+    be_call(vm, 0);
+    be_getmember(vm, -1, ".data");
+}
+
 BERRY_API bbool be_setname(bvm *vm, int index, const char *name)
 {
     bvalue *v = be_indexof(vm, index);
@@ -479,15 +486,16 @@ BERRY_API bbool be_getglobal(bvm *vm, const char *name)
     return bfalse;
 }
 
-BERRY_API bbool be_setglobal(bvm *vm, const char *name)
+BERRY_API void be_setglobal(bvm *vm, const char *name)
 {
-    int idx = be_global_find(vm, be_newstr(vm, name));
-    bvalue *top = be_indexof(vm, -1);
-    if (idx >= be_builtin_count(vm)) {
-        *be_global_var(vm, idx) = *top;
-        return btrue;
-    }
-    return bfalse;
+    int idx;
+    bstring *s = be_newstr(vm, name);
+    bvalue *v = be_incrtop(vm);
+    var_setstr(v, s);
+    idx = be_global_new(vm, s);
+    v = be_global_var(vm, idx);
+    *v = *be_indexof(vm, -2);
+    be_stackpop(vm, 1);
 }
 
 BERRY_API bbool be_getbuiltin(bvm *vm, const char *name)

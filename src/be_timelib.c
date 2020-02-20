@@ -22,7 +22,7 @@ static int m_dump(bvm *vm)
     if (be_top(vm) >= 1 && be_isint(vm, 1)) {
         time_t ts = be_toint(vm, 1);
         struct tm *t = localtime(&ts);
-        be_newmap(vm);
+        be_newobject(vm, "map");
         time_insert(vm, "year", t->tm_year + 1900);
         time_insert(vm, "month", t->tm_mon + 1);
         time_insert(vm, "day", t->tm_mday);
@@ -30,9 +30,6 @@ static int m_dump(bvm *vm)
         time_insert(vm, "min", t->tm_min);
         time_insert(vm, "sec", t->tm_sec);
         time_insert(vm, "weekday", t->tm_wday);
-        be_getbuiltin(vm, "map");
-        be_pushvalue(vm, -2);
-        be_call(vm, 1);
         be_pop(vm, 1);
         be_return(vm);
     }

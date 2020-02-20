@@ -59,8 +59,7 @@ static int m_listdir(bvm *vm)
     } else {
         res = be_dirfirst(&info, ".");
     }
-    be_getbuiltin(vm, "list");
-    be_newlist(vm);
+    be_newobject(vm, "list");
     while (res == 0) {
         const char *fn = info.name;
         if (strcmp(fn, ".") && strcmp(fn, "..")) {
@@ -71,7 +70,6 @@ static int m_listdir(bvm *vm)
         res = be_dirnext(&info);
     }
     be_dirclose(&info);
-    be_call(vm, 1);
     be_pop(vm, 1);
     be_return(vm);
 }

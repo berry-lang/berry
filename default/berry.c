@@ -252,6 +252,19 @@ static int parse_arg(struct arg_opts *opt, int argc, char *argv[])
     return args;
 }
 
+static void push_args(bvm *vm, int argc, char *argv[])
+{
+    be_newobject(vm, "list");
+    while (argc--) {
+        be_pushstring(vm, *argv++);
+        be_data_push(vm, -2);
+        be_pop(vm, 1);
+    }
+    be_pop(vm, 1);
+    be_setglobal(vm, "_argv");
+    be_pop(vm, 1);
+}
+
 /* 
  * command format: berry [options] [script [args]]
  *  command options:
@@ -272,6 +285,8 @@ static int analysis_args(bvm *vm, int argc, char *argv[])
     struct arg_opts opt = { 0 };
     opt.pattern = "vhilc?o?";
     args = parse_arg(&opt, argc, argv);
+    argc -= opt.idx;
+    argv += opt.idx;
     if (args & arg_err) {
         be_writestring(be_pushfstring(vm,
             "error: missing argument to '%s'\n", opt.errarg));
@@ -284,13 +299,14 @@ static int analysis_args(bvm *vm, int argc, char *argv[])
     if (args & arg_h) {
         be_writestring(help_information);
     }
+    push_args(vm, argc, argv);
     if (args & (arg_c | arg_o)) {
-        if (!opt.src && opt.idx < argc) {
-            opt.src = argv[opt.idx];
+        if (!opt.src && argc > 0) {
+            opt.src = *argv;
         }
         return build_file(vm, opt.dst, opt.src, args);
     }
-    return load_file(vm, argc - opt.idx, argv + opt.idx, args);
+    return load_file(vm, argc, argv, args);
 }
 
 /* TODO: more paths & support more OS */
