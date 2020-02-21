@@ -7,7 +7,7 @@
 
 typedef struct {
     bstring_header;
-#if BE_STR_HASH_CACHE
+#if BE_USE_STR_HASH_CACHE
     uint32_t hash;
 #endif
     /* char s[]; */

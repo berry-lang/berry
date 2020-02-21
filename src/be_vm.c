@@ -183,7 +183,7 @@ static bbool obj2bool(bvm *vm, bvalue *var)
     binstance *obj = var_toobj(var);
     bstring *tobool = be_newstr(vm, "tobool");
     /* get operator method */
-    if (be_instance_member(obj, tobool, vm->top)) {
+    if (be_instance_member(vm, obj, tobool, vm->top)) {
         vm->top[1] = *var; /* move self to argv[0] */
         be_dofunc(vm, vm->top, 1); /* call method 'tobool' */
         /* check the return value */
@@ -214,7 +214,7 @@ bbool be_value2bool(bvm *vm, bvalue *v)
 static void obj_method(bvm *vm, bvalue *o, bstring *attr)
 {
     binstance *obj = var_toobj(o);
-    int type = be_instance_member(obj, attr, vm->top);
+    int type = be_instance_member(vm, obj, attr, vm->top);
     if (basetype(type) != BE_FUNCTION) {
         vm_error(vm, "attribute_error",
             "the '%s' object has no method '%s'",
@@ -225,7 +225,7 @@ static void obj_method(bvm *vm, bvalue *o, bstring *attr)
 static int obj_attribute(bvm *vm, bvalue *o, bstring *attr, bvalue *dst)
 {
     binstance *obj = var_toobj(o);
-    int type = be_instance_member(obj, attr, dst);
+    int type = be_instance_member(vm, obj, attr, dst);
     if (basetype(type) == BE_NIL) {
         vm_error(vm, "attribute_error",
             "the '%s' object has no attribute '%s'",
@@ -241,7 +241,7 @@ static bbool object_eqop(bvm *vm,
     bbool res = iseq && obj == var_toobj(b); /* same object */
     if (!res) { /* not the same object */
         bvalue self = *a, other = *b;
-        int type = be_instance_member(obj, be_newstr(vm, op), vm->top);
+        int type = be_instance_member(vm, obj, be_newstr(vm, op), vm->top);
         if (basetype(type) == BE_FUNCTION) { /* call method */
             bvalue *top = vm->top;
             top[1] = self;  /* move self to argv[0] */
@@ -679,7 +679,7 @@ newframe: /* a new call frame */
             } else if (var_ismodule(b) && var_isstr(c)) {
                 bstring *attr = var_tostr(c);
                 bmodule *module = var_toobj(b);
-                bvalue *v = be_module_attr(module, attr);
+                bvalue *v = be_module_attr(vm, module, attr);
                 if (v) {
                     *a = *v;
                 } else {
@@ -712,7 +712,7 @@ newframe: /* a new call frame */
             } else if (var_ismodule(b) && var_isstr(c)) {
                 bstring *attr = var_tostr(c);
                 bmodule *module = var_toobj(b);
-                bvalue *src = be_module_attr(module, attr);
+                bvalue *src = be_module_attr(vm, module, attr);
                 if (src) {
                     var_settype(a, NOT_METHOD);
                     a[1] = *src;
@@ -731,7 +731,7 @@ newframe: /* a new call frame */
             if (var_isinstance(a) && var_isstr(b)) {
                 binstance *obj = var_toobj(a);
                 bstring *attr = var_tostr(b);
-                if (!be_instance_setmember(obj, attr, c)) {
+                if (!be_instance_setmember(vm, obj, attr, c)) {
                     vm_error(vm, "attribute_error",
                         "class '%s' cannot assign to attribute '%s'",
                         str(be_instance_name(obj)), str(attr));

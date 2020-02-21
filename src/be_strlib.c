@@ -98,7 +98,7 @@ static bstring* ins2str(bvm *vm, int idx)
     bstring *s = be_newstr(vm, "tostring");
     binstance *obj = var_toobj(vm->reg + idx);
     /* get method 'tostring' */
-    int type = be_instance_member(obj, s, vm->top);
+    int type = be_instance_member(vm, obj, s, vm->top);
     be_incrtop(vm); /* push the obj::tostring to stack */
     if (basetype(type) != BE_FUNCTION) {
         bstring *name = be_class_name(be_instance_class(obj));
@@ -111,8 +111,7 @@ static bstring* ins2str(bvm *vm, int idx)
         *vm->top = vm->reg[idx];
         be_dofunc(vm, vm->top - 1, 1);
         be_stackpop(vm, 1); /* pop the obj::tostring */
-        /* check the return value */
-        if (!var_isstr(vm->top)) {
+        if (!var_isstr(vm->top)) { /* check the return value */
             const char *name = str(be_instance_name(obj));
             be_raise(vm, "runtime_error", be_pushfstring(vm,
                 "the value of `%s::tostring()` is not a 'string'",

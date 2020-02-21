@@ -224,7 +224,7 @@ static bvalue* load_cached(bvm *vm, bstring *path)
 {
     bvalue *v = NULL;
     if (vm->module.loaded) {
-        v = be_map_findstr(vm->module.loaded, path);
+        v = be_map_findstr(vm, vm->module.loaded, path);
         if (v) {
             *vm->top = *v;
             be_incrtop(vm);
@@ -277,16 +277,16 @@ void be_module_delete(bvm *vm, bmodule *module)
     be_free(vm, module, sizeof(bmodule));
 }
 
-bvalue* be_module_attr(bmodule *module, bstring *attr)
+bvalue* be_module_attr(bvm *vm, bmodule *module, bstring *attr)
 {
-    return be_map_findstr(module->table, attr);
+    return be_map_findstr(vm, module->table, attr);
 }
 
 bvalue* be_module_bind(bvm *vm, bmodule *module, bstring *attr)
 {
     bmap *attrs = module->table;
     if (!gc_isconst(attrs)) {
-        bvalue *v = be_map_findstr(attrs, attr);
+        bvalue *v = be_map_findstr(vm, attrs, attr);
         if (v == NULL) {
             v = be_map_insertstr(vm, attrs, attr, NULL);
         }

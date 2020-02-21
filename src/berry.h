@@ -41,7 +41,7 @@ typedef int                 bbool;
 typedef uint8_t             bbyte;
 typedef BE_INTEGER          bint;
 
-#if BE_SINGLE_FLOAT != 0
+#if BE_USE_SINGLE_FLOAT != 0
     typedef float           breal;
 #else
     typedef double          breal;

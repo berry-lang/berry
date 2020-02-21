@@ -170,7 +170,7 @@ static bstring* newshortstr(bvm *vm, const char *str, size_t len)
         memcpy(cast(char *, sstr(s)), str, len);
         s->extra = 0;
         s->next = cast(void*, *list);
-#if BE_STR_HASH_CACHE
+#if BE_USE_STR_HASH_CACHE
         cast(bsstring*, s)->hash = hash;
 #endif
         *list = s;
@@ -247,7 +247,7 @@ uint32_t be_strhash(const bstring *s)
     if (gc_isconst(s)) {
         return cast(bcstring*, s)->hash;
     }
-#if BE_STR_HASH_CACHE
+#if BE_USE_STR_HASH_CACHE
     if (s->slen != 255) {
         return cast(bsstring*, s)->hash;
     }

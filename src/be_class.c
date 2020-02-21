@@ -36,11 +36,11 @@ void be_class_compress(bvm *vm, bclass *c)
     }
 }
 
-int be_class_attribute(bclass *c, bstring *attr)
+int be_class_attribute(bvm *vm, bclass *c, bstring *attr)
 {
     for (; c; c = c->super) {
         if (c->members) {
-            bvalue *v = be_map_findstr(c->members, attr);
+            bvalue *v = be_map_findstr(vm, c->members, attr);
             if (v) {
                 return var_type(v);
             }
@@ -95,11 +95,13 @@ int be_class_closure_count(bclass *c)
     return count;
 }
 
-static binstance* instance_member(binstance *obj, bstring *name, bvalue *dst)
+static binstance* instance_member(bvm *vm,
+    binstance *obj, bstring *name, bvalue *dst)
 {
     for (; obj; obj = obj->super) {
-        if (obj->class->members) {
-            bvalue *v = be_map_findstr(obj->class->members, name);
+        bmap *members = obj->class->members;
+        if (members) {
+            bvalue *v = be_map_findstr(vm, members, name);
             if (v) {
                 *dst = *v;
                 return obj;
@@ -163,7 +165,7 @@ int be_class_newobj(bvm *vm, bclass *c, bvalue *reg, int argc)
     reg = vm->reg + pos; /* the stack may have changed  */
     var_setinstance(reg, obj);
     /* find constructor */
-    obj = instance_member(obj, be_newstr(vm, "init"), &init);
+    obj = instance_member(vm, obj, be_newstr(vm, "init"), &init);
     if (obj && var_type(&init) != MT_VARIABLE) {
         /* copy argv */
         for (reg = vm->reg + pos + 1; argc > 0; --argc) {
@@ -175,11 +177,11 @@ int be_class_newobj(bvm *vm, bclass *c, bvalue *reg, int argc)
     return 0;
 }
 
-int be_instance_member(binstance *obj, bstring *name, bvalue *dst)
+int be_instance_member(bvm *vm, binstance *obj, bstring *name, bvalue *dst)
 {
     int type;
     be_assert(name != NULL);
-    obj = instance_member(obj, name, dst);
+    obj = instance_member(vm, obj, name, dst);
     type = var_type(dst);
     if (obj && type == MT_VARIABLE) {
         *dst = obj->members[dst->v.i];
@@ -187,11 +189,11 @@ int be_instance_member(binstance *obj, bstring *name, bvalue *dst)
     return type;
 }
 
-int be_instance_setmember(binstance *obj, bstring *name, bvalue *src)
+int be_instance_setmember(bvm *vm, binstance *obj, bstring *name, bvalue *src)
 {
     bvalue v;
     be_assert(name != NULL);
-    obj = instance_member(obj, name, &v);
+    obj = instance_member(vm, obj, name, &v);
     if (obj && var_istype(&v, MT_VARIABLE)) {
         obj->members[var_toint(&v)] = *src;
         return 1;

@@ -320,7 +320,8 @@ static int new_localvar(bparser *parser, bstring *name)
 
 static int find_upval(bfuncinfo *finfo, bstring *s)
 {
-    bvalue *desc = be_map_findstr(finfo->upval, s);
+    bvm *vm = finfo->lexer->vm;
+    bvalue *desc = be_map_findstr(vm, finfo->upval, s);
     if (desc) {
         return upval_index(desc->v.i);
     }
@@ -1136,7 +1137,7 @@ static void return_stmt(bparser *parser)
 
 static void check_class_attr(bparser *parser, bclass *c, bstring *attr)
 {
-    if (be_class_attribute(c, attr) != BE_NIL) {
+    if (be_class_attribute(parser->vm, c, attr) != BE_NIL) {
         push_error(parser,
             "redefinition of the attribute '%s'", str(attr));
     }

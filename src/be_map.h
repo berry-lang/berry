@@ -31,12 +31,12 @@ typedef bmapnode *bmapiter;
 
 bmap* be_map_new(bvm *vm);
 void be_map_delete(bvm *vm, bmap *map);
-bvalue* be_map_find(bmap *map, bvalue *key);
+bvalue* be_map_find(bvm *vm, bmap *map, bvalue *key);
 bvalue* be_map_insert(bvm *vm, bmap *map, bvalue *key, bvalue *value);
-int be_map_remove(bmap *map, bvalue *key);
-bvalue* be_map_findstr(bmap *map, bstring *key);
+int be_map_remove(bvm *vm, bmap *map, bvalue *key);
+bvalue* be_map_findstr(bvm *vm, bmap *map, bstring *key);
 bvalue* be_map_insertstr(bvm *vm, bmap *map, bstring *key, bvalue *value);
-void be_map_removestr(bmap *map, bstring *key);
+void be_map_removestr(bvm *vm, bmap *map, bstring *key);
 bmapnode* be_map_next(bmap *map, bmapiter *iter);
 bvalue be_map_key2value(bmapnode *node);
 bmapnode* be_map_val2node(bvalue *value);

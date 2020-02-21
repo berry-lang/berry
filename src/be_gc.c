@@ -416,7 +416,7 @@ static void destruct_object(bvm *vm, bgcobject *obj)
         int type;
         binstance *ins = cast_instance(obj);
         /* does not GC when creating the string "deinit". */
-        type = be_instance_member(ins, be_newstr(vm, "deinit"), vm->top);
+        type = be_instance_member(vm, ins, be_newstr(vm, "deinit"), vm->top);
         be_incrtop(vm);
         if (basetype(type) == BE_FUNCTION) {
             be_dofunc(vm, vm->top - 1, 1);

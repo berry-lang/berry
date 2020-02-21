@@ -518,7 +518,7 @@ BERRY_API bbool be_setmember(bvm *vm, int index, const char *k)
         bstring *key = be_newstr(vm, k);
         bvalue *v = be_indexof(vm, -1);
         binstance *obj = var_toobj(o);
-        res = be_instance_setmember(obj, key, v);
+        res = be_instance_setmember(vm, obj, key, v);
     } else if (var_ismodule(o)) {
         bstring *key = be_newstr(vm, k);
         bmodule *mod = var_toobj(o);
@@ -552,7 +552,7 @@ static int ins_member(bvm *vm, int index, const char *k)
     var_setnil(top);
     if (var_isinstance(o)) {
         binstance *obj = var_toobj(o);
-        type = be_instance_member(obj, be_newstr(vm, k), top);
+        type = be_instance_member(vm, obj, be_newstr(vm, k), top);
     }
     return type;
 }
@@ -587,7 +587,7 @@ BERRY_API bbool be_getindex(bvm *vm, int index)
     case BE_MAP:
         if (!var_isnil(k)) {
             bmap *map = cast(bmap*, var_toobj(o));
-            bvalue *src = be_map_find(map, k);
+            bvalue *src = be_map_find(vm, map, k);
             if (src) {
                 var_setval(dst, src);
                 return btrue;
@@ -612,7 +612,7 @@ static bvalue* list_setindex(blist *list, bvalue *key)
 
 static bvalue* map_setindex(bvm *vm, bmap *map, bvalue *key)
 {
-    bvalue *dst = be_map_find(map, key);
+    bvalue *dst = be_map_find(vm, map, key);
     if (dst == NULL) {
         dst = be_map_insert(vm, map, key, NULL);
     }
@@ -731,7 +731,7 @@ BERRY_API bbool be_data_remove(bvm *vm, int index)
     case BE_MAP:
         if (!var_isnil(k)) {
             bmap *map = cast(bmap*, var_toobj(o));
-            return be_map_remove(map, k);
+            return be_map_remove(vm, map, k);
         }
         break;
     case BE_LIST:
