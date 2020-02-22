@@ -32,7 +32,7 @@ void be_globalvar_deinit(bvm *vm)
 
 static int global_find(bvm *vm, bstring *name)
 {
-    bvalue *res = be_map_findstr(global(vm).vtab, name);
+    bvalue *res = be_map_findstr(vm, global(vm).vtab, name);
     if (res) {
         return var_toidx(res) + be_builtin_count(vm);
     }
@@ -86,7 +86,7 @@ void be_global_release_space(bvm *vm)
 
 int be_builtin_find(bvm *vm, bstring *name)
 {
-    bvalue *res = be_map_findstr(builtin(vm).vtab, name);
+    bvalue *res = be_map_findstr(vm, builtin(vm).vtab, name);
     if (res) {
         return var_toidx(res);
     }

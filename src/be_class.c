@@ -36,11 +36,11 @@ void be_class_compress(bvm *vm, bclass *c)
     }
 }
 
-int be_class_attribute(bclass *c, bstring *attr)
+int be_class_attribute(bvm *vm, bclass *c, bstring *attr)
 {
     for (; c; c = c->super) {
         if (c->members) {
-            bvalue *v = be_map_findstr(c->members, attr);
+            bvalue *v = be_map_findstr(vm, c->members, attr);
             if (v) {
                 return var_type(v);
             }
@@ -60,21 +60,13 @@ void be_member_bind(bvm *vm, bclass *c, bstring *name)
 
 void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p)
 {
+    bclosure *cl;
     bvalue *attr;
     check_members(vm, c);
     attr = be_map_insertstr(vm, c->members, name, NULL);
-    /* closure with upvalues need to be created when instantiating */
-    if (p->nupvals > 0) {
-        var_setproto(attr, p);
-        attr->type = BE_PROTO;
-        /* Store the index of the method in the instance
-         * data field into the extra field of the prototype. */
-        p->extra = c->nvar++;
-    } else { /* create closures without upvalues directly */
-        bclosure *cl = be_newclosure(vm, 0);
-        cl->proto = p;
-        var_setclosure(attr, cl);
-    }
+    cl = be_newclosure(vm, p->nupvals);
+    cl->proto = p;
+    var_setclosure(attr, cl);
 }
 
 void be_prim_method_bind(bvm *vm, bclass *c, bstring *name, bntvfunc f)
@@ -103,11 +95,13 @@ int be_class_closure_count(bclass *c)
     return count;
 }
 
-static binstance* instance_member(binstance *obj, bstring *name, bvalue *dst)
+static binstance* instance_member(bvm *vm,
+    binstance *obj, bstring *name, bvalue *dst)
 {
     for (; obj; obj = obj->super) {
-        if (obj->class->members) {
-            bvalue *v = be_map_findstr(obj->class->members, name);
+        bmap *members = obj->class->members;
+        if (members) {
+            bvalue *v = be_map_findstr(vm, members, name);
             if (v) {
                 *dst = *v;
                 return obj;
@@ -118,28 +112,19 @@ static binstance* instance_member(binstance *obj, bstring *name, bvalue *dst)
     return NULL;
 }
 
-static void create_closures(bvm *vm, binstance *obj)
+void be_class_upvalue_init(bvm *vm, bclass *c)
 {
     bmapnode *node;
     bmapiter iter = be_map_iter();
-    bmap *members = obj->class->members;
-    bvalue *varbuf = obj->members;
-    bvalue *top = be_incrtop(vm); /* protect new objects from GC */
-    var_setinstance(top, obj);
-    while ((node = be_map_next(members, &iter)) != NULL) {
-        if (var_isproto(&node->value)) {
-            /* The prototype in the node means that the method closure
-             * has upvalues, we store them in the instance data field.
-             * Each method closure is created when instantiated. */
-            bproto *proto = var_toobj(&node->value);
-            bclosure *cl = be_newclosure(vm, proto->nupvals);
-            bvalue *var = varbuf + proto->extra;
-            var_setclosure(var, cl);
-            cl->proto = proto;
-            be_initupvals(vm, cl); /* initialize the closure's upvalues */
+    while ((node = be_map_next(c->members, &iter)) != NULL) {
+        if (var_isclosure(&node->value)) {
+            bclosure *cl = var_toobj(&node->value);
+            if (cl->proto->nupvals) {
+                be_release_upvalues(vm, cl);
+                be_initupvals(vm, cl); /* initialize the closure's upvalues */
+            }
         }
     }
-    be_stackpop(vm, 1);
 }
 
 static binstance* newobjself(bvm *vm, bclass *c)
@@ -153,9 +138,6 @@ static binstance* newobjself(bvm *vm, bclass *c)
         while (v < end) { var_setnil(v); ++v; }
         obj->class = c;
         obj->super = NULL;
-        if (c->members) {
-            create_closures(vm, obj);
-        }
     }
     return obj;
 }
@@ -175,56 +157,43 @@ static binstance* newobject(bvm *vm, bclass *c)
     return obj;
 }
 
-int be_class_newobj(bvm *vm, bclass *c, bvalue *argv, int argc)
+int be_class_newobj(bvm *vm, bclass *c, bvalue *reg, int argc)
 {
     bvalue init;
+    size_t pos = reg - vm->reg;
     binstance *obj = newobject(vm, c);
-    var_setinstance(argv, obj);
+    reg = vm->reg + pos; /* the stack may have changed  */
+    var_setinstance(reg, obj);
     /* find constructor */
-    obj = instance_member(obj, be_newstr(vm, "init"), &init);
+    obj = instance_member(vm, obj, be_newstr(vm, "init"), &init);
     if (obj && var_type(&init) != MT_VARIABLE) {
-        /* user constructor */
-        bvalue *reg = argv + 1;
         /* copy argv */
-        for (; argc > 0; --argc) {
-            reg[argc] = argv[argc - 1];
+        for (reg = vm->reg + pos + 1; argc > 0; --argc) {
+            reg[argc] = reg[argc - 2];
         }
-        if (var_type(&init) == BE_PROTO) {
-            /* find the closure of the constructor in the data field */
-            bproto *proto = var_toobj(&init);
-            *reg = obj->members[proto->extra];
-        } else {
-            *reg = init; /* set constructor */
-        }
+        *reg = init; /* set constructor */
         return 1;
     }
     return 0;
 }
 
-int be_instance_member(binstance *obj, bstring *name, bvalue *dst)
+int be_instance_member(bvm *vm, binstance *obj, bstring *name, bvalue *dst)
 {
     int type;
     be_assert(name != NULL);
-    obj = instance_member(obj, name, dst);
+    obj = instance_member(vm, obj, name, dst);
     type = var_type(dst);
-    if (obj) {
-        if (type == MT_VARIABLE) {
-            *dst = obj->members[dst->v.i];
-        } else if (type == BE_PROTO) {
-            /* find the closure of the method in the data field */
-            bproto *proto = var_toobj(dst);
-            *dst = obj->members[proto->extra];
-            return MT_METHOD;
-        }
+    if (obj && type == MT_VARIABLE) {
+        *dst = obj->members[dst->v.i];
     }
     return type;
 }
 
-int be_instance_setmember(binstance *obj, bstring *name, bvalue *src)
+int be_instance_setmember(bvm *vm, binstance *obj, bstring *name, bvalue *src)
 {
     bvalue v;
     be_assert(name != NULL);
-    obj = instance_member(obj, name, &v);
+    obj = instance_member(vm, obj, name, &v);
     if (obj && var_istype(&v, MT_VARIABLE)) {
         obj->members[var_toint(&v)] = *src;
         return 1;

@@ -6,6 +6,6 @@ var pairs = {
     keys[3]: 'value4'
 }
 
-for (i : 0 .. keys.size() - 1)
+for i : 0 .. keys.size() - 1
     assert(pairs[keys[i]] == 'value' .. i + 1)
 end

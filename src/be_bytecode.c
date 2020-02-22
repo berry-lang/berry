@@ -89,18 +89,12 @@ static void save_int(void *fp, bint i)
 
 static void save_real(void *fp, breal r)
 {
-#if BE_SINGLE_FLOAT
-    union {
-        breal r;
-        uint32_t i;
-    } u;
+#if BE_USE_SINGLE_FLOAT
+    union { breal r; uint32_t i; } u;
     u.r = r;
     save_long(fp, u.i);
 #else
-    union {
-        breal r;
-        uint64_t i;
-    } u;
+    union { breal r; uint64_t i; } u;
     u.r = r;
     save_long(fp, u.i & 0xffffffff);
     save_long(fp, (u.i >> 32) & 0xffffffff);
@@ -348,11 +342,8 @@ static bint load_int(void *fp)
 
 static breal load_real(void *fp)
 {
-#if BE_SINGLE_FLOAT
-    union {
-        breal r;
-        uint32_t i;
-    } u;
+#if BE_USE_SINGLE_FLOAT
+    union { breal r; uint32_t i; } u;
     u.i = load_long(fp);
     return u.r;
 #else

@@ -123,9 +123,7 @@ static int item_range(bvm *vm)
     upper = upper < size ? upper : size - 1;
     lower = lower < 0 ? 0 : lower;
     /* construction result list instance */
-    be_getbuiltin(vm, "list");
-    be_call(vm, 0);
-    be_getmember(vm, -1, ".data"); /* result list */
+    be_newobject(vm, "list"); /* result list */
     be_getmember(vm, 1, ".data"); /* source list */
     /* copy elements */
     for (; lower <= upper; ++lower) {
@@ -145,9 +143,7 @@ static int item_list(bvm *vm)
     srcsize = be_data_size(vm, -2); /* get source list size */
     idxsize = be_data_size(vm, -1); /* get index list size */
     /* construction result list instance */
-    be_getbuiltin(vm, "list");
-    be_call(vm, 0);
-    be_getmember(vm, -1, ".data"); /* result list */
+    be_newobject(vm, "list"); /* result list */
     be_getmember(vm, 1, ".data"); /* source list */
     /* copy elements */
     for (i = 0; i < idxsize; ++i) {
@@ -333,8 +329,30 @@ static int m_concat(bvm *vm)
 {
     bvalue *value;
     be_getmember(vm, 1, ".data");
+    list_check_data(vm, 1);
     value = be_indexof(vm, -1);
     list_concat(vm, var_toobj(value));
+    be_return(vm);
+}
+
+static int m_reverse(bvm *vm)
+{
+    int top = be_top(vm);
+    be_getmember(vm, 1, ".data");
+    list_check_data(vm, 1);
+    be_data_reverse(vm, -1);
+    be_pop(vm, top);
+    be_return(vm);
+}
+
+static int m_copy(bvm *vm)
+{
+    be_getmember(vm, 1, ".data");
+    list_check_data(vm, 1);
+    be_getbuiltin(vm, "list");
+    be_copy(vm, -2);
+    be_call(vm, 1);
+    be_pop(vm, 1);
     be_return(vm);
 }
 
@@ -391,6 +409,8 @@ void be_load_listlib(bvm *vm)
         { "clear", m_clear },
         { "iter", m_iter },
         { "concat", m_concat },
+        { "reverse", m_reverse },
+        { "copy", m_copy },
         { "..", m_connect },
         { "+", m_merge },
         { "==", m_equal },
@@ -415,6 +435,8 @@ class be_class_list (scope: global, name: list) {
     clear, func(m_clear)
     iter, func(m_iter)
     concat, func(m_concat)
+    reverse, func(m_reverse)
+    copy, func(m_copy)
     .., func(m_connect)
     +, func(m_merge)
     ==, func(m_equal)

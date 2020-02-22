@@ -71,6 +71,9 @@ static void print_inst(binstruction ins, int pc)
     case OP_CLOSURE:
         logbuf("%s\tR%d\tP:%d", be_opcode2str(op), IGET_RA(ins), IGET_Bx(ins));
         break;
+    case OP_CLASS:
+        logbuf("%s\tK%d", be_opcode2str(op), IGET_Bx(ins));
+        break;
     case OP_CLOSE: case OP_LDNIL:
         logbuf("%s\t%d", be_opcode2str(op), IGET_RA(ins));
         break;

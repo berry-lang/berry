@@ -15,7 +15,8 @@
 
 #define FILE_BUFFER_SIZE    256
 
-#define STR(s)              #s
+#define __STR(s)            #s
+#define STR(s)              __STR(s)
 
 #define STACK_OVER_MSG(n) \
     "stack overflow (maximum stack size is " STR(n) ")"
@@ -359,7 +360,7 @@ void be_stack_expansion(bvm *vm, int n)
     if (size + n > BE_STACK_TOTAL_MAX) {
         /* ensure the stack is enough when generating error messages. */
         stack_resize(vm, size + 1);
-        be_raise(vm, "runtime_error", STACK_OVER_MSG(BE_STACK));
+        be_raise(vm, "runtime_error", STACK_OVER_MSG(BE_STACK_TOTAL_MAX));
     }
     stack_resize(vm, size + n);
 }

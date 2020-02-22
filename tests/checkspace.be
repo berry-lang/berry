@@ -2,8 +2,8 @@ import os
 
 def strfind(str, char)
     var len = size(str)
-    for (i : 0 .. len - 1)
-        if (str[i] == char)
+    for i : 0 .. len - 1
+        if str[i] == char
             return true
         end
     end
@@ -22,11 +22,11 @@ end
 
 def findpath(path)
     var ls = os.listdir(path)
-    for (name : ls)
+    for name : ls
         var fullname = os.path.join(path, name)
-        if (os.path.isfile(fullname))
+        if os.path.isfile(fullname)
             checkfile(fullname)
-        elif (fullname != '.' && fullname != '..')
+        elif fullname != '.' && fullname != '..'
             findpath(fullname)
         end
     end

@@ -9,7 +9,7 @@
 #endif
 #define M_PI        3.141592653589793238462643383279
 
-#if BE_SINGLE_FLOAT
+#if BE_USE_SINGLE_FLOAT
 #define mathfunc(func)          func##f
 #else
 #define mathfunc(func)          func

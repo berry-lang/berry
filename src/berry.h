@@ -41,7 +41,7 @@ typedef int                 bbool;
 typedef uint8_t             bbyte;
 typedef BE_INTEGER          bint;
 
-#if BE_SINGLE_FLOAT != 0
+#if BE_USE_SINGLE_FLOAT != 0
     typedef float           breal;
 #else
     typedef double          breal;
@@ -247,9 +247,11 @@ BERRY_API void be_newlist(bvm *vm);
 BERRY_API void be_newmap(bvm *vm);
 BERRY_API void be_newmodule(bvm *vm);
 BERRY_API void be_newcomobj(bvm *vm, void *data, bntvfunc destory);
+BERRY_API void be_newobject(bvm *vm, const char *name);
+BERRY_API bbool be_copy(bvm *vm, int index);
 BERRY_API bbool be_setname(bvm *vm, int index, const char *name);
 BERRY_API bbool be_getglobal(bvm *vm, const char *name);
-BERRY_API bbool be_setglobal(bvm *vm, const char *name);
+BERRY_API void be_setglobal(bvm *vm, const char *name);
 BERRY_API bbool be_getbuiltin(bvm *vm, const char *name);
 BERRY_API bbool be_setmember(bvm *vm, int index, const char *k);
 BERRY_API bbool be_getmember(bvm *vm, int index, const char *k);
@@ -265,6 +267,7 @@ BERRY_API bbool be_data_insert(bvm *vm, int index);
 BERRY_API bbool be_data_remove(bvm *vm, int index);
 BERRY_API bbool be_data_merge(bvm *vm, int index);
 BERRY_API void be_data_resize(bvm *vm, int index);
+BERRY_API void be_data_reverse(bvm *vm, int index);
 BERRY_API int be_iter_next(bvm *vm, int index);
 BERRY_API bbool be_iter_hasnext(bvm *vm, int index);
 BERRY_API bbool be_refcontains(bvm *vm, int index);

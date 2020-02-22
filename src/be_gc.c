@@ -200,7 +200,7 @@ static void mark_closure(bvm *vm, bgcobject *obj)
         bupval **uv = cl->upvals;
         vm->gc.gray = cl->gray; /* remove object from gray list */
         for (; count--; ++uv) {
-            if ((*uv)->refcnt) {
+            if (*uv && (*uv)->refcnt) {
                 mark_gray_var(vm, (*uv)->value);
             }
         }
@@ -216,7 +216,7 @@ static void mark_ntvclos(bvm *vm, bgcobject *obj)
         bupval **uv = &be_ntvclos_upval(f, 0);
         vm->gc.gray = f->gray; /* remove object from gray list */
         for (; count--; ++uv) {
-            if ((*uv)->refcnt) {
+            if (*uv && (*uv)->refcnt) {
                 mark_gray_var(vm, (*uv)->value);
             }
         }
@@ -279,17 +279,8 @@ static void free_closure(bvm *vm, bgcobject *obj)
 {
     bclosure *cl = cast_closure(obj);
     gc_try (cl != NULL) {
-        int i, count = cl->nupvals;
-        for (i = 0; i < count; ++i) {
-            bupval *uv = cl->upvals[i];
-            if (uv->refcnt) {
-                --uv->refcnt;
-            }
-            /* delete non-referenced closed upvalue */
-            if (uv->value == &uv->u.value && !uv->refcnt) {
-                be_free(vm, uv, sizeof(bupval));
-            }
-        }
+        int count = cl->nupvals;
+        be_release_upvalues(vm, cl);
         be_free(vm, cl, sizeof(bclosure)
             + sizeof(bupval*) * ((size_t)count - 1));
     }
@@ -425,7 +416,7 @@ static void destruct_object(bvm *vm, bgcobject *obj)
         int type;
         binstance *ins = cast_instance(obj);
         /* does not GC when creating the string "deinit". */
-        type = be_instance_member(ins, be_newstr(vm, "deinit"), vm->top);
+        type = be_instance_member(vm, ins, be_newstr(vm, "deinit"), vm->top);
         be_incrtop(vm);
         if (basetype(type) == BE_FUNCTION) {
             be_dofunc(vm, vm->top - 1, 1);

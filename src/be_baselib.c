@@ -63,33 +63,6 @@ static int l_input(bvm *vm)
     return m_readline(vm);
 }
 
-static int l_exit(bvm *vm)
-{
-    int status = 0;
-    if (be_top(vm)) {
-        if (be_isint(vm, 1)) {
-            status = be_toindex(vm, 1); /* get the exit code */
-        } else if (be_isbool(vm, 1)) {
-            status = be_tobool(vm, 1) - 1; /* true: 0, false: -1 */
-        } else {
-            status = -1;
-        }
-    }
-    be_exit(vm, status);
-    be_return_nil(vm);
-}
-
-static int l_memcount(bvm *vm)
-{
-    size_t count = be_gc_memcount(vm);
-    if (count < 0x80000000) {
-        be_pushint(vm, (bint)count);
-    } else {
-        be_pushreal(vm, (breal)count);
-    }
-    be_return(vm);
-}
-
 static int l_super(bvm *vm)
 {
     if (be_top(vm)) {
@@ -188,7 +161,8 @@ static int l_iterator(bvm *vm)
 {
     if (be_top(vm) && be_isfunction(vm, 1)) {
         be_return(vm); /* return the argument[0]::function */
-    } else if (check_method(vm, "iter")) {
+    }
+    if (check_method(vm, "iter")) {
         be_pushvalue(vm, 1);
         be_call(vm, 1);
         be_pop(vm, 1);
@@ -288,9 +262,7 @@ void be_load_baselib(bvm *vm)
     be_regfunc(vm, "assert", l_assert);
     be_regfunc(vm, "print", l_print);
     be_regfunc(vm, "input", l_input);
-    be_regfunc(vm, "exit", l_exit);
     be_regfunc(vm, "super", l_super);
-    be_regfunc(vm, "memcount", l_memcount);
     be_regfunc(vm, "type", l_type);
     be_regfunc(vm, "classname", l_classname);
     be_regfunc(vm, "classof", l_classof);
@@ -313,9 +285,7 @@ vartab m_builtin (scope: local) {
     assert, func(l_assert)
     print, func(l_print)
     input, func(l_input)
-    exit, func(l_exit)
     super, func(l_super)
-    memcount, func(l_memcount)
     type, func(l_type)
     classname, func(l_classname)
     classof, func(l_classof)

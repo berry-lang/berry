@@ -320,7 +320,8 @@ static int new_localvar(bparser *parser, bstring *name)
 
 static int find_upval(bfuncinfo *finfo, bstring *s)
 {
-    bvalue *desc = be_map_findstr(finfo->upval, s);
+    bvm *vm = finfo->lexer->vm;
+    bvalue *desc = be_map_findstr(vm, finfo->upval, s);
     if (desc) {
         return upval_index(desc->v.i);
     }
@@ -369,20 +370,6 @@ static void new_var(bparser *parser, bstring *name, bexpdesc *var)
                 "too many global variables (in '%s')", str(name));
         }
     }
-}
-
-static void new_class(bparser *parser, bstring *name, bclass *c, bexpdesc *e)
-{
-    bvalue *var;
-    bfuncinfo *finfo = parser->finfo;
-    new_var(parser, name, e);
-    if (e->type == ETLOCAL) {
-        var = be_code_localobject(finfo, e->v.idx);
-    } else {
-        var = be_code_globalobject(finfo, e->v.idx);
-    }
-    var_settype(var, BE_CLASS);
-    var->v.p = c;
 }
 
 static int singlevaraux(bvm *vm, bfuncinfo *finfo, bstring *s, bexpdesc *var)
@@ -912,11 +899,9 @@ static int block_follow(bparser *parser)
 static int cond_stmt(bparser *parser)
 {
     bexpdesc e;
-    /* (expr) */
-    match_token(parser, OptLBK); /* skip '(' */
+    /* expr */
     match_notoken(parser, OptRBK);
     expr(parser, &e);
-    match_token(parser, OptRBK); /* skip ')' */
     be_code_goiftrue(parser->finfo, &e);
     return e.f;
 }
@@ -936,7 +921,7 @@ static void condition_block(bparser *parser, int *jmp)
 static void if_stmt(bparser *parser)
 {
     int jl = NO_JUMP; /* jump list */
-    /* IF (expr) block {ELSEIF (expr) block}, [ELSE block], end */
+    /* IF expr block {ELSEIF expr block}, [ELSE block], end */
     scan_next_token(parser); /* skip 'if' */
     condition_block(parser, &jl);
     while (match_skip(parser, KeyElif)) { /* 'elif' */
@@ -962,7 +947,7 @@ static void while_stmt(bparser *parser)
     int brk;
     bblockinfo binfo;
     bfuncinfo *finfo = parser->finfo;
-    /* WHILE (expr) block END */
+    /* WHILE expr block END */
     scan_next_token(parser); /* skip 'while' */
     begin_block(parser->finfo, &binfo, BLOCK_LOOP);
     brk = cond_stmt(parser);
@@ -1048,14 +1033,12 @@ static void for_stmt(bparser *parser)
     bblockinfo binfo;
     bstring *var;
     bexpdesc iter;
-    /* FOR (ID : expr) block END */
+    /* FOR ID : expr block END */
     scan_next_token(parser); /* skip 'for' */
-    match_token(parser, OptLBK); /* skip '(' */
     begin_block(parser->finfo, &binfo, BLOCK_EXCEPT);
     var = for_itvar(parser);
     match_token(parser, OptColon); /* skip ':' */
     for_init(parser, &iter);
-    match_token(parser, OptRBK); /* skip ')' */
     jcatch = be_code_exblk(parser->finfo, 0);
     for_iter(parser, var, &iter);
     for_leave(parser, jcatch);
@@ -1154,7 +1137,7 @@ static void return_stmt(bparser *parser)
 
 static void check_class_attr(bparser *parser, bclass *c, bstring *attr)
 {
-    if (be_class_attribute(c, attr) != BE_NIL) {
+    if (be_class_attribute(parser->vm, c, attr) != BE_NIL) {
         push_error(parser,
             "redefinition of the attribute '%s'", str(attr));
     }
@@ -1228,7 +1211,8 @@ static void class_stmt(bparser *parser)
     if (match_id(parser, name) != NULL) {
         bexpdesc e;
         bclass *c = be_newclass(parser->vm, name, NULL);
-        new_class(parser, name, c, &e);
+        new_var(parser, name, &e);
+        be_code_class(parser->finfo, &e, c);
         class_inherit(parser, &e);
         class_block(parser, c);
         be_class_compress(parser->vm, c); /* compress class size */
@@ -1349,18 +1333,14 @@ static void except_block(bparser *parser, int *jmp, int *jbrk)
     int vcnt = 0; /* exception variable count */
     bblockinfo binfo;
     bfuncinfo *finfo = parser->finfo;
-    /* 'except' '(' [(expr {',' expr} | '..') ['as' ID [',' ID]]] ')' */
+    /* 'except' (expr {',' expr} | '..') ['as' ID [',' ID]] */
     match_token(parser, KeyExcept); /* skip 'except' */
-    match_token(parser, OptLBK); /* skip '(' */
     begin_block(finfo, &binfo, 0); /* begin catch block */
     /* link from the previous except failure point */
     be_code_conjump(finfo, jmp, finfo->pc);
-    if (!match_skip(parser, OptRBK)) { /* not match ')' */
-        /* not ')' ==> (expr {',' expr} | '..') ['as' ID [, ID]] */
-        ecnt = except_case_list(parser, &base);
-        vcnt = except_var_list(parser, base);
-        match_token(parser, OptRBK); /* ')' */
-    }
+    /* (expr {',' expr} | '..') ['as' ID [',' ID]] */
+    ecnt = except_case_list(parser, &base);
+    vcnt = except_var_list(parser, base);
     be_code_catch(finfo, base, ecnt, vcnt, jmp);
     stmtlist(parser);
     be_code_conjump(finfo, jbrk, be_code_jump(finfo));
@@ -1370,7 +1350,7 @@ static void except_block(bparser *parser, int *jmp, int *jbrk)
 static void try_stmt(bparser *parser)
 {
     int jcatch, jbrk;
-    /* 'try' block 'except' '(' ID ')' block 'end' */
+    /* 'try' block 'except' except_stmt block 'end' */
     scan_next_token(parser); /* skip 'try' */
     jcatch = be_code_exblk(parser->finfo, 0);
     block(parser, BLOCK_EXCEPT);

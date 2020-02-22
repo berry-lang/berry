@@ -68,7 +68,7 @@ static bstring* cache_string(blexer *lexer, bstring *s)
     bvm *vm = lexer->vm;
     var_setstr(vm->top, s);
     be_stackpush(vm); /* cache string to stack */
-    res = be_map_findstr(lexer->strtab, s);
+    res = be_map_findstr(lexer->vm, lexer->strtab, s);
     if (res) {
         s = var_tostr(&be_map_val2node(res)->key);
     } else {

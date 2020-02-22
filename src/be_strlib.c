@@ -98,7 +98,7 @@ static bstring* ins2str(bvm *vm, int idx)
     bstring *s = be_newstr(vm, "tostring");
     binstance *obj = var_toobj(vm->reg + idx);
     /* get method 'tostring' */
-    int type = be_instance_member(obj, s, vm->top);
+    int type = be_instance_member(vm, obj, s, vm->top);
     be_incrtop(vm); /* push the obj::tostring to stack */
     if (basetype(type) != BE_FUNCTION) {
         bstring *name = be_class_name(be_instance_class(obj));
@@ -111,8 +111,7 @@ static bstring* ins2str(bvm *vm, int idx)
         *vm->top = vm->reg[idx];
         be_dofunc(vm, vm->top - 1, 1);
         be_stackpop(vm, 1); /* pop the obj::tostring */
-        /* check the return value */
-        if (!var_isstr(vm->top)) {
+        if (!var_isstr(vm->top)) { /* check the return value */
             const char *name = str(be_instance_name(obj));
             be_raise(vm, "runtime_error", be_pushfstring(vm,
                 "the value of `%s::tostring()` is not a 'string'",
@@ -461,6 +460,28 @@ static int str_format(bvm *vm)
     be_return_nil(vm);
 }
 
+static int str_split(bvm *vm)
+{
+    int top = be_top(vm);
+    be_newobject(vm, "list");
+    if (top >= 2 && be_isstring(vm, 1) && be_isint(vm, 2)) {
+        int len = be_strlen(vm, 1), idx = be_toindex(vm, 2);
+        const char *s = be_tostring(vm, 1);
+        idx = idx > len ? len : idx < -len ? -len : idx;
+        if (idx < 0) {
+            idx += len;
+        }
+        be_pushnstring(vm, s, idx);
+        be_data_push(vm, -2);
+        be_pop(vm, 1);
+        be_pushnstring(vm, s + idx, len - idx);
+        be_data_push(vm, -2);
+        be_pop(vm, 1);
+    }
+    be_pop(vm, 1);
+    be_return(vm);
+}
+
 static int str_i2hex(bvm *vm)
 {
     int top = be_top(vm);
@@ -480,10 +501,33 @@ static int str_i2hex(bvm *vm)
     be_return_nil(vm);
 }
 
+static int str_byte(bvm *vm)
+{
+    if (be_top(vm) && be_isstring(vm, 1)) {
+        const bbyte *s = (const bbyte *)be_tostring(vm, 1);
+        be_pushint(vm, *s);
+        be_return(vm);
+    }
+    be_return_nil(vm);
+}
+
+static int str_char(bvm *vm)
+{
+    if (be_top(vm) && be_isint(vm, 1)) {
+        char c = be_toint(vm, 1) & 0xFF;
+        be_pushnstring(vm, &c, 1);
+        be_return(vm);
+    }
+    be_return_nil(vm);
+}
+
 #if !BE_USE_PRECOMPILED_OBJECT
 be_native_module_attr_table(string) {
     be_native_module_function("format", str_format),
-    be_native_module_function("hex", str_i2hex)
+    be_native_module_function("split", str_split),
+    be_native_module_function("hex", str_i2hex),
+    be_native_module_function("byte", str_byte),
+    be_native_module_function("char", str_char)
 };
 
 be_define_native_module(string, NULL);
@@ -491,7 +535,10 @@ be_define_native_module(string, NULL);
 /* @const_object_info_begin
 module string (scope: global, depend: BE_USE_STRING_MODULE) {
     format, func(str_format)
+    split, func(str_split)
     hex, func(str_i2hex)
+    byte, func(str_byte)
+    char, func(str_char)
 }
 @const_object_info_end */
 #include "../generate/be_fixed_string.h"

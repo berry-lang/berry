@@ -6,9 +6,9 @@ block = {statement};
 statement = class_stmt | func_stmt | var_stmt | if_stmt | while_stmt |
          for_stmt | break_stmt | return_stmt | expr_stmt | import_stmt |
          try_stmt | throw_stmt | ';';
-if_stmt = 'if' '(' 'expr' ')' block {'elif' '(' expr ')' block} ['else' block] 'end';
-while_stmt = 'while' '(' expr ')' block 'end';
-for_stmt = 'for' '(' ID ':' expr')' block 'end';
+if_stmt = 'if' 'expr' block {'elif' expr block} ['else' block] 'end';
+while_stmt = 'while' expr block 'end';
+for_stmt = 'for' ID ':' expr block 'end';
 break_stmt = 'break' | 'continue';
 return_stmt = 'return' [expr];
 (* function define statement *)
@@ -21,7 +21,7 @@ import_stmt = 'import' (ID (['as' ID] | {',' ID}) | STRING 'as' ID);
 (* exceptional handling statement *)
 try_stmt = 'try' block except_block {except_block} 'end';
 except_block = except_stmt block;
-except_stmt = 'except' '(' [(expr {',' expr} | '..') ['as' ID [',' ID]]] ')';
+except_stmt = 'except' (expr {',' expr} | '..') ['as' ID [',' ID]];
 throw_stmt = 'raise' expr [',' expr];
 (* variable define statement *)
 var_stmt = 'var' ID ['=' expr] {',' ID ['=' expr]};

@@ -2,14 +2,14 @@ def qsort(data)
     # do once sort
     def once(left, right)
         var pivot = data[left] # use the 0th value as the pivot
-        while (left < right) # check if sort is complete
+        while left < right # check if sort is complete
             # put the value less than the pivot to the left
-            while (left < right && data[right] >= pivot)
+            while left < right && data[right] >= pivot
                 right -= 1 # skip values greater than pivot
             end
             data[left] = data[right]
             # put the value greater than the pivot on the right
-            while (left < right && data[left] <= pivot)
+            while left < right && data[left] <= pivot
                 left += 1 # skip values less than pivot
             end
             data[right] = data[left]
@@ -35,9 +35,8 @@ import time, math
 math.srand(time.time()) # sse system time as a random seed
 data = []
 # put 20 random numbers into the array
-for (i : 1 .. 20)
+for i : 1 .. 20
     data.push(math.rand() % 100)
 end
 # sort and print
-print(qsort(data))
 print(qsort(data))
