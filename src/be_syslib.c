@@ -13,7 +13,7 @@ static int m_path(bvm *vm)
 
 #if !BE_USE_PRECOMPILED_OBJECT
 be_native_module_attr_table(sys){
-    be_native_module_function("path", m_path),
+    be_native_module_function("path", m_path)
 };
 
 be_define_native_module(sys, NULL);

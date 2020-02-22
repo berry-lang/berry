@@ -460,6 +460,28 @@ static int str_format(bvm *vm)
     be_return_nil(vm);
 }
 
+static int str_split(bvm *vm)
+{
+    int top = be_top(vm);
+    be_newobject(vm, "list");
+    if (top >= 2 && be_isstring(vm, 1) && be_isint(vm, 2)) {
+        int len = be_strlen(vm, 1), idx = be_toindex(vm, 2);
+        const char *s = be_tostring(vm, 1);
+        idx = idx > len ? len : idx < -len ? -len : idx;
+        if (idx < 0) {
+            idx += len;
+        }
+        be_pushnstring(vm, s, idx);
+        be_data_push(vm, -2);
+        be_pop(vm, 1);
+        be_pushnstring(vm, s + idx, len - idx);
+        be_data_push(vm, -2);
+        be_pop(vm, 1);
+    }
+    be_pop(vm, 1);
+    be_return(vm);
+}
+
 static int str_i2hex(bvm *vm)
 {
     int top = be_top(vm);
@@ -502,6 +524,7 @@ static int str_char(bvm *vm)
 #if !BE_USE_PRECOMPILED_OBJECT
 be_native_module_attr_table(string) {
     be_native_module_function("format", str_format),
+    be_native_module_function("split", str_split),
     be_native_module_function("hex", str_i2hex),
     be_native_module_function("byte", str_byte),
     be_native_module_function("char", str_char)
@@ -512,6 +535,7 @@ be_define_native_module(string, NULL);
 /* @const_object_info_begin
 module string (scope: global, depend: BE_USE_STRING_MODULE) {
     format, func(str_format)
+    split, func(str_split)
     hex, func(str_i2hex)
     byte, func(str_byte)
     char, func(str_char)

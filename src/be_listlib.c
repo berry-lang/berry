@@ -435,8 +435,8 @@ class be_class_list (scope: global, name: list) {
     clear, func(m_clear)
     iter, func(m_iter)
     concat, func(m_concat)
-    reverse, func(m_reverse),
-    copy, func(m_copy),
+    reverse, func(m_reverse)
+    copy, func(m_copy)
     .., func(m_connect)
     +, func(m_merge)
     ==, func(m_equal)
