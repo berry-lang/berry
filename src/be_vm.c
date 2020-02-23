@@ -49,6 +49,8 @@
         res = ibinop(op, a, b); \
     } else if (var_isnumber(a) && var_isnumber(b)) { \
         res = var2real(a) op var2real(b); \
+    } else if (var_isinstance(a)) { \
+        res = object_eqop(vm, #op, iseq, a, b); \
     } else if (var_type(a) == var_type(b)) { /* same types */ \
         if (var_isnil(a)) { /* nil op nil */ \
             res = 1 op 1; \
@@ -58,8 +60,6 @@
             res = 1 op be_eqstr(a->v.s, b->v.s); \
         } else if (var_isclass(a) || var_isfunction(a)) { \
             res = var_toobj(a) op var_toobj(b); \
-        } else if (var_isinstance(a)) { \
-            res = object_eqop(vm, #op, iseq, a, b); \
         } else { \
             binop_error(vm, #op, a, b); \
             res = bfalse; /* will not be executed */ \
