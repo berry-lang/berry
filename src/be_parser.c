@@ -10,7 +10,7 @@
 #include "be_string.h"
 #include "be_func.h"
 #include "be_class.h"
-#include "be_opcode.h"
+#include "be_decoder.h"
 #include "be_debug.h"
 #include "be_exec.h"
 

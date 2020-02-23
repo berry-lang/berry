@@ -1,5 +1,5 @@
 #include "be_vm.h"
-#include "be_opcode.h"
+#include "be_decoder.h"
 #include "be_string.h"
 #include "be_strlib.h"
 #include "be_class.h"
@@ -15,7 +15,7 @@
 #include "be_libs.h"
 #include <string.h>
 
-#define NOT_METHOD      BE_NONE
+#define NOT_METHOD          BE_NONE
 
 #define vm_error(vm, except, ...) \
     be_raise(vm, except, be_pushfstring(vm, __VA_ARGS__))

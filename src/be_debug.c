@@ -1,6 +1,6 @@
 #include "be_debug.h"
 #include "be_func.h"
-#include "be_opcode.h"
+#include "be_decoder.h"
 #include "be_string.h"
 #include "be_class.h"
 #include "be_vm.h"
@@ -25,6 +25,16 @@
     } while (0)
 
 #if BE_USE_DEBUG_MODULE
+static const char* opc2str(bopcode op)
+{
+    static const char* const opc_tab[] = {
+        #define OPCODE(opc) #opc
+        #include "be_opcodes.h"
+        #undef OPCODE
+    };
+    return op < array_count(opc_tab) ? opc_tab[op] : "ERROP";
+}
+
 static void print_inst(binstruction ins, int pc)
 {
     char __lbuf[INST_BUF_SIZE];
@@ -39,59 +49,59 @@ static void print_inst(binstruction ins, int pc)
     case OP_GETMBR: case OP_SETMBR:  case OP_GETMET:
     case OP_GETIDX: case OP_SETIDX: case OP_AND:
     case OP_OR: case OP_XOR: case OP_SHL: case OP_SHR:
-        logbuf("%s\tR%d\tR%d\tR%d", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins), IGET_RKC(ins));
+        logbuf("%s\tR%d\tR%d\tR%d", opc2str(op), IGET_RA(ins), IGET_RKB(ins), IGET_RKC(ins));
         break;
     case OP_GETGBL: case OP_SETGBL:
-        logbuf("%s\tR%d\tG:%d", be_opcode2str(op), IGET_RA(ins), IGET_Bx(ins));
+        logbuf("%s\tR%d\tG:%d", opc2str(op), IGET_RA(ins), IGET_Bx(ins));
         break;
     case OP_MOVE: case OP_SETSUPER: case OP_NEG: case OP_FLIP: case OP_IMPORT:
-        logbuf("%s\tR%d\tR%d", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins));
+        logbuf("%s\tR%d\tR%d", opc2str(op), IGET_RA(ins), IGET_RKB(ins));
         break;
     case OP_JMP:
-        logbuf("%s\t\t[%d]", be_opcode2str(op), IGET_sBx(ins) + pc + 1);
+        logbuf("%s\t\t[%d]", opc2str(op), IGET_sBx(ins) + pc + 1);
         break;
     case OP_JMPT: case OP_JMPF:
-        logbuf("%s\tR%d\t[%d]", be_opcode2str(op), IGET_RA(ins), IGET_sBx(ins) + pc + 1);
+        logbuf("%s\tR%d\t[%d]", opc2str(op), IGET_RA(ins), IGET_sBx(ins) + pc + 1);
         break;
     case OP_LDINT:
-        logbuf("%s\tR%d\t%d", be_opcode2str(op), IGET_RA(ins), IGET_sBx(ins));
+        logbuf("%s\tR%d\t%d", opc2str(op), IGET_RA(ins), IGET_sBx(ins));
         break;
     case OP_LDBOOL:
-        logbuf("%s\tR%d\t%d\t%d", be_opcode2str(op),  IGET_RA(ins), IGET_RKB(ins), IGET_RKC(ins));
+        logbuf("%s\tR%d\t%d\t%d", opc2str(op),  IGET_RA(ins), IGET_RKB(ins), IGET_RKC(ins));
         break;
     case OP_RET:
-        logbuf("%s\t%d\tR%d", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins));
+        logbuf("%s\t%d\tR%d", opc2str(op), IGET_RA(ins), IGET_RKB(ins));
         break;
     case OP_GETUPV: case OP_SETUPV:
-        logbuf("%s\tR%d\tU:%d", be_opcode2str(op), IGET_RA(ins), IGET_Bx(ins));
+        logbuf("%s\tR%d\tU:%d", opc2str(op), IGET_RA(ins), IGET_Bx(ins));
         break;
     case OP_CALL:
-        logbuf("%s\tR%d\t%d", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins));
+        logbuf("%s\tR%d\t%d", opc2str(op), IGET_RA(ins), IGET_RKB(ins));
         break;
     case OP_CLOSURE:
-        logbuf("%s\tR%d\tP:%d", be_opcode2str(op), IGET_RA(ins), IGET_Bx(ins));
+        logbuf("%s\tR%d\tP:%d", opc2str(op), IGET_RA(ins), IGET_Bx(ins));
         break;
     case OP_CLASS:
-        logbuf("%s\tK%d", be_opcode2str(op), IGET_Bx(ins));
+        logbuf("%s\tK%d", opc2str(op), IGET_Bx(ins));
         break;
     case OP_CLOSE: case OP_LDNIL:
-        logbuf("%s\t%d", be_opcode2str(op), IGET_RA(ins));
+        logbuf("%s\t%d", opc2str(op), IGET_RA(ins));
         break;
     case OP_RAISE:
-        logbuf("%s\t%d\tR%d\tR%d", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins), IGET_RKC(ins));
+        logbuf("%s\t%d\tR%d\tR%d", opc2str(op), IGET_RA(ins), IGET_RKB(ins), IGET_RKC(ins));
         break;
     case OP_EXBLK:
         if (IGET_RA(ins)) {
-            logbuf("%s\t%d\t%d", be_opcode2str(op), IGET_RA(ins), IGET_Bx(ins));
+            logbuf("%s\t%d\t%d", opc2str(op), IGET_RA(ins), IGET_Bx(ins));
         } else {
-            logbuf("%s\t%d\t[%d]", be_opcode2str(op), IGET_RA(ins), IGET_sBx(ins) + pc + 1);
+            logbuf("%s\t%d\t[%d]", opc2str(op), IGET_RA(ins), IGET_sBx(ins) + pc + 1);
         }
         break;
     case OP_CATCH:
-        logbuf("%s\tR%d\t%d\t%d", be_opcode2str(op), IGET_RA(ins), IGET_RKB(ins), IGET_RKC(ins));
+        logbuf("%s\tR%d\t%d\t%d", opc2str(op), IGET_RA(ins), IGET_RKB(ins), IGET_RKC(ins));
         break;
     default:
-        logbuf("%s", be_opcode2str(op));
+        logbuf("%s", opc2str(op));
         break;
     }
     be_writestring(__lbuf);

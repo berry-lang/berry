@@ -1,7 +1,7 @@
 #include "be_code.h"
 #include "be_parser.h"
 #include "be_lexer.h"
-#include "be_opcode.h"
+#include "be_decoder.h"
 #include "be_vector.h"
 #include "be_list.h"
 #include "be_var.h"

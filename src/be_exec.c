@@ -6,7 +6,7 @@
 #include "be_sys.h"
 #include "be_debug.h"
 #include "be_bytecode.h"
-#include "be_opcode.h"
+#include "be_decoder.h"
 #include <stdlib.h>
 
 #if !BE_USE_SCRIPT_COMPILER && !BE_USE_BYTECODE_LOADER
