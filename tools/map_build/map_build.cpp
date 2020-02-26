@@ -164,8 +164,9 @@ std::string map_build::vartab_tostring(const block &block)
     ostr << "};\n\n";
 
     ostr << "static const bvector " << block.name << "_vector = {\n"
-            "    .capacity = " << varvec.size() <<
-            ", .size = sizeof(bvalue),\n" <<
+            "    .capacity = " << varvec.size() << ",\n" <<
+            "    .size = sizeof(bvalue),\n" <<
+            "    .count = " << varvec.size() << ",\n" <<
             "    .data = (void*)__vlist_array,\n" <<
             "    .end = (void*)(__vlist_array + " << varvec.size() - 1 << ")\n" <<
             "};" << std::endl;

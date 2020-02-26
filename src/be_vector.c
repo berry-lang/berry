@@ -9,6 +9,7 @@ void be_vector_init(bvm *vm, bvector *vector, int size)
 {
     vector->capacity = 2; /* the default capacity */
     vector->size = size;
+    vector->count = 0;
     vector->data = be_malloc(vm, (size_t)vector->capacity * size);
     vector->end = (char*)vector->data - size;
     memset(vector->data, 0, (size_t)vector->capacity * size);
@@ -17,19 +18,6 @@ void be_vector_init(bvm *vm, bvector *vector, int size)
 void be_vector_delete(bvm *vm, bvector *vector)
 {
     be_free(vm, vector->data, (size_t)vector->capacity * vector->size);
-}
-
-int be_vector_count(const bvector *vector)
-{
-    size_t size = vector->size;
-    return vector->data ?
-        cast_int(((size_t)vector->end + size - (size_t)vector->data) / size)
-        : 0;
-}
-
-bbool be_vector_isempty(const bvector *vector)
-{
-    return cast_bool(vector->data && vector->data > vector->end);
 }
 
 void* be_vector_at(bvector *vector, int index)
@@ -41,7 +29,7 @@ void be_vector_push(bvm *vm, bvector *vector, void *data)
 {
     size_t size = vector->size;
     size_t capacity = vector->capacity;
-    size_t count = be_vector_count(vector);
+    size_t count = vector->count++;
     if (count >= capacity) {
         int newcap = be_nextsize(vector->capacity);
         vector->data = be_realloc(vm,
@@ -69,12 +57,15 @@ void be_vector_push_c(bvm *vm, bvector *vector, void *data)
 
 void be_vector_remove_end(bvector *vector)
 {
+    be_assert(count > 0);
+    vector->count--;
     vector->end = (char*)vector->end - vector->size;
 }
 
 void be_vector_resize(bvm *vm, bvector *vector, int count)
 {
     size_t size = vector->size;
+    be_assert(count >= 0);
     if (count != be_vector_count(vector)) {
         int newcap = be_nextsize(count);
         if (newcap > vector->capacity) { /* extended capacity */
@@ -82,12 +73,14 @@ void be_vector_resize(bvm *vm, bvector *vector, int count)
                 vector->data, vector->capacity * size, newcap * size);
             vector->capacity = newcap;
         }
+        vector->count = count;
         vector->end = (char*)vector->data + size * ((size_t)count - 1);
     }
 }
 
 void be_vector_clear(bvector *vector)
 {
+    vector->count = 0;
     vector->end = (char*)vector->data - vector->size;
 }
 

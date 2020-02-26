@@ -114,14 +114,18 @@ static binstance* instance_member(bvm *vm,
 
 void be_class_upvalue_init(bvm *vm, bclass *c)
 {
-    bmapnode *node;
-    bmapiter iter = be_map_iter();
-    while ((node = be_map_next(c->members, &iter)) != NULL) {
-        if (var_isclosure(&node->value)) {
-            bclosure *cl = var_toobj(&node->value);
-            if (cl->proto->nupvals) {
-                be_release_upvalues(vm, cl);
-                be_initupvals(vm, cl); /* initialize the closure's upvalues */
+    bmap *mbr = c->members;
+    if (mbr != NULL) {
+        bmapnode *node;
+        bmapiter iter = be_map_iter();
+        while ((node = be_map_next(mbr, &iter)) != NULL) {
+            if (var_isclosure(&node->value)) {
+                bclosure *cl = var_toobj(&node->value);
+                if (cl->proto->nupvals) {
+                    /* initialize the closure's upvalues */
+                    be_release_upvalues(vm, cl);
+                    be_initupvals(vm, cl);
+                }
             }
         }
     }

@@ -72,7 +72,7 @@
  * will not be used.
  * Default: 0
  **/
-#define BE_USE_FILE_SYSTEM              0
+#define BE_USE_FILE_SYSTEM              1
 
 /* Macro: BE_USE_SCRIPT_COMPILER
  * Enable compiler when BE_USE_SCRIPT_COMPILER is not 0, otherwise

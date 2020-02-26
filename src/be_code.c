@@ -1,7 +1,7 @@
 #include "be_code.h"
+#include "be_decoder.h"
 #include "be_parser.h"
 #include "be_lexer.h"
-#include "be_decoder.h"
 #include "be_vector.h"
 #include "be_list.h"
 #include "be_var.h"
@@ -21,7 +21,6 @@
 #define var2anyreg(f, e)        var2reg(f, e, (f)->freereg)
 #define hasjump(e)              ((e)->t != (e)->f || notexpr(e))
 #define code_bool(f, r, b, j)   codeABC(f, OP_LDBOOL, r, b, j)
-#define code_move(f, a, b)      codeABC(f, OP_MOVE, a, b, 0)
 #define code_call(f, a, b)      codeABC(f, OP_CALL, a, b, 0)
 #define code_getmbr(f, a, b, c) codeABC(f, OP_GETMBR, a, b, c)
 #define jumpboolop(e, b)        ((b) != notmask(e) ? OP_JMPT : OP_JMPF)
@@ -68,6 +67,23 @@ static int codeABC(bfuncinfo *finfo, bopcode op, int a, int b, int c)
 static int codeABx(bfuncinfo *finfo, bopcode op, int a, int bx)
 {
     return codeinst(finfo, ISET_OP(op) | ISET_RA(a) | ISET_Bx(bx));
+}
+
+static void code_move(bfuncinfo *finfo, int a, int b)
+{
+    if (finfo->pc) {
+        binstruction *i = be_vector_end(&finfo->code);
+        bopcode op = IGET_OP(*i);
+        if (op <= OP_LDNIL) {
+            /* remove redundant MOVE instruction */
+            int x = IGET_RA(*i), y = IGET_RKB(*i), z = IGET_RKC(*i);
+            if (b == x && (a == y || (op < OP_NEG && a == z))) {
+                *i = (*i & ~IRA_MASK) | ISET_RA(a);
+                return;
+            }
+        }
+    }
+    codeABC(finfo, OP_MOVE, a, b, 0);
 }
 
 static void free_expreg(bfuncinfo *finfo, bexpdesc *e)
@@ -311,15 +327,25 @@ static void code_closure(bfuncinfo *finfo, int idx, int dst)
     codeABx(finfo, OP_CLOSURE, dst, idx); /* load closure to register */
 }
 
+static bbool constint(bfuncinfo *finfo, bint i)
+{
+    /* cache common numbers */
+    if ((i < IsBx_MIN || i > IsBx_MAX) ||
+        (i >= 0 && i <= 3 && be_vector_count(&finfo->kvec) < 256)) {
+        return btrue;
+    }
+    return bfalse;
+}
+
 static int var2reg(bfuncinfo *finfo, bexpdesc *e, int dst)
 {
     be_assert(e != NULL);
     switch (e->type) {
     case ETINT:
-        if (e->v.i >= IsBx_MIN && e->v.i <= IsBx_MAX) {
-            codeABx(finfo, OP_LDINT, dst, var_toidx(e) + IsBx_MAX);
-        } else {
+        if (constint(finfo, e->v.i)) {
             return exp2const(finfo, e);
+        } else {
+            codeABx(finfo, OP_LDINT, dst, var_toidx(e) + IsBx_MAX);
         }
         break;
     case ETBOOL:

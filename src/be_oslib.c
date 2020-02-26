@@ -9,6 +9,10 @@
 
 #if BE_USE_OS_MODULE
 
+#if !BE_USE_FILE_SYSTEM
+  #error the dependent macro BE_USE_FILE_SYSTEM must be enabled
+#endif
+
 static int m_getcwd(bvm *vm)
 {
     char *buf = be_malloc(vm, FNAME_BUF_SIZE);

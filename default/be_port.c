@@ -167,7 +167,7 @@ size_t be_fsize(void *hfile)
 
 #endif /* !defined(USE_FATFS) */
 
-#if BE_USE_OS_MODULE || BE_USE_FILE_SYSTEM
+#if BE_USE_FILE_SYSTEM
 #if defined(USE_FATFS) /* FatFs */
 
 int be_isdir(const char *path)

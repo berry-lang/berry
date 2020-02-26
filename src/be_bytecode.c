@@ -1,7 +1,7 @@
 #include "be_bytecode.h"
+#include "be_decoder.h"
 #include "be_vector.h"
 #include "be_string.h"
-#include "be_decoder.h"
 #include "be_class.h"
 #include "be_func.h"
 #include "be_exec.h"
@@ -11,7 +11,6 @@
 #include "be_sys.h"
 #include "be_var.h"
 #include "be_vm.h"
-#include "be_gc.h"
 #include <string.h>
 
 #define MAGIC_NUMBER1       0xBE
@@ -267,7 +266,7 @@ void be_bytecode_save(bvm *vm, const char *filename, bproto *proto)
 #endif /* BE_USE_BYTECODE_SAVER */
 
 #if BE_USE_BYTECODE_LOADER
-static void load_proto(bvm *vm, void *fp, bproto **proto);
+static void load_proto(bvm *vm, void *fp, bproto **proto, int info);
 
 static uint8_t load_byte(void *fp)
 {
@@ -393,7 +392,7 @@ static void load_class(bvm *vm, void *fp, bvalue *v)
         value = vm->top;
         var_setproto(value, NULL);
         be_incrtop(vm);
-        load_proto(vm, fp, cast(bproto**, &var_toobj(value)));
+        load_proto(vm, fp, (bproto**)&var_toobj(value), -3);
         be_method_bind(vm, c, name, var_toobj(value));
         be_stackpop(vm, 2); /* pop the cached string and proto */
     }
@@ -415,14 +414,14 @@ static void load_value(bvm *vm, void *fp, bvalue *v)
     }
 }
 
-static void load_bytecode(bvm *vm, void *fp, bproto *proto)
+static void load_bytecode(bvm *vm, void *fp, bproto *proto, int info)
 {
     int size = (int)load_long(fp);
     if (size) {
         binstruction *code, *end;
         int bcnt = be_builtin_count(vm);
-        blist *list = var_toobj(be_indexof(vm, -1));
-        be_assert(be_islist(vm, -1));
+        blist *list = var_toobj(be_indexof(vm, info));
+        be_assert(be_islist(vm, info));
         proto->code = be_malloc(vm, sizeof(binstruction) * size);
         proto->codesize = size;
         code = proto->code;
@@ -466,7 +465,7 @@ static void load_proto_table(bvm *vm, void *fp, bproto *proto)
         proto->ptab = p;
         proto->nproto = size;
         while (size--) {
-            load_proto(vm, fp, p++);
+            load_proto(vm, fp, p++, -1);
         }
     }
 }
@@ -486,14 +485,14 @@ static void load_upvals(bvm *vm, void *fp, bproto *proto)
     }
 }
 
-static void load_proto(bvm *vm, void *fp, bproto **proto)
+static void load_proto(bvm *vm, void *fp, bproto **proto, int info)
 {
     *proto = be_newproto(vm);
     (*proto)->name = load_string(vm, fp);
     (*proto)->source = load_string(vm, fp);
     (*proto)->argc = load_byte(fp);
     (*proto)->nstack = load_byte(fp);
-    load_bytecode(vm, fp, *proto);
+    load_bytecode(vm, fp, *proto, info);
     load_constant(vm, fp, *proto);
     load_proto_table(vm, fp, *proto);
     load_upvals(vm, fp, *proto);
@@ -529,7 +528,7 @@ bclosure* be_bytecode_load(bvm *vm, const char *filename)
         var_setclosure(vm->top, cl);
         be_stackpush(vm);
         load_global_info(vm, fp);
-        load_proto(vm, fp, &cl->proto);
+        load_proto(vm, fp, &cl->proto, -1);
         be_stackpop(vm, 2); /* pop the closure and list */
         be_fclose(fp);
         return cl;

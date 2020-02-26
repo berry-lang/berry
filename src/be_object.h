@@ -57,6 +57,7 @@ typedef struct bstring {
 typedef struct bvector {
     int capacity;   /* the number of elements that the vector can store */
     int size;       /* the size of each element (bytes) */
+    int count;      /* number of elements of the vector */
     void *data;     /* the data block pointer, if vector is empty,
                        it will point to the first element */
     void *end;      /* pointer to the last element, if the vector is empty,

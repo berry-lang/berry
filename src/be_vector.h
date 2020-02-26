@@ -7,7 +7,9 @@
 #define be_vector_data(vector)          ((vector)->data)
 #define be_vector_first(vector)         ((vector)->data)
 #define be_vector_isend(vector, item)   ((item) > (vector)->end)
+#define be_vector_isempty(vector)       (!(vector)->count)
 #define be_vector_end(vector)           ((vector)->end)
+#define be_vector_count(vector)         ((vector)->count)
 #define be_vector_capacity(vector)      ((vector)->capacity)
 #define be_stack_init(vm, stack, size)  be_vector_init(vm, stack, size)
 #define be_stack_delete(vm, stack)      be_vector_delete(vm, stack)
@@ -22,8 +24,6 @@
 /* ========================== function extern ========================== */
 void be_vector_init(bvm *vm, bvector *vector, int size);
 void be_vector_delete(bvm *vm, bvector *vector);
-int be_vector_count(const bvector *vector);
-bbool be_vector_isempty(const bvector *vector);
 void* be_vector_at(bvector *vector, int index);
 void be_vector_push(bvm *vm, bvector *vector, void *data);
 void be_vector_push_c(bvm *vm, bvector *vector, void *data);
