@@ -456,7 +456,7 @@ void be_save_stacktrace(bvm *vm)
         bcallframe *top = be_stack_top(&vm->callstack);
         for (cf = base; cf <= top; ++cf) {
             bcallsnapshot *st;
-            be_stack_push(vm, stack, &st);
+            be_stack_push(vm, stack, NULL);
             st = be_stack_top(stack);
             st->func = *cf->func;
             st->ip = cf == top ? vm->ip : cf[1].ip;

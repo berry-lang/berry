@@ -142,7 +142,7 @@ static int m_path_split(bvm *vm)
         size_t len = split - path;
         if (split > path + 1 && split[-1] == '/') {
             const char *p = split - 1;
-            for (; *p == '/' && p >= path; --p);
+            for (; p >= path && *p == '/'; --p);
             if (p >= path) {
                 len = p - path + 1;
             }

@@ -339,6 +339,7 @@ BERRY_API void be_module_path_set(bvm *vm, const char *path)
 {
     blist *list = pathlist(vm);
     bvalue *value = be_list_push(vm, list, NULL);
+    var_setnil(value);
     var_setstr(value, be_newstr(vm, path))
 }
 

@@ -57,7 +57,7 @@ void be_vector_push_c(bvm *vm, bvector *vector, void *data)
 
 void be_vector_remove_end(bvector *vector)
 {
-    be_assert(count > 0);
+    be_assert(vector->count > 0);
     vector->count--;
     vector->end = (char*)vector->end - vector->size;
 }

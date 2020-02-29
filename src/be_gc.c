@@ -40,6 +40,7 @@ void be_gc_init(bvm *vm)
 
 void be_gc_deleteall(bvm *vm)
 {
+    bupval *uv, *uvnext;
     bgcobject *node, *next;
     /* halt GC and delete all objects */
     vm->gc.status |= GC_HALT;
@@ -52,7 +53,11 @@ void be_gc_deleteall(bvm *vm)
         next = node->next;
         free_object(vm, node);
     }
-    /* vm->gc will be used afterwards, so it is not free here. */
+    /* delete open upvalue list */
+    for (uv = vm->upvalist; uv; uv = uvnext) {
+        uvnext = uv->u.next;
+        be_free(vm, uv, sizeof(bupval));
+    }
 }
 
 void be_gc_setsteprate(bvm *vm, int rate)

@@ -112,10 +112,10 @@ int be_list_remove(bvm *vm, blist *list, int index)
         return bfalse;
     }
     data = list->data;
+    list->count--;
     for (i = index; i < list->count; ++i) {
         data[i] = data[i + 1];
     }
-    --list->count;
     return btrue;
 }
 

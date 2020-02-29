@@ -64,6 +64,7 @@ void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p)
     bvalue *attr;
     check_members(vm, c);
     attr = be_map_insertstr(vm, c->members, name, NULL);
+    var_setnil(attr);
     cl = be_newclosure(vm, p->nupvals);
     cl->proto = p;
     var_setclosure(attr, cl);
