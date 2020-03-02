@@ -337,6 +337,9 @@ static void premark_internal(bvm *vm)
     if (vm->module.path) {
         mark_gray(vm, gc_object(vm->module.path));
     }
+    if (vm->registry) {
+        mark_gray(vm, gc_object(vm->registry));
+    }
 }
 
 static void premark_global(bvm *vm)

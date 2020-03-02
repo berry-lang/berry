@@ -165,3 +165,36 @@ void be_list_reverse(blist *list)
         *right = temp;
     }
 }
+
+void be_list_pool_init(bvm *vm, blist *list)
+{
+    bvalue *head;
+    be_list_resize(vm, list, 0);
+    head = be_list_push(vm, list, NULL);
+    var_setint(head, 0);
+}
+
+int be_list_pool_alloc(bvm *vm, blist *list, bvalue *src)
+{
+    bvalue *head = be_list_data(list), *node;
+    int id = var_toidx(head); /* get the first free node */
+    if (id) {
+        node = head + id;
+        head->v.i = var_toint(node); /* link the next free node to head */
+    } else {
+        id = be_list_count(list);
+        node = be_list_push(vm, list, NULL);
+    }
+    *node = *src;
+    return id;
+}
+
+void be_list_pool_free(blist *list, int id)
+{
+    bvalue *head = be_list_data(list);
+    bvalue *node = head + id;
+    be_assert(id > 0 && id < list->count);
+    /* insert a new free node to head */
+    *node = *head;
+    head->v.i = id;
+}

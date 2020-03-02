@@ -315,6 +315,11 @@ BERRY_API int be_savecode(bvm *vm, const char *name);
 BERRY_API void be_module_path(bvm *vm);
 BERRY_API void be_module_path_set(bvm *vm, const char *path);
 
+/* registry operation */
+BERRY_API int be_register(bvm *vm, int index);
+BERRY_API void be_unregister(bvm *vm, int id);
+BERRY_API void be_getregister(bvm *vm, int id);
+
 /* basic character IO APIs */
 BERRY_API void be_writebuffer(const char *buffer, size_t length);
 BERRY_API char* be_readstring(char *buffer, size_t size);

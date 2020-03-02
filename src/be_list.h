@@ -25,5 +25,8 @@ int be_list_remove(bvm *vm, blist *list, int index);
 void be_list_resize(bvm *vm, blist *list, int count);
 void be_list_merge(bvm *vm, blist *list, const blist *other);
 void be_list_reverse(blist *list);
+void be_list_pool_init(bvm *vm, blist *list);
+int be_list_pool_alloc(bvm *vm, blist *list, bvalue *src);
+void be_list_pool_free(blist *list, int id);
 
 #endif
