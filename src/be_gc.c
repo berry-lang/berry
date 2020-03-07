@@ -30,11 +30,7 @@ static void free_object(bvm *vm, bgcobject *obj);
 
 void be_gc_init(bvm *vm)
 {
-    vm->gc.list = NULL;
-    vm->gc.gray = NULL;
-    vm->gc.fixed = NULL;
     vm->gc.usage = sizeof(bvm);
-    vm->gc.status = 0;
     be_gc_setsteprate(vm, 200);
 }
 

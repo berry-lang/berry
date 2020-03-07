@@ -97,9 +97,6 @@ static uint32_t str_hash(const char *str, size_t len)
 
 void be_string_init(bvm *vm)
 {
-    vm->strtab.size = 0;
-    vm->strtab.count = 0;
-    vm->strtab.table = NULL;
     resize(vm, 8);
 #if !BE_USE_PRECOMPILED_OBJECT
     /* the destructor name deinit needs to exist all the time, to ensure

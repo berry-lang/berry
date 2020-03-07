@@ -348,6 +348,7 @@ BERRY_API bvm* be_vm_new(void)
 {
     bvm *vm = be_os_malloc(sizeof(bvm));
     be_assert(vm != NULL);
+    memset(vm, 0, sizeof(bvm)); /* clear all members */
     be_gc_init(vm);
     be_string_init(vm);
     be_stack_init(vm, &vm->callstack, sizeof(bcallframe));
@@ -356,14 +357,8 @@ BERRY_API bvm* be_vm_new(void)
     be_stack_init(vm, &vm->tracestack, sizeof(bcallsnapshot));
     vm->stack = be_malloc(vm, sizeof(bvalue) * BE_STACK_FREE_MIN);
     vm->stacktop = vm->stack + BE_STACK_FREE_MIN;
-    vm->cf = NULL;
-    vm->ip = NULL;
-    vm->upvalist = NULL;
     vm->reg = vm->stack;
     vm->top = vm->reg;
-    vm->errjmp = NULL;
-    vm->module.loaded = NULL;
-    vm->module.path = NULL;
     be_globalvar_init(vm);
 #if BE_USE_DEBUG_HOOK
     be_debug_hook_init(vm);
