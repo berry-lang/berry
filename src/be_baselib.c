@@ -231,6 +231,9 @@ static int m_compile_file(bvm *vm)
     int res = be_loadfile(vm, fname);
     if (res == BE_OK) {
         be_return(vm);
+    } else if (res == BE_IO_ERROR) {
+        be_pushstring(vm, "io_error");
+        be_pushvalue(vm, -2);
     }
     return raise_compile_error(vm);
 }

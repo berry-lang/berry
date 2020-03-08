@@ -171,6 +171,7 @@ static int handle_result(bvm *vm, int res)
     case BE_EXIT: /* return exit code */
         return be_toindex(vm, -1);
     case BE_IO_ERROR:
+        be_writestring("error: "); 
         be_writestring(be_tostring(vm, -1));
         be_writenewline();
         return -2;

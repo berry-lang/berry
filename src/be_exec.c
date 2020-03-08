@@ -244,7 +244,7 @@ BERRY_API int be_loadmode(bvm *vm, const char *name, bbool islocal)
     (void)islocal;
 #endif
     if (res == BE_IO_ERROR) {
-        be_pushfstring(vm, "error: can not open file '%s'.", name);
+        be_pushfstring(vm, "cannot open file '%s'.", name);
     }
     return res;
 }
