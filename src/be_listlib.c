@@ -18,6 +18,13 @@
         be_return(vm);                                  \
     }
 
+static void list_getindex(bvm *vm, int index)
+{
+    if (!be_getindex(vm, index)) {
+        be_raise(vm, "index_error", "list index out of range");
+    }
+}
+
 static int m_init(bvm *vm)
 {
     int i, argc = be_top(vm);
@@ -82,6 +89,23 @@ static int m_push(bvm *vm)
     be_return_nil(vm);
 }
 
+static int m_pop(bvm *vm)
+{
+    int argc = be_top(vm);
+    be_getmember(vm, 1, ".data");
+    list_check_data(vm, 1);
+    if (argc >= 2) {
+        be_pushvalue(vm, 2);
+    } else {
+        be_pushint(vm, -1);
+    }
+    list_getindex(vm, -2);
+    be_pushvalue(vm, -2);
+    be_data_remove(vm, -4);
+    be_pop(vm, 1);
+    be_return(vm);
+}
+
 static int m_insert(bvm *vm)
 {
     be_getmember(vm, 1, ".data");
@@ -99,13 +123,6 @@ static int m_remove(bvm *vm)
     be_pushvalue(vm, 2);
     be_data_remove(vm, -2);
     be_return_nil(vm);
-}
-
-static void list_getindex(bvm *vm, int index)
-{
-    if (!be_getindex(vm, index)) {
-        be_raise(vm, "index_error", "list index out of range");
-    }
 }
 
 static int item_range(bvm *vm)
@@ -400,6 +417,7 @@ void be_load_listlib(bvm *vm)
         { "init", m_init },
         { "tostring", m_tostring },
         { "push", m_push },
+        { "pop", m_pop },
         { "insert", m_insert },
         { "remove", m_remove },
         { "item", m_item },
@@ -426,6 +444,7 @@ class be_class_list (scope: global, name: list) {
     init, func(m_init)
     tostring, func(m_tostring)
     push, func(m_push)
+    pop, func(m_pop)
     insert, func(m_insert)
     remove, func(m_remove)
     item, func(m_item)
