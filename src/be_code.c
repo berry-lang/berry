@@ -74,7 +74,7 @@ static void code_move(bfuncinfo *finfo, int a, int b)
     if (finfo->pc) {
         binstruction *i = be_vector_end(&finfo->code);
         bopcode op = IGET_OP(*i);
-        if (op <= OP_LDNIL) {
+        if (op <= OP_LDNIL) { /* binop or unop */
             /* remove redundant MOVE instruction */
             int x = IGET_RA(*i), y = IGET_RKB(*i), z = IGET_RKC(*i);
             if (b == x && (a == y || (op < OP_NEG && a == z))) {
@@ -83,7 +83,11 @@ static void code_move(bfuncinfo *finfo, int a, int b)
             }
         }
     }
-    codeABC(finfo, OP_MOVE, a, b, 0);
+    if (isK(b)) {
+        codeABx(finfo, OP_LDCONST, a, b & 0xFF);
+    } else {
+        codeABC(finfo, OP_MOVE, a, b, 0);
+    }
 }
 
 static void free_expreg(bfuncinfo *finfo, bexpdesc *e)

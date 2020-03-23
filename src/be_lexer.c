@@ -566,7 +566,6 @@ void be_lexer_deinit(blexer *lexer)
 int be_lexer_scan_next(blexer *lexer)
 {
     btokentype type;
-
     if (lexer->cacheType != TokenNone) {
         lexer->token.type = lexer->cacheType;
         lexer->cacheType = TokenNone;

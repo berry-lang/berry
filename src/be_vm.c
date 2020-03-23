@@ -582,6 +582,8 @@ newframe: /* a new call frame */
                 connect_str(vm, var_tostr(a), b);
             } else if (var_isinstance(a)) {
                 object_binop(vm, "..", *RKB(), *RKC());
+            } else {
+                binop_error(vm, "..", RKB(), RKC());
             }
             reg = vm->reg;
             *RA() = *vm->top; /* copy result to R(A) */
