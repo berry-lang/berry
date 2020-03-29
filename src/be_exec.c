@@ -22,11 +22,15 @@
     "stack overflow (maximum stack size is " STR(n) ")"
 
 #ifdef BE_EXPLICIT_ABORT
-  #define abort             BE_EXPLICIT_ABORT
+  #define _os_abort         BE_EXPLICIT_ABORT
+#else
+  #define _os_abort         abort
 #endif
 
 #ifdef BE_EXPLICIT_EXIT
-  #define exit              BE_EXPLICIT_EXIT
+  #define _os_exit          BE_EXPLICIT_EXIT
+#else
+  #define _os_exit          exit
 #endif
 
 #define exec_try(j) if      (be_setjmp((j)->b) == 0)
@@ -67,7 +71,7 @@ void be_throw(bvm *vm, int errorcode)
         vm->errjmp->status = errorcode;
         exec_throw(vm->errjmp);
     } else {
-        abort();
+        _os_abort();
     }
 }
 
@@ -78,7 +82,7 @@ BERRY_API void be_exit(bvm *vm, int status)
         be_pop(vm, 1);
         be_throw(vm, BE_EXIT);
     } else {
-        exit(status);
+        _os_exit(status);
     }
 }
 
