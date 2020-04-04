@@ -610,15 +610,6 @@ static bvalue* list_setindex(blist *list, bvalue *key)
     return NULL;
 }
 
-static bvalue* map_setindex(bvm *vm, bmap *map, bvalue *key)
-{
-    bvalue *dst = be_map_find(vm, map, key);
-    if (dst == NULL) {
-        dst = be_map_insert(vm, map, key, NULL);
-    }
-    return dst;
-}
-
 BERRY_API bbool be_setindex(bvm *vm, int index)
 {
     bvalue *dst = NULL;
@@ -635,7 +626,7 @@ BERRY_API bbool be_setindex(bvm *vm, int index)
     case BE_MAP:
         if (!var_isnil(k)) {
             bmap *map = var_toobj(o);
-            dst = map_setindex(vm, map, k);
+            dst = be_map_insert(vm, map, k, NULL);
         }
         break;
     default:
@@ -708,7 +699,10 @@ BERRY_API bbool be_data_insert(bvm *vm, int index)
     case BE_MAP:
         if (!var_isnil(k)) {
             bmap *map = cast(bmap*, var_toobj(o));
-            return be_map_insert(vm, map, k, v) != NULL;
+            bvalue *dst = be_map_find(vm, map, k);
+            if (dst == NULL) {
+                return be_map_insert(vm, map, k, v) != NULL;
+            }
         }
         break;
     case BE_LIST:

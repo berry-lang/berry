@@ -12,12 +12,12 @@ typedef enum {
     ETINT,
     ETSTRING,
     ETPROTO,
+    ETCONST,
     ETLOCAL,
     ETGLOBAL,
     ETUPVAL,
     ETMEMBER,
     ETINDEX,
-    ETCONST,
     ETREG
 } exptype_t;
 

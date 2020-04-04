@@ -800,8 +800,10 @@ static void assign_expr(bparser *parser)
             parser_error(parser,
                 "try to assign constant expressions.");
         }
-    } else if (e.type == ETREG) {
-        be_code_freeregs(parser->finfo, 1);
+    } else if (e.type >= ETMEMBER) {
+        bfuncinfo *finfo = parser->finfo;
+        /* these expressions occupy a register and need to be freed */
+        finfo->freereg = be_list_count(finfo->local);
     } else if (e.type == ETVOID) { /* not assign expression */
         /* undeclared symbol */
         parser->lexer.linenumber = line;

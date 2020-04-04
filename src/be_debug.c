@@ -40,7 +40,7 @@ static void print_inst(binstruction ins, int pc)
     char __lbuf[INST_BUF_SIZE];
     bopcode op = IGET_OP(ins);
 
-    logbuf("%4d: ", pc);
+    logbuf("  %.4X  ", pc);
     be_writestring(__lbuf);
     switch (op) {
     case OP_ADD: case OP_SUB: case OP_MUL: case OP_DIV:
@@ -52,16 +52,16 @@ static void print_inst(binstruction ins, int pc)
         logbuf("%s\tR%d\tR%d\tR%d", opc2str(op), IGET_RA(ins), IGET_RKB(ins), IGET_RKC(ins));
         break;
     case OP_GETGBL: case OP_SETGBL:
-        logbuf("%s\tR%d\tG:%d", opc2str(op), IGET_RA(ins), IGET_Bx(ins));
+        logbuf("%s\tR%d\tG%d", opc2str(op), IGET_RA(ins), IGET_Bx(ins));
         break;
     case OP_MOVE: case OP_SETSUPER: case OP_NEG: case OP_FLIP: case OP_IMPORT:
         logbuf("%s\tR%d\tR%d", opc2str(op), IGET_RA(ins), IGET_RKB(ins));
         break;
     case OP_JMP:
-        logbuf("%s\t\t[%d]", opc2str(op), IGET_sBx(ins) + pc + 1);
+        logbuf("%s\t\t#%.4X", opc2str(op), IGET_sBx(ins) + pc + 1);
         break;
     case OP_JMPT: case OP_JMPF:
-        logbuf("%s\tR%d\t[%d]", opc2str(op), IGET_RA(ins), IGET_sBx(ins) + pc + 1);
+        logbuf("%s\tR%d\t#%.4X", opc2str(op), IGET_RA(ins), IGET_sBx(ins) + pc + 1);
         break;
     case OP_LDINT:
         logbuf("%s\tR%d\t%d", opc2str(op), IGET_RA(ins), IGET_sBx(ins));
@@ -73,13 +73,16 @@ static void print_inst(binstruction ins, int pc)
         logbuf("%s\t%d\tR%d", opc2str(op), IGET_RA(ins), IGET_RKB(ins));
         break;
     case OP_GETUPV: case OP_SETUPV:
-        logbuf("%s\tR%d\tU:%d", opc2str(op), IGET_RA(ins), IGET_Bx(ins));
+        logbuf("%s\tR%d\tU%d", opc2str(op), IGET_RA(ins), IGET_Bx(ins));
+        break;
+    case OP_LDCONST:
+        logbuf("%s\tR%d\tK%d", opc2str(op), IGET_RA(ins), IGET_Bx(ins));
         break;
     case OP_CALL:
         logbuf("%s\tR%d\t%d", opc2str(op), IGET_RA(ins), IGET_RKB(ins));
         break;
     case OP_CLOSURE:
-        logbuf("%s\tR%d\tP:%d", opc2str(op), IGET_RA(ins), IGET_Bx(ins));
+        logbuf("%s\tR%d\tP%d", opc2str(op), IGET_RA(ins), IGET_Bx(ins));
         break;
     case OP_CLASS:
         logbuf("%s\tK%d", opc2str(op), IGET_Bx(ins));
@@ -94,7 +97,7 @@ static void print_inst(binstruction ins, int pc)
         if (IGET_RA(ins)) {
             logbuf("%s\t%d\t%d", opc2str(op), IGET_RA(ins), IGET_Bx(ins));
         } else {
-            logbuf("%s\t%d\t[%d]", opc2str(op), IGET_RA(ins), IGET_sBx(ins) + pc + 1);
+            logbuf("%s\t%d\t#%.4X", opc2str(op), IGET_RA(ins), IGET_sBx(ins) + pc + 1);
         }
         break;
     case OP_CATCH:
@@ -123,7 +126,7 @@ void be_dumpclosure(bclosure *cl)
     for (pc = 0; pc < proto->codesize; pc++) {
 #if BE_DEBUG_RUNTIME_INFO
         if (lineinfo && pc == lineinfo->endpc) {
-            logfmt("; line: %d\n", lineinfo->linenumber);
+            logfmt("; line %d\n", lineinfo->linenumber);
             ++lineinfo;
         }
 #endif

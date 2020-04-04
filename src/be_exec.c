@@ -22,15 +22,22 @@
     "stack overflow (maximum stack size is " STR(n) ")"
 
 #ifdef BE_EXPLICIT_ABORT
-  #define abort             BE_EXPLICIT_ABORT
+  #define _os_abort         BE_EXPLICIT_ABORT
+#else
+  #define _os_abort         abort
 #endif
 
 #ifdef BE_EXPLICIT_EXIT
-  #define exit              BE_EXPLICIT_EXIT
+  #define _os_exit          BE_EXPLICIT_EXIT
+#else
+  #define _os_exit          exit
 #endif
 
 #define exec_try(j) if      (be_setjmp((j)->b) == 0)
 #define exec_throw(j)       be_longjmp((j)->b, 1)
+
+#define fixup_ptr(ptr, offset)  ((ptr) = (void*)((bbyte*)(ptr) + (offset)))
+#define ptr_offset(ptr1, ptr2)  ((bbyte*)(ptr1) - (bbyte*)(ptr2))
 
 struct pparser {
     const char *fname;
@@ -64,7 +71,7 @@ void be_throw(bvm *vm, int errorcode)
         vm->errjmp->status = errorcode;
         exec_throw(vm->errjmp);
     } else {
-        abort();
+        _os_abort();
     }
 }
 
@@ -75,7 +82,7 @@ BERRY_API void be_exit(bvm *vm, int status)
         be_pop(vm, 1);
         be_throw(vm, BE_EXIT);
     } else {
-        exit(status);
+        _os_exit(status);
     }
 }
 
@@ -244,7 +251,7 @@ BERRY_API int be_loadmode(bvm *vm, const char *name, bbool islocal)
     (void)islocal;
 #endif
     if (res == BE_IO_ERROR) {
-        be_pushfstring(vm, "error: can not open file '%s'.", name);
+        be_pushfstring(vm, "cannot open file '%s'.", name);
     }
     return res;
 }
@@ -322,12 +329,12 @@ static void update_callstack(bvm *vm, intptr_t offset)
     bcallframe *cf = be_stack_top(&vm->callstack);
     bcallframe *base = be_stack_base(&vm->callstack);
     for (; cf >= base; --cf) {
-        cf->func += offset;
-        cf->top += offset;
-        cf->reg += offset;
+        fixup_ptr(cf->func, offset);
+        fixup_ptr(cf->top, offset);
+        fixup_ptr(cf->reg, offset);
     }
-    vm->top += offset;
-    vm->reg += offset;
+    fixup_ptr(vm->top, offset);
+    fixup_ptr(vm->reg, offset);
 }
 
 static void update_upvalues(bvm *vm, intptr_t offset)
@@ -335,7 +342,7 @@ static void update_upvalues(bvm *vm, intptr_t offset)
     bupval *node = vm->upvalist;
     /* update the value referenced by open upvalues */
     for (; node != NULL; node = node->u.next) {
-        node->value += offset;
+        fixup_ptr(node->value, offset);
     }
 }
 
@@ -346,7 +353,7 @@ static void stack_resize(bvm *vm, size_t size)
     size_t os = (vm->stacktop - old) * sizeof(bvalue);
     vm->stack = be_realloc(vm, old, os, sizeof(bvalue) * size);
     vm->stacktop = vm->stack + size;
-    offset = vm->stack - old;
+    offset = ptr_offset(vm->stack, old);
     /* update callframes */
     update_callstack(vm, offset);
     /* update open upvalues */
@@ -372,12 +379,12 @@ static void fixup_exceptstack(bvm* vm, struct bexecptframe* lbase)
         struct bexecptframe *top = be_stack_top(&vm->exceptstack);
         bbyte *begin = (bbyte*)&lbase->errjmp;
         bbyte *end = (bbyte*)&(lbase + (top - base))->errjmp;
-        intptr_t offset = (bbyte*)base - (bbyte*)lbase;
+        intptr_t offset = ptr_offset(base, lbase);
         struct blongjmp *errjmp = vm->errjmp;
         while (errjmp) {
             bbyte *prev = (bbyte*)errjmp->prev;
             if (prev >= begin && prev < end) {
-                prev += offset; /* fixup the prev pointer */
+                fixup_ptr(prev, offset); /* fixup the prev pointer */
                 errjmp->prev = (struct blongjmp*)prev;
             }
             errjmp = (struct blongjmp*)prev;

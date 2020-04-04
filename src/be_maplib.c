@@ -110,6 +110,31 @@ static int m_setitem(bvm *vm)
     be_return_nil(vm);
 }
 
+static int m_find(bvm *vm)
+{
+    int argc = be_top(vm);
+    be_getmember(vm, 1, ".data");
+    map_check_data(vm, 2);
+    be_pushvalue(vm, 2);
+    /* not find and has default value */
+    if (!be_getindex(vm, -2) && argc >= 3) {
+        be_pushvalue(vm, 3);
+    }
+    be_return(vm);
+}
+
+static int m_insert(bvm *vm)
+{
+    bbool res;
+    be_getmember(vm, 1, ".data");
+    map_check_data(vm, 3);
+    be_pushvalue(vm, 2);
+    be_pushvalue(vm, 3);
+    res = be_data_insert(vm, -3);
+    be_pushbool(vm, res);
+    be_return(vm);
+}
+
 static int m_size(bvm *vm)
 {
     be_getmember(vm, 1, ".data");
@@ -159,7 +184,9 @@ void be_load_maplib(bvm *vm)
         { "remove", m_remove },
         { "item", m_item },
         { "setitem", m_setitem },
+        { "find", m_find },
         { "size", m_size },
+        { "insert", m_insert },
         { "iter", m_iter },
         { NULL, NULL }
     };
@@ -174,7 +201,9 @@ class be_class_map (scope: global, name: map) {
     remove, func(m_remove)
     item, func(m_item)
     setitem, func(m_setitem)
+    find, func(m_find)
     size, func(m_size)
+    insert, func(m_insert)
     iter, func(m_iter)
 }
 @const_object_info_end */

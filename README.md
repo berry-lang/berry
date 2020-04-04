@@ -23,8 +23,6 @@ Berry has the following advantages:
 
 ## Documents
 
-Onlined documents: [https://skiars.github.io/berry](https://skiars.github.io/berry) (Expired)
-
 LaTeX documents repository: [https://github.com/Skiars/berry_doc](https://github.com/Skiars/berry_doc)
 
 Reference Manual: [berry_rm_zh_cn.pdf](https://github.com/Skiars/berry_doc/releases/download/latest/berry_rm_zh_cn.pdf) (Simplified Chinese version)
@@ -68,8 +66,8 @@ Berry's EBNF grammar definition: [tools/grammar/berry.ebnf](./tools/grammar/berr
   * Constructor method
   * Destructive method
 * Module Management
-  * Statically allocated memory: no RAM used before import
-  * Module nesting
+  * Built-in module that takes almost no RAM
+  * Extension module support: script module, bytecode file module and shared library (like *.so, *.dll) module
 * GC (Garbage collection)
   * Mark-Sweep GC
 * Exceptional Handling
@@ -134,9 +132,9 @@ Hello world!
 
 You can copy this code to the REPL:
 
-```ruby
+``` ruby
 def fib(x)
-    if (x <= 1)
+    if x <= 1
         return x
     end
     return fib(x - 1) + fib(x - 2)
