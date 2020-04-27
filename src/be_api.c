@@ -31,6 +31,28 @@ static void class_init(bvm *vm, bclass *c, const bnfuncinfo *lib)
     }
 }
 
+static bclass* class_auto_make(bvm *vm, bstring *name, const bnfuncinfo *lib)
+{
+    bvalue key, *res;
+    var_setobj(&key, BE_COMPTR, (void*)lib);
+    if (vm->ntvclass == NULL) {
+        vm->ntvclass = be_map_new(vm);
+    }
+    res = be_map_find(vm, vm->ntvclass, &key);
+    if (res == NULL || !var_isclass(res)) {
+        bclass *c = be_newclass(vm, name, NULL);
+        bvalue *top = be_incrtop(vm);
+        var_setclass(top, c);
+        /* insert class to native class table */
+        res = be_map_insert(vm, vm->ntvclass, &key, NULL);
+        var_setclass(res, c);
+        class_init(vm, c, lib); /* bind members */
+        be_stackpop(vm, 1);
+        return c;
+    }
+    return var_toobj(res);
+}
+
 BERRY_API void be_regfunc(bvm *vm, const char *name, bntvfunc f)
 {
     bvalue *var;
@@ -67,9 +89,7 @@ BERRY_API void be_regclass(bvm *vm, const char *name, const bnfuncinfo *lib)
         idx = be_global_new(vm, s);
 #endif
         var = be_global_var(vm, idx);
-        bclass *c = be_newclass(vm, s, NULL);
-        var_setclass(var, c);
-        class_init(vm, c, lib); /* bind members */
+        var_setclass(var, class_auto_make(vm, s, lib));
     } /* error case, do nothing */
 }
 
@@ -341,9 +361,8 @@ BERRY_API void be_pushclass(bvm *vm, const char *name, const bnfuncinfo *lib)
     bstring *s = be_newstr(vm, name);
     bvalue *dst = be_incrtop(vm);
     var_setstr(dst, s);
-    c = be_newclass(vm, s, NULL);
-    var_setclass(vm->top - 1, c); /* stack may change, so dst is not available */
-    class_init(vm, c, lib); /* bind members */
+    c = class_auto_make(vm, s, lib);
+    var_setclass(vm->top - 1, c);
 }
 
 BERRY_API void be_pushcomptr(bvm *vm, void *ptr)

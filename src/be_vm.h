@@ -64,6 +64,7 @@ struct bvm {
     struct bmoduledesc module; /* module description */
     struct bstringtable strtab; /* short string table */
     bstack tracestack; /* call state trace-stack */
+    bmap *ntvclass; /* native class table */
     blist *registry; /* registry list */
     struct bgc gc;
 #if BE_USE_DEBUG_HOOK

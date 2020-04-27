@@ -149,7 +149,7 @@ static void mark_map(bvm *vm, bgcobject *obj)
         while ((node = be_map_next(map, &iter)) != NULL) {
             bmapkey *key = &node->key;
             bvalue *val = &node->value;
-            if (be_isgcobj(key)) {
+            if (be_isgctype((signed char)key->type)) {
                 mark_gray(vm, var_togc(key));
             }
             mark_gray_var(vm, val);
@@ -229,6 +229,7 @@ static void mark_class(bvm *vm, bgcobject *obj)
     bclass *c = cast_class(obj);
     gc_try (c != NULL) {
         vm->gc.gray = c->gray; /* remove object from gray list */
+        mark_gray(vm, gc_object(be_class_name(c)));
         mark_gray(vm, gc_object(be_class_members(c)));
         mark_gray(vm, gc_object(be_class_super(c)));
     }
@@ -327,15 +328,10 @@ static void free_object(bvm *vm, bgcobject *obj)
 
 static void premark_internal(bvm *vm)
 {
-    if (vm->module.loaded) {
-        mark_gray(vm, gc_object(vm->module.loaded));
-    }
-    if (vm->module.path) {
-        mark_gray(vm, gc_object(vm->module.path));
-    }
-    if (vm->registry) {
-        mark_gray(vm, gc_object(vm->registry));
-    }
+    mark_gray(vm, gc_object(vm->module.loaded));
+    mark_gray(vm, gc_object(vm->module.path));
+    mark_gray(vm, gc_object(vm->ntvclass));
+    mark_gray(vm, gc_object(vm->registry));
 }
 
 static void premark_global(bvm *vm)

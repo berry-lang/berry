@@ -14,6 +14,7 @@
 #define setnil(node)        var_setnil(key(node))
 #define hash2slot(m, h)     ((m)->slots + (h) % (m)->size)
 #define hashcode(_v)        _hashcode(vm, (_v)->type, (_v)->v)
+#define keytype(key)        ((signed char)(key)->type)
 
 #define next(node)          ((node)->key.next)
 #define pos2slot(map, n)    ((n) != LASTNODE ? ((map)->slots + (n)) : NULL)
@@ -102,7 +103,7 @@ static int eqnode(bvm *vm, bmapnode *node, bvalue *key, uint32_t hash)
             return be_vm_iseq(vm, key, &kv);
         }
 #endif
-        if((int)k->type == key->type && hashcode(key(node)) == hash) {
+        if(keytype(k) == key->type && hashcode(k) == hash) {
             switch (key->type) {
             case BE_INT: return var_toint(key) == var_toint(k);
             case BE_REAL: return var_toreal(key) == var_toreal(k);
