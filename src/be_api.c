@@ -40,14 +40,13 @@ static bclass* class_auto_make(bvm *vm, bstring *name, const bnfuncinfo *lib)
     }
     res = be_map_find(vm, vm->ntvclass, &key);
     if (res == NULL || !var_isclass(res)) {
-        bclass *c = be_newclass(vm, name, NULL);
-        bvalue *top = be_incrtop(vm);
-        var_setclass(top, c);
+        bclass *c;
         /* insert class to native class table */
         res = be_map_insert(vm, vm->ntvclass, &key, NULL);
+        var_setnil(res); /* must be initialized to ensure correct GC */
+        c = be_newclass(vm, name, NULL);
         var_setclass(res, c);
         class_init(vm, c, lib); /* bind members */
-        be_stackpop(vm, 1);
         return c;
     }
     return var_toobj(res);
