@@ -52,7 +52,7 @@ uint32_t str_build::hashcode(const std::string &string)
     const char *str = string.data();
     uint32_t hash = 2166136261u;
     while (len--) {
-        hash = (hash ^ *str++) * 16777619u;
+        hash = (hash ^ (unsigned char)*str++) * 16777619u;
     }
     return hash;
 }

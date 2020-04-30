@@ -90,7 +90,7 @@ static uint32_t str_hash(const char *str, size_t len)
     uint32_t hash = 2166136261u;
     be_assert(str || len);
     while (len--) {
-        hash = (hash ^ *str++) * 16777619u;
+        hash = (hash ^ (unsigned char)*str++) * 16777619u;
     }
     return hash;
 }
