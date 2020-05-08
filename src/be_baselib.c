@@ -259,6 +259,17 @@ static int l_compile(bvm *vm)
     be_return_nil(vm);
 }
 
+static int l_issuper(bvm *vm)
+{
+    bbool status = bfalse;
+    if (be_top(vm) >= 2) {
+        be_pushvalue(vm, 2);
+        status = be_issuper(vm, 1);
+    }
+    be_pushbool(vm, status);
+    be_return(vm);
+}
+
 #if !BE_USE_PRECOMPILED_OBJECT
 void be_load_baselib(bvm *vm)
 {
@@ -276,6 +287,7 @@ void be_load_baselib(bvm *vm)
     be_regfunc(vm, "module", l_module);
     be_regfunc(vm, "size", l_size);
     be_regfunc(vm, "compile", l_compile);
+    be_regfunc(vm, "issuper", l_issuper);
     be_regfunc(vm, "__iterator__", l_iterator);
 }
 #else
@@ -299,6 +311,7 @@ vartab m_builtin (scope: local) {
     module, func(l_module)
     size, func(l_size)
     compile, func(l_compile)
+    issuper, func(l_issuper)
     __iterator__, func(l_iterator)
     open, func(be_nfunc_open)
     list, class(be_class_list)

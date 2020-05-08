@@ -220,6 +220,7 @@ BERRY_API bbool be_islist(bvm *vm, int index);
 BERRY_API bbool be_ismap(bvm *vm, int index);
 BERRY_API bbool be_iscomptr(bvm *vm, int index);
 BERRY_API bbool be_iscomobj(bvm *vm, int index);
+BERRY_API bbool be_issuper(bvm *vm, int index);
 
 BERRY_API bint be_toint(bvm *vm, int index);
 BERRY_API breal be_toreal(bvm *vm, int index);
@@ -259,7 +260,8 @@ BERRY_API bbool be_getmethod(bvm *vm, int index, const char *k);
 BERRY_API bbool be_getindex(bvm *vm, int index);
 BERRY_API bbool be_setindex(bvm *vm, int index);
 BERRY_API void be_getupval(bvm *vm, int index, int pos);
-BERRY_API void be_setupval(bvm *vm, int index, int pos);
+BERRY_API bbool be_setupval(bvm *vm, int index, int pos);
+BERRY_API bbool be_setsuper(bvm *vm, int index);
 BERRY_API void be_getsuper(bvm *vm, int index);
 BERRY_API int be_data_size(bvm *vm, int index);
 BERRY_API void be_data_push(bvm *vm, int index);

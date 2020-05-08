@@ -390,11 +390,23 @@ BERRY_API void be_strconcat(bvm *vm, int index)
     var_setstr(dst, s);
 }
 
-void be_getsuper(bvm *vm, int index)
+BERRY_API bbool be_setsuper(bvm *vm, int index)
+{
+    bvalue *v = be_indexof(vm, index);
+    bvalue *top = be_indexof(vm, -1);
+    if (var_isclass(v) && var_isclass(top)) {
+        bclass *c = var_toobj(v);
+        bclass *super = var_toobj(top);
+        be_class_setsuper(c, super);
+        return btrue;
+    }
+    return bfalse;
+}
+
+BERRY_API void be_getsuper(bvm *vm, int index)
 {
     bvalue *v = be_indexof(vm, index);
     bvalue *top = be_incrtop(vm);
-
     if (var_isclass(v)) {
         bclass *c = var_toobj(v);
         c = be_class_super(c);
@@ -411,6 +423,27 @@ void be_getsuper(bvm *vm, int index)
         }
     }
     var_setnil(top);
+}
+
+static bclass* _getclass(bvalue *v)
+{ 
+    if (var_isinstance(v)) {
+        binstance *ins = var_toobj(v);
+        return be_instance_class(ins);
+    }
+    return var_isclass(v) ? var_toobj(v) : NULL;
+}
+
+BERRY_API bbool be_issuper(bvm *vm, int index)
+{
+    bclass *sup = _getclass(be_indexof(vm, index));
+    if (sup) {
+        bclass *c = _getclass(be_indexof(vm, -1));
+        while (c && c != sup)
+            c = be_class_super(c);
+        return c != NULL;
+    }
+    return bfalse;
 }
 
 BERRY_API const char *be_typename(bvm *vm, int index)
@@ -672,7 +705,7 @@ BERRY_API void be_getupval(bvm *vm, int index, int pos)
     }
 }
 
-BERRY_API void be_setupval(bvm *vm, int index, int pos)
+BERRY_API bbool be_setupval(bvm *vm, int index, int pos)
 {
     bvalue *f = index ? be_indexof(vm, index) : vm->cf->func;
     bvalue *uv, *v = be_indexof(vm, -1);
@@ -682,7 +715,9 @@ BERRY_API void be_setupval(bvm *vm, int index, int pos)
         be_assert(pos >= 0 && pos < nf->nupvals);
         uv = be_ntvclos_upval(nf, pos)->value;
         var_setval(uv, v);
+        return btrue;
     }
+    return bfalse;
 }
 
 BERRY_API int be_data_size(bvm *vm, int index)
