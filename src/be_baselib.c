@@ -259,15 +259,25 @@ static int l_compile(bvm *vm)
     be_return_nil(vm);
 }
 
-static int l_issuper(bvm *vm)
+static int _issubv(bvm *vm, bbool (*filter)(bvm*, int))
 {
     bbool status = bfalse;
-    if (be_top(vm) >= 2) {
+    if (be_top(vm) >= 2 && filter(vm, 1)) {
         be_pushvalue(vm, 2);
-        status = be_issuper(vm, 1);
+        status = be_isderived(vm, 1);
     }
     be_pushbool(vm, status);
     be_return(vm);
+}
+
+static int l_issubclass(bvm *vm)
+{
+    return _issubv(vm, be_isclass);
+}
+
+static int l_isinstance(bvm *vm)
+{
+    return _issubv(vm, be_isinstance);
 }
 
 #if !BE_USE_PRECOMPILED_OBJECT
@@ -287,7 +297,8 @@ void be_load_baselib(bvm *vm)
     be_regfunc(vm, "module", l_module);
     be_regfunc(vm, "size", l_size);
     be_regfunc(vm, "compile", l_compile);
-    be_regfunc(vm, "issuper", l_issuper);
+    be_regfunc(vm, "issubclass", l_issubclass);
+    be_regfunc(vm, "isinstance", l_isinstance);
     be_regfunc(vm, "__iterator__", l_iterator);
 }
 #else
@@ -311,7 +322,8 @@ vartab m_builtin (scope: local) {
     module, func(l_module)
     size, func(l_size)
     compile, func(l_compile)
-    issuper, func(l_issuper)
+    issubclass, func(l_issubclass)
+    isinstance, func(l_isinstance)
     __iterator__, func(l_iterator)
     open, func(be_nfunc_open)
     list, class(be_class_list)

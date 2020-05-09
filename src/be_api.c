@@ -11,6 +11,7 @@
 #include "be_exec.h"
 #include "be_strlib.h"
 #include "be_module.h"
+#include "be_gc.h"
 #include <string.h>
 
 #define retreg(vm)      ((vm)->cf->func)
@@ -396,9 +397,11 @@ BERRY_API bbool be_setsuper(bvm *vm, int index)
     bvalue *top = be_indexof(vm, -1);
     if (var_isclass(v) && var_isclass(top)) {
         bclass *c = var_toobj(v);
-        bclass *super = var_toobj(top);
-        be_class_setsuper(c, super);
-        return btrue;
+        if (!gc_isconst(c)) {
+            bclass *super = var_toobj(top);
+            be_class_setsuper(c, super);
+            return btrue;
+        }
     }
     return bfalse;
 }
@@ -434,11 +437,11 @@ static bclass* _getclass(bvalue *v)
     return var_isclass(v) ? var_toobj(v) : NULL;
 }
 
-BERRY_API bbool be_issuper(bvm *vm, int index)
+BERRY_API bbool be_isderived(bvm *vm, int index)
 {
-    bclass *sup = _getclass(be_indexof(vm, index));
+    bclass *sup = _getclass(be_indexof(vm, -1));
     if (sup) {
-        bclass *c = _getclass(be_indexof(vm, -1));
+        bclass *c = _getclass(be_indexof(vm, index));
         while (c && c != sup)
             c = be_class_super(c);
         return c != NULL;
