@@ -1,18 +1,30 @@
 #include "be_object.h"
 #include <math.h>
+#include <limits.h>
 #include <stdlib.h>
 
 #if BE_USE_MATH_MODULE
 
 #ifdef M_PI
-#undef M_PI
+  #undef M_PI
 #endif
 #define M_PI        3.141592653589793238462643383279
 
+#if BE_INTGER_TYPE == 0 /* int */
+  #define M_IMAX    INT_MAX
+  #define M_IMIN    INT_MIN
+#elif BE_INTGER_TYPE == 1 /* long */
+  #define M_IMAX    LONG_MAX
+  #define M_IMIN    LONG_MIN
+#else /* int64_t (long long) */
+  #define M_IMAX    LLONG_MAX
+  #define M_IMIN    LLONG_MIN
+#endif
+
 #if BE_USE_SINGLE_FLOAT
-#define mathfunc(func)          func##f
+  #define mathfunc(func)        func##f
 #else
-#define mathfunc(func)          func
+  #define mathfunc(func)        func
 #endif
 
 static int m_abs(bvm *vm)
@@ -262,7 +274,9 @@ be_native_module_attr_table(math) {
     be_native_module_function("pow", m_pow),
     be_native_module_function("srand", m_srand),
     be_native_module_function("rand", m_rand),
-    be_native_module_real("pi", M_PI)
+    be_native_module_real("pi", M_PI),
+    be_native_module_int("imax", M_IMAX),
+    be_native_module_int("imin", M_IMIN),
 };
 
 be_define_native_module(math, NULL);
@@ -291,6 +305,8 @@ module math (scope: global, depend: BE_USE_MATH_MODULE) {
     srand, func(m_srand)
     rand, func(m_rand)
     pi, real(M_PI)
+    imax, int(M_IMAX)
+    imin, int(M_IMIN)
 }
 @const_object_info_end */
 #include "../generate/be_fixed_math.h"
