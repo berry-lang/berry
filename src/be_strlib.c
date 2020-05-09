@@ -474,7 +474,7 @@ static int str_split(bvm *vm)
         be_pushnstring(vm, s, idx);
         be_data_push(vm, -2);
         be_pop(vm, 1);
-        be_pushnstring(vm, s + idx, len - idx);
+        be_pushnstring(vm, s + idx, (size_t)len - idx);
         be_data_push(vm, -2);
         be_pop(vm, 1);
     }

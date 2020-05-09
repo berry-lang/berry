@@ -347,10 +347,10 @@ static char* escape(char *q, unsigned c)
         if (c < 0x20) { /* other characters are escaped using '\uxxxx' */
             *q++ = '\\'; *q++ = 'u';
             *q++ = '0'; *q++ = '0';
-            *q++ = eschex(c >> 4);
-            *q = eschex(c & 0x0F);
+            *q++ = (char)eschex(c >> 4);
+            *q = (char)eschex(c & 0x0F);
         } else { /* unescaped characters */
-            *q = c;
+            *q = (char)c;
         }
         break;
     }

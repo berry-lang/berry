@@ -803,7 +803,7 @@ static void assign_expr(bparser *parser)
     } else if (e.type >= ETMEMBER) {
         bfuncinfo *finfo = parser->finfo;
         /* these expressions occupy a register and need to be freed */
-        finfo->freereg = be_list_count(finfo->local);
+        finfo->freereg = (bbyte)be_list_count(finfo->local);
     } else if (e.type == ETVOID) { /* not assign expression */
         /* undeclared symbol */
         parser->lexer.linenumber = line;
