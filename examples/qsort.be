@@ -20,7 +20,7 @@ def qsort(data)
     end
     # recursive quick sort algorithm
     def _sort(left, right)
-        if (left < right) # executed when the array is not empty
+        if left < right # executed when the array is not empty
             var index = once(left, right) # get index of pivot for divide and conquer
             _sort(left, index - 1) # sort the data on the left
             _sort(index + 1, right) # sort the data on the right
