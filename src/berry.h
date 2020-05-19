@@ -74,22 +74,22 @@ enum berrorcode {
 #define BE_CMODULE              6
 
 /* API function mark */
-#if defined(_WIN32) /* in Windows */
+#if defined(_WIN32) || defined(__CYGWIN__) /* in Windows */
   #if defined(BERRY_MODULE) /* berry extension module */
     #define BERRY_API           __declspec(dllimport)
   #else /* berry core */
     #define BERRY_API           __declspec(dllexport)
   #endif
-#else
+#else /* other platforms */
   #define BERRY_API             extern
 #endif
 
 /* only linux */
-#if defined(_MSC_VER)
+#if defined(_WIN32) || defined(__CYGWIN__) /* in Windows */
   #define BERRY_LOCAL
-#elif defined(__GNUC__) && !defined(_WIN32)
+#elif defined(__GNUC__) /* in GCC */
   #define BERRY_LOCAL           __attribute__ ((visibility ("hidden")))
-#else
+#else /* other platforms */
   #define BERRY_LOCAL
 #endif
 

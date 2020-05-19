@@ -12,7 +12,9 @@
 /* the maximum suffix length */
 #define SUFFIX_LEN      5 /* length of (.be .bec .so .dll) + 1 */
 
-#if defined(__linux) || defined(__APPLE__)
+/* check POSIX platforms */
+#if defined(__linux__) || \
+    defined(__APPLE__) || defined(__unix__) || defined(__CYGWIN__)
   #define __POSIX_OS__
 #endif
 
