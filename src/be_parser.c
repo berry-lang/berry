@@ -904,6 +904,7 @@ static int cond_stmt(bparser *parser)
     /* expr */
     match_notoken(parser, OptRBK);
     expr(parser, &e);
+    check_var(parser, &e);
     be_code_goiftrue(parser->finfo, &e);
     return e.f;
 }

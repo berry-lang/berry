@@ -521,7 +521,7 @@ static btokentype lexer_next(blexer *lexer)
             return scan_numeral(lexer);
         default:
             if (is_letter(lgetc(lexer))) {
-                return scan_identifier(lexer);;
+                return scan_identifier(lexer);
             }
             be_lexerror(lexer, be_pushfstring(lexer->vm,
                 "stray '\\%d' in program", (unsigned char)lgetc(lexer)));
