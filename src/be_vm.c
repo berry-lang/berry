@@ -30,7 +30,11 @@
 #define ibinop(op, a, b)    ((a)->v.i op (b)->v.i)
 
 #if BE_USE_DEBUG_HOOK
-  #define DEBUG_HOOK()      be_debug_hook(vm, ins);
+  #define DEBUG_HOOK() \
+    if (vm->hookmask & BE_HOOK_LINE) { \
+        do_linehook(vm); \
+        reg = vm->reg; \
+    }
 #else
   #define DEBUG_HOOK()
 #endif
@@ -141,6 +145,20 @@ static void check_bool(bvm *vm, binstance *obj, const char *method)
     }
 }
 
+#if BE_USE_DEBUG_HOOK
+static void do_linehook(bvm *vm)
+{
+    bcallframe *cf = vm->cf;
+    bclosure *cl = var_toobj(cf->func);
+    int pc = vm->ip - cl->proto->code;
+    if (!pc || pc > cf->lineinfo->endpc) {
+        while (pc > cf->lineinfo->endpc)
+            cf->lineinfo++;
+        be_callhook(vm, BE_HOOK_LINE);
+    }
+}
+#endif
+
 static void precall(bvm *vm, bvalue *func, int nstack, int mode)
 {
     bcallframe *cf;
@@ -167,6 +185,10 @@ static void push_closure(bvm *vm, bvalue *func, int nstack, int mode)
     vm->cf->ip = vm->ip;
     vm->cf->status = NONE_FLAG;
     vm->ip = cl->proto->code;
+#if BE_USE_DEBUG_HOOK
+    vm->cf->lineinfo = cl->proto->lineinfo;
+    be_callhook(vm, BE_HOOK_CALL);
+#endif
 }
 
 static void ret_native(bvm *vm)
@@ -360,9 +382,6 @@ BERRY_API bvm* be_vm_new(void)
     vm->reg = vm->stack;
     vm->top = vm->reg;
     be_globalvar_init(vm);
-#if BE_USE_DEBUG_HOOK
-    be_debug_hook_init(vm);
-#endif
     be_gc_setpause(vm, 1);
     be_loadlibs(vm);
     return vm;
@@ -926,8 +945,13 @@ newframe: /* a new call frame */
             dispatch();
         }
         opcase(RET): {
-            bcallframe *cf = vm->cf;
-            bvalue *ret = vm->cf->func;
+            bcallframe *cf;
+            bvalue *ret;
+#if BE_USE_DEBUG_HOOK
+            be_callhook(vm, BE_HOOK_RET);
+#endif
+            cf = vm->cf;
+            ret = vm->cf->func;
             /* copy return value */
             if (IGET_RA(ins)) {
                 *ret = *RKB();

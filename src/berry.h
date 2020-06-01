@@ -322,6 +322,9 @@ BERRY_API int be_register(bvm *vm, int index);
 BERRY_API void be_unregister(bvm *vm, int id);
 BERRY_API void be_getregister(bvm *vm, int id);
 
+/* debug APIs */
+BERRY_API void be_sethook(bvm *vm, const char *mask);
+
 /* basic character IO APIs */
 BERRY_API void be_writebuffer(const char *buffer, size_t length);
 BERRY_API char* be_readstring(char *buffer, size_t size);

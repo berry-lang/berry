@@ -3,9 +3,12 @@
 
 #include "be_object.h"
 
+#define BE_HOOK_LINE    1
+#define BE_HOOK_CALL    2
+#define BE_HOOK_RET     4
+
 void be_dumpclosure(bclosure *cl);
 void be_tracestack(bvm *vm);
-void be_debug_hook_init(bvm *vm);
-void be_debug_hook(bvm *vm, binstruction ins);
+void be_callhook(bvm *vm, int mask);
 
 #endif

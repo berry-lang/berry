@@ -19,6 +19,9 @@ typedef struct {
     bvalue *top; /* top register pointer */
     bvalue *reg; /* base register pointer */
     binstruction *ip; /* instruction pointer (only berry-function) */
+#if BE_USE_DEBUG_HOOK
+    blineinfo *lineinfo;
+#endif
     int status;
 } bcallframe;
 
@@ -68,7 +71,8 @@ struct bvm {
     blist *registry; /* registry list */
     struct bgc gc;
 #if BE_USE_DEBUG_HOOK
-    struct bdebughook *debughook;
+    bvalue hook;
+    bbyte hookmask;
 #endif
 };
 

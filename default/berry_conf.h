@@ -114,7 +114,7 @@
  * Berry debug hook switch.
  * Default: 0
  **/
-#define BE_USE_DEBUG_HOOK               0
+#define BE_USE_DEBUG_HOOK               1
 
 /* Macro: BE_USE_XXX_MODULE
  * These macros control whether the related module is compiled.

@@ -11,6 +11,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#if BE_USE_DEBUG_HOOK && !BE_DEBUG_RUNTIME_INFO
+  #error This macro BE_USE_DEBUG_HOOK requires BE_DEBUG_RUNTIME_INFO != 0
+#endif
+
 #ifndef INST_BUF_SIZE
 #define INST_BUF_SIZE   96
 #endif
@@ -123,9 +127,10 @@ void be_dumpclosure(bclosure *cl)
 #endif
     logfmt("source '%s', ", str(proto->source));
     logfmt("function '%s':\n", str(proto->name));
+
     for (pc = 0; pc < proto->codesize; pc++) {
 #if BE_DEBUG_RUNTIME_INFO
-        if (lineinfo && pc == lineinfo->endpc) {
+        if (lineinfo && (!pc || pc > lineinfo->endpc)) {
             logfmt("; line %d\n", lineinfo->linenumber);
             ++lineinfo;
         }
@@ -141,10 +146,10 @@ static void sourceinfo(bproto *proto, binstruction *ip)
     char buf[24];
     be_assert(proto != NULL);
     if (proto->lineinfo && proto->nlineinfo) {
-        blineinfo *start = proto->lineinfo;
-        blineinfo *it = start + proto->nlineinfo - 1;
+        blineinfo *it = proto->lineinfo;
+        blineinfo *end = it + proto->nlineinfo;
         int pc = cast_int(ip - proto->code - 1);
-        for (; it > start && it->endpc > pc; --it);
+        for (; it < end && pc > it->endpc; --it);
         sprintf(buf, ":%d:", it->linenumber);
         be_writestring(str(proto->source));
         be_writestring(buf);
@@ -213,20 +218,68 @@ void be_tracestack(bvm *vm)
 
 #if BE_USE_DEBUG_HOOK
 
-typedef struct bdebughook {
-    int line;
-    const char *source;
-} bdebughook;
-
-void be_debug_hook_init(bvm *vm)
+int hook_pushargs(bvm *vm, int mask)
 {
-    vm->debughook = be_malloc(vm, sizeof(bdebughook));
+        bcallframe *cf = vm->cf;
+    if (mask == BE_HOOK_LINE) {
+        bcallframe *cf = vm->cf;
+        be_pushstring(vm, "line");
+        be_pushint(vm, cf->lineinfo->linenumber);
+        return 2;
+    }
+    if (mask == BE_HOOK_CALL) {
+        bclosure *cl = var_toobj(cf->func);
+        be_pushstring(vm, "call");
+        var_setstr(vm->top, cl->proto->name);
+        vm->top++;
+        return 2;
+    }
+    if (mask == BE_HOOK_RET) {
+        be_pushstring(vm, "return");
+        return 1;
+    }
+    return 0;
 }
 
-void be_debug_hook(bvm *vm, binstruction ins)
+void be_callhook(bvm *vm, int mask)
 {
-    (void)vm;
-    (void)ins;
+    if (vm->hookmask & mask) {
+        int argc, hookmask = vm->hookmask;
+        vm->hookmask = 0;
+        vm->top[2] = vm->hook;
+        be_stack_require(vm, 5);
+        vm->top += 3;
+        argc = hook_pushargs(vm, mask);
+        be_call(vm, argc);
+        be_pop(vm, 3 + argc);
+        vm->hookmask = (bbyte)hookmask;
+    }
+}
+
+static bbyte parse_hookmask(const char *mask)
+{
+    int c, res = 0;
+    if (mask) {
+        while ((c = *mask++) != '\0') {
+            switch (c) {
+            case 'l': res |= BE_HOOK_LINE; break;
+            case 'c': res |= BE_HOOK_CALL; break;
+            case 'r': res |= BE_HOOK_RET; break;
+            default: break;
+            }
+        }
+    }
+    return (bbyte)res;
+}
+
+BERRY_API void be_sethook(bvm *vm, const char *mask)
+{
+    vm->hookmask = parse_hookmask(mask);
+    if (vm->hookmask) {
+        vm->hook = *be_indexof(vm, -1);
+    } else {
+        var_setnil(&vm->hook);
+    }
 }
 
 #endif
