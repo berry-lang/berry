@@ -155,6 +155,15 @@ static void do_linehook(bvm *vm)
         while (pc > cf->lineinfo->endpc)
             cf->lineinfo++;
         be_callhook(vm, BE_HOOK_LINE);
+    } else {
+        blineinfo *linfo = cf->lineinfo;
+        blineinfo *base = cl->proto->lineinfo;
+        while (linfo > base && pc <= linfo[-1].endpc)
+            linfo--;
+        if (cf->lineinfo != linfo) {
+            cf->lineinfo = linfo;
+            be_callhook(vm, BE_HOOK_LINE);
+        }
     }
 }
 #endif
