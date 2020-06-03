@@ -109,6 +109,17 @@ typedef struct {
 #endif
 } blineinfo;
 
+typedef struct {
+    bstring *name;
+#if BE_DEBUG_RUNTIME_INFO > 1
+    uint16_t beginpc;
+    uint16_t endpc;
+#else
+    int beginpc;
+    int endpc;
+#endif
+} bvarinfo;
+
 typedef struct bupval {
     bvalue *value;
     union {
@@ -136,6 +147,10 @@ typedef struct bproto {
 #if BE_DEBUG_RUNTIME_INFO /* debug information */
     blineinfo *lineinfo;
     int nlineinfo;
+#endif
+#if BE_DEBUG_VAR_INFO
+    bvarinfo *varinfo;
+    int nvarinfo;
 #endif
 } bproto;
 

@@ -63,6 +63,9 @@ typedef struct bfuncinfo {
 #if BE_DEBUG_RUNTIME_INFO /* debug information */
     bvector linevec;
 #endif
+#if BE_DEBUG_VAR_INFO
+    bvector varvec;
+#endif
     int pc; /* program count */
     bbyte freereg; /* first free register */
     bbyte flags; /* some flages */

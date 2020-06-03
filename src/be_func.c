@@ -100,6 +100,10 @@ bproto* be_newproto(bvm *vm)
         p->lineinfo = NULL;
         p->nlineinfo = 0;
 #endif
+#if BE_DEBUG_VAR_INFO
+        p->varinfo = NULL;
+        p->nvarinfo = 0;
+#endif
     }
     return p;
 }

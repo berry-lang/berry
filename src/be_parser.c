@@ -127,11 +127,46 @@ static bstring* _match_id(bparser *parser)
     return NULL;
 }
 
+#if BE_DEBUG_VAR_INFO
+
+void begin_varinfo(bparser *parser, bstring *name)
+{
+    bvarinfo *var;
+    bfuncinfo *finfo = parser->finfo;
+    be_vector_push_c(parser->vm, &finfo->varvec, NULL);
+    var = be_vector_end(&finfo->varvec);
+    var->name = name;
+    var->beginpc = finfo->pc;
+    var->endpc = 0; /*  */
+    finfo->proto->varinfo = be_vector_data(&finfo->varvec);
+    finfo->proto->nvarinfo = be_vector_capacity(&finfo->varvec);
+}
+
+void end_varinfo(bparser *parser)
+{
+    bfuncinfo *finfo = parser->finfo;
+    bblockinfo *binfo = finfo->binfo;
+    bvarinfo *it = be_vector_data(&finfo->varvec);
+    bvarinfo *end = be_vector_end(&finfo->varvec);
+    /* skip the variable of the previous blocks */
+    for (; it->beginpc < binfo->beginpc; ++it);
+    for (; it <= end; ++it) {
+        if (!it->endpc) /* write to endpc only once */
+            it->endpc = finfo->pc;
+    }
+}
+
+#else
+
+#define begin_varinfo(parser, name)
+#define end_varinfo(parser)
+
+#endif
+
 static void block_set_loop(bfuncinfo *finfo)
 {
     bblockinfo *binfo = finfo->binfo;
     binfo->type |= BLOCK_LOOP;
-    binfo->beginpc = finfo->pc;
     binfo->breaklist = NO_JUMP;
     binfo->continuelist = NO_JUMP;
 }
@@ -142,6 +177,7 @@ static void begin_block(bfuncinfo *finfo, bblockinfo *binfo, int type)
     finfo->binfo = binfo;
     binfo->type = (bbyte)type;
     binfo->hasupval = 0;
+    binfo->beginpc = finfo->pc;
     binfo->nactlocals = (bbyte)be_list_count(finfo->local);
     if (type & BLOCK_LOOP) {
         block_set_loop(finfo);
@@ -158,6 +194,7 @@ static void end_block(bparser *parser)
         be_code_patchjump(finfo, binfo->breaklist);
         be_code_patchlist(finfo, binfo->continuelist, binfo->beginpc);
     }
+    end_varinfo(parser);
     be_list_resize(parser->vm, finfo->local, binfo->nactlocals);
     finfo->freereg = binfo->nactlocals;
     finfo->binfo = binfo->prev;
@@ -206,6 +243,11 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     proto->lineinfo = be_vector_data(&finfo->linevec);
     proto->nlineinfo = be_vector_capacity(&finfo->linevec);
 #endif
+#if BE_DEBUG_VAR_INFO
+    be_vector_init(vm, &finfo->varvec, sizeof(bvarinfo));
+    proto->varinfo = be_vector_data(&finfo->varvec);
+    proto->nvarinfo = be_vector_capacity(&finfo->varvec);
+#endif
     begin_block(finfo, binfo, 0);
 }
 
@@ -230,6 +272,7 @@ static void setupvals(bfuncinfo *finfo)
     }
 }
 
+#include <stdio.h>
 static void end_func(bparser *parser)
 {
     bvm *vm = parser->vm;
@@ -249,8 +292,19 @@ static void end_func(bparser *parser)
     proto->lineinfo = be_vector_release(vm, &finfo->linevec);
     proto->nlineinfo = be_vector_count(&finfo->linevec);
 #endif
+#if BE_DEBUG_VAR_INFO
+    proto->varinfo = be_vector_release(vm, &finfo->varvec);
+    proto->nvarinfo = be_vector_count(&finfo->varvec);
+#endif
     parser->finfo = parser->finfo->prev;
     be_stackpop(vm, 2); /* pop upval and local */
+    printf("Function: %s\n", str(proto->name));
+    for (int i = 0; i < proto->nvarinfo; ++i) {
+        bvarinfo *v = &proto->varinfo[i];
+        printf("var name: %s\n", str(v->name));
+        printf("     pc0: %.4X\n", v->beginpc);
+        printf("     pc0: %.4X\n", v->endpc);
+    }
 }
 
 static btokentype get_binop(bparser *parser)
@@ -314,6 +368,7 @@ static int new_localvar(bparser *parser, bstring *name)
         if (reg >= finfo->freereg) {
             be_code_allocregs(finfo, 1); /* use a register */
         }
+        begin_varinfo(parser, name);
     }
     return reg;
 }
