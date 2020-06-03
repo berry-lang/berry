@@ -17,6 +17,7 @@
 #define GC_ALLOC    (1 << 2) /* GC in alloc */
 
 #define gc_try(expr)        be_assert(expr); if (expr)
+#define gc_setdark_safe(o)  if (o) gc_setdark(o)
 
 #define next_threshold(gc)  ((gc).usage * ((size_t)(gc).steprate + 100) / 100)
 
@@ -184,12 +185,17 @@ static void mark_proto(bvm *vm, bgcobject *obj)
         for (count = p->nproto; count--; ++ptab) {
             mark_gray(vm, gc_object(*ptab));
         }
-        if (p->name) {
-            gc_setdark(p->name);
+        gc_setdark_safe(p->name);
+        gc_setdark_safe(p->source);
+#if BE_DEBUG_VAR_INFO
+        if (p->nvarinfo) {
+            bvarinfo *vinfo = p->varinfo;
+            be_assert(vinfo != NULL);
+            for (count = p->nvarinfo; count--; ++vinfo) {
+                gc_setdark_safe(vinfo->name);
+            }
         }
-        if (p->source) {
-            gc_setdark(p->source);
-        }
+#endif
     }
 }
 
