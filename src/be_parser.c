@@ -272,7 +272,6 @@ static void setupvals(bfuncinfo *finfo)
     }
 }
 
-#include <stdio.h>
 static void end_func(bparser *parser)
 {
     bvm *vm = parser->vm;
@@ -298,13 +297,6 @@ static void end_func(bparser *parser)
 #endif
     parser->finfo = parser->finfo->prev;
     be_stackpop(vm, 2); /* pop upval and local */
-    printf("Function: %s\n", str(proto->name));
-    for (int i = 0; i < proto->nvarinfo; ++i) {
-        bvarinfo *v = &proto->varinfo[i];
-        printf("var name: %s\n", str(v->name));
-        printf("     pc0: %.4X\n", v->beginpc);
-        printf("     pc1: %.4X\n", v->endpc);
-    }
 }
 
 static btokentype get_binop(bparser *parser)

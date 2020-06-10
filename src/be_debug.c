@@ -149,7 +149,7 @@ static void sourceinfo(bproto *proto, binstruction *ip)
         blineinfo *it = proto->lineinfo;
         blineinfo *end = it + proto->nlineinfo;
         int pc = cast_int(ip - proto->code - 1);
-        for (; it < end && pc > it->endpc; --it);
+        for (; it < end && pc > it->endpc; ++it);
         sprintf(buf, ":%d:", it->linenumber);
         be_writestring(str(proto->source));
         be_writestring(buf);
