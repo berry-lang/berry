@@ -268,23 +268,23 @@ static int obj_attribute(bvm *vm, bvalue *o, bstring *attr, bvalue *dst)
 static bbool object_eqop(bvm *vm,
     const char *op, bbool iseq, bvalue *a, bvalue *b)
 {
-    binstance *obj = var_toobj(a);
-    bbool res = iseq && obj == var_toobj(b); /* same object */
-    if (!res) { /* not the same object */
-        bvalue self = *a, other = *b;
-        int type = be_instance_member(vm, obj, be_newstr(vm, op), vm->top);
-        if (basetype(type) == BE_FUNCTION) { /* call method */
-            bvalue *top = vm->top;
-            top[1] = self;  /* move self to argv[0] */
-            top[2] = other; /* move other to argv[1] */
-            be_incrtop(vm); /* prevent collection results */
-            be_dofunc(vm, top, 2); /* call method 'item' */
-            be_stackpop(vm, 1);
-            check_bool(vm, obj, op); /* check return value */
-            res = var_tobool(vm->top); /* copy result to dst */
-        }
+    binstance *o = var_toobj(a);
+    bvalue self = *a, other = *b;
+    bbool isself = var_isinstance(b) && o == var_toobj(b);
+    /* first, try to call the overloaded operator of the object */
+    int type = be_instance_member(vm, o, be_newstr(vm, op), vm->top);
+    if (basetype(type) == BE_FUNCTION) { /* call method */
+        bvalue *top = vm->top;
+        top[1] = self;  /* move self to argv[0] */
+        top[2] = other; /* move other to argv[1] */
+        be_incrtop(vm); /* prevent collection results */
+        be_dofunc(vm, top, 2); /* call method 'item' */
+        be_stackpop(vm, 1);
+        check_bool(vm, o, op); /* check return value */
+        return var_tobool(vm->top); /* copy result to dst */
     }
-    return res;
+    /* the default equal operation rule */
+    return iseq == isself; /* check object self */
 }
 
 static void object_binop(bvm *vm, const char *op, bvalue self, bvalue other)
