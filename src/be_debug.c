@@ -218,11 +218,28 @@ void be_tracestack(bvm *vm)
 
 #if BE_USE_DEBUG_HOOK
 
-int hook_pushargs(bvm *vm, int mask)
+static void hook_callnative(bvm *vm, int mask)
 {
-        bcallframe *cf = vm->cf;
+    bhookinfo info;
+    int top = be_top(vm);
+    bcallframe *cf = vm->cf;
+    bclosure *cl = var_toobj(cf->func);
+    struct bhookblock *hb = var_toobj(&vm->hook);
+    be_stack_require(vm, BE_STACK_FREE_MIN + 2);
+    info.type = mask;
+    info.line = cf->lineinfo->linenumber;
+    info.source = str(cl->proto->source);
+    info.func_name = str(cl->proto->name);
+    info.data = hb->data;
+    hb->hook(vm, &info);
+    vm->top += 2;
+    be_pop(vm, be_top(vm) - top);
+}
+
+static int hook_pushargs(bvm *vm, int mask)
+{
+    bcallframe *cf = vm->cf;
     if (mask == BE_HOOK_LINE) {
-        bcallframe *cf = vm->cf;
         be_pushstring(vm, "line");
         be_pushint(vm, cf->lineinfo->linenumber);
         return 2;
@@ -241,17 +258,27 @@ int hook_pushargs(bvm *vm, int mask)
     return 0;
 }
 
+static void hook_call(bvm *vm, int mask)
+{
+    int argc;
+    vm->top[2] = vm->hook;
+    be_stack_require(vm, 5);
+    vm->top += 3;
+    argc = hook_pushargs(vm, mask);
+    be_call(vm, argc);
+    be_pop(vm, 3 + argc);
+}
+
 void be_callhook(bvm *vm, int mask)
 {
     if (vm->hookmask & mask) {
-        int argc, hookmask = vm->hookmask;
+        int hookmask = vm->hookmask;
         vm->hookmask = 0;
-        vm->top[2] = vm->hook;
-        be_stack_require(vm, 5);
-        vm->top += 3;
-        argc = hook_pushargs(vm, mask);
-        be_call(vm, argc);
-        be_pop(vm, 3 + argc);
+        if (var_istype(&vm->hook, BE_COMPTR)) {
+            hook_callnative(vm, mask);
+        } else {
+            hook_call(vm, mask);
+        }
         vm->hookmask = (bbyte)hookmask;
     }
 }
@@ -275,11 +302,31 @@ static bbyte parse_hookmask(const char *mask)
 BERRY_API void be_sethook(bvm *vm, const char *mask)
 {
     vm->hookmask = parse_hookmask(mask);
+    if (vm->hookmask && var_istype(&vm->hook, BE_COMPTR)) /* free native hook */
+        be_free(vm, var_toobj(&vm->hook), sizeof(struct bhookblock));
     if (vm->hookmask) {
         vm->hook = *be_indexof(vm, -1);
-    } else {
+    } else if (!var_istype(&vm->hook, BE_COMPTR)) {
         var_setnil(&vm->hook);
     }
+}
+
+BERRY_API void be_setntvhook(bvm *vm, bntvhook hook, void *data, int mask)
+{
+    struct bhookblock *hb;
+    if (mask) {
+        if (!var_istype(&vm->hook, BE_COMPTR)) {
+            var_setobj(&vm->hook, BE_COMPTR,
+                be_malloc(vm, sizeof(struct bhookblock)));
+        }
+        hb = var_toobj(&vm->hook);
+        be_assert(hb != NULL);
+        hb->hook = hook;
+        hb->data = data;
+    } else if (!var_istype(&vm->hook, BE_COMPTR)) {
+        var_setnil(&vm->hook);
+    }
+    vm->hookmask = mask;
 }
 
 #endif

@@ -3,9 +3,10 @@
 
 #include "be_object.h"
 
-#define BE_HOOK_LINE    1
-#define BE_HOOK_CALL    2
-#define BE_HOOK_RET     4
+struct bhookblock {
+    void *data;
+    bntvhook hook;
+};
 
 void be_dumpclosure(bclosure *cl);
 void be_tracestack(bvm *vm);

@@ -406,6 +406,10 @@ BERRY_API void be_vm_delete(bvm *vm)
     be_stack_delete(vm, &vm->tracestack);
     be_free(vm, vm->stack, (vm->stacktop - vm->stack) * sizeof(bvalue));
     be_globalvar_deinit(vm);
+    /* free native hook */
+    if (var_istype(&vm->hook, BE_COMPTR))
+        be_free(vm, var_toobj(&vm->hook), sizeof(struct bhookblock));
+    /* free VM structure */
     be_os_free(vm);
 }
 
