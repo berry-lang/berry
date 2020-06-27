@@ -15,5 +15,6 @@ void be_release_upvalues(bvm *vm, bclosure *cl);
 bproto* be_newproto(bvm *vm);
 bclosure* be_newclosure(bvm *vm, int nupval);
 bntvclos* be_newntvclosure(bvm *vm, bntvfunc cf, int nupvals);
+bstring* be_func_varname(bproto *proto, int index, int pc);
 
 #endif

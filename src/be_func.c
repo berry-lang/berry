@@ -152,3 +152,17 @@ bntvclos* be_newntvclosure(bvm *vm, bntvfunc cf, int nupvals)
     }
     return f;
 }
+
+#if BE_DEBUG_VAR_INFO
+bstring* be_func_varname(bproto *proto, int index, int pc)
+{
+    int i, nvarinfo = proto->nvarinfo;
+    bvarinfo *varinfo = proto->varinfo;
+    for (i = 0; i < nvarinfo && varinfo[i].beginpc <= pc; ++i) {
+        if (pc < varinfo[i].endpc && index-- == 0) {
+            return varinfo[i].name;
+        }
+    }
+    return NULL;
+}
+#endif
