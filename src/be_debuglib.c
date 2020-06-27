@@ -108,6 +108,28 @@ static int m_calldepth(bvm *vm)
     be_return(vm);
 }
 
+#if BE_DEBUG_VAR_INFO
+static int m_varname(bvm *vm)
+{
+    int index, level = 1;
+    if (be_top(vm) < 1)
+        be_raise(vm, "value_error", "too few arguments");
+    if (!be_isint(vm, 1) || (be_top(vm) >= 2 && !be_isint(vm, 2)))
+        be_raise(vm, "value_error", "invalid argument(s) value");
+    if (be_top(vm) >= 2)
+        level = be_toindex(vm, 2);
+    index = be_toindex(vm, 1);
+    if (index < 0)
+        be_raise(vm, "value_error", "variable index cannot be less than 0");
+    if (level < 1 || level >= be_stack_count(&vm->callstack))
+        be_raise(vm, "value_error", "invalid call depth level");
+    if (be_debug_varname(vm, level + 1, index)) {
+        be_return(vm);
+    }
+    be_return_nil(vm);
+}
+#endif
+
 #if !BE_USE_PRECOMPILED_OBJECT
 be_native_module_attr_table(debug) {
     be_native_module_function("attrdump", m_attrdump),
@@ -117,7 +139,10 @@ be_native_module_attr_table(debug) {
     be_native_module_function("sethook", m_sethook),
 #endif
     be_native_module_function("calldepth", m_calldepth),
-    be_native_module_function("top", m_top)
+    be_native_module_function("top", m_top),
+#if BE_DEBUG_VAR_INFO
+    be_native_module_function("varname", m_varname)
+#endif
 };
 
 be_define_native_module(debug, NULL);
@@ -130,6 +155,7 @@ module debug (scope: global, depend: BE_USE_DEBUG_MODULE) {
     sethook, func(m_sethook), BE_USE_DEBUG_HOOK
     calldepth, func(m_calldepth)
     top, func(m_top)
+    varname, func(m_varname), BE_DEBUG_VAR_INFO
 }
 @const_object_info_end */
 #include "../generate/be_fixed_debug.h"

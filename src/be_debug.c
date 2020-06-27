@@ -330,3 +330,32 @@ BERRY_API void be_setntvhook(bvm *vm, bntvhook hook, void *data, int mask)
 }
 
 #endif
+
+#if BE_DEBUG_VAR_INFO
+static binstruction* callstack_fixip(bvm *vm, int level)
+{
+    bcallframe *top = (bcallframe*)be_stack_top(&vm->callstack);
+    bcallframe *cf = top - level + 2;
+    for (; cf <= top && cf->status & PRIM_FUNC; ++cf);
+    return cf <= top ? cf->ip : vm->ip;
+}
+
+bbool be_debug_varname(bvm *vm, int level, int index)
+{
+    int depth = be_stack_count(&vm->callstack);
+    if (level > 0 && level <= depth) {
+        bcallframe *cf = be_vector_at(&vm->callstack, depth - level);
+        if ((cf->status & PRIM_FUNC) == 0) {
+            bproto *proto = cast(bclosure*, var_toobj(cf->func))->proto;
+            binstruction *ip = callstack_fixip(vm, level);
+            bstring *name = be_func_varname(proto, index, ip - proto->code);
+            if (name) {
+                bvalue *reg = be_incrtop(vm);
+                var_setstr(reg, name);
+                return btrue;
+            }
+        }
+    }
+    return bfalse;
+}
+#endif
