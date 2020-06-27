@@ -127,12 +127,15 @@ void be_dumpclosure(bclosure *cl)
 #endif
     logfmt("source '%s', ", str(proto->source));
     logfmt("function '%s':\n", str(proto->name));
-
+#if BE_DEBUG_RUNTIME_INFO
+    if (lineinfo) { /* first line */
+        logfmt("; line %d\n", lineinfo->linenumber);
+    }
+#endif
     for (pc = 0; pc < proto->codesize; pc++) {
 #if BE_DEBUG_RUNTIME_INFO
-        if (lineinfo && (!pc || pc > lineinfo->endpc)) {
-            logfmt("; line %d\n", lineinfo->linenumber);
-            ++lineinfo;
+        if (lineinfo && pc > lineinfo->endpc) {
+            logfmt("; line %d\n", (++lineinfo)->linenumber);
         }
 #endif
         print_inst(*code++, pc);
@@ -148,7 +151,7 @@ static void sourceinfo(bproto *proto, binstruction *ip)
     if (proto->lineinfo && proto->nlineinfo) {
         blineinfo *it = proto->lineinfo;
         blineinfo *end = it + proto->nlineinfo;
-        int pc = cast_int(ip - proto->code - 1);
+        int pc = cast_int(ip - proto->code - 1); /* now vm->ip has been increased */
         for (; it < end && pc > it->endpc; ++it);
         sprintf(buf, ":%d:", it->linenumber);
         be_writestring(str(proto->source));

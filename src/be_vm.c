@@ -150,7 +150,7 @@ static void do_linehook(bvm *vm)
 {
     bcallframe *cf = vm->cf;
     bclosure *cl = var_toobj(cf->func);
-    int pc = vm->ip - cl->proto->code;
+    int pc = cast_int(vm->ip - cl->proto->code);
     if (!pc || pc > cf->lineinfo->endpc) {
         while (pc > cf->lineinfo->endpc)
             cf->lineinfo++;
