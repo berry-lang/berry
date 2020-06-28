@@ -16,7 +16,7 @@
 #elif defined(__unix)
     #define OS_NAME   "Unix"
 #elif defined(__APPLE__)
-    #define OS_NAME   "macOS"
+    #define OS_NAME   "Darwin"
 #elif defined(_WIN32)
     #define OS_NAME   "Windows"
 #else
