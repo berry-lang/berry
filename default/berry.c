@@ -311,7 +311,7 @@ static int analysis_args(bvm *vm, int argc, char *argv[])
 }
 
 #if defined(_WIN32)
-    #define BERRY_ROOT "C:\Windows\system32"
+    #define BERRY_ROOT "\Windows\system32"
     static const char *module_paths[] = {
         BERRY_ROOT "\berry\packages",
     };
