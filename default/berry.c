@@ -16,7 +16,7 @@
 #elif defined(__unix)
     #define OS_NAME   "Unix"
 #elif defined(__APPLE__)
-    #define OS_NAME   "macOS"
+    #define OS_NAME   "Darwin"
 #elif defined(_WIN32)
     #define OS_NAME   "Windows"
 #else
@@ -310,11 +310,17 @@ static int analysis_args(bvm *vm, int argc, char *argv[])
     return load_file(vm, argc, argv, args);
 }
 
-/* TODO: more paths & support more OS */
+#if defined(_WIN32)
+#define BERRY_ROOT "\\Windows\\system32"
+static const char *module_paths[] = {
+    BERRY_ROOT "\\berry\\packages",
+};
+#else
 #define BERRY_ROOT "/usr/local"
 static const char *module_paths[] = {
     BERRY_ROOT "/lib/berry/packages",
 };
+#endif
 
 static void berry_paths(bvm * vm)
 {
