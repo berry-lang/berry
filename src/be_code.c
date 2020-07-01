@@ -42,6 +42,8 @@ static void codelineinfo(bfuncinfo *finfo)
         li->linenumber = line;
         finfo->proto->lineinfo = be_vector_data(vec);
         finfo->proto->nlineinfo = be_vector_capacity(vec);
+    } else {
+        li->endpc = finfo->pc;
     }
 }
 #else

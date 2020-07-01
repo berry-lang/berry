@@ -40,10 +40,18 @@
  * Set runtime error debugging information.
  * 0: unable to output source file and line number at runtime.
  * 1: output source file and line number information at runtime.
- * 2: the information use uint16_t type (save space)
+ * 2: the information use uint16_t type (save space).
  * Default: 1
  **/
 #define BE_DEBUG_RUNTIME_INFO           1
+
+/* Macro: BE_DEBUG_VAR_INFO
+ * Set variable debugging tracking information.
+ * 0: disable variable debugging tracking information at runtime.
+ * 1: enable variable debugging tracking information at runtime.
+ * Default: 1
+ **/
+#define BE_DEBUG_VAR_INFO               1
 
 /* Macro: BE_STACK_TOTAL_MAX
  * Set the maximum total stack size.
@@ -114,7 +122,7 @@
  * Berry debug hook switch.
  * Default: 0
  **/
-#define BE_USE_DEBUG_HOOK               0
+#define BE_USE_DEBUG_HOOK               1
 
 /* Macro: BE_USE_XXX_MODULE
  * These macros control whether the related module is compiled.

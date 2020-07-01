@@ -11,6 +11,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#if BE_USE_DEBUG_HOOK && !BE_DEBUG_RUNTIME_INFO
+  #error This macro BE_USE_DEBUG_HOOK requires BE_DEBUG_RUNTIME_INFO != 0
+#endif
+
 #ifndef INST_BUF_SIZE
 #define INST_BUF_SIZE   96
 #endif
@@ -123,11 +127,15 @@ void be_dumpclosure(bclosure *cl)
 #endif
     logfmt("source '%s', ", str(proto->source));
     logfmt("function '%s':\n", str(proto->name));
+#if BE_DEBUG_RUNTIME_INFO
+    if (lineinfo) { /* first line */
+        logfmt("; line %d\n", lineinfo->linenumber);
+    }
+#endif
     for (pc = 0; pc < proto->codesize; pc++) {
 #if BE_DEBUG_RUNTIME_INFO
-        if (lineinfo && pc == lineinfo->endpc) {
-            logfmt("; line %d\n", lineinfo->linenumber);
-            ++lineinfo;
+        if (lineinfo && pc > lineinfo->endpc) {
+            logfmt("; line %d\n", (++lineinfo)->linenumber);
         }
 #endif
         print_inst(*code++, pc);
@@ -141,10 +149,10 @@ static void sourceinfo(bproto *proto, binstruction *ip)
     char buf[24];
     be_assert(proto != NULL);
     if (proto->lineinfo && proto->nlineinfo) {
-        blineinfo *start = proto->lineinfo;
-        blineinfo *it = start + proto->nlineinfo - 1;
-        int pc = cast_int(ip - proto->code - 1);
-        for (; it > start && it->endpc > pc; --it);
+        blineinfo *it = proto->lineinfo;
+        blineinfo *end = it + proto->nlineinfo;
+        int pc = cast_int(ip - proto->code - 1); /* now vm->ip has been increased */
+        for (; it < end && pc > it->endpc; ++it);
         sprintf(buf, ":%d:", it->linenumber);
         be_writestring(str(proto->source));
         be_writestring(buf);
@@ -213,20 +221,161 @@ void be_tracestack(bvm *vm)
 
 #if BE_USE_DEBUG_HOOK
 
-typedef struct bdebughook {
-    int line;
-    const char *source;
-} bdebughook;
-
-void be_debug_hook_init(bvm *vm)
+static void hook_callnative(bvm *vm, int mask)
 {
-    vm->debughook = be_malloc(vm, sizeof(bdebughook));
+    bhookinfo info;
+    int top = be_top(vm);
+    bcallframe *cf = vm->cf;
+    bclosure *cl = var_toobj(cf->func);
+    struct bhookblock *hb = var_toobj(&vm->hook);
+    be_stack_require(vm, BE_STACK_FREE_MIN + 2);
+    info.type = mask;
+    info.line = cf->lineinfo->linenumber;
+    info.source = str(cl->proto->source);
+    info.func_name = str(cl->proto->name);
+    info.data = hb->data;
+    hb->hook(vm, &info);
+    vm->top += 2;
+    be_pop(vm, be_top(vm) - top);
 }
 
-void be_debug_hook(bvm *vm, binstruction ins)
+static int hook_pushargs(bvm *vm, int mask)
 {
-    (void)vm;
-    (void)ins;
+    bcallframe *cf = vm->cf;
+    if (mask == BE_HOOK_LINE) {
+        be_pushstring(vm, "line");
+        be_pushint(vm, cf->lineinfo->linenumber);
+        return 2;
+    }
+    if (mask == BE_HOOK_CALL) {
+        bclosure *cl = var_toobj(cf->func);
+        be_pushstring(vm, "call");
+        var_setstr(vm->top, cl->proto->name);
+        vm->top++;
+        return 2;
+    }
+    if (mask == BE_HOOK_RET) {
+        be_pushstring(vm, "return");
+        return 1;
+    }
+    return 0;
 }
 
+static void hook_call(bvm *vm, int mask)
+{
+    int argc;
+    vm->top[2] = vm->hook;
+    be_stack_require(vm, 5);
+    vm->top += 3;
+    argc = hook_pushargs(vm, mask);
+    be_call(vm, argc);
+    be_pop(vm, 3 + argc);
+}
+
+void be_callhook(bvm *vm, int mask)
+{
+    if (vm->hookmask & mask) {
+        int hookmask = vm->hookmask;
+        vm->hookmask = 0;
+        if (var_istype(&vm->hook, BE_COMPTR)) {
+            hook_callnative(vm, mask);
+        } else {
+            hook_call(vm, mask);
+        }
+        vm->hookmask = (bbyte)hookmask;
+    }
+}
+
+static bbyte parse_hookmask(const char *mask)
+{
+    int c, res = 0;
+    if (mask) {
+        while ((c = *mask++) != '\0') {
+            switch (c) {
+            case 'l': res |= BE_HOOK_LINE; break;
+            case 'c': res |= BE_HOOK_CALL; break;
+            case 'r': res |= BE_HOOK_RET; break;
+            default: break;
+            }
+        }
+    }
+    return (bbyte)res;
+}
+
+BERRY_API void be_sethook(bvm *vm, const char *mask)
+{
+    vm->hookmask = parse_hookmask(mask);
+    if (vm->hookmask && var_istype(&vm->hook, BE_COMPTR)) /* free native hook */
+        be_free(vm, var_toobj(&vm->hook), sizeof(struct bhookblock));
+    if (vm->hookmask) {
+        vm->hook = *be_indexof(vm, -1);
+    } else if (!var_istype(&vm->hook, BE_COMPTR)) {
+        var_setnil(&vm->hook);
+    }
+}
+
+BERRY_API void be_setntvhook(bvm *vm, bntvhook hook, void *data, int mask)
+{
+    struct bhookblock *hb;
+    if (mask) {
+        if (!var_istype(&vm->hook, BE_COMPTR)) {
+            var_setobj(&vm->hook, BE_COMPTR,
+                be_malloc(vm, sizeof(struct bhookblock)));
+        }
+        hb = var_toobj(&vm->hook);
+        be_assert(hb != NULL);
+        hb->hook = hook;
+        hb->data = data;
+    } else if (!var_istype(&vm->hook, BE_COMPTR)) {
+        var_setnil(&vm->hook);
+    }
+    vm->hookmask = mask;
+}
+
+#endif
+
+#if BE_DEBUG_VAR_INFO
+static binstruction* callstack_fixip(bvm *vm, int level)
+{
+    bcallframe *top = (bcallframe*)be_stack_top(&vm->callstack);
+    bcallframe *cf = top - level + 2;
+    for (; cf <= top && cf->status & PRIM_FUNC; ++cf);
+    return cf <= top ? cf->ip : vm->ip;
+}
+
+bbool be_debug_varname(bvm *vm, int level, int index)
+{
+    int depth = be_stack_count(&vm->callstack);
+    if (level > 0 && level <= depth) {
+        bcallframe *cf = be_vector_at(&vm->callstack, depth - level);
+        if ((cf->status & PRIM_FUNC) == 0) {
+            bproto *proto = cast(bclosure*, var_toobj(cf->func))->proto;
+            binstruction *ip = callstack_fixip(vm, level);
+            bstring *name = be_func_varname(proto, index, ip - proto->code);
+            if (name) {
+                bvalue *reg = be_incrtop(vm);
+                var_setstr(reg, name);
+                return btrue;
+            }
+        }
+    }
+    return bfalse;
+}
+
+bbool be_debug_upvname(bvm *vm, int level, int index)
+{
+    int depth = be_stack_count(&vm->callstack);
+    if (level > 0 && level <= depth) {
+        bcallframe *cf = be_vector_at(&vm->callstack, depth - level);
+        if ((cf->status & PRIM_FUNC) == 0) {
+            bproto *proto = cast(bclosure*, var_toobj(cf->func))->proto;
+            if (index >= 0 && index < proto->nupvals) {
+                bvalue *reg = be_incrtop(vm);
+                var_setstr(reg, proto->upvals[index].name);
+                return btrue;
+            }
+        }
+    }
+    return bfalse;
+}
 #endif

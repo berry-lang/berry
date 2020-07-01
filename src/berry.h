@@ -167,6 +167,23 @@ typedef const struct {
         .init = _init                               \
     }
 
+/* debug hook typedefs */
+#define BE_HOOK_LINE    1
+#define BE_HOOK_CALL    2
+#define BE_HOOK_RET     4
+#define BE_HOOK_EXCEPT  8
+
+typedef struct bhookinfo {
+    int type; /* current hook type */
+    int line; /* current linenumber */
+    const char *source; /* source path information */
+    const char *func_name; /* current function name */
+    void *data; /* user extended data */
+} bhookinfo;
+
+typedef void(*bntvhook)(bvm *vm, bhookinfo *info);
+
+/* the default assert definition */
 #if !BE_DEBUG
   #if defined(be_assert)
     #undef be_assert
@@ -321,6 +338,10 @@ BERRY_API void be_module_path_set(bvm *vm, const char *path);
 BERRY_API int be_register(bvm *vm, int index);
 BERRY_API void be_unregister(bvm *vm, int id);
 BERRY_API void be_getregister(bvm *vm, int id);
+
+/* debug APIs */
+BERRY_API void be_sethook(bvm *vm, const char *mask);
+BERRY_API void be_setntvhook(bvm *vm, bntvhook hook, void *data, int mask);
 
 /* basic character IO APIs */
 BERRY_API void be_writebuffer(const char *buffer, size_t length);

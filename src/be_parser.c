@@ -127,14 +127,43 @@ static bstring* _match_id(bparser *parser)
     return NULL;
 }
 
-static void block_set_loop(bfuncinfo *finfo)
+#if BE_DEBUG_VAR_INFO
+
+void begin_varinfo(bparser *parser, bstring *name)
 {
-    bblockinfo *binfo = finfo->binfo;
-    binfo->type |= BLOCK_LOOP;
-    binfo->beginpc = finfo->pc;
-    binfo->breaklist = NO_JUMP;
-    binfo->continuelist = NO_JUMP;
+    bvarinfo *var;
+    bfuncinfo *finfo = parser->finfo;
+    be_vector_push_c(parser->vm, &finfo->varvec, NULL);
+    var = be_vector_end(&finfo->varvec);
+    var->name = name;
+    var->beginpc = finfo->pc;
+    var->endpc = 0; /*  */
+    finfo->proto->varinfo = be_vector_data(&finfo->varvec);
+    finfo->proto->nvarinfo = be_vector_capacity(&finfo->varvec);
 }
+
+void end_varinfo(bparser *parser, int beginpc)
+{
+    bfuncinfo *finfo = parser->finfo;
+    bblockinfo *binfo = finfo->binfo;
+    bvarinfo *it = be_vector_data(&finfo->varvec);
+    bvarinfo *end = be_vector_end(&finfo->varvec);
+    if (beginpc == -1) /* use block->beginpc by default */
+        beginpc = binfo->beginpc;
+    /* skip the variable of the previous blocks */
+    for (; it->beginpc < beginpc; ++it);
+    for (; it <= end; ++it) {
+        if (!it->endpc) /* write to endpc only once */
+            it->endpc = finfo->pc;
+    }
+}
+
+#else
+
+#define begin_varinfo(parser, name)
+#define end_varinfo(parser, beginpc) (void)(beginpc)
+
+#endif
 
 static void begin_block(bfuncinfo *finfo, bblockinfo *binfo, int type)
 {
@@ -142,13 +171,15 @@ static void begin_block(bfuncinfo *finfo, bblockinfo *binfo, int type)
     finfo->binfo = binfo;
     binfo->type = (bbyte)type;
     binfo->hasupval = 0;
+    binfo->beginpc = finfo->pc;
     binfo->nactlocals = (bbyte)be_list_count(finfo->local);
     if (type & BLOCK_LOOP) {
-        block_set_loop(finfo);
+        binfo->breaklist = NO_JUMP;
+        binfo->continuelist = NO_JUMP;
     }
 }
 
-static void end_block(bparser *parser)
+static void end_block_ex(bparser *parser, int beginpc)
 {
     bfuncinfo *finfo = parser->finfo;
     bblockinfo *binfo = finfo->binfo;
@@ -158,9 +189,15 @@ static void end_block(bparser *parser)
         be_code_patchjump(finfo, binfo->breaklist);
         be_code_patchlist(finfo, binfo->continuelist, binfo->beginpc);
     }
+    end_varinfo(parser, beginpc);
     be_list_resize(parser->vm, finfo->local, binfo->nactlocals);
     finfo->freereg = binfo->nactlocals;
     finfo->binfo = binfo->prev;
+}
+
+static void end_block(bparser *parser)
+{
+    end_block_ex(parser, -1);
 }
 
 static bstring* parser_source(bparser *parser)
@@ -206,6 +243,11 @@ static void begin_func(bparser *parser, bfuncinfo *finfo, bblockinfo *binfo)
     proto->lineinfo = be_vector_data(&finfo->linevec);
     proto->nlineinfo = be_vector_capacity(&finfo->linevec);
 #endif
+#if BE_DEBUG_VAR_INFO
+    be_vector_init(vm, &finfo->varvec, sizeof(bvarinfo));
+    proto->varinfo = be_vector_data(&finfo->varvec);
+    proto->nvarinfo = be_vector_capacity(&finfo->varvec);
+#endif
     begin_block(finfo, binfo, 0);
 }
 
@@ -220,10 +262,13 @@ static void setupvals(bfuncinfo *finfo)
         bupvaldesc *upvals = be_malloc(
                 finfo->lexer->vm, sizeof(bupvaldesc) * nupvals);
         while ((node = be_map_next(map, &iter)) != NULL) {
-            uint32_t v = (uint32_t)node->value.v.i;
-            int idx = upval_index(v);
-            upvals[idx].idx = upval_target(v);
-            upvals[idx].instack = upval_instack(v);
+            uint32_t v = (uint32_t)var_toint(&node->value);
+            bupvaldesc *uv = upvals + upval_index(v);
+            uv->idx = upval_target(v);
+            uv->instack = upval_instack(v);
+#if BE_DEBUG_VAR_INFO
+            uv->name = var_tostr(&node->key);
+#endif
         }
         proto->upvals = upvals;
         proto->nupvals = (bbyte)nupvals;
@@ -248,6 +293,10 @@ static void end_func(bparser *parser)
 #if BE_DEBUG_RUNTIME_INFO
     proto->lineinfo = be_vector_release(vm, &finfo->linevec);
     proto->nlineinfo = be_vector_count(&finfo->linevec);
+#endif
+#if BE_DEBUG_VAR_INFO
+    proto->varinfo = be_vector_release(vm, &finfo->varvec);
+    proto->nvarinfo = be_vector_count(&finfo->varvec);
 #endif
     parser->finfo = parser->finfo->prev;
     be_stackpop(vm, 2); /* pop upval and local */
@@ -314,6 +363,7 @@ static int new_localvar(bparser *parser, bstring *name)
         if (reg >= finfo->freereg) {
             be_code_allocregs(finfo, 1); /* use a register */
         }
+        begin_varinfo(parser, name);
     }
     return reg;
 }
@@ -819,7 +869,7 @@ static void cond_expr(bparser *parser, bexpdesc *e)
         int jf, jl = NO_JUMP; /* jump list */
         bfuncinfo *finfo = parser->finfo;
         scan_next_token(parser); /* skip '?' */
-        be_code_goiftrue(finfo, e);
+        be_code_jumpbool(finfo, e, bfalse); /* go if true */
         jf = e->f;
         expr(parser, e);
         check_var(parser, e);
@@ -905,7 +955,7 @@ static int cond_stmt(bparser *parser)
     match_notoken(parser, OptRBK);
     expr(parser, &e);
     check_var(parser, &e);
-    be_code_goiftrue(parser->finfo, &e);
+    be_code_jumpbool(parser->finfo, &e, bfalse); /* go if true */
     return e.f;
 }
 
@@ -993,7 +1043,8 @@ static void for_iter(bparser *parser, bstring *var, bexpdesc *it)
 {
     bexpdesc e;
     bfuncinfo *finfo = parser->finfo;
-    block_set_loop(finfo); /* now, setup the loop block */
+    /* reset the jump head PC of the for loop body */
+    finfo->binfo->beginpc = finfo->pc;
     /* itvar = .it() */
     init_exp(&e, ETLOCAL, new_localvar(parser, var)); /* new itvar */
     be_code_setvar(finfo, &e, it); /* code function to variable '.it' */
@@ -1001,14 +1052,14 @@ static void for_iter(bparser *parser, bstring *var, bexpdesc *it)
     stmtlist(parser);
 }
 
-static void for_leave(bparser *parser, int jcatch)
+static void for_leave(bparser *parser, int jcatch, int beginpc)
 {
     bexpdesc e;
     bfuncinfo *finfo = parser->finfo;
     int jbrk = finfo->binfo->breaklist;
     init_exp(&e, ETSTRING, 0);
     e.v.s = parser_newstr(parser, "stop_iteration");
-    end_block(parser); /* leave except & loop block */
+    end_block_ex(parser, beginpc); /* leave except & loop block */
     if (jbrk != NO_JUMP) { /* has `break` statement in iteration block */
         be_code_exblk(finfo, 1);
         jbrk = be_code_jump(finfo);
@@ -1032,19 +1083,19 @@ static void for_leave(bparser *parser, int jcatch)
  * */
 static void for_stmt(bparser *parser)
 {
-    int jcatch;
-    bblockinfo binfo;
     bstring *var;
     bexpdesc iter;
+    bblockinfo binfo;
+    int jcatch, beginpc = parser->finfo->pc;
     /* FOR ID : expr block END */
     scan_next_token(parser); /* skip 'for' */
-    begin_block(parser->finfo, &binfo, BLOCK_EXCEPT);
+    begin_block(parser->finfo, &binfo, BLOCK_EXCEPT | BLOCK_LOOP);
     var = for_itvar(parser);
     match_token(parser, OptColon); /* skip ':' */
     for_init(parser, &iter);
     jcatch = be_code_exblk(parser->finfo, 0);
     for_iter(parser, var, &iter);
-    for_leave(parser, jcatch);
+    for_leave(parser, jcatch, beginpc);
     match_token(parser, KeyEnd); /* skip 'end' */
 }
 

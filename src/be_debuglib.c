@@ -1,6 +1,7 @@
 #include "be_object.h"
 #include "be_module.h"
 #include "be_string.h"
+#include "be_vector.h"
 #include "be_class.h"
 #include "be_debug.h"
 #include "be_map.h"
@@ -80,6 +81,19 @@ static int m_traceback(bvm *vm)
     be_return_nil(vm);
 }
 
+#if BE_USE_DEBUG_HOOK
+static int m_sethook(bvm *vm)
+{
+    if (be_top(vm) >= 2) {
+        be_pushvalue(vm, 1);
+        be_sethook(vm, be_tostring(vm, 2));
+    } else {
+        be_sethook(vm, NULL);
+    }
+    be_return_nil(vm);
+}
+#endif
+
 static int m_top(bvm *vm)
 {
     bint top = vm->top - vm->stack + 1;
@@ -87,12 +101,59 @@ static int m_top(bvm *vm)
     be_return(vm);
 }
 
+static int m_calldepth(bvm *vm)
+{
+    bint depth = be_stack_count(&vm->callstack);
+    be_pushint(vm, depth);
+    be_return(vm);
+}
+
+#if BE_DEBUG_VAR_INFO
+static int v_getname(bvm *vm, bbool(*getter)(bvm *vm, int, int))
+{
+    int index, level = 1;
+    if (be_top(vm) < 1)
+        be_raise(vm, "value_error", "too few arguments");
+    if (!be_isint(vm, 1) || (be_top(vm) >= 2 && !be_isint(vm, 2)))
+        be_raise(vm, "value_error", "invalid argument(s) value");
+    if (be_top(vm) >= 2)
+        level = be_toindex(vm, 2);
+    index = be_toindex(vm, 1);
+    if (index < 0)
+        be_raise(vm, "value_error", "variable index cannot be less than 0");
+    if (level < 1 || level >= be_stack_count(&vm->callstack))
+        be_raise(vm, "value_error", "invalid call depth level");
+    if (getter(vm, level + 1, index)) {
+        be_return(vm);
+    }
+    be_return_nil(vm);
+}
+
+static int m_varname(bvm *vm)
+{
+    return v_getname(vm, be_debug_varname);
+}
+
+static int m_upvname(bvm *vm)
+{
+    return v_getname(vm, be_debug_upvname);
+}
+#endif
+
 #if !BE_USE_PRECOMPILED_OBJECT
 be_native_module_attr_table(debug) {
     be_native_module_function("attrdump", m_attrdump),
     be_native_module_function("codedump", m_codedump),
     be_native_module_function("traceback", m_traceback),
-    be_native_module_function("top", m_top)
+#if BE_USE_DEBUG_HOOK
+    be_native_module_function("sethook", m_sethook),
+#endif
+    be_native_module_function("calldepth", m_calldepth),
+    be_native_module_function("top", m_top),
+#if BE_DEBUG_VAR_INFO
+    be_native_module_function("varname", m_varname)
+    be_native_module_function("upvname", m_upvname)
+#endif
 };
 
 be_define_native_module(debug, NULL);
@@ -102,7 +163,11 @@ module debug (scope: global, depend: BE_USE_DEBUG_MODULE) {
     attrdump, func(m_attrdump)
     codedump, func(m_codedump)
     traceback, func(m_traceback)
+    sethook, func(m_sethook), BE_USE_DEBUG_HOOK
+    calldepth, func(m_calldepth)
     top, func(m_top)
+    varname, func(m_varname), BE_DEBUG_VAR_INFO
+    upvname, func(m_upvname), BE_DEBUG_VAR_INFO
 }
 @const_object_info_end */
 #include "../generate/be_fixed_debug.h"

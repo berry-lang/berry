@@ -30,7 +30,11 @@
 #define ibinop(op, a, b)    ((a)->v.i op (b)->v.i)
 
 #if BE_USE_DEBUG_HOOK
-  #define DEBUG_HOOK()      be_debug_hook(vm, ins);
+  #define DEBUG_HOOK() \
+    if (vm->hookmask & BE_HOOK_LINE) { \
+        do_linehook(vm); \
+        reg = vm->reg; \
+    }
 #else
   #define DEBUG_HOOK()
 #endif
@@ -141,6 +145,29 @@ static void check_bool(bvm *vm, binstance *obj, const char *method)
     }
 }
 
+#if BE_USE_DEBUG_HOOK
+static void do_linehook(bvm *vm)
+{
+    bcallframe *cf = vm->cf;
+    bclosure *cl = var_toobj(cf->func);
+    int pc = cast_int(vm->ip - cl->proto->code);
+    if (!pc || pc > cf->lineinfo->endpc) {
+        while (pc > cf->lineinfo->endpc)
+            cf->lineinfo++;
+        be_callhook(vm, BE_HOOK_LINE);
+    } else {
+        blineinfo *linfo = cf->lineinfo;
+        blineinfo *base = cl->proto->lineinfo;
+        while (linfo > base && pc <= linfo[-1].endpc)
+            linfo--;
+        if (cf->lineinfo != linfo) {
+            cf->lineinfo = linfo;
+            be_callhook(vm, BE_HOOK_LINE);
+        }
+    }
+}
+#endif
+
 static void precall(bvm *vm, bvalue *func, int nstack, int mode)
 {
     bcallframe *cf;
@@ -167,6 +194,10 @@ static void push_closure(bvm *vm, bvalue *func, int nstack, int mode)
     vm->cf->ip = vm->ip;
     vm->cf->status = NONE_FLAG;
     vm->ip = cl->proto->code;
+#if BE_USE_DEBUG_HOOK
+    vm->cf->lineinfo = cl->proto->lineinfo;
+    be_callhook(vm, BE_HOOK_CALL);
+#endif
 }
 
 static void ret_native(bvm *vm)
@@ -237,23 +268,23 @@ static int obj_attribute(bvm *vm, bvalue *o, bstring *attr, bvalue *dst)
 static bbool object_eqop(bvm *vm,
     const char *op, bbool iseq, bvalue *a, bvalue *b)
 {
-    binstance *obj = var_toobj(a);
-    bbool res = iseq && obj == var_toobj(b); /* same object */
-    if (!res) { /* not the same object */
-        bvalue self = *a, other = *b;
-        int type = be_instance_member(vm, obj, be_newstr(vm, op), vm->top);
-        if (basetype(type) == BE_FUNCTION) { /* call method */
-            bvalue *top = vm->top;
-            top[1] = self;  /* move self to argv[0] */
-            top[2] = other; /* move other to argv[1] */
-            be_incrtop(vm); /* prevent collection results */
-            be_dofunc(vm, top, 2); /* call method 'item' */
-            be_stackpop(vm, 1);
-            check_bool(vm, obj, op); /* check return value */
-            res = var_tobool(vm->top); /* copy result to dst */
-        }
+    binstance *o = var_toobj(a);
+    bvalue self = *a, other = *b;
+    bbool isself = var_isinstance(b) && o == var_toobj(b);
+    /* first, try to call the overloaded operator of the object */
+    int type = be_instance_member(vm, o, be_newstr(vm, op), vm->top);
+    if (basetype(type) == BE_FUNCTION) { /* call method */
+        bvalue *top = vm->top;
+        top[1] = self;  /* move self to argv[0] */
+        top[2] = other; /* move other to argv[1] */
+        be_incrtop(vm); /* prevent collection results */
+        be_dofunc(vm, top, 2); /* call method 'item' */
+        be_stackpop(vm, 1);
+        check_bool(vm, o, op); /* check return value */
+        return var_tobool(vm->top); /* copy result to dst */
     }
-    return res;
+    /* the default equal operation rule */
+    return iseq == isself; /* check object self */
 }
 
 static void object_binop(bvm *vm, const char *op, bvalue self, bvalue other)
@@ -360,9 +391,6 @@ BERRY_API bvm* be_vm_new(void)
     vm->reg = vm->stack;
     vm->top = vm->reg;
     be_globalvar_init(vm);
-#if BE_USE_DEBUG_HOOK
-    be_debug_hook_init(vm);
-#endif
     be_gc_setpause(vm, 1);
     be_loadlibs(vm);
     return vm;
@@ -378,6 +406,12 @@ BERRY_API void be_vm_delete(bvm *vm)
     be_stack_delete(vm, &vm->tracestack);
     be_free(vm, vm->stack, (vm->stacktop - vm->stack) * sizeof(bvalue));
     be_globalvar_deinit(vm);
+#if BE_USE_DEBUG_HOOK
+    /* free native hook */
+    if (var_istype(&vm->hook, BE_COMPTR))
+        be_free(vm, var_toobj(&vm->hook), sizeof(struct bhookblock));
+#endif
+    /* free VM structure */
     be_os_free(vm);
 }
 
@@ -926,8 +960,13 @@ newframe: /* a new call frame */
             dispatch();
         }
         opcase(RET): {
-            bcallframe *cf = vm->cf;
-            bvalue *ret = vm->cf->func;
+            bcallframe *cf;
+            bvalue *ret;
+#if BE_USE_DEBUG_HOOK
+            be_callhook(vm, BE_HOOK_RET);
+#endif
+            cf = vm->cf;
+            ret = vm->cf->func;
             /* copy return value */
             if (IGET_RA(ins)) {
                 *ret = *RKB();
