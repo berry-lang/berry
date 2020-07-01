@@ -361,4 +361,21 @@ bbool be_debug_varname(bvm *vm, int level, int index)
     }
     return bfalse;
 }
+
+bbool be_debug_upvname(bvm *vm, int level, int index)
+{
+    int depth = be_stack_count(&vm->callstack);
+    if (level > 0 && level <= depth) {
+        bcallframe *cf = be_vector_at(&vm->callstack, depth - level);
+        if ((cf->status & PRIM_FUNC) == 0) {
+            bproto *proto = cast(bclosure*, var_toobj(cf->func))->proto;
+            if (index >= 0 && index < proto->nupvals) {
+                bvalue *reg = be_incrtop(vm);
+                var_setstr(reg, proto->upvals[index].name);
+                return btrue;
+            }
+        }
+    }
+    return bfalse;
+}
 #endif

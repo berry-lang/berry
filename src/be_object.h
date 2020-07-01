@@ -95,6 +95,9 @@ typedef struct {
 } bvaldesc;
 
 typedef struct {
+#if BE_DEBUG_VAR_INFO
+    bstring *name;
+#endif
     bbyte instack;
     bbyte idx;
 } bupvaldesc;

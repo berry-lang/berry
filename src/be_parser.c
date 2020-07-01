@@ -262,10 +262,13 @@ static void setupvals(bfuncinfo *finfo)
         bupvaldesc *upvals = be_malloc(
                 finfo->lexer->vm, sizeof(bupvaldesc) * nupvals);
         while ((node = be_map_next(map, &iter)) != NULL) {
-            uint32_t v = (uint32_t)node->value.v.i;
-            int idx = upval_index(v);
-            upvals[idx].idx = upval_target(v);
-            upvals[idx].instack = upval_instack(v);
+            uint32_t v = (uint32_t)var_toint(&node->value);
+            bupvaldesc *uv = upvals + upval_index(v);
+            uv->idx = upval_target(v);
+            uv->instack = upval_instack(v);
+#if BE_DEBUG_VAR_INFO
+            uv->name = var_tostr(&node->key);
+#endif
         }
         proto->upvals = upvals;
         proto->nupvals = (bbyte)nupvals;
@@ -866,7 +869,7 @@ static void cond_expr(bparser *parser, bexpdesc *e)
         int jf, jl = NO_JUMP; /* jump list */
         bfuncinfo *finfo = parser->finfo;
         scan_next_token(parser); /* skip '?' */
-        be_code_goiftrue(finfo, e);
+        be_code_jumpbool(finfo, e, bfalse); /* go if true */
         jf = e->f;
         expr(parser, e);
         check_var(parser, e);
@@ -952,7 +955,7 @@ static int cond_stmt(bparser *parser)
     match_notoken(parser, OptRBK);
     expr(parser, &e);
     check_var(parser, &e);
-    be_code_goiftrue(parser->finfo, &e);
+    be_code_jumpbool(parser->finfo, &e, bfalse); /* go if true */
     return e.f;
 }
 

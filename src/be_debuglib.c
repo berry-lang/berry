@@ -109,7 +109,7 @@ static int m_calldepth(bvm *vm)
 }
 
 #if BE_DEBUG_VAR_INFO
-static int m_varname(bvm *vm)
+static int v_getname(bvm *vm, bbool(*getter)(bvm *vm, int, int))
 {
     int index, level = 1;
     if (be_top(vm) < 1)
@@ -123,10 +123,20 @@ static int m_varname(bvm *vm)
         be_raise(vm, "value_error", "variable index cannot be less than 0");
     if (level < 1 || level >= be_stack_count(&vm->callstack))
         be_raise(vm, "value_error", "invalid call depth level");
-    if (be_debug_varname(vm, level + 1, index)) {
+    if (getter(vm, level + 1, index)) {
         be_return(vm);
     }
     be_return_nil(vm);
+}
+
+static int m_varname(bvm *vm)
+{
+    return v_getname(vm, be_debug_varname);
+}
+
+static int m_upvname(bvm *vm)
+{
+    return v_getname(vm, be_debug_upvname);
 }
 #endif
 
@@ -142,6 +152,7 @@ be_native_module_attr_table(debug) {
     be_native_module_function("top", m_top),
 #if BE_DEBUG_VAR_INFO
     be_native_module_function("varname", m_varname)
+    be_native_module_function("upvname", m_upvname)
 #endif
 };
 
@@ -156,6 +167,7 @@ module debug (scope: global, depend: BE_USE_DEBUG_MODULE) {
     calldepth, func(m_calldepth)
     top, func(m_top)
     varname, func(m_varname), BE_DEBUG_VAR_INFO
+    upvname, func(m_upvname), BE_DEBUG_VAR_INFO
 }
 @const_object_info_end */
 #include "../generate/be_fixed_debug.h"

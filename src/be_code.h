@@ -3,8 +3,6 @@
 
 #include "be_parser.h"
 
-#define be_code_goiftrue(f, e)      be_code_jumpbool(f, e, 0)
-#define be_code_goiffalse(f, e)     be_code_jumpbool(f, e, 1)
 #define be_code_freeregs(f, n)      ((f)->freereg -= (bbyte)(n))
 
 int be_code_allocregs(bfuncinfo *finfo, int count);
