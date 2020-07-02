@@ -44,6 +44,7 @@ static int m_readline(bvm *vm)
     while (res) {
         pos += strlen(buffer + pos) - 1;
         if (!pos || buffer[pos] == '\n') {
+            buffer[pos] = '\0'; /* trim \n */
             break;
         }
         buffer = be_realloc(vm, buffer, size, size + READLINE_STEP);
