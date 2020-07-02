@@ -2,7 +2,7 @@
 #include <time.h>
 #if defined(_WIN32)
     #include <windows.h>
-    #define sleep(x) Sleep((x*1000))
+    #define sleep(x) Sleep((x*1000)) // fix for windows.h Sleep(sec*1000);
 #else
     #include <unistd.h>
 #endif
@@ -50,12 +50,15 @@ static int m_clock(bvm *vm)
 
 static int m_sleep(bvm *vm)
 {
+    /*
+    check if not time.sleep()
+    */
     if (vm != NULL) {
         breal second = be_toreal(vm, 1);
-        sleep(second);
-        be_return_nil(vm);
+        sleep(second); // sleep in seconds
+        be_return_nil(vm); // return nil
     } else {
-        be_return_nil(vm);
+        be_return_nil(vm); // return nil
     }
 }
 
