@@ -1,5 +1,10 @@
 #include "berry.h"
 #include <time.h>
+#if defined(_WIN32)
+    #include <windows.h>
+#else
+    #include <unistd.h>
+#endif
 
 #if BE_USE_TIME_MODULE
 
@@ -42,11 +47,28 @@ static int m_clock(bvm *vm)
     be_return(vm);
 }
 
+static int m_sleep(bvm *vm)
+{
+    if (vm != NULL) {
+        #if defined(_WIN32)
+            breal second = be_toreal(vm, 1) * 1000;
+            Sleep(second);
+        #else
+            breal second = be_toreal(vm, 1);
+            sleep(second);
+        #endif
+        be_return_nil(vm);
+    } else {
+        be_return_nil(vm);
+    }
+}
+
 #if !BE_USE_PRECOMPILED_OBJECT
 be_native_module_attr_table(time) {
     be_native_module_function("time", m_time),
     be_native_module_function("dump", m_dump),
-    be_native_module_function("clock", m_clock)
+    be_native_module_function("clock", m_clock),
+    be_native_module_function("sleep", m_sleep)
 };
 
 be_define_native_module(time, NULL);
@@ -56,6 +78,7 @@ module time (scope: global, depend: BE_USE_TIME_MODULE) {
     time, func(m_time)
     dump, func(m_dump)
     clock, func(m_clock)
+    sleep, func(m_sleep)
 }
 @const_object_info_end */
 #include "../generate/be_fixed_time.h"
