@@ -51,8 +51,8 @@ static int m_sleep(bvm *vm)
 {
     if (vm != NULL) {
         #if defined(_WIN32)
-            breal second = be_toreal(vm, 1) * 1000;
-            Sleep(second);
+            breal second = be_toreal(vm, 1);
+            Sleep(second*1000);
         #else
             breal second = be_toreal(vm, 1);
             sleep(second);
