@@ -1,3 +1,5 @@
+// signed int = 0
+
 void my_sleep(double duration)
 {
     time_t start = time(NULL);
