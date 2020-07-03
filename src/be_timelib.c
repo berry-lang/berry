@@ -3,7 +3,7 @@
 
 #if defined(_WIN32)
     #include <windows.h>
-    #define delay(x) Sleep((x))
+    #define usleep(x) Sleep((x))
 #else
     #include <unistd.h>
 #endif
