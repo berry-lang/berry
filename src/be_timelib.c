@@ -1,11 +1,6 @@
 #include "berry.h"
+#include "be_timelib.h"
 #include <time.h>
-#if defined(_WIN32)
-    #include <windows.h>
-    #define sleep(x) Sleep((x*1000)) // fix for windows.h Sleep(sec*1000);
-#else
-    #include <unistd.h>
-#endif
 
 #if BE_USE_TIME_MODULE
 
@@ -54,8 +49,8 @@ static int m_sleep(bvm *vm)
     check if not time.sleep()
     */
     if (vm != NULL) {
-        breal second = be_toreal(vm, 1);
-        sleep(second); // sleep in seconds
+        double second = be_toreal(vm, 1);
+        my_sleep(second); // sleep in seconds
         be_return_nil(vm); // return nil
     } else {
         be_return_nil(vm); // return nil
