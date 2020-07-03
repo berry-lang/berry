@@ -12,6 +12,8 @@
 #define is_digit(c)     ((c) >= '0' && (c) <= '9')
 #define skip_space(s)   while (is_space(*(s))) { ++(s); }
 
+typedef bint (*str_opfunc)(const char*, const char*, bint);
+
 bstring* be_strcat(bvm *vm, bstring *s1, bstring *s2)
 {
     size_t len = (size_t)str_len(s1) + str_len(s2);
@@ -460,11 +462,100 @@ static int str_format(bvm *vm)
     be_return_nil(vm);
 }
 
-static int str_split(bvm *vm)
+/* string.op(s1, s2, begin=0, end=length(s2)) */
+static bint str_operation(bvm *vm, str_opfunc func, bint error)
 {
     int top = be_top(vm);
-    be_newobject(vm, "list");
-    if (top >= 2 && be_isstring(vm, 1) && be_isint(vm, 2)) {
+    /* check the number and type of arguments */
+    if (top >= 2 && be_isstring(vm, 1) && be_isstring(vm, 2)) {
+        /* get the operation string and its length */
+        int len1 = be_strlen(vm, 1);
+        int len2 = be_strlen(vm, 2);
+        const char *s1 = be_tostring(vm, 1);
+        const char *s2 = be_tostring(vm, 2);
+        /* get begin and end indexes (may use default values) */
+        bint begin = top >= 3 && be_isint(vm, 3) ? be_toint(vm, 3) : 0;
+        bint end = top >= 4 && be_isint(vm, 4) ? be_toint(vm, 4) : len1;
+        /* basic range check:
+         * 1. begin position must be greater than 0 and
+         *    less than the length of the source string.
+         * 2. the length of the pattern string cannot be
+         *    less than the matching range (end - begin).
+         **/
+        if (begin >= 0 && begin < len1 && end - begin >= len2) {
+            /* call the operation function */
+            return func(s1 + begin, s2, end - begin - len2);
+        }
+    }
+    return error; /* returns the default error value */
+}
+
+static bint _op_find(const char *s1, const char *s2, bint end)
+{
+    const char *res = strstr(s1, s2);
+    if (res) {
+        bint pos = (bint)(res - s1);
+        return pos < end ? pos : -1;
+    }
+    return -1;
+}
+
+static int str_find(bvm *vm)
+{
+    be_pushint(vm, str_operation(vm, _op_find, -1));
+    be_return(vm);
+}
+
+static bint _op_count(const char *s1, const char *s2, bint end)
+{
+    bint count = 0;
+    const char *send = s1 + end;
+    for (;;) {
+        const char *res = strstr(s1, s2);
+        if (res && res < send) {
+            ++count;
+            s1 = res + 1;
+        } else {
+            break;
+        }
+    }
+    return count;
+}
+
+static int str_count(bvm *vm)
+{
+    be_pushint(vm, str_operation(vm, _op_count, 0));
+    be_return(vm);
+}
+
+static bbool _split_string(bvm *vm, int top)
+{
+    if (be_isstring(vm, 2)) {
+        const char *res;
+        int len1 = be_strlen(vm, 1);
+        int len2 = be_strlen(vm, 2);
+        const char *s1 = be_tostring(vm, 1);
+        const char *s2 = be_tostring(vm, 2);
+        bint count = len2 /* match when the pattern string is not empty */
+            ? top >= 3 && be_isint(vm, 3) ? be_toint(vm, 3) : len1
+            : 0; /* cannot match empty pattern string */
+        while (count-- && (res = strstr(s1, s2)) != NULL) {
+            be_pushnstring(vm, s1, res - s1);
+            be_data_push(vm, -2);
+            be_pop(vm, 1);
+            s1 = res + len2;
+        }
+        be_pushstring(vm, s1);
+        be_data_push(vm, -2);
+        be_pop(vm, 1);
+        return btrue;
+    }
+    return bfalse;
+}
+
+static bbool _split_index(bvm *vm)
+{
+    if (be_isint(vm, 2)) {
         int len = be_strlen(vm, 1), idx = be_toindex(vm, 2);
         const char *s = be_tostring(vm, 1);
         idx = idx > len ? len : idx < -len ? -len : idx;
@@ -477,6 +568,18 @@ static int str_split(bvm *vm)
         be_pushnstring(vm, s + idx, (size_t)len - idx);
         be_data_push(vm, -2);
         be_pop(vm, 1);
+        return btrue;
+    }
+    return bfalse;
+}
+
+static int str_split(bvm *vm)
+{
+    int top = be_top(vm);
+    be_newobject(vm, "list");
+    if (top >= 2 && be_isstring(vm, 1)) {
+        if (!_split_index(vm))
+            _split_string(vm, top);
     }
     be_pop(vm, 1);
     be_return(vm);
@@ -524,7 +627,9 @@ static int str_char(bvm *vm)
 #if !BE_USE_PRECOMPILED_OBJECT
 be_native_module_attr_table(string) {
     be_native_module_function("format", str_format),
+    be_native_module_function("count", str_count),
     be_native_module_function("split", str_split),
+    be_native_module_function("find", str_find),
     be_native_module_function("hex", str_i2hex),
     be_native_module_function("byte", str_byte),
     be_native_module_function("char", str_char)
@@ -535,7 +640,9 @@ be_define_native_module(string, NULL);
 /* @const_object_info_begin
 module string (scope: global, depend: BE_USE_STRING_MODULE) {
     format, func(str_format)
+    count, func(str_count)
     split, func(str_split)
+    find, func(str_find)
     hex, func(str_i2hex)
     byte, func(str_byte)
     char, func(str_char)
