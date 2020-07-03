@@ -3,7 +3,7 @@
 
 #if defined(_WIN32)
     #include <windows.h>
-    #define delay(x) Sleep((x*1000))
+    #define delay(x) Sleep((x))
 #else
     #include <unistd.h>
 #endif
@@ -53,8 +53,12 @@ static int m_sleep(bvm *vm)
 {
     if (vm != NULL) {
         double milisecs = be_toreal(vm, 1);
-        unsigned int secs = milisecs * 1000;
-        delay(secs);
+        #if defined(_WIN32)
+            unsigned int secs = milisecs * 1000; // 1
+        #else 
+            unsigned int secs = milisecs * 1000000; // 2
+        #endif 
+        usleep(secs);
         be_return_nil(vm);
     } else {
         be_return_nil(vm);
