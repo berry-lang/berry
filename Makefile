@@ -1,4 +1,4 @@
-CFLAGS    = -Wall -Wextra -std=c99 -pedantic-errors -O2
+CFLAGS    = -Wall -Wextra -std=gnu99 -pedantic-errors -O2
 LIBS      = -lm
 TARGET    = berry
 CC        = gcc
