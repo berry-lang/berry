@@ -12,7 +12,7 @@
 #define is_digit(c)     ((c) >= '0' && (c) <= '9')
 #define skip_space(s)   while (is_space(*(s))) { ++(s); }
 
-typedef bint (*str_opfunc)(const char*, const char*, bint);
+typedef bint (*str_opfunc)(const char*, const char*, bint, bint);
 
 bstring* be_strcat(bvm *vm, bstring *s1, bstring *s2)
 {
@@ -482,49 +482,44 @@ static bint str_operation(bvm *vm, str_opfunc func, bint error)
          * 2. the length of the pattern string cannot be
          *    less than the matching range (end - begin).
          **/
-        if (begin >= 0 && begin < len1 && end - begin >= len2) {
+        if (begin >= 0 && begin <= len1 && end - begin >= len2) {
             /* call the operation function */
-            return func(s1 + begin, s2, end - begin - len2);
+            return func(s1, s2, begin, end - len2);
         }
     }
     return error; /* returns the default error value */
 }
 
-static bint _op_find(const char *s1, const char *s2, bint end)
+static bint _sfind(const char *s1, const char *s2, bint begin, bint end)
 {
-    const char *res = strstr(s1, s2);
+    const char *res = strstr(s1 + begin, s2);
     if (res) {
         bint pos = (bint)(res - s1);
-        return pos < end ? pos : -1;
+        return pos <= end ? pos : -1;
     }
     return -1;
 }
 
 static int str_find(bvm *vm)
 {
-    be_pushint(vm, str_operation(vm, _op_find, -1));
+    be_pushint(vm, str_operation(vm, _sfind, -1));
     be_return(vm);
 }
 
-static bint _op_count(const char *s1, const char *s2, bint end)
+static bint _scount(const char *s1, const char *s2, bint begin, bint end)
 {
     bint count = 0;
-    const char *send = s1 + end;
-    for (;;) {
-        const char *res = strstr(s1, s2);
-        if (res && res < send) {
-            ++count;
-            s1 = res + 1;
-        } else {
-            break;
-        }
+    const char *res = s1 + begin, *send = s1 + end;
+    while ((res = strstr(res, s2)) && res <= send) {
+        count += 1;
+        res += 1;
     }
     return count;
 }
 
 static int str_count(bvm *vm)
 {
-    be_pushint(vm, str_operation(vm, _op_count, 0));
+    be_pushint(vm, str_operation(vm, _scount, 0));
     be_return(vm);
 }
 
