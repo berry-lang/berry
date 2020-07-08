@@ -55,6 +55,7 @@
     "Avilable options are:\n"                                       \
     "  -i        enter interactive mode after executing 'file'\n"   \
     "  -l        all variables in 'file' are parsed as local\n"     \
+    "  -e        load 'script' source string and execute\n"         \
     "  -c <file> compile script 'file' to bytecode file\n"          \
     "  -o <file> save bytecode to 'file'\n"                         \
     "  -v        show version information\n"                        \
@@ -70,6 +71,7 @@
 #define arg_l       (1 << 3)
 #define arg_h       (1 << 4)
 #define arg_v       (1 << 5)
+#define arg_e       (1 << 6)
 #define arg_err     (1 << 7)
 
 struct arg_opts {
@@ -183,29 +185,30 @@ static int handle_result(bvm *vm, int res)
     }
 }
 
-/* execute a script file and output a result or error */
-static int dofile(bvm *vm, const char *name, int args)
+/* execute a script source or file and output a result or error */
+static int doscript(bvm *vm, const char *name, int args)
 {
-    /* load bytecode file or compile script file */
-    int res = be_loadmode(vm, name, args & arg_l);
+    /* load string, bytecode file or compile script file */
+    int res = args & arg_e ? /* check script source string */
+        be_loadstring(vm, name) : be_loadmode(vm, name, args & arg_l);
     if (res == BE_OK) { /* parsing succeeded */
         res = be_pcall(vm, 0); /* execute */
     }
     return handle_result(vm, res);
 }
 
-/* load a Berry file and execute
+/* load a Berry script string or file and execute
  * args: the enabled options mask
  * */
-static int load_file(bvm *vm, int argc, char *argv[], int args)
+static int load_script(bvm *vm, int argc, char *argv[], int args)
 {
     int res = 0;
     int repl_mode = args & arg_i || (args == 0 && argc == 0);
     if (repl_mode) { /* enter the REPL mode after executing the script file */
         be_writestring(repl_prelude);
     }
-    if (argc > 0) { /* check file path argument */
-        res = dofile(vm, argv[0], args);
+    if (argc > 0) { /* check file path or source string argument */
+        res = doscript(vm, argv[0], args);
     }
     if (repl_mode) { /* enter the REPL mode */
         res = be_repl(vm, get_line, free_line);
@@ -237,6 +240,7 @@ static int parse_arg(struct arg_opts *opt, int argc, char *argv[])
         case 'v': args |= arg_v; break;
         case 'i': args |= arg_i; break;
         case 'l': args |= arg_l; break;
+        case 'e': args |= arg_e; break;
         case '?': return args | arg_err;
         case 'c':
             args |= arg_c;
@@ -271,6 +275,7 @@ static void push_args(bvm *vm, int argc, char *argv[])
  *  command options:
  *   -i: enter interactive mode after executing 'script'
  *   -b: load code from bytecode file
+ *   -e: load 'script' source and execute
  * command format: berry options
  *  command options:
  *   -v: show version information
@@ -284,7 +289,7 @@ static int analysis_args(bvm *vm, int argc, char *argv[])
 {
     int args = 0;
     struct arg_opts opt = { 0 };
-    opt.pattern = "vhilc?o?";
+    opt.pattern = "vhilec?o?";
     args = parse_arg(&opt, argc, argv);
     argc -= opt.idx;
     argv += opt.idx;
@@ -307,7 +312,7 @@ static int analysis_args(bvm *vm, int argc, char *argv[])
         }
         return build_file(vm, opt.dst, opt.src, args);
     }
-    return load_file(vm, argc, argv, args);
+    return load_script(vm, argc, argv, args);
 }
 
 #if defined(_WIN32)
