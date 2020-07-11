@@ -377,7 +377,7 @@ static void string_dump(bvm *vm, int idx)
 
 static void object_dump(bvm *vm, int *indent, int idx, int fmt)
 {
-    be_getmember(vm, idx, ".data");
+    be_getmember(vm, idx, ".p");
     be_pushstring(vm, fmt ? "{\n" : "{");
     be_pushiter(vm, -2); /* map iterator use 1 register */
     *indent += fmt;
@@ -416,7 +416,7 @@ static void object_dump(bvm *vm, int *indent, int idx, int fmt)
 
 static void array_dump(bvm *vm, int *indent, int idx, int fmt)
 {
-    be_getmember(vm, idx, ".data");
+    be_getmember(vm, idx, ".p");
     be_pushstring(vm, fmt ? "[\n" : "[");
     be_pushiter(vm, -2);
     *indent += fmt;

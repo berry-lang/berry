@@ -515,7 +515,7 @@ BERRY_API void be_newobject(bvm *vm, const char *name)
 {
     be_getbuiltin(vm, name);
     be_call(vm, 0);
-    be_getmember(vm, -1, ".data");
+    be_getmember(vm, -1, ".p");
 }
 
 BERRY_API bbool be_setname(bvm *vm, int index, const char *name)

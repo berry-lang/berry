@@ -8,7 +8,7 @@
 
 static int i_write(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     if(be_iscomptr(vm, -1) && be_isstring(vm, 2)) {
         void *fh = be_tocomptr(vm, -1);
         const char *data = be_tostring(vm, 2);
@@ -28,7 +28,7 @@ static size_t readsize(bvm *vm, int argc, void *fh)
 static int i_read(bvm *vm)
 {
     int argc = be_top(vm);
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     if (be_iscomptr(vm, -1)) {
         void *fh = be_tocomptr(vm, -1);
         size_t size = readsize(vm, argc, fh);
@@ -47,7 +47,7 @@ static int i_read(bvm *vm)
 
 static int i_readline(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     if (be_iscomptr(vm, -1)) {
         void *fh = be_tocomptr(vm, -1);
         size_t pos = 0, size = READLINE_STEP;
@@ -71,7 +71,7 @@ static int i_readline(bvm *vm)
 
 static int i_seek(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     if (be_iscomptr(vm, -1) && be_isint(vm, 2)) {
         void *fh = be_tocomptr(vm, -1);
         be_fseek(fh, be_toindex(vm, 2));
@@ -81,7 +81,7 @@ static int i_seek(bvm *vm)
 
 static int i_tell(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     if (be_iscomptr(vm, -1)) {
         void *fh = be_tocomptr(vm, -1);
         size_t pos = be_ftell(fh);
@@ -93,7 +93,7 @@ static int i_tell(bvm *vm)
 
 static int i_size(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     if (be_iscomptr(vm, -1)) {
         void *fh = be_tocomptr(vm, -1);
         size_t pos = be_fsize(fh);
@@ -105,7 +105,7 @@ static int i_size(bvm *vm)
 
 static int i_flush(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     if (be_iscomptr(vm, -1)) {
         void *fh = be_tocomptr(vm, -1);
         be_fflush(fh);
@@ -115,12 +115,12 @@ static int i_flush(bvm *vm)
 
 static int i_close(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     if (be_iscomptr(vm, -1)) {
         void *fh = be_tocomptr(vm, -1);
         be_fclose(fh);
         be_pushnil(vm);
-        be_setmember(vm, 1, ".data");
+        be_setmember(vm, 1, ".p");
     }
     be_return_nil(vm);
 }
@@ -134,7 +134,7 @@ int be_nfunc_open(bvm *vm)
     int argc = be_top(vm);
     const char *fname, *mode;
     static const bnfuncinfo members[] = {
-        { ".data", NULL },
+        { ".p", NULL },
         { "write", i_write },
         { "read", i_read },
         { "readline", i_readline },
@@ -157,7 +157,7 @@ int be_nfunc_open(bvm *vm)
         be_pushclass(vm, "file", members);
         be_call(vm, 0);
         be_pushcomptr(vm, fh);
-        be_setmember(vm, -2, ".data");
+        be_setmember(vm, -2, ".p");
         be_pop(vm, 1);
         be_return(vm);
     }

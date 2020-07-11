@@ -41,8 +41,7 @@ OPCODE(GETIDX),     /*  A, B, C  |   R(A) <- RK(B)[RK(C)] */
 OPCODE(SETIDX),     /*  A, B, C  |   R(A)[RK(B)] <- RK(C) */
 OPCODE(SETSUPER),   /*  A, B     |   class:R(A) set super with class:RK(B) */
 OPCODE(CLOSE),      /*  A        |   close upvalues */
-OPCODE(IMPORT),     /*  A, B, C  |   IF (A == C) import module name as RK(B) to RK(A),
-                    /*           |   ELSE from module RK(C) import name as RK(B) to RK(A) */
+OPCODE(IMPORT),     /*  A, B, C  |   IF (A == C) import module name as RK(B) to RK(A), ELSE from module RK(C) import name as RK(B) to RK(A) */
 OPCODE(EXBLK),      /*  A, Bx    |   ... */
 OPCODE(CATCH),      /*  A, B, C  |   ... */
 OPCODE(RAISE),      /*  A, B, C  |   ... */

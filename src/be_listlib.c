@@ -30,10 +30,10 @@ static int m_init(bvm *vm)
     int i, argc = be_top(vm);
     if (argc > 1 && be_islist(vm, 2)) {
         be_pushvalue(vm, 2);
-        be_setmember(vm, 1, ".data");
+        be_setmember(vm, 1, ".p");
     } else {
         be_newlist(vm);
-        be_setmember(vm, 1, ".data");
+        be_setmember(vm, 1, ".p");
         for (i = 2; i <= argc; ++i) {
             be_pushvalue(vm, i);
             be_data_push(vm, -2);
@@ -57,7 +57,7 @@ static void push_element(bvm *vm)
 
 static int m_tostring(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     list_check_data(vm, 1);
     list_check_ref(vm);
     be_refpush(vm, 1);
@@ -82,7 +82,7 @@ static int m_tostring(bvm *vm)
 
 static int m_push(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     list_check_data(vm, 2);
     be_pushvalue(vm, 2);
     be_data_push(vm, -2);
@@ -92,7 +92,7 @@ static int m_push(bvm *vm)
 static int m_pop(bvm *vm)
 {
     int argc = be_top(vm);
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     list_check_data(vm, 1);
     if (argc >= 2) {
         be_pushvalue(vm, 2);
@@ -108,7 +108,7 @@ static int m_pop(bvm *vm)
 
 static int m_insert(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     list_check_data(vm, 3);
     be_pushvalue(vm, 2);
     be_pushvalue(vm, 3);
@@ -118,7 +118,7 @@ static int m_insert(bvm *vm)
 
 static int m_remove(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     list_check_data(vm, 2);
     be_pushvalue(vm, 2);
     be_data_remove(vm, -2);
@@ -141,7 +141,7 @@ static int item_range(bvm *vm)
     lower = lower < 0 ? 0 : lower;
     /* construction result list instance */
     be_newobject(vm, "list"); /* result list */
-    be_getmember(vm, 1, ".data"); /* source list */
+    be_getmember(vm, 1, ".p"); /* source list */
     /* copy elements */
     for (; lower <= upper; ++lower) {
         be_pushint(vm, lower);
@@ -156,12 +156,12 @@ static int item_range(bvm *vm)
 static int item_list(bvm *vm)
 {
     int i, srcsize, idxsize;
-    be_getmember(vm, 2, ".data"); /* get index list */
+    be_getmember(vm, 2, ".p"); /* get index list */
     srcsize = be_data_size(vm, -2); /* get source list size */
     idxsize = be_data_size(vm, -1); /* get index list size */
     /* construction result list instance */
     be_newobject(vm, "list"); /* result list */
-    be_getmember(vm, 1, ".data"); /* source list */
+    be_getmember(vm, 1, ".p"); /* source list */
     /* copy elements */
     for (i = 0; i < idxsize; ++i) {
         be_pushint(vm, i);
@@ -185,7 +185,7 @@ static int item_list(bvm *vm)
 
 static int m_item(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     list_check_data(vm, 2);
     if (be_isint(vm, 2)) {
         be_pushvalue(vm, 2);
@@ -207,7 +207,7 @@ static int m_item(bvm *vm)
 
 static int m_setitem(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     list_check_data(vm, 3);
     be_pushvalue(vm, 2);
     be_pushvalue(vm, 3);
@@ -219,7 +219,7 @@ static int m_setitem(bvm *vm)
 
 static int m_size(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     list_check_data(vm, 1);
     be_pushint(vm, be_data_size(vm, -1));
     be_return(vm);
@@ -227,7 +227,7 @@ static int m_size(bvm *vm)
 
 static int m_resize(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     list_check_data(vm, 2);
     be_pushvalue(vm, 2);
     be_data_resize(vm, -2);
@@ -236,7 +236,7 @@ static int m_resize(bvm *vm)
 
 static int m_clear(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     list_check_data(vm, 1);
     be_pushint(vm, 0);
     be_data_resize(vm, -2);
@@ -265,7 +265,7 @@ static int iter_closure(bvm *vm)
 static int m_iter(bvm *vm)
 {
     be_pushntvclosure(vm, iter_closure, 2);
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     be_setupval(vm, -2, 0);
     be_pushiter(vm, -1);
     be_setupval(vm, -3, 1);
@@ -277,7 +277,7 @@ static int m_connect(bvm *vm)
 {
     int argc = be_top(vm);
     if (argc >= 2) {
-        be_getmember(vm, 1, ".data");
+        be_getmember(vm, 1, ".p");
         be_pushvalue(vm, 2);
         be_data_push(vm, -2);
         be_pop(vm, argc + 1);
@@ -289,8 +289,8 @@ static int m_merge(bvm *vm)
 {
     int argc = be_top(vm);
     if (argc >= 2) {
-        be_getmember(vm, 1, ".data");
-        be_getmember(vm, 2, ".data");
+        be_getmember(vm, 1, ".p");
+        be_getmember(vm, 2, ".p");
         if (!be_islist(vm, -1)) {
             be_raise(vm, "type_error", "operand must be a list");
         }
@@ -345,7 +345,7 @@ static void list_concat(bvm *vm, blist *list)
 static int m_concat(bvm *vm)
 {
     bvalue *value;
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     list_check_data(vm, 1);
     value = be_indexof(vm, -1);
     list_concat(vm, var_toobj(value));
@@ -355,7 +355,7 @@ static int m_concat(bvm *vm)
 static int m_reverse(bvm *vm)
 {
     int top = be_top(vm);
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     list_check_data(vm, 1);
     be_data_reverse(vm, -1);
     be_pop(vm, top);
@@ -364,7 +364,7 @@ static int m_reverse(bvm *vm)
 
 static int m_copy(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     list_check_data(vm, 1);
     be_getbuiltin(vm, "list");
     be_copy(vm, -2);
@@ -377,8 +377,8 @@ static int list_equal(bvm *vm, bbool iseq)
 {
     int i, j, res;
     bbool (*eqfunc)(bvm*) = iseq ? be_iseq : be_isneq;
-    be_getmember(vm, 1, ".data");
-    be_getmember(vm, 2, ".data");
+    be_getmember(vm, 1, ".p");
+    be_getmember(vm, 2, ".p");
     i = be_data_size(vm, -2);
     j = be_data_size(vm, -1);
     if (i == j) {
@@ -413,7 +413,7 @@ static int m_nequal(bvm *vm)
 void be_load_listlib(bvm *vm)
 {
     static const bnfuncinfo members[] = {
-        { ".data", NULL },
+        { ".p", NULL },
         { "init", m_init },
         { "tostring", m_tostring },
         { "push", m_push },
@@ -440,7 +440,7 @@ void be_load_listlib(bvm *vm)
 #else
 /* @const_object_info_begin
 class be_class_list (scope: global, name: list) {
-    .data, var
+    .p, var
     init, func(m_init)
     tostring, func(m_tostring)
     push, func(m_push)

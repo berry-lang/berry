@@ -19,10 +19,10 @@ static int m_init(bvm *vm)
 {
     if (be_top(vm) > 1 && be_ismap(vm, 2)) {
         be_pushvalue(vm, 2);
-        be_setmember(vm, 1, ".data");
+        be_setmember(vm, 1, ".p");
     } else {
         be_newmap(vm);
-        be_setmember(vm, 1, ".data");
+        be_setmember(vm, 1, ".p");
     }
     be_return_nil(vm);
 }
@@ -58,7 +58,7 @@ static void push_value(bvm *vm)
 
 static int m_tostring(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     map_check_data(vm, 1);
     map_check_ref(vm);
     be_refpush(vm, 1);
@@ -82,7 +82,7 @@ static int m_tostring(bvm *vm)
 
 static int m_remove(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     map_check_data(vm, 2);
     be_pushvalue(vm, 2);
     be_data_remove(vm, -2);
@@ -91,7 +91,7 @@ static int m_remove(bvm *vm)
 
 static int m_item(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     map_check_data(vm, 2);
     be_pushvalue(vm, 2);
     if (!be_getindex(vm, -2)) {
@@ -102,7 +102,7 @@ static int m_item(bvm *vm)
 
 static int m_setitem(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     map_check_data(vm, 3);
     be_pushvalue(vm, 2);
     be_pushvalue(vm, 3);
@@ -113,7 +113,7 @@ static int m_setitem(bvm *vm)
 static int m_find(bvm *vm)
 {
     int argc = be_top(vm);
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     map_check_data(vm, 2);
     be_pushvalue(vm, 2);
     /* not find and has default value */
@@ -126,7 +126,7 @@ static int m_find(bvm *vm)
 static int m_insert(bvm *vm)
 {
     bbool res;
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     map_check_data(vm, 3);
     be_pushvalue(vm, 2);
     be_pushvalue(vm, 3);
@@ -137,7 +137,7 @@ static int m_insert(bvm *vm)
 
 static int m_size(bvm *vm)
 {
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     map_check_data(vm, 1);
     be_pushint(vm, be_data_size(vm, -1));
     be_return(vm);
@@ -166,7 +166,7 @@ static int iter_closure(bvm *vm)
 static int m_iter(bvm *vm)
 {
     be_pushntvclosure(vm, iter_closure, 2);
-    be_getmember(vm, 1, ".data");
+    be_getmember(vm, 1, ".p");
     be_setupval(vm, -2, 0);
     be_pushiter(vm, -1);
     be_setupval(vm, -3, 1);
@@ -178,7 +178,7 @@ static int m_iter(bvm *vm)
 void be_load_maplib(bvm *vm)
 {
     static const bnfuncinfo members[] = {
-        { ".data", NULL },
+        { ".p", NULL },
         { "init", m_init },
         { "tostring", m_tostring },
         { "remove", m_remove },
@@ -195,7 +195,7 @@ void be_load_maplib(bvm *vm)
 #else
 /* @const_object_info_begin
 class be_class_map (scope: global, name: map) {
-    .data, var
+    .p, var
     init, func(m_init)
     tostring, func(m_tostring)
     remove, func(m_remove)
