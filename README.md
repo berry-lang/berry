@@ -32,11 +32,15 @@ Berry's EBNF grammar definition: [tools/grammar/berry.ebnf](./tools/grammar/berr
 ## Features
 
 * Base Type
-  * Numerical value: Integer (`int`) and Real (`real`)
+  * Nil: `nil`
   * Boolean: `true` and `false`
+  * Numerical: Integer (`int`) and Real (`real`)
   * String: Single quotation-mark string and double quotation-mark string
-  * List: Continuous memory list, like `[1, 2, 3]`
-  * Map: Hash Map, like `{ 'a': 1, 2: 3, 'map': {} }`
+  * Class: Instance template, read only
+  * Instance: Object constructed by class
+  * Module: Read-write key-value pair table
+  * List: Ordered container, like `[1, 2, 3]`
+  * Map: Hash Map container, like `{ 'a': 1, 2: 3, 'map': {} }`
   * Range: include a lower and a upper integer value, like `0..5`
 * Operator and Expression
   * Assign operator: `=`, `+=`, `-=`, `*=`, `/=`, `%=`, `&=`, `|=`, `^=`, `<<=`, `>>=`
@@ -149,3 +153,9 @@ This example code will output the result `55`, and you can save the above code t
 ```
 
 This will also get the correct output.
+
+## License
+
+Berry is free software distributed under the [MIT license](./LICENSE).
+
+The Berry interpreter partly referred to [Lua](http://www.lua.org/)'s design. View Lua's license here: http://www.lua.org/license.html.
