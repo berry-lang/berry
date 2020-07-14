@@ -329,7 +329,7 @@ BERRY_API void be_setntvhook(bvm *vm, bntvhook hook, void *data, int mask)
     } else if (!var_istype(&vm->hook, BE_COMPTR)) {
         var_setnil(&vm->hook);
     }
-    vm->hookmask = mask;
+    vm->hookmask = (bbyte)mask;
 }
 
 #endif
@@ -350,8 +350,8 @@ bbool be_debug_varname(bvm *vm, int level, int index)
         bcallframe *cf = be_vector_at(&vm->callstack, depth - level);
         if ((cf->status & PRIM_FUNC) == 0) {
             bproto *proto = cast(bclosure*, var_toobj(cf->func))->proto;
-            binstruction *ip = callstack_fixip(vm, level);
-            bstring *name = be_func_varname(proto, index, ip - proto->code);
+            int pc = (int)(callstack_fixip(vm, level) - proto->code);
+            bstring *name = be_func_varname(proto, index, pc);
             if (name) {
                 bvalue *reg = be_incrtop(vm);
                 var_setstr(reg, name);
