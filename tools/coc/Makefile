@@ -1,4 +1,4 @@
-TARGET   = map_build
+TARGET   = coc
 CXXFLAGS = -std=c++11 -O2
 CXX      = g++
 
