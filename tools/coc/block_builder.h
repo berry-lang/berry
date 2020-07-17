@@ -1,5 +1,5 @@
-#ifndef __MAP_BUILD_H
-#define __MAP_BUILD_H
+#ifndef __BLOCK_BUILDER_H
+#define __BLOCK_BUILDER_H
 
 #include <map>
 #include <vector>
@@ -7,9 +7,9 @@
 
 class macro_table;
 
-class map_build {
+class block_builder {
 public:
-    map_build(const macro_table *macro, const std::string &path = ".");
+    block_builder(const macro_table *macro, const std::string &path = ".");
     void parse_block(const std::string &str);
     std::string str();
 
@@ -42,4 +42,4 @@ private:
     const macro_table *m_macro;
 };
 
-#endif // !__MAP_BUILD_H
+#endif // !__BLOCK_BUILDER_H

@@ -5,7 +5,7 @@ CXX      = g++
 OBJS    = hash_map.o            \
           macro_table.o         \
           main.o                \
-          map_build.o           \
+          block_builder.o       \
           str_build.o           \
           str_map.o             \
 

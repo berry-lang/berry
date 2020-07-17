@@ -1,17 +1,17 @@
-#include "map_build.h"
+#include "block_builder.h"
 #include "hash_map.h"
 #include "macro_table.h"
 #include <regex>
 #include <sstream>
 #include <fstream>
 
-map_build::map_build(const macro_table *macro, const std::string &path)
+block_builder::block_builder(const macro_table *macro, const std::string &path)
 {
     m_macro = macro;
     m_outpath = path.substr(path.find_last_of("\\") + 1);
 }
 
-void map_build::parse_block(const std::string &str)
+void block_builder::parse_block(const std::string &str)
 {
     const std::string body;
     std::regex reg("(\\w+)\\s+(\\w+)(?:\\s*\\(([^\\)]*)\\)\\s*|\\s+)\\{([^\\}]*)\\}");
@@ -28,7 +28,7 @@ void map_build::parse_block(const std::string &str)
     }
 }
 
-std::map<std::string, std::string> map_build::parse_body(const std::string &str)
+std::map<std::string, std::string> block_builder::parse_body(const std::string &str)
 {
     std::regex reg("(\\w+|\\.\\w+|\\(\\)|-\\*|<<|>>|"
                    "<=|>=|==|!=|\\.\\.|[<>\\+\\-\\*/%&\\|\\^|~])\\s*,\\s*([^\\n^\\r]+)");
@@ -44,7 +44,7 @@ std::map<std::string, std::string> map_build::parse_body(const std::string &str)
     return data;
 }
 
-std::map<std::string, std::string> map_build::parse_attr(const std::string &str)
+std::map<std::string, std::string> block_builder::parse_attr(const std::string &str)
 {
     std::regex reg("(\\w+)\\s*:\\s*(\\w+)(?:[^\\w]+|$)");
     std::sregex_iterator it(str.begin(), str.end(), reg);
@@ -57,7 +57,7 @@ std::map<std::string, std::string> map_build::parse_attr(const std::string &str)
     return attr;
 }
 
-void map_build::writefile(const std::string &filename, const std::string &text)
+void block_builder::writefile(const std::string &filename, const std::string &text)
 {
     std::string pathname(m_outpath + "/" + filename);
     std::string otext("#include \"be_constobj.h\"\n\n" + text);
@@ -73,7 +73,7 @@ void map_build::writefile(const std::string &filename, const std::string &text)
     }
 }
 
-std::string map_build::block_tostring(const block &block)
+std::string block_builder::block_tostring(const block &block)
 {
     std::ostringstream ostr;
 
@@ -92,7 +92,7 @@ std::string map_build::block_tostring(const block &block)
     return ostr.str();
 }
 
-std::string map_build::class_tostring(const block &block)
+std::string block_builder::class_tostring(const block &block)
 {
     bool empty_map = block.data.empty();
     std::ostringstream ostr;
@@ -112,7 +112,7 @@ std::string map_build::class_tostring(const block &block)
     return ostr.str();
 }
 
-std::string map_build::map_tostring(const block &block, const std::string &name, bool local)
+std::string block_builder::map_tostring(const block &block, const std::string &name, bool local)
 {
     std::ostringstream ostr;
     hash_map map(block.data);
@@ -141,7 +141,7 @@ std::string map_build::map_tostring(const block &block, const std::string &name,
     return ostr.str();
 }
 
-std::string map_build::vartab_tostring(const block &block)
+std::string block_builder::vartab_tostring(const block &block)
 {
     std::ostringstream ostr;
     struct block idxblk;
@@ -173,7 +173,7 @@ std::string map_build::vartab_tostring(const block &block)
     return ostr.str();
 }
 
-std::string map_build::module_tostring(const block &block)
+std::string block_builder::module_tostring(const block &block)
 {
     std::ostringstream ostr;
     std::string name("m_lib" + block.name);
@@ -192,7 +192,7 @@ std::string map_build::module_tostring(const block &block)
     return ostr.str();
 }
 
-std::string map_build::scope(const block &block)
+std::string block_builder::scope(const block &block)
 {
     if (block.attr.find("scope") != block.attr.end()
         && block.attr.at("scope") == "local") {
@@ -201,7 +201,7 @@ std::string map_build::scope(const block &block)
     return "";
 }
 
-std::string map_build::super(const block &block)
+std::string block_builder::super(const block &block)
 {
     if (block.attr.find("super") == block.attr.end()) {
         return "NULL";
@@ -209,7 +209,7 @@ std::string map_build::super(const block &block)
     return "(bclass *)&" + block.attr.at("super");
 }
 
-std::string map_build::name(const block &block)
+std::string block_builder::name(const block &block)
 {
     if (block.attr.find("name") == block.attr.end()) {
         return block.name;
@@ -217,7 +217,7 @@ std::string map_build::name(const block &block)
     return block.attr.at("name");
 }
 
-std::string map_build::init(const block &block)
+std::string block_builder::init(const block &block)
 {
     if (block.attr.find("init") == block.attr.end()) {
         return "NULL";
@@ -225,7 +225,7 @@ std::string map_build::init(const block &block)
     return block.attr.at("init");
 }
 
-bool map_build::block_depend(const block &block)
+bool block_builder::block_depend(const block &block)
 {
     if (block.attr.find("depend") != block.attr.end()) {
         return m_macro->query(block.attr.at("depend"));
@@ -233,7 +233,7 @@ bool map_build::block_depend(const block &block)
     return true;
 }
 
-std::string map_build::str()
+std::string block_builder::str()
 {
     hash_map map;
     std::ostringstream ostr;
@@ -243,7 +243,7 @@ std::string map_build::str()
     return ostr.str();
 }
 
-std::string map_build::query_item(const std::string &str)
+std::string block_builder::query_item(const std::string &str)
 {
     std::regex reg("^([^,]*),\\s*(\\w+).*$");
     std::match_results<std::string::const_iterator> res;

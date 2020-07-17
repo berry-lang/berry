@@ -1,5 +1,5 @@
 #include "main.h"
-#include "map_build.h"
+#include "block_builder.h"
 #include "str_build.h"
 #include "str_map.h"
 #include "macro_table.h"
@@ -25,7 +25,7 @@ void builder::parse_all(const std::string &filename, const std::string &subname)
 {
     std::string text = readfile(filename);
     if (subname == ".c" || subname == ".cc") {
-        map_build mb(m_macro, m_output);
+        block_builder mb(m_macro, m_output);
         mb.parse_block(info_block(text));
         m_strmap->parse_text("temp.h", mb.str());
     }
