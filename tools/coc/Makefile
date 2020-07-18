@@ -8,6 +8,7 @@ OBJS    = hash_map.o            \
           block_builder.o       \
           str_build.o           \
           str_map.o             \
+	  coc_parser.o
 
 ifeq ($(OS), Windows_NT) # Windows
     TARGET  := $(TARGET).exe

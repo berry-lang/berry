@@ -9,11 +9,6 @@ class macro_table;
 
 class block_builder {
 public:
-    block_builder(const macro_table *macro, const std::string &path = ".");
-    void parse_block(const std::string &str);
-    std::string str();
-
-private:
     struct block {
         std::string type;
         std::string name;
@@ -21,6 +16,11 @@ private:
         std::map<std::string, std::string> data;
     };
 
+    block_builder(const macro_table *macro, const std::string &path = ".");
+    void parse_block(const std::string &str);
+    std::string str();
+
+private:
     std::map<std::string, std::string> parse_body(const std::string &str);
     std::map<std::string, std::string> parse_attr(const std::string &str);
     std::string block_tostring(const block &block);

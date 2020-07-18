@@ -7,6 +7,7 @@
 #include <fstream>  
 #include <sstream>
 #include <regex>
+#include "coc_parser.h"
 
 std::string builder::info_block(const std::string &text)
 {
@@ -26,6 +27,7 @@ void builder::parse_all(const std::string &filename, const std::string &subname)
     std::string text = readfile(filename);
     if (subname == ".c" || subname == ".cc") {
         block_builder mb(m_macro, m_output);
+        coc_parser p(text);
         mb.parse_block(info_block(text));
         m_strmap->parse_text("temp.h", mb.str());
     }
