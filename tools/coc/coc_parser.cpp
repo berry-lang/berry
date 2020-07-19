@@ -8,12 +8,43 @@ static inline int _isalnum(int c)
 
 coc_parser::coc_parser(const std::string &text)
 {
-    m_ptr = text.data();
-    m_end = m_ptr + text.size();
-    for (; m_ptr < m_end; ++m_ptr) {
-        if (*m_ptr == '@') {
+    m_ptr = text.c_str();
+    while (*m_ptr) {
+        switch (*m_ptr) {
+        case '@':
             parse_object();
+            break;
+        case 'b':
+            scan_const_string();
+            break;
+        default:
+            ++m_ptr;
         }
+    }
+}
+
+const std::vector<object_block>& coc_parser::objects() const
+{
+    return m_objects;
+}
+
+const std::vector<std::string>& coc_parser::strtab() const
+{
+    return m_strtab;
+}
+
+void coc_parser::scan_const_string()
+{
+    const char prefix[] = "be_const_str_";
+    const size_t len = sizeof(prefix) - 1;
+    if (!strncmp(m_ptr, prefix, len)) {
+        m_ptr += len;
+        const char *p = m_ptr;
+        while (_isalnum(*m_ptr))
+            ++m_ptr;
+        m_strtab.push_back(std::string(p, m_ptr - p));
+    } else {
+        ++m_ptr;
     }
 }
 
@@ -84,54 +115,62 @@ std::string coc_parser::parse_tonewline()
 
 void coc_parser::parse_object()
 {
-    const char *text_begin = "@const_object_info_begin";
-    size_t len = strlen(text_begin);
-    if (m_ptr + len >= m_end) {
-        throw "error";
-    }
-    if (!memcmp(m_ptr, text_begin, len)) {
-        m_ptr += len;
-        parse_block();
+    const char begin_text[] = "@const_object_info_begin";
+    const size_t begin_len = sizeof(begin_text) - 1;
+    if (!strncmp(m_ptr, begin_text, begin_len)) {
+        m_ptr += begin_len;
+        do {
+            object_block object;
+            parse_block(&object);
+            m_objects.push_back(object);
+        } while (!parse_char('@'));
+        const char end_text[] = "const_object_info_end";
+        const size_t end_len = sizeof(end_text) - 1;
+        if (strncmp(m_ptr, end_text, end_len))
+            throw "error";
+        m_ptr += end_len;
+    } else {
+        ++m_ptr;
     }
 }
 
-void coc_parser::parse_block()
+void coc_parser::parse_block(object_block *object)
 {
-    m_block.type = parse_word();
-    m_block.name = parse_word();
-    parse_attr();
-    parse_body();
+    object->type = parse_word();
+    object->name = parse_word();
+    parse_attr(object);
+    parse_body(object);
 }
 
-void coc_parser::parse_attr()
+void coc_parser::parse_attr(object_block *object)
 {
     skip_char('(');
-    parse_attr_pair();
+    parse_attr_pair(object);
     while (parse_char(',')) {
-        parse_attr_pair();
+        parse_attr_pair(object);
     }
     skip_char(')');
 }
 
-void coc_parser::parse_attr_pair()
+void coc_parser::parse_attr_pair(object_block *object)
 {
     std::string key = parse_word();
     skip_char(':');
     std::string value = parse_word();
-    m_block.attr[key] = value;
+    object->attr[key] = value;
 }
 
-void coc_parser::parse_body()
+void coc_parser::parse_body(object_block *object)
 {
     skip_char('{');
     if (!parse_char('}')) {
         do {
-            parse_body_item();
+            parse_body_item(object);
         } while (!parse_char('}'));
     }
 }
 
-void coc_parser::parse_body_item()
+void coc_parser::parse_body_item(object_block *object)
 {
     object_block::data_value value;
     std::string key = parse_tocomma();
@@ -139,5 +178,5 @@ void coc_parser::parse_body_item()
     value.value = parse_tocomma();
     if (parse_char_continue(','))
         value.depend = parse_tonewline();
-    m_block.data[key] = value;
+    object->data[key] = value;
 }

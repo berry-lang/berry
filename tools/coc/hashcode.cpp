@@ -1,6 +1,6 @@
 #include "hashcode.h"
 
-namespace string {
+namespace coc {
 
 uint32_t hashcode(const std::string &string)
 {

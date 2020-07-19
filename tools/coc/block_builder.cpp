@@ -1,65 +1,35 @@
 #include "block_builder.h"
 #include "hash_map.h"
 #include "macro_table.h"
+#include "object_block.h"
 #include <regex>
 #include <sstream>
 #include <fstream>
 
-block_builder::block_builder(const macro_table *macro, const std::string &path)
+static bool depend(const object_block *object, const macro_table *macro)
 {
-    m_macro = macro;
-    m_outpath = path.substr(path.find_last_of("\\") + 1);
-}
-
-void block_builder::parse_block(const std::string &str)
-{
-    const std::string body;
-    std::regex reg("(\\w+)\\s+(\\w+)(?:\\s*\\(([^\\)]*)\\)\\s*|\\s+)\\{([^\\}]*)\\}");
-    std::sregex_iterator it(str.begin(), str.end(), reg);
-    std::sregex_iterator end;
-    while (it != end) {
-        block bl;
-        bl.type = it->str(1);
-        bl.name = it->str(2);
-        bl.attr = parse_attr(it->str(3));
-        bl.data = parse_body(it->str(4));
-        m_block.push_back(bl);
-        ++it;
+    if (object->attr.find("depend") != object->attr.end()) {
+        return macro->query(object->attr.at("depend"));
     }
+    return true;
 }
 
-std::map<std::string, std::string> block_builder::parse_body(const std::string &str)
+block_builder::block_builder(const object_block *object, const macro_table *macro)
 {
-    std::regex reg("(\\w+|\\.\\w+|\\(\\)|-\\*|<<|>>|"
-                   "<=|>=|==|!=|\\.\\.|[<>\\+\\-\\*/%&\\|\\^|~])\\s*,\\s*([^\\n^\\r]+)");
-    std::sregex_iterator it(str.begin(), str.end(), reg);
-    std::sregex_iterator end;
-    std::map<std::string, std::string> data;
-    for (; it != end; ++it) {
-        std::string item = query_item(it->str(2));
-        if (!item.empty()) {
-            data[it->str(1)] = item;
+    if (depend(object, macro)) {
+        m_block.type = object->type;
+        m_block.name = object->name;
+        m_block.attr = object->attr;
+        for (auto i : object->data) {
+            if (i.second.depend.empty() || macro->query(i.second.depend))
+                m_block.data[i.first] = i.second.value;
         }
     }
-    return data;
-}
-
-std::map<std::string, std::string> block_builder::parse_attr(const std::string &str)
-{
-    std::regex reg("(\\w+)\\s*:\\s*(\\w+)(?:[^\\w]+|$)");
-    std::sregex_iterator it(str.begin(), str.end(), reg);
-    std::sregex_iterator end;
-    std::map<std::string, std::string> attr;
-    while (it != end) {
-        attr[it->str(1)] = it->str(2);
-        ++it;
-    }
-    return attr;
 }
 
 void block_builder::writefile(const std::string &filename, const std::string &text)
 {
-    std::string pathname(m_outpath + "/" + filename);
+    std::string pathname(filename);
     std::string otext("#include \"be_constobj.h\"\n\n" + text);
 
     std::ostringstream buf;
@@ -76,19 +46,15 @@ void block_builder::writefile(const std::string &filename, const std::string &te
 std::string block_builder::block_tostring(const block &block)
 {
     std::ostringstream ostr;
-
-    if (block_depend(block)) {
-        if (block.type == "map") {
-            ostr << map_tostring(block, block.name);
-        } else if (block.type == "class") {
-            ostr << class_tostring(block);
-        } else if (block.type == "vartab") {
-            ostr << vartab_tostring(block);
-        } else if (block.type == "module") {
-            ostr << module_tostring(block);
-        }
+    if (block.type == "map") {
+        ostr << map_tostring(block, block.name);
+    } else if (block.type == "class") {
+        ostr << class_tostring(block);
+    } else if (block.type == "vartab") {
+        ostr << vartab_tostring(block);
+    } else if (block.type == "module") {
+        ostr << module_tostring(block);
     }
-    writefile("be_fixed_" + block.name + ".h", ostr.str());
     return ostr.str();
 }
 
@@ -121,11 +87,9 @@ std::string block_builder::map_tostring(const block &block, const std::string &n
     hash_map::entry_table list = map.entry_list();
     ostr << "static const bmapnode " << map_name << "[] = {\n";
     for (auto it : list) {
-        int next = it.next;
-        std::string key = it.key;
-        std::string value = it.value;
-        ostr << "    { be_const_key(" << key << ", "
-            << next << "), " << value << " }," << std::endl;
+        m_strtab.push_back(it.key);
+        ostr << "    { be_const_key(" << it.key << ", "
+             << it.next << "), " << it.value << " }," << std::endl;
     }
     ostr << "};\n\n";
 
@@ -225,30 +189,20 @@ std::string block_builder::init(const block &block)
     return block.attr.at("init");
 }
 
-bool block_builder::block_depend(const block &block)
-{
-    if (block.attr.find("depend") != block.attr.end()) {
-        return m_macro->query(block.attr.at("depend"));
-    }
-    return true;
-}
-
 std::string block_builder::str()
 {
-    hash_map map;
     std::ostringstream ostr;
-    for (auto it : m_block) {
-        ostr << block_tostring(it) << std::endl;
-    }
+    ostr << block_tostring(m_block) << std::endl;
     return ostr.str();
 }
 
-std::string block_builder::query_item(const std::string &str)
+void block_builder::dumpfile(const std::string &path)
 {
-    std::regex reg("^([^,]*),\\s*(\\w+).*$");
-    std::match_results<std::string::const_iterator> res;
-    if (regex_match(str, res, reg)) {
-        return m_macro->query(res[2]) ? res[1] : std::string();
-    }
-    return str;
+    std::string s = block_tostring(m_block);
+    writefile(path + "/be_fixed_" + m_block.name + ".h", s);
+}
+
+const std::vector<std::string>& block_builder::strtab() const
+{
+    return m_strtab;
 }

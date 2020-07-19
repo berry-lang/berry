@@ -19,7 +19,7 @@
 
 #define be_const_key(_str, _next)   \
 { \
-    .v.s = (bstring *)&(_str), \
+    .v.s = (bstring *)&be_const_str_##_str, \
     .type = BE_STRING, \
     .next = (uint32_t)(_next) & 0xFFFFFF \
 }

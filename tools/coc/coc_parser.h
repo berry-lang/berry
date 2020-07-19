@@ -2,13 +2,17 @@
 #define __COC_PARSER_H
 
 #include <string>
+#include <vector>
 #include "object_block.h"
 
 class coc_parser {
 public:
     coc_parser(const std::string &text);
+    const std::vector<object_block>& objects() const;
+    const std::vector<std::string>& strtab() const;
 
 private:
+    void scan_const_string();
     void skip_space();
     void skip_char(int c) {
         parse_char(c, true);
@@ -20,15 +24,16 @@ private:
     std::string parse_tocomma();
     std::string parse_tonewline();
     void parse_object();
-    void parse_block();
-    void parse_attr();
-    void parse_attr_pair();
-    void parse_body();
-    void parse_body_item();
+    void parse_block(object_block *object);
+    void parse_attr(object_block *object);
+    void parse_attr_pair(object_block *object);
+    void parse_body(object_block *object);
+    void parse_body_item(object_block *object);
 
 private:
-    const char *m_ptr, *m_end;
-    object_block m_block;
+    const char *m_ptr;
+    std::vector<object_block> m_objects;
+    std::vector<std::string> m_strtab;
 };
 
 #endif // !__COC_PARSER_H

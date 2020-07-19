@@ -1,37 +1,30 @@
 #include "main.h"
 #include "block_builder.h"
-#include "str_build.h"
-#include "str_map.h"
-#include "macro_table.h"
-#include <iostream>
-#include <fstream>  
-#include <sstream>
-#include <regex>
 #include "coc_parser.h"
-
-std::string builder::info_block(const std::string &text)
-{
-    std::regex reg("@const_object_info_begin([^@]+)@const_object_info_end");
-    std::sregex_iterator it(text.begin(), text.end(), reg);
-    std::sregex_iterator end;
-    std::string result;
-    while (it != end) {
-        result += it->str(1);
-        ++it;
-    }
-    return result;
-}
+#include "macro_table.h"
+#include "str_build.h"
+#include <fstream>
+#include <regex>
+#include <sstream>
 
 void builder::parse_all(const std::string &filename, const std::string &subname)
 {
     std::string text = readfile(filename);
     if (subname == ".c" || subname == ".cc") {
-        block_builder mb(m_macro, m_output);
-        coc_parser p(text);
-        mb.parse_block(info_block(text));
-        m_strmap->parse_text("temp.h", mb.str());
+        coc_parser parser(text);
+        push_strtab(parser.strtab());
+        for (auto object : parser.objects()) {
+            block_builder builder(&object, m_macro);
+            builder.dumpfile(m_output);
+            push_strtab(builder.strtab());
+        }
     }
-    m_strmap->parse_text(filename, text);
+}
+
+void builder::push_strtab(const std::vector<std::string> &list)
+{
+    for (auto s : list)
+        m_strmap[s] = 0;
 }
 
 std::string builder::readfile(const std::string &filename)
@@ -95,7 +88,7 @@ void builder::build()
     for (auto it : m_input) {
         scandir(it);
     }
-    str_build sb(m_strmap->data());
+    str_build sb(m_strmap);
     sb.build(m_output);
 }
 
@@ -105,7 +98,6 @@ builder::builder(int argc, char **argv)
     for (int i = 1; i < argc; ++i) {
         add_arg(argv[i]);
     }
-    m_strmap = new str_map();
     m_macro = new macro_table();
     for (auto it : m_config) {
         m_macro->scan_file(it);
@@ -115,7 +107,6 @@ builder::builder(int argc, char **argv)
 builder::~builder()
 {
     delete m_macro;
-    delete m_strmap;
 }
 
 void builder::add_arg(const std::string &arg)

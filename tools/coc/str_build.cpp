@@ -1,5 +1,5 @@
 #include "str_build.h"
-#include <iostream>
+#include "hashcode.h"
 #include <sstream>
 #include <fstream>
 
@@ -9,7 +9,7 @@ str_build::str_build(std::map<std::string, int> map)
     m_count = map.size();
     m_hashtable.resize(size < 4 ? 4 : size);
     for (auto it : map) {
-        make_ceil(it.first);
+        make_ceil(it.first, it.second);
     }
     keywords();
 }
@@ -27,7 +27,7 @@ void str_build::build(const std::string &path)
 
 void str_build::keywords()
 {
-    constexpr int opif = 50; /* note the definition in be_lexer.h */
+    const int opif = 50; /* note the definition in be_lexer.h */
     const static std::map<std::string, int> tab = {
         { "if", opif}, { "elif", opif + 1 },
         { "else", opif + 2 }, { "while", opif + 3 },
@@ -46,21 +46,10 @@ void str_build::keywords()
     }
 }
 
-uint32_t str_build::hashcode(const std::string &string)
-{
-    size_t len = string.size();
-    const char *str = string.data();
-    uint32_t hash = 2166136261u;
-    while (len--) {
-        hash = (hash ^ (unsigned char)*str++) * 16777619u;
-    }
-    return hash;
-}
-
 void str_build::make_ceil(const std::string &string, int extra)
 {
     str_info info;
-    info.hash = hashcode(escape(string));
+    info.hash = coc::hashcode(escape(string));
     info.str = string;
     info.extra = extra;
     m_hashtable[info.hash % m_hashtable.size()].push_back(info);

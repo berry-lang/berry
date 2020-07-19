@@ -14,7 +14,6 @@ public:
 
 private:
     void keywords();
-    uint32_t hashcode(const std::string &string);
     void make_ceil(const std::string &string, int extra = 0);
     std::string escape(const std::string &string);
     std::string build_table_def();

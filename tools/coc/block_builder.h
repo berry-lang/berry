@@ -4,11 +4,19 @@
 #include <map>
 #include <vector>
 #include <string>
+#include "object_block.h"
 
 class macro_table;
+class object_block;
 
 class block_builder {
 public:
+    block_builder(const object_block *object, const macro_table *macro);
+    std::string str();
+    void dumpfile(const std::string &path);
+    const std::vector<std::string>& strtab() const;
+
+private:
     struct block {
         std::string type;
         std::string name;
@@ -16,13 +24,6 @@ public:
         std::map<std::string, std::string> data;
     };
 
-    block_builder(const macro_table *macro, const std::string &path = ".");
-    void parse_block(const std::string &str);
-    std::string str();
-
-private:
-    std::map<std::string, std::string> parse_body(const std::string &str);
-    std::map<std::string, std::string> parse_attr(const std::string &str);
     std::string block_tostring(const block &block);
     std::string class_tostring(const block &block);
     std::string vartab_tostring(const block &block);
@@ -33,13 +34,10 @@ private:
     std::string super(const block &block);
     std::string name(const block &block);
     std::string init(const block &block);
-    bool block_depend(const block &block);
-    std::string query_item(const std::string &str);
 
 private:
-    std::vector<block> m_block;
-    std::string m_outpath;
-    const macro_table *m_macro;
+    block m_block;
+    std::vector<std::string> m_strtab;
 };
 
 #endif // !__BLOCK_BUILDER_H
