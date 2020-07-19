@@ -4,7 +4,6 @@
 #include "macro_table.h"
 #include "str_build.h"
 #include <fstream>
-#include <regex>
 #include <sstream>
 
 void builder::parse_all(const std::string &filename, const std::string &subname)

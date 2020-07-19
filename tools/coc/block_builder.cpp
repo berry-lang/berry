@@ -2,7 +2,6 @@
 #include "hash_map.h"
 #include "macro_table.h"
 #include "object_block.h"
-#include <regex>
 #include <sstream>
 #include <fstream>
 
