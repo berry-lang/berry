@@ -8,38 +8,23 @@
 
 static bool depend(const object_block *object, const macro_table *macro)
 {
-    if (object->attr.find("depend") != object->attr.end()) {
-        return macro->query(object->attr.at("depend"));
+    auto it = object->attr.find("depend");
+    if (it != object->attr.end()) {
+        return macro->query(it->second);
     }
     return true;
 }
 
 block_builder::block_builder(const object_block *object, const macro_table *macro)
 {
+    m_block.name = object->name;
     if (depend(object, macro)) {
         m_block.type = object->type;
-        m_block.name = object->name;
         m_block.attr = object->attr;
         for (auto i : object->data) {
             if (i.second.depend.empty() || macro->query(i.second.depend))
                 m_block.data[i.first] = i.second.value;
         }
-    }
-}
-
-void block_builder::writefile(const std::string &filename, const std::string &text)
-{
-    std::string pathname(filename);
-    std::string otext("#include \"be_constobj.h\"\n\n" + text);
-
-    std::ostringstream buf;
-    std::ifstream fin(pathname);
-    buf << fin.rdbuf();
-    if (buf.str() != otext) {
-        std::ofstream fout;
-        fout.open(pathname, std::ios::out);
-        fout << otext;
-        fout.close();
     }
 }
 
@@ -189,11 +174,20 @@ std::string block_builder::init(const block &block)
     return block.attr.at("init");
 }
 
-std::string block_builder::str()
+void block_builder::writefile(const std::string &filename, const std::string &text)
 {
-    std::ostringstream ostr;
-    ostr << block_tostring(m_block) << std::endl;
-    return ostr.str();
+    std::string pathname(filename);
+    std::string otext("#include \"be_constobj.h\"\n\n" + text);
+
+    std::ostringstream buf;
+    std::ifstream fin(pathname);
+    buf << fin.rdbuf();
+    if (buf.str() != otext) {
+        std::ofstream fout;
+        fout.open(pathname, std::ios::out);
+        fout << otext;
+        fout.close();
+    }
 }
 
 void block_builder::dumpfile(const std::string &path)

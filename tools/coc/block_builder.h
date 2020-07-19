@@ -12,7 +12,6 @@ class object_block;
 class block_builder {
 public:
     block_builder(const object_block *object, const macro_table *macro);
-    std::string str();
     void dumpfile(const std::string &path);
     const std::vector<std::string>& strtab() const;
 
@@ -29,11 +28,11 @@ private:
     std::string vartab_tostring(const block &block);
     std::string module_tostring(const block &block);
     std::string map_tostring(const block &block, const std::string &name, bool local = false);
-    void writefile(const std::string &filename, const std::string &text);
     std::string scope(const block &block);
     std::string super(const block &block);
     std::string name(const block &block);
     std::string init(const block &block);
+    void writefile(const std::string &filename, const std::string &text);
 
 private:
     block m_block;
