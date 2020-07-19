@@ -235,7 +235,7 @@ be_native_module_attr_table(os) {
 be_define_native_module(os, NULL);
 #else
 /* @const_object_info_begin
-module path (scope: local, depend: BE_USE_OS_MODULE) {
+module path (scope: local, file: os_path, depend: BE_USE_OS_MODULE) {
     isdir, func(m_path_isdir)
     isfile, func(m_path_isfile)
     exists, func(m_path_exists)
@@ -244,7 +244,7 @@ module path (scope: local, depend: BE_USE_OS_MODULE) {
     join, func(m_path_join)
 }
 @const_object_info_end */
-#include "../generate/be_fixed_path.h"
+#include "../generate/be_fixed_os_path.h"
 
 /* @const_object_info_begin
 module os (scope: global, depend: BE_USE_OS_MODULE) {

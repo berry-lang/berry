@@ -143,35 +143,26 @@ std::string block_builder::module_tostring(const block &block)
 
 std::string block_builder::scope(const block &block)
 {
-    if (block.attr.find("scope") != block.attr.end()
-        && block.attr.at("scope") == "local") {
-        return "static ";
-    }
-    return "";
+    auto it = block.attr.find("scope");
+    return it != block.attr.end() && it->second == "local" ? "static " : "";
 }
 
 std::string block_builder::super(const block &block)
 {
-    if (block.attr.find("super") == block.attr.end()) {
-        return "NULL";
-    }
-    return "(bclass *)&" + block.attr.at("super");
+    auto it = block.attr.find("super");
+    return it == block.attr.end() ? "NULL" : "(bclass *)&" + it->second;
 }
 
 std::string block_builder::name(const block &block)
 {
-    if (block.attr.find("name") == block.attr.end()) {
-        return block.name;
-    }
-    return block.attr.at("name");
+    auto it = block.attr.find("name");
+    return it == block.attr.end() ? block.name : it->second;
 }
 
 std::string block_builder::init(const block &block)
 {
-    if (block.attr.find("init") == block.attr.end()) {
-        return "NULL";
-    }
-    return block.attr.at("init");
+    auto it = block.attr.find("init");
+    return it == block.attr.end() ? "NULL" : it->second;
 }
 
 void block_builder::writefile(const std::string &filename, const std::string &text)
@@ -193,7 +184,9 @@ void block_builder::writefile(const std::string &filename, const std::string &te
 void block_builder::dumpfile(const std::string &path)
 {
     std::string s = block_tostring(m_block);
-    writefile(path + "/be_fixed_" + m_block.name + ".h", s);
+    auto it = m_block.attr.find("file");
+    std::string &name = it != m_block.attr.end() ? it->second : m_block.name;
+    writefile(path + "/be_fixed_" + name + ".h", s);
 }
 
 const std::vector<std::string>& block_builder::strtab() const
