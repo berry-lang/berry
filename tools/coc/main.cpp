@@ -15,8 +15,8 @@ void builder::parse_all(const std::string &filename, const std::string &subname)
         push_strtab(parser.strtab());
         for (auto object : parser.objects()) {
             block_builder builder(&object, m_macro);
-            builder.dumpfile(m_output);
             push_strtab(builder.strtab());
+            builder.dumpfile(m_output);
         }
     }
 }

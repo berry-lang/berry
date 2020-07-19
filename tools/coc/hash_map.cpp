@@ -1,5 +1,5 @@
 #include "hash_map.h"
-#include "hashcode.h"
+#include "coc_string.h"
 
 #define is_empty(entry) ((entry).next == NODE_EMPTY)
 
@@ -117,35 +117,9 @@ void hash_map::insert(const std::string &key, const std::string value)
     }
 }
 
-void hash_map::escape_str(std::string &string)
-{
-    if (string == "..") {
-        string = "opt_connect";
-    } else if (string[0] == '.') {
-        string.replace(0, 1, "dot_");
-    } else {
-        const static std::map<std::string, std::string> tab = {
-            {"+", "opt_add"}, {"-", "opt_sub"},
-            {"*", "opt_mul"}, {"/", "opt_div"},
-            {"%", "opt_mod"}, {"&", "opt_and"},
-            {"^", "opt_xor"}, {"|", "opt_or"},
-            {"<", "opt_lt"},  {">", "opt_gt"},
-            {"<=", "opt_le"}, {">=", "opt_ge"},
-            {"==", "opt_eq"}, {"!=", "opt_neq"},
-            {"<<", "opt_shl"}, {">>", "opt_shr"},
-            {"-*", "opt_neg"}, {"~", "opt_flip"},
-            {"()", "opt_call"}
-        };
-        auto it = tab.find(string);
-        if (it != tab.end()) {
-            string = it->second;
-        }
-    }
-}
-
 hash_map::entry hash_map::entry_modify(entry entry, int *var_count)
 {
-    escape_str(entry.key);
+    entry.key = coc::escape_operator(entry.key);
     if (entry.value == "var") {
         entry.value = "be_const_int("
                 + std::to_string(*var_count) + ")";

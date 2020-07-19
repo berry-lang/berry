@@ -2,7 +2,7 @@ TARGET   = coc
 CXXFLAGS = -std=c++11 -O2
 CXX      = g++
 
-OBJS    = hashcode.o            \
+OBJS    = coc_string.o          \
           hash_map.o            \
           macro_table.o         \
           main.o                \

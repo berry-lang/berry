@@ -22,8 +22,10 @@ block_builder::block_builder(const object_block *object, const macro_table *macr
         m_block.type = object->type;
         m_block.attr = object->attr;
         for (auto i : object->data) {
-            if (i.second.depend.empty() || macro->query(i.second.depend))
+            if (i.second.depend.empty() || macro->query(i.second.depend)) {
                 m_block.data[i.first] = i.second.value;
+                m_strtab.push_back(i.first);
+            }
         }
     }
 }
@@ -72,7 +74,6 @@ std::string block_builder::map_tostring(const block &block, const std::string &n
     hash_map::entry_table list = map.entry_list();
     ostr << "static const bmapnode " << map_name << "[] = {\n";
     for (auto it : list) {
-        m_strtab.push_back(it.key);
         ostr << "    { be_const_key(" << it.key << ", "
              << it.next << "), " << it.value << " }," << std::endl;
     }

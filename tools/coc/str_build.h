@@ -15,7 +15,6 @@ public:
 private:
     void keywords();
     void make_ceil(const std::string &string, int extra = 0);
-    std::string escape(const std::string &string);
     std::string build_table_def();
     std::string build_table_ext();
     void writefile(const std::string &filename, const std::string &text);

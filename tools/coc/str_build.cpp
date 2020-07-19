@@ -1,5 +1,5 @@
 #include "str_build.h"
-#include "hashcode.h"
+#include "coc_string.h"
 #include <sstream>
 #include <fstream>
 
@@ -49,35 +49,10 @@ void str_build::keywords()
 void str_build::make_ceil(const std::string &string, int extra)
 {
     str_info info;
-    info.hash = coc::hashcode(escape(string));
+    info.hash = coc::hashcode(string);
     info.str = string;
     info.extra = extra;
     m_hashtable[info.hash % m_hashtable.size()].push_back(info);
-}
-
-std::string str_build::escape(const std::string &string)
-{
-    if (string.size() > 4 && string.substr(0, 4) == "dot_") {
-        return "." + string.substr(4);
-    } else if (string.size() >= 6) {
-        const static std::map<std::string, std::string> tab = {
-            {"opt_add", "+"}, {"opt_sub", "-"},
-            {"opt_mul", "*"}, {"opt_div", "/"},
-            {"opt_mod", "%"}, {"opt_and", "&"},
-            {"opt_xor", "^"}, {"opt_or", "|"},
-            {"opt_lt", "<"},  {"opt_gt", ">"},
-            {"opt_le", "<="}, {"opt_ge", ">="},
-            {"opt_eq", "=="}, {"opt_neq", "!="},
-            {"opt_shl", "<<"}, {"opt_shr", ">>"},
-            {"opt_neg", "-*"}, {"opt_flip", "~"},
-            {"opt_call", "()"}, {"opt_connect", ".."}
-        };
-        auto it = tab.find(string);
-        if (it != tab.end()) {
-            return it->second;
-        }
-    }
-    return string;
 }
 
 void str_build::writefile(const std::string &filename, const std::string &text)
@@ -100,14 +75,15 @@ std::string str_build::build_table_def()
         size_t size = bucket.size();
         for (size_t i = 0; i < size; ++i) {
             str_info info = bucket[i];
-            std::string next(i < size - 1 ?
-                "&be_const_str_" + bucket[i + 1].str : "NULL");
-            std::string str(escape(info.str));
+            std::string node = coc::escape_operator(info.str);
+            std::string next = i < size - 1 ?
+                "&be_const_str_" + coc::escape_operator(bucket[i + 1].str) :
+                "NULL";
             ostr << "be_define_const_str("
-                << info.str << ", \"" << str << "\", "
-                << info.hash << "u, " << info.extra << ", "
-                << str.size() << ", " << next << ");"
-                << std::endl;
+                 << node << ", \"" << info.str << "\", "
+                 << info.hash << "u, " << info.extra << ", "
+                 << info.str.size() << ", " << next << ");"
+                 << std::endl;
         }
     }
     ostr << std::endl;
@@ -117,7 +93,7 @@ std::string str_build::build_table_def()
         auto bucket = m_hashtable[i];
         if (bucket.size()) {
             ostr << "    (const bstring *)&be_const_str_"
-                << bucket[0].str;
+                 << coc::escape_operator(bucket[0].str);
         } else {
             ostr << "    NULL";
         }
@@ -139,7 +115,7 @@ std::string str_build::build_table_ext()
     for (auto bucket : m_hashtable) {
         for (auto info : bucket) {
             ostr << "extern const bcstring be_const_str_"
-                << info.str << ";" << std::endl;
+                << coc::escape_operator(info.str) << ";" << std::endl;
         }
     }
     return ostr.str();
