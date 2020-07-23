@@ -9,7 +9,7 @@ typedef struct bmodule {
     bcommon_header;
     bmap *table;
     union {
-        bntvmodule *native;
+        const bntvmodule *native;
         const char *name;
         const bstring *sname;
     } info;

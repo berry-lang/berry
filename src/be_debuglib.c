@@ -151,7 +151,7 @@ be_native_module_attr_table(debug) {
     be_native_module_function("calldepth", m_calldepth),
     be_native_module_function("top", m_top),
 #if BE_DEBUG_VAR_INFO
-    be_native_module_function("varname", m_varname)
+    be_native_module_function("varname", m_varname),
     be_native_module_function("upvname", m_upvname)
 #endif
 };
