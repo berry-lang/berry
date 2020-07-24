@@ -38,7 +38,7 @@ static void dump_class(bclass *class)
 
 static void dump_instanse(binstance *ins)
 {
-    dump_class(ins->class);
+    dump_class(ins->_class);
 }
 
 static void dump_value(bvalue *value)

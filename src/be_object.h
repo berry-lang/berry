@@ -74,6 +74,16 @@ union bvaldata {
     bstring *s;     /* string pointer */
     bgcobject *gc;  /* GC object */
     bntvfunc nf;    /* native C function */
+#if __cplusplus >= 199711L
+    constexpr bvaldata() : i(0) {}
+    constexpr bvaldata(bbool v) : b(v) {}
+    constexpr bvaldata(breal v) : r(v) {}
+    constexpr bvaldata(bint v) : i(v) {}
+    constexpr bvaldata(void *v) : p(v) {}
+    constexpr bvaldata(bstring *v) : s(v) {}
+    constexpr bvaldata(bgcobject *v) : gc(v) {}
+    constexpr bvaldata(bntvfunc v) : nf(v) {}
+#endif
 };
 
 /* berry value. for simple types, the value of the data is stored,

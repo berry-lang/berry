@@ -100,7 +100,7 @@ static binstance* instance_member(bvm *vm,
     binstance *obj, bstring *name, bvalue *dst)
 {
     for (; obj; obj = obj->super) {
-        bmap *members = obj->class->members;
+        bmap *members = obj->_class->members;
         if (members) {
             bvalue *v = be_map_findstr(vm, members, name);
             if (v) {
@@ -141,7 +141,7 @@ static binstance* newobjself(bvm *vm, bclass *c)
     if (obj) { /* initialize members */
         bvalue *v = obj->members, *end = v + c->nvar;
         while (v < end) { var_setnil(v); ++v; }
-        obj->class = c;
+        obj->_class = c;
         obj->super = NULL;
     }
     return obj;

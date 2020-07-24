@@ -8,12 +8,20 @@
 typedef struct bmodule {
     bcommon_header;
     bmap *table;
-    union {
+    union infodata {
         const bntvmodule *native;
         const char *name;
         const bstring *sname;
+#if __cplusplus >= 199711L
+        constexpr infodata(const char *name) : name(name) {}
+#endif
     } info;
     bgcobject *gray; /* for gc gray list */
+#if __cplusplus >= 199711L
+    constexpr bmodule(bmap *tab, const char *name) :
+        next(0), type(BE_MODULE), marked(GC_CONST),
+        table(tab), info(infodata(name)), gray(0) {}
+#endif
 } bmodule;
 
 bmodule* be_module_new(bvm *vm);

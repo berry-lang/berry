@@ -21,6 +21,11 @@ struct bmap {
     bmapnode *lastfree;
     int size;
     int count;
+#if __cplusplus >= 199711L
+    constexpr bmap(bmapnode *s, int n) :
+        next(0), type(BE_MAP), marked(GC_CONST), gray(0),
+        slots(s), lastfree(0), size(n), count(n) {}
+#endif
 };
 
 typedef bmapnode *bmapiter;

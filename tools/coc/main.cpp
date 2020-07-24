@@ -8,8 +8,8 @@
 
 void builder::parse_all(const std::string &filename, const std::string &subname)
 {
-    std::string text = readfile(filename);
-    if (subname == ".c" || subname == ".cc") {
+    if (subname == ".c"|| subname == ".cc" || subname == ".cpp") {
+        std::string text = readfile(filename);
         coc_parser parser(text);
         push_strtab(parser.strtab());
         for (auto object : parser.objects()) {
@@ -54,9 +54,7 @@ void builder::scandir(const std::string &srcpath)
             std::string fname(ep->d_name);
             size_t find = fname.find_last_of(".");
             std::string subname(find < fname.size() ? fname.substr(find) : "");
-            if (subname == ".c" || subname == ".h") {
-                parse_all(srcpath + "/" + fname, subname);
-            }
+            parse_all(srcpath + "/" + fname, subname);
         }
         closedir(dp);
     }
@@ -72,10 +70,7 @@ void builder::scandir(const std::string &srcpath)
             std::string fname(data.cFileName);
             size_t find = fname.find_last_of(".");
             std::string subname(find < fname.size() ? fname.substr(find) : "");
-            if (subname == ".c" || subname == ".cpp" ||
-                subname == ".cc" || subname == ".h" || subname == ".hpp") {
-                parse_all(srcpath + "/" + fname, subname);
-            }
+            parse_all(srcpath + "/" + fname, subname);
         } while (FindNextFile(find, &data) != 0);
         FindClose(find);
     }

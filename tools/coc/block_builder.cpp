@@ -54,13 +54,12 @@ std::string block_builder::class_tostring(const block &block)
     if (!empty_map) {
         ostr << map_tostring(block, map_name, true) << std::endl;
     }
-    ostr << scope(block) << "const bclass " << block.name << " = {\n"
-         << "    be_const_header_class(),\n"
-         << "    .nvar = " << map.var_count() << ",\n"
-         << "    .super = " << super(block) << ",\n"
-         << "    .members = " << (empty_map ? "NULL" : "(bmap *)&" + map_name) << ",\n"
-         << "    .name = (bstring *)&be_const_str_" << name(block) << "\n"
-         << "};\n";
+    ostr << scope(block) << "be_define_const_class(\n    "
+         << block.name << ",\n    "
+         << map.var_count() << ",\n    "
+         << super(block) << ",\n    "
+         << name(block) << "\n"
+            ");" << std::endl;
     return ostr.str();
 }
 
@@ -68,10 +67,9 @@ std::string block_builder::map_tostring(const block &block, const std::string &n
 {
     std::ostringstream ostr;
     hash_map map(block.data);
-    std::string map_name(name + "_slots");
 
     hash_map::entry_table list = map.entry_list();
-    ostr << "static const bmapnode " << map_name << "[] = {\n";
+    ostr << "static be_define_const_map_slots(" << name << ") {\n";
     for (auto it : list) {
         ostr << "    { be_const_key(" << it.key << ", "
              << it.next << "), " << it.value << " }," << std::endl;
@@ -79,14 +77,10 @@ std::string block_builder::map_tostring(const block &block, const std::string &n
     ostr << "};\n\n";
 
     ostr << (local ? "static " : scope(block))
-         << "const bmap " + name + " = {\n"
-         << "    be_const_header_map(),\n"
-         << "    .slots = (bmapnode *)" << map_name << ",\n"
-         << "    .lastfree = (bmapnode *)&" << map_name <<
-                "[" << list.size() - 1 << "],\n"
-         << "    .size = " << list.size() << ",\n"
-         << "    .count = " << list.size() << "\n"
-         << "};\n";
+         << "be_define_const_map(\n    "
+         << name << ",\n    "
+         << list.size() << "\n"
+            ");" << std::endl;
     return ostr.str();
 }
 
@@ -112,13 +106,11 @@ std::string block_builder::vartab_tostring(const block &block)
     }
     ostr << "};\n\n";
 
-    ostr << "static const bvector " << block.name << "_vector = {\n"
-            "    .capacity = " << varvec.size() << ",\n" <<
-            "    .size = sizeof(bvalue),\n" <<
-            "    .count = " << varvec.size() << ",\n" <<
-            "    .data = (void*)__vlist_array,\n" <<
-            "    .end = (void*)(__vlist_array + " << varvec.size() - 1 << ")\n" <<
-            "};" << std::endl;
+    ostr << "static be_define_const_vector(\n    "
+         << block.name << "_vector,\n    "
+            "__vlist_array,\n    "
+         << varvec.size() << "\n"
+            ");" << std::endl;
     return ostr.str();
 }
 
@@ -128,14 +120,16 @@ std::string block_builder::module_tostring(const block &block)
     std::string name("m_lib" + block.name);
     std::string map_name(name + "_map");
 
-    ostr << map_tostring(block, map_name, true) << std::endl;
-    ostr << "static const bmodule " << name << " = {\n"
-         << "    be_const_header_module(),\n"
-         << "    .table = (bmap*)&" << map_name << ",\n"
-         << "    .info.name = \"" << block.name << "\"\n"
-         << "};" << std::endl;
+    ostr << map_tostring(block, map_name, true) << std::endl
+         << "static be_define_const_module(\n    "
+         << name << ",\n    "
+            "\"" << block.name << "\"\n"
+            ");" << std::endl;
     if (scope(block).empty()) { /* extern */
-        ostr << "\nbe_define_const_module(" << block.name << ", "
+        ostr << "\n"
+                "#ifdef __cplusplus\nextern \"C\"\n#endif\n"
+                "be_define_const_native_module("
+             << block.name << ", "
              << init(block) << ");" << std::endl;
     }
     return ostr.str();
