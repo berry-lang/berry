@@ -20,7 +20,7 @@ extern "C" {
     .marked = GC_CONST
 
 #define be_const_key(_str, _next) {                             \
-    .v.s = (bstring*)&be_const_str_##_str,                      \
+    .v.c = &be_const_str_##_str,                                \
     .type = BE_STRING,                                          \
     .next = (uint32_t)(_next) & 0xFFFFFF                        \
 }
@@ -41,12 +41,12 @@ extern "C" {
 }
 
 #define be_const_class(_class) {                                \
-    .v.p = (bclass*)&(_class),                                  \
+    .v.c = &(_class),                                           \
     .type = BE_CLASS                                            \
 }
 
 #define be_const_module(_module) {                              \
-    .v.p = (bmodule*)&(_module),                                \
+    .v.c = &(_module),                                          \
     .type = BE_MODULE                                           \
 }
 

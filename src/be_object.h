@@ -71,6 +71,7 @@ union bvaldata {
     breal r;        /* real number */
     bint i;         /* integer number */
     void *p;        /* object pointer */
+    const void *c;  /* const object pointer */
     bstring *s;     /* string pointer */
     bgcobject *gc;  /* GC object */
     bntvfunc nf;    /* native C function */
@@ -80,8 +81,7 @@ union bvaldata {
     constexpr bvaldata(breal v) : r(v) {}
     constexpr bvaldata(bint v) : i(v) {}
     constexpr bvaldata(void *v) : p(v) {}
-    constexpr bvaldata(bstring *v) : s(v) {}
-    constexpr bvaldata(bgcobject *v) : gc(v) {}
+    constexpr bvaldata(const void *v) : c(v) {}
     constexpr bvaldata(bntvfunc v) : nf(v) {}
 #endif
 };
