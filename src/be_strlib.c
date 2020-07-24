@@ -1,3 +1,10 @@
+/********************************************************************
+** Copyright (c) 2018-2020 Guan Wenliang
+** This file is part of the Berry default interpreter.
+** skiars@qq.com, https://github.com/Skiars/berry
+** See Copyright Notice in the LICENSE file or at
+** https://github.com/Skiars/berry/blob/master/LICENSE
+********************************************************************/
 #include "be_strlib.h"
 #include "be_string.h"
 #include "be_vm.h"
