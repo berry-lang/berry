@@ -1,5 +1,12 @@
+/********************************************************************
+** Copyright (c) 2018-2020 Guan Wenliang
+** This file is part of the Berry default interpreter.
+** skiars@qq.com, https://github.com/Skiars/berry
+** See Copyright Notice in the LICENSE file or at
+** https://github.com/Skiars/berry/blob/master/LICENSE
+********************************************************************/
 #include "str_build.h"
-#include <iostream>
+#include "coc_string.h"
 #include <sstream>
 #include <fstream>
 
@@ -9,7 +16,7 @@ str_build::str_build(std::map<std::string, int> map)
     m_count = map.size();
     m_hashtable.resize(size < 4 ? 4 : size);
     for (auto it : map) {
-        make_ceil(it.first);
+        make_ceil(it.first, it.second);
     }
     keywords();
 }
@@ -27,7 +34,7 @@ void str_build::build(const std::string &path)
 
 void str_build::keywords()
 {
-    constexpr int opif = 50; /* note the definition in be_lexer.h */
+    const int opif = 50; /* note the definition in be_lexer.h */
     const static std::map<std::string, int> tab = {
         { "if", opif}, { "elif", opif + 1 },
         { "else", opif + 2 }, { "while", opif + 3 },
@@ -46,49 +53,13 @@ void str_build::keywords()
     }
 }
 
-uint32_t str_build::hashcode(const std::string &string)
-{
-    size_t len = string.size();
-    const char *str = string.data();
-    uint32_t hash = 2166136261u;
-    while (len--) {
-        hash = (hash ^ (unsigned char)*str++) * 16777619u;
-    }
-    return hash;
-}
-
 void str_build::make_ceil(const std::string &string, int extra)
 {
     str_info info;
-    info.hash = hashcode(escape(string));
+    info.hash = coc::hashcode(string);
     info.str = string;
     info.extra = extra;
     m_hashtable[info.hash % m_hashtable.size()].push_back(info);
-}
-
-std::string str_build::escape(const std::string &string)
-{
-    if (string.size() > 4 && string.substr(0, 4) == "dot_") {
-        return "." + string.substr(4);
-    } else if (string.size() >= 6) {
-        const static std::map<std::string, std::string> tab = {
-            {"opt_add", "+"}, {"opt_sub", "-"},
-            {"opt_mul", "*"}, {"opt_div", "/"},
-            {"opt_mod", "%"}, {"opt_and", "&"},
-            {"opt_xor", "^"}, {"opt_or", "|"},
-            {"opt_lt", "<"},  {"opt_gt", ">"},
-            {"opt_le", "<="}, {"opt_ge", ">="},
-            {"opt_eq", "=="}, {"opt_neq", "!="},
-            {"opt_shl", "<<"}, {"opt_shr", ">>"},
-            {"opt_neg", "-*"}, {"opt_flip", "~"},
-            {"opt_call", "()"}, {"opt_connect", ".."}
-        };
-        auto it = tab.find(string);
-        if (it != tab.end()) {
-            return it->second;
-        }
-    }
-    return string;
 }
 
 void str_build::writefile(const std::string &filename, const std::string &text)
@@ -111,14 +82,15 @@ std::string str_build::build_table_def()
         size_t size = bucket.size();
         for (size_t i = 0; i < size; ++i) {
             str_info info = bucket[i];
-            std::string next(i < size - 1 ?
-                "&be_const_str_" + bucket[i + 1].str : "NULL");
-            std::string str(escape(info.str));
+            std::string node = coc::escape_operator(info.str);
+            std::string next = i < size - 1 ?
+                "&be_const_str_" + coc::escape_operator(bucket[i + 1].str) :
+                "NULL";
             ostr << "be_define_const_str("
-                << info.str << ", \"" << str << "\", "
-                << info.hash << "u, " << info.extra << ", "
-                << str.size() << ", " << next << ");"
-                << std::endl;
+                 << node << ", \"" << info.str << "\", "
+                 << info.hash << "u, " << info.extra << ", "
+                 << info.str.size() << ", " << next << ");"
+                 << std::endl;
         }
     }
     ostr << std::endl;
@@ -128,7 +100,7 @@ std::string str_build::build_table_def()
         auto bucket = m_hashtable[i];
         if (bucket.size()) {
             ostr << "    (const bstring *)&be_const_str_"
-                << bucket[0].str;
+                 << coc::escape_operator(bucket[0].str);
         } else {
             ostr << "    NULL";
         }
@@ -150,7 +122,7 @@ std::string str_build::build_table_ext()
     for (auto bucket : m_hashtable) {
         for (auto info : bucket) {
             ostr << "extern const bcstring be_const_str_"
-                << info.str << ";" << std::endl;
+                << coc::escape_operator(info.str) << ";" << std::endl;
         }
     }
     return ostr.str();

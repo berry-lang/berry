@@ -5,13 +5,21 @@
 ** See Copyright Notice in the LICENSE file or at
 ** https://github.com/Skiars/berry/blob/master/LICENSE
 ********************************************************************/
-#ifndef __BE_BYTECODE_H
-#define __BE_BYTECODE_H
+#ifndef __OBJECT_BLOCK_H
+#define __OBJECT_BLOCK_H
 
-#include "be_object.h"
+#include <map>
+#include <string>
 
-void be_bytecode_save(bvm *vm, const char *filename, bproto *proto);
-bclosure* be_bytecode_load(bvm *vm, const char *filename);
-bbool be_bytecode_check(const char *path);
+struct object_block {
+    struct data_value {
+        std::string value;
+        std::string depend;
+    };
+    std::string type;
+    std::string name;
+    std::map<std::string, std::string> attr;
+    std::map<std::string, data_value> data;
+};
 
 #endif

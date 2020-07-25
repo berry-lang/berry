@@ -1,3 +1,10 @@
+/********************************************************************
+** Copyright (c) 2018-2020 Guan Wenliang
+** This file is part of the Berry default interpreter.
+** skiars@qq.com, https://github.com/Skiars/berry
+** See Copyright Notice in the LICENSE file or at
+** https://github.com/Skiars/berry/blob/master/LICENSE
+********************************************************************/
 #include "be_module.h"
 #include "be_string.h"
 #include "be_strlib.h"
@@ -29,14 +36,14 @@
   #endif
 #endif
 
-extern BERRY_LOCAL bntvmodule *const be_module_table[];
+extern BERRY_LOCAL const bntvmodule* const be_module_table[];
 
-static bmodule* native_module(bvm *vm, bntvmodule *nm, bvalue *dst);
+static bmodule* native_module(bvm *vm, const bntvmodule *nm, bvalue *dst);
 
-static bntvmodule* find_native(bstring *path)
+static const bntvmodule* find_native(bstring *path)
 {
-    bntvmodule *module;
-    bntvmodule * const *node = be_module_table;
+    const bntvmodule *module;
+    const bntvmodule* const *node = be_module_table;
     for (; (module = *node) != NULL; ++node) {
         if (!strcmp(module->name, str(path))) {
             return module;
@@ -45,11 +52,11 @@ static bntvmodule* find_native(bstring *path)
     return NULL;
 }
 
-static void insert_attrs(bvm *vm, bmap *table, bntvmodule *nm)
+static void insert_attrs(bvm *vm, bmap *table, const bntvmodule *nm)
 {
     size_t i;
     for (i = 0; i < nm->size; ++i) {
-        bntvmodule_obj *node = nm->attrs + i;
+        const bntvmodobj *node = nm->attrs + i;
         bstring *name = be_newstr(vm, node->name);
         bvalue *v = be_map_insertstr(vm, table, name, NULL);
         be_assert(node->type <= BE_CMODULE);
@@ -81,7 +88,7 @@ static void insert_attrs(bvm *vm, bmap *table, bntvmodule *nm)
     }
 }
 
-static bmodule* new_module(bvm *vm, bntvmodule *nm)
+static bmodule* new_module(bvm *vm, const bntvmodule *nm)
 {
     bgcobject *gco = be_gcnew(vm, BE_MODULE, bmodule);
     bmodule *obj = cast_module(gco);
@@ -98,7 +105,7 @@ static bmodule* new_module(bvm *vm, bntvmodule *nm)
     return obj;
 }
 
-static bmodule* native_module(bvm *vm, bntvmodule *nm, bvalue *dst)
+static bmodule* native_module(bvm *vm, const bntvmodule *nm, bvalue *dst)
 {
     if (nm) {
         bmodule *obj;
@@ -211,7 +218,7 @@ static int load_package(bvm *vm, bstring *path)
 
 static int load_native(bvm *vm, bstring *path)
 {
-    bntvmodule *nm = find_native(path);
+    const bntvmodule *nm = find_native(path);
     bmodule *mod = native_module(vm, nm, NULL);
     if (mod != NULL) {
         /* the pointer vm->top may be changed */

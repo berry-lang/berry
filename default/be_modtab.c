@@ -1,6 +1,13 @@
-/* this file contains the declaration of the module table. */
-
+/********************************************************************
+** Copyright (c) 2018-2020 Guan Wenliang
+** This file is part of the Berry default interpreter.
+** skiars@qq.com, https://github.com/Skiars/berry
+** See Copyright Notice in the LICENSE file or at
+** https://github.com/Skiars/berry/blob/master/LICENSE
+********************************************************************/
 #include "berry.h"
+
+/* this file contains the declaration of the module table. */
 
 /* default modules declare */
 be_extern_native_module(string);
@@ -17,7 +24,7 @@ be_extern_native_module(gc);
 /* user-defined modules declare end */
 
 /* module list declaration */
-BERRY_LOCAL bntvmodule *const be_module_table[] = {
+BERRY_LOCAL const bntvmodule* const be_module_table[] = {
 /* default modules register */
 #if BE_USE_STRING_MODULE
     &be_native_module(string),

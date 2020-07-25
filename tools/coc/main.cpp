@@ -1,35 +1,36 @@
+/********************************************************************
+** Copyright (c) 2018-2020 Guan Wenliang
+** This file is part of the Berry default interpreter.
+** skiars@qq.com, https://github.com/Skiars/berry
+** See Copyright Notice in the LICENSE file or at
+** https://github.com/Skiars/berry/blob/master/LICENSE
+********************************************************************/
 #include "main.h"
-#include "map_build.h"
-#include "str_build.h"
-#include "str_map.h"
+#include "block_builder.h"
+#include "coc_parser.h"
 #include "macro_table.h"
-#include <iostream>
-#include <fstream>  
+#include "str_build.h"
+#include <fstream>
 #include <sstream>
-#include <regex>
-
-std::string builder::info_block(const std::string &text)
-{
-    std::regex reg("@const_object_info_begin([^@]+)@const_object_info_end");
-    std::sregex_iterator it(text.begin(), text.end(), reg);
-    std::sregex_iterator end;
-    std::string result;
-    while (it != end) {
-        result += it->str(1);
-        ++it;
-    }
-    return result;
-}
 
 void builder::parse_all(const std::string &filename, const std::string &subname)
 {
-    std::string text = readfile(filename);
-    if (subname == ".c" || subname == ".cc") {
-        map_build mb(m_macro, m_output);
-        mb.parse_block(info_block(text));
-        m_strmap->parse_text("temp.h", mb.str());
+    if (subname == ".c"|| subname == ".cc" || subname == ".cpp") {
+        std::string text = readfile(filename);
+        coc_parser parser(text);
+        push_strtab(parser.strtab());
+        for (auto object : parser.objects()) {
+            block_builder builder(&object, m_macro);
+            push_strtab(builder.strtab());
+            builder.dumpfile(m_output);
+        }
     }
-    m_strmap->parse_text(filename, text);
+}
+
+void builder::push_strtab(const std::vector<std::string> &list)
+{
+    for (auto s : list)
+        m_strmap[s] = 0;
 }
 
 std::string builder::readfile(const std::string &filename)
@@ -60,9 +61,7 @@ void builder::scandir(const std::string &srcpath)
             std::string fname(ep->d_name);
             size_t find = fname.find_last_of(".");
             std::string subname(find < fname.size() ? fname.substr(find) : "");
-            if (subname == ".c" || subname == ".h") {
-                parse_all(srcpath + "/" + fname, subname);
-            }
+            parse_all(srcpath + "/" + fname, subname);
         }
         closedir(dp);
     }
@@ -78,10 +77,7 @@ void builder::scandir(const std::string &srcpath)
             std::string fname(data.cFileName);
             size_t find = fname.find_last_of(".");
             std::string subname(find < fname.size() ? fname.substr(find) : "");
-            if (subname == ".c" || subname == ".cpp" ||
-                subname == ".cc" || subname == ".h" || subname == ".hpp") {
-                parse_all(srcpath + "/" + fname, subname);
-            }
+            parse_all(srcpath + "/" + fname, subname);
         } while (FindNextFile(find, &data) != 0);
         FindClose(find);
     }
@@ -93,7 +89,7 @@ void builder::build()
     for (auto it : m_input) {
         scandir(it);
     }
-    str_build sb(m_strmap->data());
+    str_build sb(m_strmap);
     sb.build(m_output);
 }
 
@@ -103,7 +99,6 @@ builder::builder(int argc, char **argv)
     for (int i = 1; i < argc; ++i) {
         add_arg(argv[i]);
     }
-    m_strmap = new str_map();
     m_macro = new macro_table();
     for (auto it : m_config) {
         m_macro->scan_file(it);
@@ -113,7 +108,6 @@ builder::builder(int argc, char **argv)
 builder::~builder()
 {
     delete m_macro;
-    delete m_strmap;
 }
 
 void builder::add_arg(const std::string &arg)

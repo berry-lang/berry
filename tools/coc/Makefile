@@ -1,13 +1,14 @@
-TARGET   = map_build
+TARGET   = coc
 CXXFLAGS = -std=c++11 -O2
 CXX      = g++
 
-OBJS    = hash_map.o            \
+OBJS    = coc_string.o          \
+          hash_map.o            \
           macro_table.o         \
           main.o                \
-          map_build.o           \
+          block_builder.o       \
           str_build.o           \
-          str_map.o             \
+          coc_parser.o
 
 ifeq ($(OS), Windows_NT) # Windows
     TARGET  := $(TARGET).exe

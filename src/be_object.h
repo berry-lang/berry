@@ -1,3 +1,10 @@
+/********************************************************************
+** Copyright (c) 2018-2020 Guan Wenliang
+** This file is part of the Berry default interpreter.
+** skiars@qq.com, https://github.com/Skiars/berry
+** See Copyright Notice in the LICENSE file or at
+** https://github.com/Skiars/berry/blob/master/LICENSE
+********************************************************************/
 #ifndef BE_OBJECT_H
 #define BE_OBJECT_H
 
@@ -71,9 +78,19 @@ union bvaldata {
     breal r;        /* real number */
     bint i;         /* integer number */
     void *p;        /* object pointer */
+    const void *c;  /* const object pointer */
     bstring *s;     /* string pointer */
     bgcobject *gc;  /* GC object */
     bntvfunc nf;    /* native C function */
+#if __cplusplus >= 199711L
+    constexpr bvaldata() : i(0) {}
+    constexpr bvaldata(bbool v) : b(v) {}
+    constexpr bvaldata(breal v) : r(v) {}
+    constexpr bvaldata(bint v) : i(v) {}
+    constexpr bvaldata(void *v) : p(v) {}
+    constexpr bvaldata(const void *v) : c(v) {}
+    constexpr bvaldata(bntvfunc v) : nf(v) {}
+#endif
 };
 
 /* berry value. for simple types, the value of the data is stored,

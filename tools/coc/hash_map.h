@@ -1,3 +1,10 @@
+/********************************************************************
+** Copyright (c) 2018-2020 Guan Wenliang
+** This file is part of the Berry default interpreter.
+** skiars@qq.com, https://github.com/Skiars/berry
+** See Copyright Notice in the LICENSE file or at
+** https://github.com/Skiars/berry/blob/master/LICENSE
+********************************************************************/
 #ifndef __HASH_MAP
 #define __HASH_MAP
 
@@ -30,8 +37,6 @@ private:
     hash_map::entry* findprev(entry *list, entry *slot);
     void resize(size_t size);
     void insert_p(const std::string &key, const std::string value);
-    uint32_t hashcode(const std::string &string);
-    void escape_str(std::string &string);
     hash_map::entry entry_modify(entry entry, int *var_count);
 
 private:

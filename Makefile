@@ -9,15 +9,15 @@ INCPATH   = src default
 SRCPATH   = src default
 GENERATE  = generate
 CONFIG    = default/berry_conf.h
-MAP_BUILD = tools/map_build/map_build
+COC		  = tools/coc/coc
 CONST_TAB = $(GENERATE)/be_const_strtab.h
-MAKE_MAP_BUILD = $(MAKE) -C tools/map_build
+MAKE_COC  = $(MAKE) -C tools/coc
 
 ifeq ($(OS), Windows_NT) # Windows
     CFLAGS    += -Wno-format # for "%I64d" warning
     LFLAGS    += -Wl,--out-implib,berry.lib # export symbols lib for dll linked
     TARGET    := $(TARGET).exe
-    MAP_BUILD := $(MAP_BUILD).exe
+    COC       := $(COC).exe
 else
     CFLAGS    += -DUSE_READLINE_LIB
     LIBS      += -lreadline -ldl
@@ -30,7 +30,7 @@ endif
 ifneq ($(V), 1)
     Q=@
     MSG=@echo
-    MAKE_MAP_BUILD += -s Q=$(Q)
+    MAKE_COC += -s Q=$(Q)
 else
     MSG=@true
 endif
@@ -61,16 +61,16 @@ sinclude $(DEPS)
 
 $(OBJS): $(CONST_TAB)
 
-$(CONST_TAB): $(MAP_BUILD) $(GENERATE) $(SRCS) $(CONFIG)
+$(CONST_TAB): $(COC) $(GENERATE) $(SRCS) $(CONFIG)
 	$(MSG) [Prebuild] generate resources
-	$(Q) $(MAP_BUILD) -i $(SRCPATH) -c $(CONFIG) -o $(GENERATE)
+	$(Q) $(COC) -i $(SRCPATH) -c $(CONFIG) -o $(GENERATE)
 
 $(GENERATE):
 	$(Q) $(MKDIR) $(GENERATE)
 
-$(MAP_BUILD):
-	$(MSG) [Make] map_build
-	$(Q) $(MAKE_MAP_BUILD)
+$(COC):
+	$(MSG) [Make] coc
+	$(Q) $(MAKE_COC)
 
 install:
 	cp $(TARGET) /usr/local/bin
@@ -78,13 +78,13 @@ install:
 uninstall:
 	$(RM) /usr/local/bin/$(TARGET)
 
-prebuild: $(MAP_BUILD) $(GENERATE)
+prebuild: $(COC) $(GENERATE)
 	$(MSG) [Prebuild] generate resources
-	$(Q) $(MAP_BUILD) -o $(GENERATE) $(SRCPATH) -c $(CONFIG)
+	$(Q) $(COC) -o $(GENERATE) $(SRCPATH) -c $(CONFIG)
 	$(MSG) done
 
 clean:
 	$(MSG) [Clean...]
 	$(Q) $(RM) $(OBJS) $(DEPS) $(GENERATE)/* berry.lib
-	$(Q) $(MAKE_MAP_BUILD) clean
+	$(Q) $(MAKE_COC) clean
 	$(MSG) done

@@ -1,11 +1,18 @@
+/********************************************************************
+** Copyright (c) 2018-2020 Guan Wenliang
+** This file is part of the Berry default interpreter.
+** skiars@qq.com, https://github.com/Skiars/berry
+** See Copyright Notice in the LICENSE file or at
+** https://github.com/Skiars/berry/blob/master/LICENSE
+********************************************************************/
 #ifndef __MAIN_H
 #define __MAIN_H
 
 #include <string>
 #include <vector>
+#include <map>
 
 class macro_table;
-class str_map;
 
 class builder {
 public:
@@ -14,7 +21,8 @@ public:
     void build();
 
 private:
-    void add_arg(const std::string &arg);
+    void push_strtab(const std::vector<std::string>& list);
+    void add_arg(const std::string& arg);
     std::string info_block(const std::string &text);
     void parse_all(const std::string &filename, const std::string &subname);
     void scandir(const std::string &srcpath);
@@ -31,7 +39,7 @@ private:
     std::vector<std::string> m_config;
     arg_state m_state;
     macro_table *m_macro;
-    str_map *m_strmap;
+    std::map<std::string, int> m_strmap;
 };
 
 #endif

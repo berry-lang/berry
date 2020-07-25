@@ -1,3 +1,10 @@
+/********************************************************************
+** Copyright (c) 2018-2020 Guan Wenliang
+** This file is part of the Berry default interpreter.
+** skiars@qq.com, https://github.com/Skiars/berry
+** See Copyright Notice in the LICENSE file or at
+** https://github.com/Skiars/berry/blob/master/LICENSE
+********************************************************************/
 /* define opcode, don't change order */
 /*  opcode            parameters         description */
 OPCODE(ADD),        /*  A, B, C  |   R(A) <- RK(B) + RK(C) */

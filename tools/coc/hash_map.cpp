@@ -1,5 +1,12 @@
+/********************************************************************
+** Copyright (c) 2018-2020 Guan Wenliang
+** This file is part of the Berry default interpreter.
+** skiars@qq.com, https://github.com/Skiars/berry
+** See Copyright Notice in the LICENSE file or at
+** https://github.com/Skiars/berry/blob/master/LICENSE
+********************************************************************/
 #include "hash_map.h"
-#include <iostream>
+#include "coc_string.h"
 
 #define is_empty(entry) ((entry).next == NODE_EMPTY)
 
@@ -18,17 +25,6 @@ hash_map::hash_map(std::map<std::string, std::string> map)
 
 hash_map::~hash_map()
 {
-}
-
-uint32_t hash_map::hashcode(const std::string &string)
-{
-    size_t len = string.size();
-    const char *str = string.data();
-    uint32_t hash = 2166136261u;
-    while (len--) {
-        hash = (hash ^ (unsigned char)*str++) * 16777619u;
-    }
-    return hash;
 }
 
 void hash_map::resize(size_t size)
@@ -77,7 +73,7 @@ int hash_map::nextfree()
 
 hash_map::entry hash_map::find(const std::string &key)
 {
-    uint32_t hash = hashcode(key);
+    uint32_t hash = coc::hashcode(key);
     entry null, *slot = &m_bucket[hash % m_bucket.size()];
     if (is_empty(*slot)) {
         return null;
@@ -93,13 +89,13 @@ hash_map::entry hash_map::find(const std::string &key)
 
 void hash_map::insert_p(const std::string &key, const std::string value)
 {
-    entry *slot = &m_bucket[hashcode(key) % m_bucket.size()];
+    entry *slot = &m_bucket[coc::hashcode(key) % m_bucket.size()];
     if (is_empty(*slot)) { /* empty slot */
         slot->next = NODE_NULL;
     } else {
         int newidx = nextfree();
         /* get the main-slot index */
-        entry *mainslot = &m_bucket[hashcode(slot->key) % m_bucket.size()];
+        entry *mainslot = &m_bucket[coc::hashcode(slot->key) % m_bucket.size()];
         entry *newslot = &m_bucket[newidx]; /* get a free slot index */
         if (mainslot == slot) { /* old is main slot */
             newslot->next = mainslot->next;
@@ -128,36 +124,9 @@ void hash_map::insert(const std::string &key, const std::string value)
     }
 }
 
-void hash_map::escape_str(std::string &string)
-{
-    if (string == "..") {
-        string = "opt_connect";
-    } else if (string[0] == '.') {
-        string.replace(0, 1, "dot_");
-    } else {
-        const static std::map<std::string, std::string> tab = {
-            {"+", "opt_add"}, {"-", "opt_sub"},
-            {"*", "opt_mul"}, {"/", "opt_div"},
-            {"%", "opt_mod"}, {"&", "opt_and"},
-            {"^", "opt_xor"}, {"|", "opt_or"},
-            {"<", "opt_lt"},  {">", "opt_gt"},
-            {"<=", "opt_le"}, {">=", "opt_ge"},
-            {"==", "opt_eq"}, {"!=", "opt_neq"},
-            {"<<", "opt_shl"}, {">>", "opt_shr"},
-            {"-*", "opt_neg"}, {"~", "opt_flip"},
-            {"()", "opt_call"}
-        };
-        auto it = tab.find(string);
-        if (it != tab.end()) {
-            string = it->second;
-        }
-    }
-}
-
 hash_map::entry hash_map::entry_modify(entry entry, int *var_count)
 {
-    escape_str(entry.key);
-    entry.key = "be_const_str_" + entry.key;
+    entry.key = coc::escape_operator(entry.key);
     if (entry.value == "var") {
         entry.value = "be_const_int("
                 + std::to_string(*var_count) + ")";

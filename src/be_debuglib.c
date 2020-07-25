@@ -1,3 +1,10 @@
+/********************************************************************
+** Copyright (c) 2018-2020 Guan Wenliang
+** This file is part of the Berry default interpreter.
+** skiars@qq.com, https://github.com/Skiars/berry
+** See Copyright Notice in the LICENSE file or at
+** https://github.com/Skiars/berry/blob/master/LICENSE
+********************************************************************/
 #include "be_object.h"
 #include "be_module.h"
 #include "be_string.h"
@@ -38,7 +45,7 @@ static void dump_class(bclass *class)
 
 static void dump_instanse(binstance *ins)
 {
-    dump_class(ins->class);
+    dump_class(ins->_class);
 }
 
 static void dump_value(bvalue *value)
@@ -151,7 +158,7 @@ be_native_module_attr_table(debug) {
     be_native_module_function("calldepth", m_calldepth),
     be_native_module_function("top", m_top),
 #if BE_DEBUG_VAR_INFO
-    be_native_module_function("varname", m_varname)
+    be_native_module_function("varname", m_varname),
     be_native_module_function("upvname", m_upvname)
 #endif
 };

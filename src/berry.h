@@ -1,3 +1,10 @@
+/********************************************************************
+** Copyright (c) 2018-2020 Guan Wenliang
+** This file is part of the Berry default interpreter.
+** skiars@qq.com, https://github.com/Skiars/berry
+** See Copyright Notice in the LICENSE file or at
+** https://github.com/Skiars/berry/blob/master/LICENSE
+********************************************************************/
 #ifndef BERRY_H
 #define BERRY_H
 
@@ -37,21 +44,25 @@ extern "C" {
 #endif
 #define BE_INT_FORMAT       "%" BE_INT_FMTLEN "d"
 
-typedef int                 bbool;
 typedef uint8_t             bbyte;
 typedef BE_INTEGER          bint;
 
 #if BE_USE_SINGLE_FLOAT != 0
-    typedef float           breal;
+  typedef float             breal;
 #else
-    typedef double          breal;
+  typedef double            breal;
 #endif
 
 /* boolean values definition */
-enum {
-    bfalse = 0,
-    btrue = 1
-};
+#ifndef __cplusplus
+  #define bbool               _Bool
+  #define bfalse              0
+  #define btrue               1
+#else
+  #define bbool               bool
+  #define bfalse              false
+  #define btrue               true
+#endif
 
 /* error code definition */
 enum berrorcode {
@@ -103,10 +114,18 @@ typedef struct {
 } bnfuncinfo;
 
 /* native module object node */
-typedef const struct {
+typedef struct bntvmodobj {
     const char *name;
     int type;
-    union {
+    union value {
+#if __cplusplus >= 199711L
+        constexpr value(bint v) : i(v) {}
+        constexpr value(breal v) : r(v) {}
+        constexpr value(bbool v) : b(v) {}
+        constexpr value(bntvfunc v) : f(v) {}
+        constexpr value(const char *v) : s(v) {}
+        constexpr value(const void *v) : o(v) {}
+#endif
         bint i;
         breal r;
         bbool b;
@@ -114,58 +133,122 @@ typedef const struct {
         const char *s;
         const void *o;
     } u;
-} bntvmodule_obj;
+#if __cplusplus >= 199711L
+    constexpr bntvmodobj(const char *name) :
+        name(name), type(BE_CNIL), u(bint(0)) {}
+    constexpr bntvmodobj(const char *name, bint v) :
+        name(name), type(BE_CINT), u(v) {}
+    constexpr bntvmodobj(const char *name, breal v) :
+        name(name), type(BE_CREAL), u(v) {}
+    constexpr bntvmodobj(const char *name, bbool v) :
+        name(name), type(BE_CBOOL), u(v) {}
+    constexpr bntvmodobj(const char *name, bntvfunc v) :
+        name(name), type(BE_CFUNCTION), u(v) {}
+    constexpr bntvmodobj(const char *name, const char *v) :
+        name(name), type(BE_CSTRING), u(v) {}
+    constexpr bntvmodobj(const char *name, int _tpye, const void *v) :
+        name(name), type(_tpye), u(v) {}
+#endif
+} bntvmodobj;
 
 /* native module object */
-typedef const struct {
+typedef struct bntvmodule {
     const char *name; /* native module name */
-    bntvmodule_obj *attrs; /* native module attributes */
+    const bntvmodobj *attrs; /* native module attributes */
     size_t size; /* native module attribute count */
     const struct bmodule *module; /* const module object */
     bntvfunc init; /* initialization function */
+#if __cplusplus >= 199711L
+    constexpr bntvmodule(const char *name, const bntvmodobj *attrs,
+        size_t size, const struct bmodule *module, bntvfunc init) :
+        name(name), attrs(attrs), size(size), module(module), init(init) {}
+#endif
 } bntvmodule;
 
 /* native module node definition macro */
-#define be_native_module_nil(_name)                 \
+#if __cplusplus < 199711L
+#define be_native_module_nil(_name)                     \
     { .name = (_name), .type = BE_CNIL, .u.i = 0 }
 
-#define be_native_module_int(_name, _v)             \
+#define be_native_module_int(_name, _v)                 \
     { .name = (_name), .type = BE_CINT, .u.i = (bint)(_v) }
 
-#define be_native_module_real(_name, _v)            \
+#define be_native_module_real(_name, _v)                \
     { .name = (_name), .type = BE_CREAL, .u.r = (breal)(_v) }
 
-#define be_native_module_bool(_name, _b)            \
+#define be_native_module_bool(_name, _b)                \
     { .name = (_name), .type = BE_CBOOL, .u.b = (bbool)(_b) }
 
-#define be_native_module_function(_name, _f)        \
+#define be_native_module_function(_name, _f)            \
     { .name = (_name), .type = BE_CFUNCTION, .u.f = (_f) }
 
-#define be_native_module_str(_name, _s)             \
+#define be_native_module_str(_name, _s)                 \
     { .name = (_name), .type = BE_CSTRING, .u.s = (_s) }
 
-#define be_native_module_module(_name, _m)          \
+#define be_native_module_module(_name, _m)              \
     { .name = (_name), .type = BE_CMODULE, .u.o = &(_m) }
+#else
+#define be_native_module_nil(_name)                     \
+    bntvmodobj(_name)
+
+#define be_native_module_int(_name, _v)                 \
+    bntvmodobj(_name, bint(_v))
+
+#define be_native_module_real(_name, _v)                \
+    bntvmodobj(_name, breal(_v))
+
+#define be_native_module_bool(_name, _b)                \
+    bntvmodobj(_name, bbool(_b))
+
+#define be_native_module_function(_name, _f)            \
+    bntvmodobj(_name, _f)
+
+#define be_native_module_str(_name, _s)                 \
+    bntvmodobj(_name, _s)
+
+#define be_native_module_module(_name, _m)              \
+    bntvmodobj(_name, BE_CMODULE, &(_m))
+#endif
+
+#if __cplusplus < 199711L
+#define be_native_module_attr_table(name)               \
+    static const bntvmodobj name##_attrs[] =
+#else
+#define be_native_module_attr_table(name)               \
+    static constexpr bntvmodobj name##_attrs[] =
+#endif
 
 #define be_native_module(name)  be_native_module_##name
 
-#define be_native_module_attr_table(name)           \
-    static bntvmodule_obj name##_attrs[] =
-
 /* native module declaration macro */
-#define be_extern_native_module(name)               \
-    extern bntvmodule be_native_module(name)
+#if __cplusplus < 199711L
+#define be_extern_native_module(name)                   \
+    extern const bntvmodule be_native_module(name)
+#else
+#define be_extern_native_module(name)                   \
+    extern constexpr bntvmodule be_native_module(name)
+#endif
 
 /* native module definition macro */
-#define be_define_native_module(_name, _init)       \
-    bntvmodule be_native_module(_name) = {          \
-        .name = #_name,                             \
-        .attrs = _name##_attrs,                     \
-        .size = (sizeof(_name##_attrs)              \
-               / sizeof(_name##_attrs[0])),         \
-        .module = NULL,                             \
-        .init = _init                               \
+#if __cplusplus < 199711L
+#define be_define_native_module(_name, _init)           \
+    const bntvmodule be_native_module(_name) = {        \
+        .name = #_name,                                 \
+        .attrs = _name##_attrs,                         \
+        .size = sizeof(_name##_attrs)                   \
+               / sizeof(_name##_attrs[0]),              \
+        .module = NULL,                                 \
+        .init = _init                                   \
     }
+#else
+#define be_define_native_module(_name, _init)           \
+    constexpr bntvmodule be_native_module(_name) (      \
+        #_name, _name##_attrs,                          \
+        sizeof(_name##_attrs)                           \
+            / sizeof(_name##_attrs[0]),                 \
+        NULL,  _init                                    \
+    )
+#endif
 
 /* debug hook typedefs */
 #define BE_HOOK_LINE    1

@@ -1,3 +1,10 @@
+/********************************************************************
+** Copyright (c) 2018-2020 Guan Wenliang
+** This file is part of the Berry default interpreter.
+** skiars@qq.com, https://github.com/Skiars/berry
+** See Copyright Notice in the LICENSE file or at
+** https://github.com/Skiars/berry/blob/master/LICENSE
+********************************************************************/
 #ifndef __BUILD_MAP_H
 #define __BUILD_MAP_H
 
@@ -14,9 +21,7 @@ public:
 
 private:
     void keywords();
-    uint32_t hashcode(const std::string &string);
     void make_ceil(const std::string &string, int extra = 0);
-    std::string escape(const std::string &string);
     std::string build_table_def();
     std::string build_table_ext();
     void writefile(const std::string &filename, const std::string &text);

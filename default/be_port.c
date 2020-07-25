@@ -1,10 +1,17 @@
-/* this file contains configuration for the file system. */
-
+/********************************************************************
+** Copyright (c) 2018-2020 Guan Wenliang
+** This file is part of the Berry default interpreter.
+** skiars@qq.com, https://github.com/Skiars/berry
+** See Copyright Notice in the LICENSE file or at
+** https://github.com/Skiars/berry/blob/master/LICENSE
+********************************************************************/
 #include "berry.h"
 #include "be_mem.h"
 #include "be_sys.h"
 #include <stdio.h>
 #include <string.h>
+
+/* this file contains configuration for the file system. */
 
 /* standard input and output */
 
