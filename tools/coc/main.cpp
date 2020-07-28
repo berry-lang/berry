@@ -13,9 +13,11 @@
 #include <fstream>
 #include <sstream>
 
-void builder::parse_all(const std::string &filename, const std::string &subname)
+void builder::parse_all(const std::string &filename)
 {
-    if (subname == ".c"|| subname == ".cc" || subname == ".cpp") {
+    size_t pos = filename.find_last_of(".");
+    std::string ext = pos < filename.size() ? filename.substr(pos) : "";
+    if (ext == ".c" || ext == ".cc" || ext == ".cpp") {
         std::string text = readfile(filename);
         coc_parser parser(text);
         push_strtab(parser.strtab());
@@ -59,9 +61,7 @@ void builder::scandir(const std::string &srcpath)
     if (dp != NULL) {
         while ((ep = readdir(dp)) != NULL) {
             std::string fname(ep->d_name);
-            size_t find = fname.find_last_of(".");
-            std::string subname(find < fname.size() ? fname.substr(find) : "");
-            parse_all(srcpath + "/" + fname, subname);
+            parse_all(srcpath + "/" + fname);
         }
         closedir(dp);
     }
@@ -75,9 +75,7 @@ void builder::scandir(const std::string &srcpath)
     if (find != INVALID_HANDLE_VALUE) {
         do {
             std::string fname(data.cFileName);
-            size_t find = fname.find_last_of(".");
-            std::string subname(find < fname.size() ? fname.substr(find) : "");
-            parse_all(srcpath + "/" + fname, subname);
+            parse_all(srcpath + "/" + fname);
         } while (FindNextFile(find, &data) != 0);
         FindClose(find);
     }

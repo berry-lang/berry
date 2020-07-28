@@ -24,7 +24,7 @@ private:
     void push_strtab(const std::vector<std::string>& list);
     void add_arg(const std::string& arg);
     std::string info_block(const std::string &text);
-    void parse_all(const std::string &filename, const std::string &subname);
+    void parse_all(const std::string &filename);
     void scandir(const std::string &srcpath);
     std::string readfile(const std::string &filename);
 
