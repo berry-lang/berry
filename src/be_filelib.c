@@ -61,15 +61,15 @@ static int i_readline(bvm *vm)
         char *buffer = be_malloc(vm, size);
         char *res = be_fgets(fh, buffer, (int)size);
         while (res) {
-            pos += strlen(buffer + pos) - 1;
-            if (!pos || buffer[pos] == '\n') {
+            pos += strlen(buffer + pos);
+            if (!pos || buffer[pos - 1] == '\n') {
                 break;
             }
             buffer = be_realloc(vm, buffer, size, size + READLINE_STEP);
-            res = be_fgets(fh, buffer + pos + 1, READLINE_STEP);
+            res = be_fgets(fh, buffer + pos, READLINE_STEP);
             size += READLINE_STEP;
         }
-        be_pushnstring(vm, buffer, pos + 1);
+        be_pushnstring(vm, buffer, pos);
         be_free(vm, buffer, size);
         be_return(vm);
     }

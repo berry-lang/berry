@@ -136,7 +136,7 @@ static bstring* buf_tostr(blexer *lexer)
 
 static int is_newline(int c)
 {
-    return c == '\r' || c == '\n';
+    return c == '\n' || c == '\r';
 }
 
 static int is_digit(int c)
@@ -146,12 +146,12 @@ static int is_digit(int c)
 
 static int is_letter(int c)
 {
-    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c == '_');
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c == '_');
 }
 
 static int is_word(int c)
 {
-    return is_digit(c) || is_letter(c);
+    return is_letter(c) || is_digit(c);
 }
 
 static int check_next(blexer *lexer, int c)
