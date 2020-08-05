@@ -25,7 +25,9 @@ Berry has the following advantages:
 
 LaTeX documents repository: [https://github.com/Skiars/berry_doc](https://github.com/Skiars/berry_doc)
 
-Reference Manual: [berry_rm_zh_cn.pdf](https://github.com/Skiars/berry_doc/releases/download/latest/berry_rm_zh_cn.pdf) (Simplified Chinese version)
+Short Manual: [berry_short_manual.pdf](https://github.com/Skiars/berry_doc/releases/download/latest/berry_short_manual.pdf).
+
+Reference Manual: [berry_rm_en_us.pdf](https://github.com/Skiars/berry_doc/releases/download/latest/berry_rm_en_us.pdf), [berry_rm_zh_cn.pdf](https://github.com/Skiars/berry_doc/releases/download/latest/berry_rm_zh_cn.pdf).
 
 Berry's EBNF grammar definition: [tools/grammar/berry.ebnf](./tools/grammar/berry.ebnf)
 
