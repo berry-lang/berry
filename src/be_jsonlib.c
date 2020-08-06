@@ -315,71 +315,10 @@ static void make_indent(bvm *vm, int stridx, int indent)
     }
 }
 
-static unsigned escape_length(const char *s)
+void string_dump(bvm *vm, int index)
 {
-    unsigned c, len = 0;
-    for (; (c = *s) != '\0'; ++s) {
-        switch (c) {
-        case '\"': case '\\': case '\b': case '\f':
-        case '\n': case '\r': case '\t':
-            len += 1;
-            break;
-        default:
-            if (c < 0x20) {
-                len += 5;
-            }
-            break;
-        }
-    }
-    return len;
-}
-
-static unsigned eschex(unsigned num)
-{
-    return num <= 9 ? '0' + num : 'a' + num - 10;
-}
-
-/* escape as JSON */
-static char* escape(char *q, unsigned c)
-{
-    switch (c) {
-    case '\"': *q++ = '\\'; *q = '"'; break;
-    case '\\': *q++ = '\\'; *q = '\\'; break;
-    case '\b': *q++ = '\\'; *q = 'b'; break;
-    case '\f': *q++ = '\\'; *q = 'f'; break;
-    case '\n': *q++ = '\\'; *q = 'n'; break;
-    case '\r': *q++ = '\\'; *q = 'r'; break;
-    case '\t': *q++ = '\\'; *q = 't'; break;
-    default:
-        if (c < 0x20) { /* other characters are escaped using '\uxxxx' */
-            *q++ = '\\'; *q++ = 'u';
-            *q++ = '0'; *q++ = '0';
-            *q++ = (char)eschex(c >> 4);
-            *q = (char)eschex(c & 0x0F);
-        } else { /* unescaped characters */
-            *q = (char)c;
-        }
-        break;
-    }
-    return q;
-}
-
-static void string_dump(bvm *vm, int idx)
-{
-    char *buf, *q;
-    const char *p;
-    const char *s = be_tostring(vm, idx);
-    size_t len = (size_t)be_strlen(vm, idx) + 2;
-    len += escape_length(s); /* get escaped length */
-    buf = q = be_pushbuffer(vm, len);
-    *q++ = '"'; /* add first '"' */
-    /* generate JSON string */
-    for (p = s; *p != '\0'; ++p, ++q) {
-        q = escape(q, *p);
-    }
-    *q = '"'; /* add last '"' */
-    be_pushnstring(vm, buf, len); /* make JSON string from buffer */
-    be_remove(vm, -2); /* remove buffer */
+    be_toescape(vm, index, 'u');
+    be_pushvalue(vm, index);
 }
 
 static void object_dump(bvm *vm, int *indent, int idx, int fmt)

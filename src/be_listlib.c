@@ -52,12 +52,7 @@ static int m_init(bvm *vm)
 
 static void push_element(bvm *vm)
 {
-    if (be_isstring(vm, -1)) { /* Add '"' to strings */
-        be_pushfstring(vm, "'%s'", be_tostring(vm, -1));
-        be_remove(vm, -2);
-    } else {
-        be_tostring(vm, -1);
-    }
+    be_toescape(vm, -1, 'x'); /* escape string */
     be_strconcat(vm, -3);
     be_pop(vm, 1);
 }

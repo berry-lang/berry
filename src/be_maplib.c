@@ -36,26 +36,17 @@ static int m_init(bvm *vm)
 
 static void push_key(bvm *vm)
 {
-    if (be_isstring(vm, -2)) { /* add ''' to strings */
-        be_pushfstring(vm, "'%s'", be_tostring(vm, -2));
-    } else {
-        be_tostring(vm, -2);
-        be_pushvalue(vm, -2); /* push to top */
-    }
+    be_toescape(vm, -2, 'x'); /* escape string */
+    be_pushvalue(vm, -2); /* push to top */
     be_strconcat(vm, -5);
     be_pop(vm, 1);
 }
 
 static void push_value(bvm *vm)
 {
-    if (be_isstring(vm, -1)) { /* add ''' to strings */
-        be_pushfstring(vm, "'%s'", be_tostring(vm, -1));
-    } else {
-        be_tostring(vm, -1);
-        be_pushvalue(vm, -1); /* push to top */
-    }
-    be_strconcat(vm, -5);
-    be_pop(vm, 3);
+    be_toescape(vm, -1, 'x'); /* escape string */
+    be_strconcat(vm, -4);
+    be_pop(vm, 2);
     if (be_iter_hasnext(vm, -3)) {
         be_pushstring(vm, ", ");
         be_strconcat(vm, -3);

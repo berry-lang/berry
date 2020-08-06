@@ -357,6 +357,88 @@ const char* be_splitname(const char *path)
     return p;
 }
 
+static unsigned escape_length(const char *s, int quote)
+{
+    unsigned c, len = 0, step = quote == '"' ? 5 : 3;
+    for (; (c = *s) != '\0'; ++s) {
+        switch (c) {
+        case '\\': case '\n': case '\r': case '\t':
+            len += 1;
+            break;
+        default:
+            if (c < 0x20)
+                len += step;
+            else if (c == (unsigned)quote)
+                len += 1;
+            break;
+        }
+    }
+    return len;
+}
+
+static unsigned eschex(unsigned num)
+{
+    return num <= 9 ? '0' + num : 'a' + num - 10;
+}
+
+/* escape as Berry or JSON */
+static char* escape(char *q, unsigned c, int quote)
+{
+    int json = quote == '"';
+    switch (c) {
+    case '\\': *q++ = '\\'; *q = '\\'; break;
+    case '\n': *q++ = '\\'; *q = 'n'; break;
+    case '\r': *q++ = '\\'; *q = 'r'; break;
+    case '\t': *q++ = '\\'; *q = 't'; break;
+    default:
+        if (c < 0x20) { /* other characters are escaped using '\uxxxx' */
+            *q++ = '\\';
+            if (json) {
+                *q++ = 'u'; *q++ = '0'; *q++ = '0';
+                *q++ = (char)eschex(c >> 4);
+                *q = (char)eschex(c & 0x0f);
+            } else {
+                *q++ = 'x';
+                *q++ = (char)eschex(c >> 4);
+                *q = (char)eschex(c & 0x0f);
+            }
+        } else { /* quotes and unescaped characters */
+            if (c == (unsigned)quote)
+                *q++ = '\\';
+            *q = (char)c;
+        }
+        break;
+    }
+    return q;
+}
+
+static void toescape(bvm *vm, int index, int quote)
+{
+    char *buf, *q;
+    const char *p, *s = be_tostring(vm, index);
+    size_t len = (size_t)be_strlen(vm, index) + 2;
+    len += escape_length(s, quote); /* get escaped length */
+    buf = q = be_pushbuffer(vm, len);
+    *q++ = (char)quote; /* add first quote */
+    /* generate escape string */
+    for (p = s; *p != '\0'; ++p, ++q) {
+        q = escape(q, *p, quote);
+    }
+    *q = (char)quote; /* add last quote */
+    be_pushnstring(vm, buf, len); /* make escape string from buffer */
+    be_moveto(vm, -1, index);
+    be_pop(vm, 2); /* remove buffer & top string */
+}
+
+BERRY_API const char* be_toescape(bvm *vm, int index, int mode)
+{
+    if (be_isstring(vm, index)) {
+        index = be_absindex(vm, index);
+        toescape(vm, index, mode == 'u' ? '"' : '\'');
+    }
+    return be_tostring(vm, index);
+}
+
 #if BE_USE_STRING_MODULE
 
 #define MAX_FORMAT_MODE     32

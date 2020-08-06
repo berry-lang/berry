@@ -1012,19 +1012,31 @@ BERRY_API int be_getexcept(bvm *vm, int code)
     return code;
 }
 
-static int _dvfunc(bvm *vm)
+static int _dvfunc(bvm *vm, bbool esc)
 {
-    be_writestring(be_tostring(vm, 1));
+    const char* s = esc ?
+        be_toescape(vm, 1, 'x') : be_tostring(vm, 1);
+    be_writestring(s);
     be_return_nil(vm);
 }
 
-static int dump_value(bvm *vm, int index)
+static int _dumpesc(bvm *vm)
+{
+    return _dvfunc(vm, btrue);
+}
+
+static int _dumpdir(bvm *vm)
+{
+    return _dvfunc(vm, bfalse);
+}
+
+static int dump_value(bvm *vm, int index, bbool esc)
 {
     int res, top = be_top(vm) + 1;
     index = be_absindex(vm, index);
-    be_pushntvfunction(vm, _dvfunc);
+    be_pushntvfunction(vm, esc ? _dumpesc : _dumpdir);
     be_pushvalue(vm, index);
-    res = be_pcall(vm, 1); /* using index to store result  */
+    res = be_pcall(vm, 1); /* using index to store result */
     be_remove(vm, top); /* remove '_dumpvalue' function */
     be_remove(vm, top); /* remove the value */
     if (res == BE_EXCEPTION) {
@@ -1035,7 +1047,7 @@ static int dump_value(bvm *vm, int index)
 
 BERRY_API void be_dumpvalue(bvm *vm, int index)
 {
-    if (dump_value(vm, index) == BE_OK) {
+    if (dump_value(vm, index, btrue) == BE_OK) {
         be_writenewline();
     }
 }
@@ -1044,10 +1056,10 @@ BERRY_API void be_dumpexcept(bvm *vm)
 {
     do {
         /* print exception value */
-        if (dump_value(vm, -2)) break;
+        if (dump_value(vm, -2, bfalse)) break;
         be_writestring(": ");
         /* print exception argument */
-        if (dump_value(vm, -1)) break;
+        if (dump_value(vm, -1, bfalse)) break;
         be_writenewline();
         /* print stack traceback */
         be_tracestack(vm);
