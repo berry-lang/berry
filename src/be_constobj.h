@@ -95,7 +95,7 @@ const bvector _name = {                                         \
 }
 
 #define be_define_const_native_module(_module, _init)           \
-bntvmodule be_native_module(_module) = {                        \
+const bntvmodule be_native_module(_module) = {                  \
     .name = #_module,                                           \
     .attrs = NULL,                                              \
     .size = 0,                                                  \
