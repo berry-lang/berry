@@ -10,10 +10,6 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: configure
-      run: sudo apt-get install libreadline-dev
-    - name: make
-      run: make
-    - name: install
-      run: sudo make install
-    - name: run tests
-      run: ./testall.be
+      run: sudo apt-get install libreadline-dev lcov
+    - name: make & test
+      run: make test

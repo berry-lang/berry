@@ -1,7 +1,7 @@
 CFLAGS    = -Wall -Wextra -std=c99 -pedantic-errors -O2
 LIBS      = -lm
 TARGET    = berry
-CC        = gcc
+CC       ?= gcc
 MKDIR     = mkdir
 LFLAGS    = 
 
@@ -35,6 +35,11 @@ else
     MSG=@true
 endif
 
+ifeq ($(TEST), 1)
+    CFLAGS += -fprofile-arcs -ftest-coverage
+    LFLAGS += -fprofile-arcs -ftest-coverage
+endif
+
 SRCS     = $(foreach dir, $(SRCPATH), $(wildcard $(dir)/*.c))
 OBJS     = $(patsubst %.c, %.o, $(SRCS))
 DEPS     = $(patsubst %.c, %.d, $(SRCS))
@@ -46,6 +51,13 @@ all: $(TARGET)
 
 debug: CFLAGS += -O0 -g -DBE_DEBUG
 debug: all
+
+test: CFLAGS += --coverage
+test: LFLAGS += --coverage
+test: all
+	$(MSG) [Run Testcases...]
+	$(Q) ./testall.be
+	$(Q) $(RM) */*.gcno */*.gcda
 
 $(TARGET): $(OBJS)
 	$(MSG) [Linking...]

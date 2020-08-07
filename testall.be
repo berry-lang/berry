@@ -1,6 +1,8 @@
 #! ./berry
 import os
 
+os.system('lcov', '-c -i -d . -o init.info')
+
 var exec = './berry'
 var path = 'tests'
 var testcases = os.listdir(path)
@@ -22,5 +24,10 @@ print('\033[0;32mtest results: ' +
     str(total) + ' total, ' + str(failed) + ' failed' +
     (failed ? '' : ' (all tests passed)') +
     '.\033[0m')
+
+os.system('lcov', '-c -d ./ -o cover.info')
+os.system('lcov', '--remove total.info */usr/include/* -o final.info')
+os.system('genhtml', '-o test_report --legend --title "lcov" --prefix=./ final.info')
+os.system('rm', '-f', 'init.info cover.info final.info')
 
 os.exit(failed == 0)

@@ -53,6 +53,11 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
+# Test files
+*.gcda
+*.gcno
+test_report/
+
 # Ctags
 tags
 
