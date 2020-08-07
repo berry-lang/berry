@@ -144,6 +144,11 @@ static int is_digit(int c)
     return c >= '0' && c <= '9';
 }
 
+static int is_octal(int c)
+{
+    return c >= '0' && c <= '7';
+}
+
 static int is_letter(int c)
 {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c == '_');
@@ -179,7 +184,7 @@ static int check2hex(blexer *lexer, int c)
 {
     c = char2hex(c);
     if (c < 0) {
-        be_lexerror(lexer, "hexadecimal digit expected.");
+        be_lexerror(lexer, "invalid hexadecimal number");
     }
     return c;
 }
@@ -192,13 +197,13 @@ static int read_hex(blexer *lexer, const char *src)
 
 static int read_oct(blexer *lexer, const char *src)
 {
-    int i, c = 0;
-
-    for (i = 0; i < 3 && is_digit(*src); ++i) {
+    int c = 0;
+    const char *end = src + 3;
+    while (src < end && is_octal(*src)) {
         c = 8 * c + *src++ - '0';
     }
-    if (i < 3 && !(c == EOS && i == 1)) {
-        be_lexerror(lexer, "octal escape too few.");
+    if (src < end) {
+        be_lexerror(lexer, "invalid octal number");
     }
     return c;
 }
@@ -212,7 +217,7 @@ static void tr_string(blexer *lexer)
         int c = *src++;
         switch (c) {
         case '\n': case '\r':
-            be_lexerror(lexer, "unfinished string.");
+            be_lexerror(lexer, "unfinished string");
             break;
         case '\\':
             switch (*src) {

@@ -14,10 +14,20 @@ def test_source(src, msg)
     end
 end
 
+#----
+  this is a
+  mult-line comment
+----#
+
 compile('x = 5; 0..x')
+assert('\x5a' == 'Z')
+assert('\132' == 'Z')
+assert('\a\b\f\n\r\t\v\\\'\"\?' == '\x07\x08\x0c\x0a\x0d\x09\x0b\x5c\x27\x22\x3f')
 assert(.45 == 0.45)
 assert(0X10 == 16)
 assert(0x10 == 16)
+assert(0X1A == 26)
+assert(0x1a == 26)
 check(45., 45)
 check(45.e-1, 4.5)
 check(45.E-1, 4.5)
@@ -29,6 +39,11 @@ check(45.e+2, 4500)
 test_source('x = 5; 0...x;', 'unexpected symbol near \'.\'')
 test_source('x = 5; 0...x;', 'unexpected symbol near \'.\'')
 test_source('45..', 'unexpected symbol near \'EOS\'')
+test_source('0xg', 'invalid hexadecimal number')
+test_source('"\\x5g"', 'invalid hexadecimal number')
+test_source('0x5g', 'malformed number')
+test_source('"\\779"', 'invalid octal number')
+test_source('"\n', 'unfinished string')
 
 var malformed_numbers = [
     '45f',

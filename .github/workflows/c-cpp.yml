@@ -11,5 +11,5 @@ jobs:
     - uses: actions/checkout@v1
     - name: configure
       run: sudo apt-get install libreadline-dev lcov
-    - name: make & test
+    - name: build & test
       run: make test
