@@ -171,12 +171,10 @@ static const char* parser_string(bvm *vm, const char *json)
                     *dst++ = (char)ch;
                 }
             }
-            if (ch == '"') {
-                be_pushnstring(vm, buf, cast_int(dst - buf));
-                be_free(vm, buf, len);
-                return json + 1; /* skip '"' */
-            }
+            be_assert(ch == '"');
+            be_pushnstring(vm, buf, cast_int(dst - buf));
             be_free(vm, buf, len);
+            return json + 1; /* skip '"' */
         }
     }
     return NULL;
@@ -317,6 +315,7 @@ static void make_indent(bvm *vm, int stridx, int indent)
 
 void string_dump(bvm *vm, int index)
 {
+    be_tostring(vm, index); /* convert value to string */
     be_toescape(vm, index, 'u');
     be_pushvalue(vm, index);
 }

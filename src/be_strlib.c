@@ -416,8 +416,8 @@ static void toescape(bvm *vm, int index, int quote)
 {
     char *buf, *q;
     const char *p, *s = be_tostring(vm, index);
-    size_t len = (size_t)be_strlen(vm, index) + 2;
-    len += escape_length(s, quote); /* get escaped length */
+    size_t len = (size_t)be_strlen(vm, index);
+    len += escape_length(s, quote) + 2; /* escape length + quote mark */
     buf = q = be_pushbuffer(vm, len);
     *q++ = (char)quote; /* add first quote */
     /* generate escape string */
