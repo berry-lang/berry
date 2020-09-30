@@ -148,7 +148,7 @@ end
 fib(10)
 ```
 
-This example code will output the result `55`, and you can save the above code to a plain text file (eg test.be) and run this command:
+This example code will output the result `55` and you can save the above code to a plain text file (eg test.be) and run this command:
 
 ``` bash
 ./berry test.be
