@@ -54,8 +54,8 @@ void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p);
 void be_prim_method_bind(bvm *vm, bclass *c, bstring *name, bntvfunc f);
 int be_class_closure_count(bclass *c);
 void be_class_upvalue_init(bvm *vm, bclass *c);
-int be_class_newobj(bvm *vm, bclass *c, bvalue *argv, int argc);
+bbool be_class_newobj(bvm *vm, bclass *c, bvalue *argv, int argc);
 int be_instance_member(bvm *vm, binstance *obj, bstring *name, bvalue *dst);
-int be_instance_setmember(bvm *vm, binstance *obj, bstring *name, bvalue *src);
+bbool be_instance_setmember(bvm *vm, binstance *obj, bstring *name, bvalue *src);
 
 #endif

@@ -169,7 +169,7 @@ static binstance* newobject(bvm *vm, bclass *c)
     return obj;
 }
 
-int be_class_newobj(bvm *vm, bclass *c, bvalue *reg, int argc)
+bbool be_class_newobj(bvm *vm, bclass *c, bvalue *reg, int argc)
 {
     bvalue init;
     size_t pos = reg - vm->reg;
@@ -184,9 +184,9 @@ int be_class_newobj(bvm *vm, bclass *c, bvalue *reg, int argc)
             reg[argc] = reg[argc - 2];
         }
         *reg = init; /* set constructor */
-        return 1;
+        return btrue;
     }
-    return 0;
+    return bfalse;
 }
 
 int be_instance_member(bvm *vm, binstance *obj, bstring *name, bvalue *dst)
@@ -201,14 +201,14 @@ int be_instance_member(bvm *vm, binstance *obj, bstring *name, bvalue *dst)
     return type;
 }
 
-int be_instance_setmember(bvm *vm, binstance *obj, bstring *name, bvalue *src)
+bbool be_instance_setmember(bvm *vm, binstance *obj, bstring *name, bvalue *src)
 {
     bvalue v;
     be_assert(name != NULL);
     obj = instance_member(vm, obj, name, &v);
     if (obj && var_istype(&v, MT_VARIABLE)) {
         obj->members[var_toint(&v)] = *src;
-        return 1;
+        return btrue;
     }
-    return 0;
+    return bfalse;
 }
