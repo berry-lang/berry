@@ -62,7 +62,7 @@ static uint32_t hashreal(union bvaldata v)
 #if BE_USE_OVERLOAD_HASH
 static uint32_t hashins(bvm *vm, binstance *obj)
 {
-    int type = be_instance_member(vm, obj, be_newstr(vm, "hash"), vm->top);
+    int type = be_instance_member(vm, obj, str_literal(vm, "hash"), vm->top);
     if (basetype(type) == BE_FUNCTION) {
         bvalue *top = vm->top;
         var_setinstance(top + 1, obj);

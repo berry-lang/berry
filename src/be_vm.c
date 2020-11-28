@@ -219,7 +219,7 @@ static void ret_native(bvm *vm)
 static bbool obj2bool(bvm *vm, bvalue *var)
 {
     binstance *obj = var_toobj(var);
-    bstring *tobool = be_newstr(vm, "tobool");
+    bstring *tobool = str_literal(vm, "tobool");
     /* get operator method */
     if (be_instance_member(vm, obj, tobool, vm->top)) {
         vm->top[1] = *var; /* move self to argv[0] */
@@ -249,10 +249,10 @@ bbool be_value2bool(bvm *vm, bvalue *v)
     }
 }
 
-static void obj_method(bvm *vm, bvalue *o, bstring *attr)
+static void obj_method(bvm *vm, bvalue *o, bstring *attr, bvalue *dst)
 {
     binstance *obj = var_toobj(o);
-    int type = be_instance_member(vm, obj, attr, vm->top);
+    int type = be_instance_member(vm, obj, attr, dst);
     if (basetype(type) != BE_FUNCTION) {
         vm_error(vm, "attribute_error",
             "the '%s' object has no method '%s'",
@@ -296,10 +296,9 @@ static bbool object_eqop(bvm *vm,
 
 static void object_binop(bvm *vm, const char *op, bvalue self, bvalue other)
 {
-    bvalue *top;
+    bvalue *top = vm->top;
     /* get operator method (possible GC) */
-    obj_method(vm, &self, be_newstr(vm, op));
-    top = vm->top;
+    obj_method(vm, &self, be_newstr(vm, op), vm->top);
     top[1] = self; /* move self to argv[0] */
     top[2] = other; /* move other to argv[1] */
     be_incrtop(vm); /* prevent collection results */
@@ -315,10 +314,9 @@ static void object_binop(bvm *vm, const char *op, bvalue self, bvalue other)
 
 static void ins_unop(bvm *vm, const char *op, bvalue self)
 {
-    bvalue *top;
+    bvalue *top = vm->top;
     /* get operator method (possible GC) */
-    obj_method(vm, &self, be_newstr(vm, op));
-    top = vm->top;
+    obj_method(vm, &self, be_newstr(vm, op), vm->top);
     top[1] = self; /* move self to argv[0] */
     be_dofunc(vm, top, 1); /* call method 'item' */
 }
@@ -356,7 +354,7 @@ bbool be_vm_isge(bvm *vm, bvalue *a, bvalue *b)
 static void make_range(bvm *vm, bvalue lower, bvalue upper)
 {
     /* get method 'item' (possible GC) */
-    int idx = be_builtin_find(vm, be_newstr(vm, "range"));
+    int idx = be_builtin_find(vm, str_literal(vm, "range"));
     bvalue *top = vm->top;
     top[0] = *be_global_var(vm, idx);
     top[1] = lower; /* move lower to argv[0] */
@@ -792,10 +790,9 @@ newframe: /* a new call frame */
         opcase(GETIDX): {
             bvalue *b = RKB(), *c = RKC();
             if (var_isinstance(b)) {
-                bvalue *top;
+                bvalue *top = vm->top;
                 /* get method 'item' */
-                obj_method(vm, b, be_newstr(vm, "item"));
-                top = vm->top;
+                obj_method(vm, b, str_literal(vm, "item"), vm->top);
                 top[1] = *b; /* move object to argv[0] */
                 top[2] = *c; /* move key to argv[1] */
                 vm->top += 3;   /* prevent collection results */
@@ -817,10 +814,9 @@ newframe: /* a new call frame */
         opcase(SETIDX): {
             bvalue *a = RA(), *b = RKB(), *c = RKC();
             if (var_isinstance(a)) {
-                bvalue *top;
+                bvalue *top = vm->top;
                 /* get method 'setitem' */
-                obj_method(vm, a, be_newstr(vm, "setitem"));
-                top = vm->top;
+                obj_method(vm, a, str_literal(vm, "setitem"), vm->top);
                 top[1] = *a; /* move object to argv[0] */
                 top[2] = *b; /* move key to argv[1] */
                 top[3] = *c; /* move src to argv[2] */
@@ -934,6 +930,14 @@ newframe: /* a new call frame */
                     goto recall; /* call constructor */
                 }
                 break;
+            case BE_INSTANCE: {
+                bvalue *v = var + argc++, temp;
+                /* load the '()' method to `temp' */
+                obj_method(vm, var, str_literal(vm, "()"), &temp);
+                for (; v >= var; --v) v[1] = v[0];
+                *var = temp;
+                goto recall; /* call '()' method */
+            }
             case BE_CLOSURE: {
                 bvalue *v, *end;
                 bproto *proto = var2cl(var)->proto;

@@ -374,7 +374,7 @@ static bstring* load_string(bvm *vm, void *fp)
         be_free(vm, buf, len);
         return str;
     }
-    return be_newstr(vm, "");
+    return str_literal(vm, "");
 }
 
 static bstring* cache_string(bvm *vm, void *fp)

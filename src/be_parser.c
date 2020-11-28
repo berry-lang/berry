@@ -1146,7 +1146,13 @@ static void continue_stmt(bparser *parser)
     }
 }
 
-static bstring* func_name(bparser *parser, bexpdesc *e, int ismethod)
+static bbool isoverloadable(btokentype type)
+{
+    return (type >= OptAdd && type <= OptConnect) /* overloaded binary operator */
+        || type == OptFlip || type == OptLBK;     /* '~' and '()' operator */
+}
+
+static bstring* func_name(bparser* parser, bexpdesc* e, int ismethod)
 {
     btokentype type = next_type(parser);
     if (type == TokenId) {
@@ -1156,13 +1162,17 @@ static bstring* func_name(bparser *parser, bexpdesc *e, int ismethod)
         }
         scan_next_token(parser); /* skip name */
         return name;
-    } else if (ismethod && type >= OptAdd && type <= OptConnect) {
+    } else if (ismethod && isoverloadable(type)) {
         scan_next_token(parser); /* skip token */
-        /* '-*' neg method */
-        if (type == OptFlip || (type == OptSub
-            && next_type(parser) == OptMul)) {
+        /* '-*' negative operator */
+        if (type == OptSub && next_type(parser) == OptMul) {
             scan_next_token(parser); /* skip '*' */
             return parser_newstr(parser, "-*");
+        }
+        /* '()' call operator */
+        if (type == OptLBK && next_type(parser) == OptRBK) {
+            scan_next_token(parser); /* skip ')' */
+            return parser_newstr(parser, "()");
         }
         return parser_newstr(parser, be_tokentype2str(type));
     }

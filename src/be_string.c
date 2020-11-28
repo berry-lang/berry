@@ -108,7 +108,7 @@ void be_string_init(bvm *vm)
 #if !BE_USE_PRECOMPILED_OBJECT
     /* the destructor name deinit needs to exist all the time, to ensure
      * that it does not need to be created when the heap is exhausted. */
-    be_gc_fix(vm, cast(bgcobject*, be_newstr(vm, "deinit")));
+    be_gc_fix(vm, cast(bgcobject*, str_literal(vm, "deinit")));
 #endif
     /* be_const_str_deinit --> for precompiled */
 }
@@ -128,7 +128,7 @@ void be_string_deleteall(bvm *vm)
     be_free(vm, tab->table, tab->size * sizeof(bstring*));
 }
 
-bstring* createstrobj(bvm *vm, size_t len, int islong)
+static bstring* createstrobj(bvm *vm, size_t len, int islong)
 {
     size_t size = (islong ? sizeof(blstring)
                 : sizeof(bsstring)) + len + 1;

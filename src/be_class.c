@@ -177,7 +177,7 @@ bbool be_class_newobj(bvm *vm, bclass *c, bvalue *reg, int argc)
     reg = vm->reg + pos; /* the stack may have changed  */
     var_setinstance(reg, obj);
     /* find constructor */
-    obj = instance_member(vm, obj, be_newstr(vm, "init"), &init);
+    obj = instance_member(vm, obj, str_literal(vm, "init"), &init);
     if (obj && var_type(&init) != MT_VARIABLE) {
         /* copy argv */
         for (reg = vm->reg + pos + 1; argc > 0; --argc) {

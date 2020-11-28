@@ -104,7 +104,7 @@ static bstring* sim2str(bvm *vm, bvalue *v)
 
 static bstring* ins2str(bvm *vm, int idx)
 {
-    bstring *s = be_newstr(vm, "tostring");
+    bstring *s = str_literal(vm, "tostring");
     binstance *obj = var_toobj(vm->reg + idx);
     /* get method 'tostring' */
     int type = be_instance_member(vm, obj, s, vm->top);

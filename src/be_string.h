@@ -35,8 +35,9 @@ typedef struct {
 #define str_len(_s) \
     ((_s)->slen == 255 ? cast(blstring*, _s)->llen : (_s)->slen)
 
-#define str(_s)             be_str2cstr(_s)
-#define str_extra(_s)       ((_s)->extra)
+#define str(_s)                 be_str2cstr(_s)
+#define str_extra(_s)           ((_s)->extra)
+#define str_literal(_vm, _s)    be_newstrn((_vm), (_s), sizeof(_s) - 1)
 
 #if BE_USE_PRECOMPILED_OBJECT
 #include "../generate/be_const_strtab.h"
