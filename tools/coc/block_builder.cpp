@@ -61,7 +61,7 @@ std::string block_builder::class_tostring(const block &block)
     if (!empty_map) {
         ostr << map_tostring(block, map_name, true) << std::endl;
     }
-    ostr << scope(block) << "be_define_const_class(\n    "
+    ostr << scope(block) << " be_define_const_class(\n    "
          << block.name << ",\n    "
          << map.var_count() << ",\n    "
          << super(block) << ",\n    "
@@ -83,8 +83,8 @@ std::string block_builder::map_tostring(const block &block, const std::string &n
     }
     ostr << "};\n\n";
 
-    ostr << (local ? "static " : scope(block))
-         << "be_define_const_map(\n    "
+    ostr << (local ? "static" : scope(block))
+         << " be_define_const_map(\n    "
          << name << ",\n    "
          << list.size() << "\n"
             ");" << std::endl;
@@ -132,10 +132,10 @@ std::string block_builder::module_tostring(const block &block)
          << name << ",\n    "
             "\"" << block.name << "\"\n"
             ");" << std::endl;
-    if (scope(block).empty()) { /* extern */
-        ostr << "\n"
-                "#ifdef __cplusplus\nextern \"C\"\n#endif\n"
-                "be_define_const_native_module("
+    std::string scp = scope(block);
+    if (scp != "static") { /* extern */
+        ostr << "\n" << scp
+             << " be_define_const_native_module("
              << block.name << ", "
              << init(block) << ");" << std::endl;
     }
@@ -145,7 +145,8 @@ std::string block_builder::module_tostring(const block &block)
 std::string block_builder::scope(const block &block)
 {
     auto it = block.attr.find("scope");
-    return it != block.attr.end() && it->second == "local" ? "static " : "";
+    return it != block.attr.end() && it->second == "local" ?
+        "static" : "BE_EXPORT_VARIABLE";
 }
 
 std::string block_builder::super(const block &block)

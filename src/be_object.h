@@ -52,6 +52,7 @@ typedef struct bclass bclass;
 typedef struct binstance binstance;
 typedef struct blist blist;
 typedef struct bmap bmap;
+typedef struct bupval bupval;
 
 typedef uint32_t binstruction;
 
@@ -82,14 +83,13 @@ union bvaldata {
     bstring *s;     /* string pointer */
     bgcobject *gc;  /* GC object */
     bntvfunc nf;    /* native C function */
-#if __cplusplus >= 199711L
-    constexpr bvaldata() : i(0) {}
-    constexpr bvaldata(bbool v) : b(v) {}
-    constexpr bvaldata(breal v) : r(v) {}
-    constexpr bvaldata(bint v) : i(v) {}
-    constexpr bvaldata(void *v) : p(v) {}
-    constexpr bvaldata(const void *v) : c(v) {}
-    constexpr bvaldata(bntvfunc v) : nf(v) {}
+#ifdef __cplusplus
+    BE_CONSTEXPR bvaldata(bbool v) : b(v) {}
+    BE_CONSTEXPR bvaldata(breal v) : r(v) {}
+    BE_CONSTEXPR bvaldata(bint v) : i(v) {}
+    BE_CONSTEXPR bvaldata(void *v) : p(v) {}
+    BE_CONSTEXPR bvaldata(const void *v) : c(v) {}
+    BE_CONSTEXPR bvaldata(bntvfunc v) : nf(v) {}
 #endif
 };
 
@@ -99,17 +99,6 @@ typedef struct bvalue {
     union bvaldata v; /* the value data */
     int type;         /* the value type */
 } bvalue;
-
-typedef struct {
-    bstring *name; /* the name of variable */
-    int startpc;   /* first point where variable is active */
-    int endpc;     /* first point where variable is dead */
-} blocalval;
-
-typedef struct {
-    bstring *name;
-    int index;
-} bvaldesc;
 
 typedef struct {
 #if BE_DEBUG_VAR_INFO
@@ -139,15 +128,6 @@ typedef struct {
     int endpc;
 #endif
 } bvarinfo;
-
-typedef struct bupval {
-    bvalue *value;
-    union {
-        bvalue value;
-        struct bupval *next;
-    } u;
-    int refcnt;
-} bupval;
 
 typedef struct bproto {
     bcommon_header;

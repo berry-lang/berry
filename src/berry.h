@@ -10,6 +10,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <inttypes.h>
 
 #include "berry_conf.h"
 
@@ -18,7 +19,7 @@ extern "C" {
 #endif
 
 /* do not modify the version number! */
-#define BERRY_VERSION   "0.1.10"
+#define BERRY_VERSION           "0.1.10"
 
 #if BE_STACK_TOTAL_MAX < BE_STACK_FREE_MIN * 2
 #error "The value of the macro BE_STACK_TOTAL_MAX is too small."
@@ -26,42 +27,42 @@ extern "C" {
 
 /* basic type definition */
 #if BE_INTGER_TYPE == 0
-  #define BE_INTEGER        int
-  #define BE_INT_FMTLEN     ""
+  #define BE_INTEGER            int
+  #define BE_INT_FMTLEN         ""
 #elif BE_INTGER_TYPE == 1
-  #define BE_INTEGER        long
-  #define BE_INT_FMTLEN     "l"
+  #define BE_INTEGER            long
+  #define BE_INT_FMTLEN         "l"
 #elif BE_INTGER_TYPE == 2
   #ifdef _WIN32
-    #define BE_INTEGER      __int64
-    #define BE_INT_FMTLEN   "I64"
+    #define BE_INTEGER          __int64
+    #define BE_INT_FMTLEN       "I64"
   #else
-    #define BE_INTEGER      long long
-    #define BE_INT_FMTLEN   "ll"
+    #define BE_INTEGER          int64_t
+    #define BE_INT_FMTLEN       PRId64 
   #endif
 #else
   #error "Unsupported integer type for `bint`."
 #endif
-#define BE_INT_FORMAT       "%" BE_INT_FMTLEN "d"
+#define BE_INT_FORMAT           "%" BE_INT_FMTLEN "d"
 
-typedef uint8_t             bbyte;
-typedef BE_INTEGER          bint;
+typedef uint8_t                 bbyte;
+typedef BE_INTEGER              bint;
 
 #if BE_USE_SINGLE_FLOAT != 0
-  typedef float             breal;
+  typedef float                 breal;
 #else
-  typedef double            breal;
+  typedef double                breal;
 #endif
 
 /* boolean values definition */
 #ifndef __cplusplus
-  #define bbool               _Bool
-  #define bfalse              0
-  #define btrue               1
+  #define bbool                 _Bool
+  #define bfalse                0
+  #define btrue                 1
 #else
-  #define bbool               bool
-  #define bfalse              false
-  #define btrue               true
+  #define bbool                 bool
+  #define bfalse                false
+  #define btrue                 true
 #endif
 
 /* error code definition */
@@ -104,6 +105,20 @@ enum berrorcode {
   #define BERRY_LOCAL
 #endif
 
+#ifdef __cplusplus
+#ifdef __cpp_constexpr
+  #define BE_CONSTEXPR          constexpr
+#else
+  #define BE_CONSTEXPR
+#endif
+#endif
+
+#ifdef __cplusplus
+#define BE_EXPORT_VARIABLE      extern "C"
+#else
+#define BE_EXPORT_VARIABLE
+#endif
+
 typedef struct bvm bvm;        /* virtual machine structure */
 typedef int (*bntvfunc)(bvm*); /* native function pointer */
 
@@ -118,35 +133,35 @@ typedef struct bntvmodobj {
     const char *name;
     int type;
     union value {
-#if __cplusplus >= 199711L
-        constexpr value(bint v) : i(v) {}
-        constexpr value(breal v) : r(v) {}
-        constexpr value(bbool v) : b(v) {}
-        constexpr value(bntvfunc v) : f(v) {}
-        constexpr value(const char *v) : s(v) {}
-        constexpr value(const void *v) : o(v) {}
-#endif
         bint i;
         breal r;
         bbool b;
         bntvfunc f;
         const char *s;
         const void *o;
+#ifdef __cplusplus
+        BE_CONSTEXPR value(bint v) : i(v) {}
+        BE_CONSTEXPR value(breal v) : r(v) {}
+        BE_CONSTEXPR value(bbool v) : b(v) {}
+        BE_CONSTEXPR value(bntvfunc v) : f(v) {}
+        BE_CONSTEXPR value(const char *v) : s(v) {}
+        BE_CONSTEXPR value(const void *v) : o(v) {}
+#endif
     } u;
-#if __cplusplus >= 199711L
-    constexpr bntvmodobj(const char *name) :
+#ifdef __cplusplus
+    BE_CONSTEXPR bntvmodobj(const char *name) :
         name(name), type(BE_CNIL), u(bint(0)) {}
-    constexpr bntvmodobj(const char *name, bint v) :
+    BE_CONSTEXPR bntvmodobj(const char *name, bint v) :
         name(name), type(BE_CINT), u(v) {}
-    constexpr bntvmodobj(const char *name, breal v) :
+    BE_CONSTEXPR bntvmodobj(const char *name, breal v) :
         name(name), type(BE_CREAL), u(v) {}
-    constexpr bntvmodobj(const char *name, bbool v) :
+    BE_CONSTEXPR bntvmodobj(const char *name, bbool v) :
         name(name), type(BE_CBOOL), u(v) {}
-    constexpr bntvmodobj(const char *name, bntvfunc v) :
+    BE_CONSTEXPR bntvmodobj(const char *name, bntvfunc v) :
         name(name), type(BE_CFUNCTION), u(v) {}
-    constexpr bntvmodobj(const char *name, const char *v) :
+    BE_CONSTEXPR bntvmodobj(const char *name, const char *v) :
         name(name), type(BE_CSTRING), u(v) {}
-    constexpr bntvmodobj(const char *name, int _tpye, const void *v) :
+    BE_CONSTEXPR bntvmodobj(const char *name, int _tpye, const void *v) :
         name(name), type(_tpye), u(v) {}
 #endif
 } bntvmodobj;
@@ -158,15 +173,10 @@ typedef struct bntvmodule {
     size_t size; /* native module attribute count */
     const struct bmodule *module; /* const module object */
     bntvfunc init; /* initialization function */
-#if __cplusplus >= 199711L
-    constexpr bntvmodule(const char *name, const bntvmodobj *attrs,
-        size_t size, const struct bmodule *module, bntvfunc init) :
-        name(name), attrs(attrs), size(size), module(module), init(init) {}
-#endif
 } bntvmodule;
 
 /* native module node definition macro */
-#if __cplusplus < 199711L
+#ifndef __cplusplus
 #define be_native_module_nil(_name)                     \
     { .name = (_name), .type = BE_CNIL, .u.i = 0 }
 
@@ -210,27 +220,17 @@ typedef struct bntvmodule {
     bntvmodobj(_name, BE_CMODULE, &(_m))
 #endif
 
-#if __cplusplus < 199711L
 #define be_native_module_attr_table(name)               \
     static const bntvmodobj name##_attrs[] =
-#else
-#define be_native_module_attr_table(name)               \
-    static constexpr bntvmodobj name##_attrs[] =
-#endif
 
 #define be_native_module(name)  be_native_module_##name
 
 /* native module declaration macro */
-#if __cplusplus < 199711L
 #define be_extern_native_module(name)                   \
     extern const bntvmodule be_native_module(name)
-#else
-#define be_extern_native_module(name)                   \
-    extern constexpr bntvmodule be_native_module(name)
-#endif
 
 /* native module definition macro */
-#if __cplusplus < 199711L
+#ifndef __cplusplus
 #define be_define_native_module(_name, _init)           \
     const bntvmodule be_native_module(_name) = {        \
         .name = #_name,                                 \
@@ -242,12 +242,12 @@ typedef struct bntvmodule {
     }
 #else
 #define be_define_native_module(_name, _init)           \
-    constexpr bntvmodule be_native_module(_name) (      \
+    const bntvmodule be_native_module(_name) = {        \
         #_name, _name##_attrs,                          \
         sizeof(_name##_attrs)                           \
             / sizeof(_name##_attrs[0]),                 \
-        NULL,  _init                                    \
-    )
+        0, _init                                        \
+    }
 #endif
 
 /* debug hook typedefs */

@@ -17,6 +17,10 @@ typedef struct {
     const char *name;
 } bdirinfo;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void* be_fopen(const char *filename, const char *modes);
 int be_fclose(void *hfile);
 size_t be_fwrite(void *hfile, const void *buffer, size_t length);
@@ -36,5 +40,9 @@ int be_unlink(const char *filename);
 int be_dirfirst(bdirinfo *info, const char *path);
 int be_dirnext(bdirinfo *info);
 int be_dirclose(bdirinfo *info);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

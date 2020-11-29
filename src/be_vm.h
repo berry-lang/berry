@@ -58,6 +58,15 @@ typedef struct {
     binstruction *ip;
 } bcallsnapshot;
 
+struct bupval {
+    bvalue* value;
+    union {
+        bvalue value;
+        struct bupval* next;
+    } u;
+    int refcnt;
+};
+
 struct bvm {
     bglobaldesc gbldesc; /* global description */
     bvalue *stack; /* stack space */

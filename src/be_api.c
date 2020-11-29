@@ -880,8 +880,7 @@ static int map_next(bvm *vm, bvalue *v)
     entry = be_map_next(var_toobj(v), &iter);
     var_setobj(itvar, BE_COMPTR, iter);
     if (entry) {
-        bvalue vk = be_map_key2value(entry);
-        var_setval(dst, &vk);
+        be_map_key2value(dst, entry);
         var_setval(dst + 1, &entry->value);
         vm->top += 2;
         return 2;

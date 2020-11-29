@@ -599,7 +599,7 @@ static bint _scount(const char *s1, const char *s2, bint begin, bint end)
 {
     bint count = 0;
     const char *res = s1 + begin, *send = s1 + end;
-    while ((res = strstr(res, s2)) && res <= send) {
+    while ((res = strstr(res, s2)) != NULL && res <= send) {
         count += 1;
         res += 1;
     }

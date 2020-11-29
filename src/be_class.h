@@ -26,13 +26,13 @@
 
 struct bclass {
     bcommon_header;
-    unsigned short nvar; /* members variable data field count */
+    uint16_t nvar; /* members variable data field count */
     struct bclass *super;
     bmap *members;
     bstring *name;
     bgcobject *gray; /* for gc gray list */
-#if __cplusplus >= 199711L
-    constexpr bclass(int nv, bclass *sup, bmap *mem, bstring *s) :
+#ifdef __cplusplus
+    BE_CONSTEXPR bclass(uint16_t nv, bclass *sup, bmap *mem, bstring *s) :
         next(0), type(BE_CLASS), marked(GC_CONST), nvar(nv),
         super(sup), members(mem), name(s), gray(0) {}
 #endif

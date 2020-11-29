@@ -5,8 +5,8 @@
 ** See Copyright Notice in the LICENSE file or at
 ** https://github.com/Skiars/berry/blob/master/LICENSE
 ********************************************************************/
-#ifndef __BE_CONSTOBJ_H
-#define __BE_CONSTOBJ_H
+#ifndef BE_CONSTOBJ_H
+#define BE_CONSTOBJ_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,7 +19,7 @@ extern "C" {
 #include "be_string.h"
 #include "be_module.h"
 
-#if __cplusplus < 199711L
+#ifndef __cplusplus
 
 #define be_const_header(_t)                                     \
     .next = NULL,                                               \
@@ -58,7 +58,7 @@ extern "C" {
 }
 
 #define be_define_const_map_slots(_name)                        \
-    const bmapnode _name##_slots[] =
+const bmapnode _name##_slots[] =
 
 #define be_define_const_map(_name, _size)                       \
 const bmap _name = {                                            \
@@ -137,32 +137,32 @@ const bntvmodule be_native_module(_module) = {                  \
 }
 
 #define be_define_const_map_slots(_name)                        \
-    constexpr bmapnode _name##_slots[] =
+const bmapnode _name##_slots[] =
 
 #define be_define_const_map(_name, _size)                       \
-    constexpr bmap _name = bmap(                                \
-        (bmapnode*)_name##_slots, _size)
+const bmap _name(                                               \
+    (bmapnode*)_name##_slots, _size                             \
+)
 
 #define be_define_const_class(_name, _nvar, _super, _name_)     \
-    constexpr bclass _name = bclass(                            \
-        _nvar, _super, (bmap*)&_name##_map,                     \
-        (bstring*)&be_const_str_##_name_)
+const bclass _name(                                             \
+    _nvar, _super, (bmap*)&_name##_map,                         \
+    (bstring*)&be_const_str_##_name_                            \
+)
 
 #define be_define_const_module(_name, _name_)                   \
-    constexpr bmodule _name = bmodule(                          \
-        (bmap*)&_name##_map, _name_)
+const bmodule _name((bmap*)&_name##_map, _name_)
 
 #define be_define_const_vector(_name, _data, _size)             \
-    constexpr bvector _name = {                                 \
-        _size, sizeof(bvalue), _size,                           \
-        (void*)_data, (void*)(_data + (_size) - 1)              \
-    }
+const bvector _name = {                                         \
+    _size, sizeof(bvalue), _size,                               \
+    (void*)_data, (void*)(_data + (_size) - 1)                  \
+}
 
 #define be_define_const_native_module(_module, _init)           \
-constexpr bntvmodule be_native_module(_module) = {              \
+const bntvmodule be_native_module(_module) = {                  \
     #_module,                                                   \
-    NULL,                                                       \
-    0,                                                          \
+    0, 0,                                                       \
     (bmodule*)&(m_lib##_module),                                \
     _init                                                       \
 }
