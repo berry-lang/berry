@@ -66,5 +66,6 @@ tags
 *.out.*
 *.user
 .vscode
+.DS_Store
 generate/
 temp/
