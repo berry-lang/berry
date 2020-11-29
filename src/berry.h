@@ -10,7 +10,6 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <inttypes.h>
 
 #include "berry_conf.h"
 
@@ -37,8 +36,8 @@ extern "C" {
     #define BE_INTEGER          __int64
     #define BE_INT_FMTLEN       "I64"
   #else
-    #define BE_INTEGER          int64_t
-    #define BE_INT_FMTLEN       PRId64 
+    #define BE_INTEGER          long long
+    #define BE_INT_FMTLEN       "ll"
   #endif
 #else
   #error "Unsupported integer type for `bint`."

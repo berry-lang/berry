@@ -56,6 +56,7 @@ dkms.conf
 # Test files
 *.gcda
 *.gcno
+*.info
 test_report/
 
 # Ctags
