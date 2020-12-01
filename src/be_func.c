@@ -10,6 +10,7 @@
 #include "be_mem.h"
 #include "be_vm.h"
 #include "be_exec.h"
+#include <string.h>
 
 #define clousersize(n) \
     (sizeof(bclosure) + sizeof(bupval*) * ((size_t)(n) - 1))
@@ -87,31 +88,7 @@ bproto* be_newproto(bvm *vm)
 {
     bgcobject *gco = be_gcnew(vm, BE_PROTO, bproto);
     bproto *p = cast_proto(gco);
-
-    if (p) {
-        p->upvals = NULL;
-        p->ktab = NULL;
-        p->ptab = NULL;
-        p->code = NULL;
-        p->name = NULL;
-        p->gray = NULL;
-        p->codesize = 0;
-        p->nupvals = 0;
-        p->nproto = 0;
-        p->nconst = 0;
-        p->nstack = 0;
-        p->codesize = 0;
-        p->argc = 0;
-        p->source = NULL;
-#if BE_DEBUG_RUNTIME_INFO
-        p->lineinfo = NULL;
-        p->nlineinfo = 0;
-#endif
-#if BE_DEBUG_VAR_INFO
-        p->varinfo = NULL;
-        p->nvarinfo = 0;
-#endif
-    }
+    if (p) memset(p, 0, sizeof(bproto));
     return p;
 }
 

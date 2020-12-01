@@ -13,7 +13,8 @@ break_stmt = 'break' | 'continue';
 return_stmt = 'return' [expr];
 (* function define statement *)
 func_stmt = 'def' ID func_body;
-func_body = '(' [ID {',' ID}] ')' block 'end';
+func_body = '(' [arg_field {',' arg_field}] ')' block 'end';
+arg_field = ['*'] ID;
 (* class define statement *)
 class_stmt = 'class' ID [':' ID] class_block 'end';
 class_block = {'var' ID {',' ID} | func_stmt};
@@ -41,4 +42,4 @@ call_expr = '(' [expr {',' expr}] ')';
 list_expr = '[' {expr ','} [expr] ']';
 map_expr = '{' {expr ':' expr ','} [expr ':' expr] '}';
 anon_func = 'def' func_body; (* anonymous function *)
-lambda_expr = '/' [ID {',' ID}] | {ID}] '->' expr;
+lambda_expr = '/' [arg_field {',' arg_field}] | {arg_field}] '->' expr;
