@@ -88,7 +88,31 @@ bproto* be_newproto(bvm *vm)
 {
     bgcobject *gco = be_gcnew(vm, BE_PROTO, bproto);
     bproto *p = cast_proto(gco);
-    if (p) memset(p, 0, sizeof(bproto));
+    if (p) {
+        p->upvals = NULL;
+        p->ktab = NULL;
+        p->ptab = NULL;
+        p->code = NULL;
+        p->name = NULL;
+        p->gray = NULL;
+        p->codesize = 0;
+        p->nupvals = 0;
+        p->nproto = 0;
+        p->nconst = 0;
+        p->nstack = 0;
+        p->codesize = 0;
+        p->argc = 0;
+        p->varg = 0;
+        p->source = NULL;
+#if BE_DEBUG_RUNTIME_INFO
+        p->lineinfo = NULL;
+        p->nlineinfo = 0;
+#endif
+#if BE_DEBUG_VAR_INFO
+        p->varinfo = NULL;
+        p->nvarinfo = 0;
+#endif
+    }
     return p;
 }
 
