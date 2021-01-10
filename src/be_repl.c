@@ -87,10 +87,13 @@ BERRY_API int be_repl(bvm *vm, breadline getline, bfreeline freeline)
     char *line;
     be_assert(getline != NULL);
     while ((line = getline("> ")) != NULL) {
-        if (compile(vm, line, getline, freeline)) {
+        int res = compile(vm, line, getline, freeline);
+        if (res == BE_MALLOC_FAIL)
+            return BE_MALLOC_FAIL;
+        if (res) {
             be_dumpexcept(vm);
         } else { /* compiled successfully */
-            int res = call_script(vm);
+            res = call_script(vm);
             if (res) {
                 return res == BE_EXIT ? be_toindex(vm, -1) : res;
             }
