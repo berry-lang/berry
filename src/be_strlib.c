@@ -14,6 +14,7 @@
 #include "be_mem.h"
 #include <string.h>
 #include <stdio.h>
+#include <ctype.h>
 
 #define is_space(c)     ((c) == ' ' || (c) == '\t' || (c) == '\r' || (c) == '\n')
 #define is_digit(c)     ((c) >= '0' && (c) <= '9')
@@ -708,6 +709,34 @@ static int str_char(bvm *vm)
     be_return_nil(vm);
 }
 
+// boolean to select whether we call toupper() or tolower()
+static int str_touplower(bvm *vm, bbool up)
+{
+    if (be_top(vm) && be_isstring(vm, 1)) {
+        const char *p, *s = be_tostring(vm, 1);
+        size_t len = (size_t)be_strlen(vm, 1);
+        char *buf, *q;
+        buf = q = be_pushbuffer(vm, len);
+        /* convert to lower case */
+        for (p = s; *p != '\0'; ++p, ++q) {
+            *q = up ? toupper(*p) : tolower(*p);
+        }
+        be_pushnstring(vm, buf, len); /* make escape string from buffer */
+        be_remove(vm, 2); /* remove buffer */
+        be_return(vm);
+    }
+    be_return_nil(vm);
+}
+
+static int str_tolower(bvm *vm) {
+    return str_touplower(vm, bfalse);
+}
+
+static int str_toupper(bvm *vm) {
+    return str_touplower(vm, btrue);
+}
+
+
 #if !BE_USE_PRECOMPILED_OBJECT
 be_native_module_attr_table(string) {
     be_native_module_function("format", str_format),
@@ -716,7 +745,9 @@ be_native_module_attr_table(string) {
     be_native_module_function("find", str_find),
     be_native_module_function("hex", str_i2hex),
     be_native_module_function("byte", str_byte),
-    be_native_module_function("char", str_char)
+    be_native_module_function("char", str_char),
+    be_native_module_function("tolower", str_tolower),
+    be_native_module_function("toupper", str_toupper),
 };
 
 be_define_native_module(string, NULL);
@@ -730,6 +761,8 @@ module string (scope: global, depend: BE_USE_STRING_MODULE) {
     hex, func(str_i2hex)
     byte, func(str_byte)
     char, func(str_char)
+    tolower, func(str_tolower)
+    toupper, func(str_toupper)
 }
 @const_object_info_end */
 #include "../generate/be_fixed_string.h"
