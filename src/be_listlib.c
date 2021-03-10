@@ -207,6 +207,19 @@ static int m_item(bvm *vm)
     be_return_nil(vm);
 }
 
+static int m_find(bvm *vm)
+{
+    be_getmember(vm, 1, ".p");
+    list_check_data(vm, 2);
+    if (be_isint(vm, 2)) {
+        be_pushvalue(vm, 2);
+        if (be_getindex(vm, -2)) {
+            be_return(vm);
+        }
+    }
+    be_return_nil(vm);
+}
+
 static int m_setitem(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
@@ -423,6 +436,7 @@ void be_load_listlib(bvm *vm)
         { "insert", m_insert },
         { "remove", m_remove },
         { "item", m_item },
+        { "find", m_find },
         { "setitem", m_setitem },
         { "size", m_size },
         { "resize", m_resize },
@@ -450,6 +464,7 @@ class be_class_list (scope: global, name: list) {
     insert, func(m_insert)
     remove, func(m_remove)
     item, func(m_item)
+    find, func(m_find)
     setitem, func(m_setitem)
     size, func(m_size)
     resize, func(m_resize)
