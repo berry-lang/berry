@@ -285,9 +285,9 @@ static int m_tostring(bvm *vm)
     size_t hex_len = len * 2 + 5 + 2 + 2 + 1;  /* reserve size for `bytes("")\0` - 9 chars */
 
     char * hex_out = be_pushbuffer(vm, hex_len);
-    size_t l = strlcpy(hex_out, "bytes(\"", hex_len);
+    size_t l = strlcpy(hex_out, "bytes('", hex_len);
     l += tohex(&hex_out[l], hex_len - l, buf_get_buf(buf), buf->len);
-    l += strlcpy(&hex_out[l], "\")", hex_len - l);
+    l += strlcpy(&hex_out[l], "')", hex_len - l);
 
     be_pushnstring(vm, hex_out, l); /* make escape string from buffer */
     be_remove(vm, -2); /* remove buffer */
