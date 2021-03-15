@@ -1,7 +1,7 @@
 import math
 
 def check(a, b)
-    assert(math.abs(a - b) < 1e-10)
+    assert(math.abs(a - b) < 1e-6)
 end
 
 def test_source(src, msg)
