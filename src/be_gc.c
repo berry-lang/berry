@@ -286,6 +286,9 @@ static void free_proto(bvm *vm, bgcobject *obj)
 #if BE_DEBUG_RUNTIME_INFO
         be_free(vm, proto->lineinfo, proto->nlineinfo * sizeof(blineinfo));
 #endif
+#if BE_DEBUG_VAR_INFO
+        be_free(vm, proto->varinfo, proto->nvarinfo * sizeof(bvarinfo));
+#endif
         be_free(vm, proto, sizeof(bproto));
     }
 }
