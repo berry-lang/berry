@@ -63,3 +63,12 @@ l.pop()
 assert(l == [0, '3'])
 l.pop(0)
 assert(l == ['3'])
+
+l1 = [0, 1]
+l2 = [2, 3]
+assert(l1+l2==[0, 1, 2, 3])
+assert(l1 == [0, 1])
+assert(l2 == [2, 3])
+assert(l1+[2] == [0, 1, 2])
+assert([-1]+l1 == [-1, 0, 1])
+assert(l1 == [0, 1])

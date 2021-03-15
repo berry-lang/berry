@@ -304,13 +304,15 @@ static int m_merge(bvm *vm)
 {
     int argc = be_top(vm);
     if (argc >= 2) {
+        be_newobject(vm, "list"); /* stack contains instance and .p */
         be_getmember(vm, 1, ".p");
+        be_data_merge(vm, -2);
         be_getmember(vm, 2, ".p");
         if (!be_islist(vm, -1)) {
             be_raise(vm, "type_error", "operand must be a list");
         }
-        be_data_merge(vm, -2);
-        be_pop(vm, argc + 1);
+        be_data_merge(vm, -3);
+        be_pop(vm, 3);
     }
     be_return(vm); /* return self */
 }
