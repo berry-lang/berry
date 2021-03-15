@@ -21,6 +21,7 @@
 #include "be_debug.h"
 #include "be_libs.h"
 #include <string.h>
+#include <math.h>
 
 #define NOT_METHOD          BE_NONE
 
@@ -561,6 +562,8 @@ newframe: /* a new call frame */
             bvalue *dst = RA(), *a = RKB(), *b = RKC();
             if (var_isint(a) && var_isint(b)) {
                 var_setint(dst, ibinop(%, a, b));
+            } else if (var_isreal(a) && var_isreal(b)) {
+							var_setreal(dst,fmod(var_toreal(a),var_toreal(b)));
             } else if (var_isinstance(a)) {
                 ins_binop(vm, "%", ins);
             } else {
