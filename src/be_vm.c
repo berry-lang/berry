@@ -563,7 +563,11 @@ newframe: /* a new call frame */
             if (var_isint(a) && var_isint(b)) {
                 var_setint(dst, ibinop(%, a, b));
             } else if (var_isreal(a) && var_isreal(b)) {
-							var_setreal(dst,fmod(var_toreal(a),var_toreal(b)));
+#if BE_USE_SINGLE_FLOAT
+                var_setreal(dst,fmodf(var_toreal(a),var_toreal(b)));
+#else
+                var_setreal(dst,fmod(var_toreal(a),var_toreal(b)));
+#endif
             } else if (var_isinstance(a)) {
                 ins_binop(vm, "%", ins);
             } else {
