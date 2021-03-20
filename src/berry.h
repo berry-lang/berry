@@ -275,7 +275,7 @@ typedef void(*bntvhook)(bvm *vm, bhookinfo *info);
 
 /* Observability hook */
 
-typedef void(*beobshook)(bvm *vm, int event, ...);
+typedef void(*bobshook)(bvm *vm, int event, ...);
 enum beobshookevents {
   BE_OBS_GC_START,        // start of GC, arg = allocated size
   BE_OBS_GC_END,          // end of GC, arg = allocated size
@@ -415,7 +415,7 @@ BERRY_API bvm* be_vm_new(void);
 BERRY_API void be_vm_delete(bvm *vm);
 
 /* Observability hook */
-BERRY_API void be_set_obs_hook(bvm *vm, beobshook hook);
+BERRY_API void be_set_obs_hook(bvm *vm, bobshook hook);
 
 /* code load APIs */
 BERRY_API int be_loadbuffer(bvm *vm,
@@ -430,7 +430,7 @@ BERRY_API void be_module_path_set(bvm *vm, const char *path);
 
 /* bytes operations */
 BERRY_API void be_pushbytes(bvm *vm, const void *buf, size_t len);
-BERRY_API const void *be_tobytes(bvm *vm, int index, size_t *len);
+BERRY_API const void* be_tobytes(bvm *vm, int index, size_t *len);
 
 /* registry operation */
 BERRY_API int be_register(bvm *vm, int index);

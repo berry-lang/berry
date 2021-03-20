@@ -64,7 +64,7 @@
  * Use the obshook function to report low-level actions.
  * Default: 0
  **/
-#define BE_USE_OBSERVABILITY_HOOK       1
+#define BE_USE_OBSERVABILITY_HOOK       0
 
 /* Macro: BE_STACK_TOTAL_MAX
  * Set the maximum total stack size.

@@ -52,8 +52,14 @@
         DEBUG_HOOK(); \
         switch (IGET_OP(ins = *vm->ip++))
 
-#define opcase(opcode)    case OP_##opcode
-#define dispatch()        goto loop
+#if BE_USE_SINGLE_FLOAT
+  #define mathfunc(func)    func##f
+#else
+  #define mathfunc(func)    func
+#endif
+
+#define opcase(opcode)      case OP_##opcode
+#define dispatch()          goto loop
 
 #define equal_rule(op, iseq) \
     bbool res; \
@@ -562,12 +568,8 @@ newframe: /* a new call frame */
             bvalue *dst = RA(), *a = RKB(), *b = RKC();
             if (var_isint(a) && var_isint(b)) {
                 var_setint(dst, ibinop(%, a, b));
-            } else if (var_isreal(a) && var_isreal(b)) {
-#if BE_USE_SINGLE_FLOAT
-                var_setreal(dst,fmodf(var_toreal(a),var_toreal(b)));
-#else
-                var_setreal(dst,fmod(var_toreal(a),var_toreal(b)));
-#endif
+            } else if (var_isnumber(a) && var_isnumber(b)) {
+                var_setreal(dst, mathfunc(fmod)(var_toreal(a), var_toreal(b)));
             } else if (var_isinstance(a)) {
                 ins_binop(vm, "%", ins);
             } else {
@@ -1062,7 +1064,7 @@ void be_dofunc(bvm *vm, bvalue *v, int argc)
     }
 }
 
-BERRY_API void be_set_obs_hook(bvm *vm, beobshook hook)
+BERRY_API void be_set_obs_hook(bvm *vm, bobshook hook)
 {
 #if BE_USE_OBSERVABILITY_HOOK
     vm->obshook = hook;
