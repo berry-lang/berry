@@ -55,3 +55,14 @@ BERRY_LOCAL const bntvmodule* const be_module_table[] = {
     /* user-defined modules register end */
     NULL /* do not remove */
 };
+
+/* this code loads the native class definitions */
+BERRY_API void be_load_custom_libs(bvm *vm)
+{
+    (void)vm;   /* prevent a compiler warning */
+    
+    /* add here custom libs */
+#if !BE_USE_PRECOMPILED_OBJECT
+    /* be_load_xxxlib(vm); */
+#endif
+}
