@@ -10,6 +10,7 @@
 #include "be_vm.h"
 #include "be_gc.h"
 #include <stdlib.h>
+#include <string.h>
 
 #define GC_ALLOC    (1 << 2) /* GC in alloc */
 
