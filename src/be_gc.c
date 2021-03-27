@@ -492,9 +492,15 @@ static void reset_fixedlist(bvm *vm)
 
 void be_gc_auto(bvm *vm)
 {
+#if BE_USE_DEBUG_GC
+    if (vm->gc.status & GC_PAUSE) { /* force gc each time it's possible */
+        be_gc_collect(vm);
+    }
+#else
     if (vm->gc.status & GC_PAUSE && vm->gc.usage > vm->gc.threshold) {
         be_gc_collect(vm);
     }
+#endif
 }
 
 size_t be_gc_memcount(bvm *vm)

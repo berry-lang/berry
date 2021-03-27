@@ -137,6 +137,14 @@
  **/
 #define BE_USE_DEBUG_HOOK               1
 
+/* Macro: BE_USE_DEBUG_GC
+ * Enable GC debug mode. This causes an actual gc after each
+ * allocation. It's much slower and should not be used
+ * in production code.
+ * Default: 0
+ **/
+#define BE_USE_DEBUG_GC                  0
+
 /* Macro: BE_USE_XXX_MODULE
  * These macros control whether the related module is compiled.
  * When they are true, they will enable related modules. At this
