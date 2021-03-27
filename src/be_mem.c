@@ -53,6 +53,10 @@ static void* _realloc(void *ptr, size_t old_size, size_t new_size)
         return malloc(new_size);
     }
     be_assert(new_size == 0);
+
+#if BE_USE_DEBUG_GC
+    memset(ptr, 0xFF, old_size); /* fill the structure with invalid pointers */
+#endif
     free(ptr);
     return NULL;
 }
