@@ -59,8 +59,10 @@ int be_class_attribute(bvm *vm, bclass *c, bstring *attr)
 void be_member_bind(bvm *vm, bclass *c, bstring *name)
 {
     bvalue *attr;
+    set_fixed(name);
     check_members(vm, c);
     attr = be_map_insertstr(vm, c->members, name, NULL);
+    restore_fixed(name);
     attr->v.i = c->nvar++;
     attr->type = MT_VARIABLE;
 }
@@ -69,8 +71,10 @@ void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p)
 {
     bclosure *cl;
     bvalue *attr;
+    set_fixed(name);
     check_members(vm, c);
     attr = be_map_insertstr(vm, c->members, name, NULL);
+    restore_fixed(name);
     var_setnil(attr);
     cl = be_newclosure(vm, p->nupvals);
     cl->proto = p;
@@ -80,8 +84,10 @@ void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p)
 void be_prim_method_bind(bvm *vm, bclass *c, bstring *name, bntvfunc f)
 {
     bvalue *attr;
+    set_fixed(name);
     check_members(vm, c);
     attr = be_map_insertstr(vm, c->members, name, NULL);
+    restore_fixed(name);
     attr->v.nf = f;
     attr->type = MT_PRIMMETHOD;
 }
