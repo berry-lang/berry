@@ -120,6 +120,20 @@ void be_gc_unfix(bvm *vm, bgcobject *obj)
     }
 }
 
+bbool be_gc_fix_set(bvm *vm, bgcobject *obj, bbool fix)
+{
+    (void)vm;
+    bbool was_fixed = gc_isfixed(obj);
+    if (!gc_isconst(obj)) {
+        if (fix) {
+            gc_setfixed(obj);
+        } else {
+            gc_clearfixed(obj);
+        }
+    }
+    return was_fixed;
+}
+
 static void mark_gray(bvm *vm, bgcobject *obj)
 {
     if (obj && gc_iswhite(obj) && !gc_isconst(obj)) {
