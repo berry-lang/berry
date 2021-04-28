@@ -92,6 +92,15 @@ void be_prim_method_bind(bvm *vm, bclass *c, bstring *name, bntvfunc f)
     attr->type = MT_PRIMMETHOD;
 }
 
+void be_closure_method_bind(bvm *vm, bclass *c, bstring *name, bclosure *cl)
+{
+    bvalue *attr;
+    check_members(vm, c);
+    attr = be_map_insertstr(vm, c->members, name, NULL);
+    attr->v.gc = (bgcobject*) cl;
+    attr->type = MT_METHOD;
+}
+
 /* get the closure method count that need upvalues */
 int be_class_closure_count(bclass *c)
 {
