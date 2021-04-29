@@ -1066,6 +1066,9 @@ void be_dofunc(bvm *vm, bvalue *v, int argc)
 
 BERRY_API void be_set_obs_hook(bvm *vm, bobshook hook)
 {
+    (void)vm;       /* avoid comiler warning */
+    (void)hook;     /* avoid comiler warning */
+
 #if BE_USE_OBSERVABILITY_HOOK
     vm->obshook = hook;
 #endif

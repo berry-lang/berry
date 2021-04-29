@@ -35,6 +35,17 @@ static void class_init(bvm *vm, bclass *c, const bnfuncinfo *lib)
             }
             ++lib;
         }
+        if (lib->function == (bntvfunc) BE_CLOSURE) {
+            /* next section is closures */
+            ++lib;
+            while (lib->name) {
+                if (lib->function) { /* method */
+                    bstring *s = be_newstr(vm, lib->name);
+                    be_closure_method_bind(vm, c, s, (bclosure*) lib->function);
+                }
+                ++lib;
+            }
+        }
         be_map_release(vm, c->members); /* clear space */
     }
 }
@@ -346,6 +357,13 @@ BERRY_API void be_pushvalue(bvm *vm, int index)
     be_incrtop(vm);
 }
 
+BERRY_API void be_pushclosure(bvm *vm, void *cl)
+{
+    bvalue *reg = be_incrtop(vm);
+    bclosure * closure = (bclosure*) cl;
+    var_setclosure(reg, closure);
+}
+
 BERRY_API void be_pushntvclosure(bvm *vm, bntvfunc f, int nupvals)
 {
     /* to create a native closure and then push the top registor,
@@ -370,6 +388,12 @@ BERRY_API void be_pushclass(bvm *vm, const char *name, const bnfuncinfo *lib)
     var_setstr(dst, s);
     c = class_auto_make(vm, s, lib);
     var_setclass(vm->top - 1, c);
+}
+
+BERRY_API void be_pushntvclass(bvm *vm, const struct bclass * c)
+{
+    bvalue *top = be_incrtop(vm);
+    var_setclass(top, (bclass *) c);
 }
 
 BERRY_API void be_pushcomptr(bvm *vm, void *ptr)
