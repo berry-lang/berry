@@ -82,7 +82,7 @@ static void m_solidify_proto(bvm *vm, bproto *pr, const char * func_name, int bu
 
     logfmt("%*s%d,                          /* has constants */\n", indent, "", (pr->nconst > 0) ? 1 : 0);
     if (pr->nconst > 0) {
-        logfmt("%*s( &(const bvalue[%2d]) {     /* upvals */\n", indent, "", pr->nconst);
+        logfmt("%*s( &(const bvalue[%2d]) {     /* constants */\n", indent, "", pr->nconst);
         for (int k = 0; k < pr->nconst; k++) {
             int type = pr->ktab[k].type;
             const char *type_name = m_type_ktab(type);
