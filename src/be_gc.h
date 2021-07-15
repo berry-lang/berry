@@ -45,7 +45,7 @@ if (!gc_isconst(o)) { \
 #define gc_exmark(o)        (((o)->marked >> 4) & 0x0F)
 #define gc_setexmark(o, k)  ((o)->marked |= (k) << 4)
 
-#define be_isgctype(t)      ((t) >= BE_GCOBJECT)
+#define be_isgctype(t)      ((t) >= BE_GCOBJECT && (t) != BE_VAR)
 #define be_isgcobj(o)       be_isgctype(var_type(o))
 #define be_gcnew(v, t, s)   be_newgcobj((v), (t), sizeof(s))
 
