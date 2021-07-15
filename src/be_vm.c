@@ -301,7 +301,7 @@ static int class_attribute(bvm *vm, bvalue *o, bvalue *c, bvalue *dst)
     bstring *attr = var_tostr(c);
     bclass *obj = var_toobj(o);
     int type = be_class_member(vm, obj, attr, dst);
-    if (type == BE_NONE || type == BE_VAR) {
+    if (type == BE_NONE || type == BE_INDEX) {
         vm_error(vm, "attribute_error",
             "the '%s' class has no static attribute '%s'",
             str(obj->name), str(attr));

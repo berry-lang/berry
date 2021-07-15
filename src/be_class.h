@@ -10,7 +10,7 @@
 
 #include "be_object.h"
 
-#define MT_VARIABLE                     BE_VAR
+#define MT_VARIABLE                     BE_INDEX
 #define MT_METHOD                       BE_CLOSURE
 #define MT_PRIMMETHOD                   BE_NTVFUNC
 

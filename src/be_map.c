@@ -87,7 +87,6 @@ static uint32_t _hashcode(bvm *vm, int type, union bvaldata v)
     switch (type) {
     case BE_NIL: return 0;
     case BE_BOOL: return (uint32_t)v.b;
-    case BE_VAR:
     case BE_INT: return (uint32_t)v.i;
     case BE_REAL: return hashreal(v);
     case BE_STRING: return be_strhash(v.s);
@@ -113,7 +112,6 @@ static int eqnode(bvm *vm, bmapnode *node, bvalue *key, uint32_t hash)
 #endif
         if(keytype(k) == key->type && hashcode(k) == hash) {
             switch (key->type) {
-            case BE_VAR:
             case BE_INT: return var_toint(key) == var_toint(k);
             case BE_REAL: return var_toreal(key) == var_toreal(k);
             case BE_STRING: return be_eqstr(var_tostr(key), var_tostr(k));

@@ -129,7 +129,7 @@ static bstring** save_members(bvm *vm, void *fp, bclass *c, int nvar)
     }
     while ((node = be_map_next(members, &iter)) != NULL) {
         be_assert(var_isstr(&node->key));
-        if (var_isvar(&node->value)) { /* cache member name */
+        if (var_isindex(&node->value)) { /* cache member name */
             if (vars == NULL) {
                 return NULL; /* should never be executed */
             }
@@ -171,7 +171,6 @@ static void save_value(bvm *vm, void *fp, bvalue *v)
 {
     save_byte(fp, (uint8_t)var_type(v)); /* type */
     switch (var_type(v)) {
-    case BE_VAR:
     case BE_INT: save_int(fp, var_toint(v)); break;
     case BE_REAL: save_real(fp, var_toreal(v)); break;
     case BE_STRING: save_string(fp, var_tostr(v)); break;
@@ -414,7 +413,6 @@ static void load_class(bvm *vm, void *fp, bvalue *v)
 static void load_value(bvm *vm, void *fp, bvalue *v)
 {
     switch (load_byte(fp)) {
-    case BE_VAR: 
     case BE_INT: var_setint(v, load_int(fp)); break;
     case BE_REAL: var_setreal(v, load_real(fp)); break;
     case BE_STRING: var_setstr(v, load_string(vm, fp)); break;
