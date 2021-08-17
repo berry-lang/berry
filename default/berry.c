@@ -67,6 +67,7 @@
     "  -c <file> compile script 'file' to bytecode file\n"          \
     "  -o <file> save bytecode to 'file'\n"                         \
     "  -g        force named globals in VM\n"                       \
+    "  -s        force Berry compiler in strict mode\n"             \
     "  -v        show version information\n"                        \
     "  -h        show help information\n\n"                         \
     "For more information, please see:\n"                           \
@@ -82,7 +83,8 @@
 #define arg_v       (1 << 5)
 #define arg_e       (1 << 6)
 #define arg_g       (1 << 7)
-#define arg_err     (1 << 8)
+#define arg_s       (1 << 8)
+#define arg_err     (1 << 9)
 
 struct arg_opts {
     int idx;
@@ -252,6 +254,7 @@ static int parse_arg(struct arg_opts *opt, int argc, char *argv[])
         case 'l': args |= arg_l; break;
         case 'e': args |= arg_e; break;
         case 'g': args |= arg_g; break;
+        case 's': args |= arg_s; break;
         case '?': return args | arg_err;
         case 'c':
             args |= arg_c;
@@ -300,7 +303,7 @@ static int analysis_args(bvm *vm, int argc, char *argv[])
 {
     int args = 0;
     struct arg_opts opt = { 0 };
-    opt.pattern = "vhilegc?o?";
+    opt.pattern = "vhilegsc?o?";
     args = parse_arg(&opt, argc, argv);
     argc -= opt.idx;
     argv += opt.idx;
@@ -313,6 +316,10 @@ static int analysis_args(bvm *vm, int argc, char *argv[])
     if (args & arg_g) {
         comp_set_named_gbl(vm); /* forced named global in VM code */
         args &= ~arg_g;         /* clear the flag for this option not to interfere with other options */
+    }
+    if (args & arg_s) {
+        comp_set_strict(vm);    /* compiler in strict mode */
+        args &= ~arg_s;
     }
     if (args & arg_v) {
         be_writestring(FULL_VERSION "\n");

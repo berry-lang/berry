@@ -378,6 +378,8 @@ static int find_localvar(bfuncinfo *finfo, bstring *s, int begin)
 
 /* create a new local variable by name, or return the current register if already exists */
 /* returns the Reg number for the variable */
+/* If STRICT, we don't allow a var to hide a var from outer scope */
+/* We don't allow the same var to be defined twice in same scope */
 static int new_localvar(bparser *parser, bstring *name)
 {
     bfuncinfo *finfo = parser->finfo;
@@ -385,6 +387,11 @@ static int new_localvar(bparser *parser, bstring *name)
     /* 'strict': raise an exception if the local variable shadows another local variable */
     if (reg == -1) {
         bvalue *var;
+        if (comp_is_strict(parser->vm)) {
+            if (find_localvar(finfo, name, 0) >= 0 && str(name)[0] != '.') {  /* we do accept nested redifinition of internal variables starting with ':' */
+                push_error(parser, "strict: redefinition of '%s' from outer scope", str(name));
+            }
+        }
         reg = be_list_count(finfo->local); /* new local index */
         var = be_list_push(parser->vm, finfo->local, NULL);
         var_setstr(var, name);
@@ -392,6 +399,8 @@ static int new_localvar(bparser *parser, bstring *name)
             be_code_allocregs(finfo, 1); /* use a register */
         }
         begin_varinfo(parser, name);
+    } else {
+        push_error(parser, "redefinition of '%s'", str(name));
     }
     return reg;
 }
@@ -535,11 +544,7 @@ static void func_varlist(bparser *parser)
             str = next_token(parser).u.s;
             match_token(parser, TokenId); /* match and skip ID */
             /* new local variable */
-            if (find_localvar(parser->finfo, str, 0) == -1) {
-                new_var(parser, str, &v);
-            } else {
-                push_error(parser, "redefinition of '%s'", str(str));
-            }
+            new_var(parser, str, &v);
         }
     }
     match_token(parser, OptRBK); /* skip ')' */
@@ -596,11 +601,7 @@ static void lambda_varlist(bparser *parser)
             str = next_token(parser).u.s;
             match_token(parser, TokenId); /* match and skip ID */
             /* new local variable */
-            if (find_localvar(parser->finfo, str, 0) == -1) {
-                new_var(parser, str, &v);
-            } else {
-                push_error(parser, "redefinition of '%s'", str(str));
-            }
+            new_var(parser, str, &v);
         }
     }
     match_token(parser, OptArrow); /* skip '->' */
@@ -902,9 +903,20 @@ static int check_newvar(bparser *parser, bexpdesc *e)
     if (e->type == ETGLOBAL) {
         if (e->v.idx < be_builtin_count(parser->vm)) {
             e->v.s = be_builtin_name(parser->vm, e->v.idx);
+            if (comp_is_strict(parser->vm)) {
+                push_error(parser, "strict: redefinition of builtin '%s'",
+                    str(e->v.s));
+            }
             return btrue;
         }
         return bfalse;
+    }
+    if (comp_is_strict(parser->vm)) {
+        bfuncinfo *finfo = parser->finfo;
+        if ((e->type == ETVOID) && (finfo->prev || finfo->binfo->prev || parser->islocal)) {
+            push_error(parser, "strict: no global '%s', did you mean 'var %s'?",
+                str(e->v.s), str(e->v.s));
+        }
     }
     return e->type == ETVOID;
 }
