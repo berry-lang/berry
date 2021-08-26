@@ -21,7 +21,7 @@ bytecode_file:  -- little endian
 
 header: 8
     magic_number: 3 -- 0xbecdfe (berry code file)
-    version: 1      -- update with file structure definition
+    version: 2      -- update with file structure definition
     integer_size: .1
     float_size: .1
     -- reserved space
@@ -30,7 +30,7 @@ main_function -> function
 
 global_desc:
     builtin_count: 4
-    global_count: 4
+    global_count: 4 -- excluding builtins
     global_name -> [
             string
         ](global_count)
@@ -43,7 +43,8 @@ function:
             string
         argc: 1   -- arguments count
         nstack: 1 -- number of stack size by this function
-        extra: 2  -- extra data
+        varg: 1
+        extra: 1  -- extra data
     bytecode:
         code_size: 4
         code_array -> [ -- bytecode array
