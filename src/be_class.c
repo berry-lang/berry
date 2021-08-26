@@ -14,6 +14,7 @@
 #include "be_vm.h"
 #include "be_func.h"
 #include "be_var.h"
+#include <string.h>
 
 #define check_members(vm, c)            \
     if (!(c)->members) {                \
@@ -235,6 +236,20 @@ bbool be_class_newobj(bvm *vm, bclass *c, bvalue *reg, int argc, int mode)
         return btrue;
     }
     return bfalse;
+}
+
+/* Find instance member by name and copy value to `dst` */
+/* Do not look into virtual members */
+int be_instance_member_simple(bvm *vm, binstance *instance, bstring *name, bvalue *dst)
+{
+    int type;
+    be_assert(name != NULL);
+    binstance * obj = instance_member(vm, instance, name, dst);
+    type = var_type(dst);
+    if (obj && type == MT_VARIABLE) {
+        *dst = obj->members[dst->v.i];
+    }
+    return type;
 }
 
 /* Find instance member by name and copy value to `dst` */
