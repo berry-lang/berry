@@ -1105,6 +1105,7 @@ be_local_closure(getbits,   /* name */
   be_nested_proto(
     9,                          /* nstack */
     3,                          /* argc */
+    0,                          /* varg */
     0,                          /* has upvals */
     NULL,                       /* no upvals */
     0,                          /* has sup protos */
@@ -1164,6 +1165,7 @@ be_local_closure(setbits,   /* name */
   be_nested_proto(
     10,                          /* nstack */
     4,                          /* argc */
+    0,                          /* varg */
     0,                          /* has upvals */
     NULL,                       /* no upvals */
     0,                          /* has sup protos */
