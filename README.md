@@ -111,9 +111,9 @@ Berry's EBNF grammar definition: [tools/grammar/berry.ebnf](./tools/grammar/berr
    make install
    ```
 
-## Editor pulgins
+## Editor plugins
 
-[Visual Studio Code](https://code.visualstudio.com/) pulgin are in this directory: [./tools/pulgins/vscode](./tools/pulgins/vscode).
+[Visual Studio Code](https://code.visualstudio.com/) plugin are in this directory: [./tools/plugins/vscode](./tools/plugins/vscode).
 
 ## Examples
 
