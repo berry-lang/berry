@@ -161,6 +161,7 @@
 #define BE_USE_DEBUG_MODULE             1
 #define BE_USE_GC_MODULE                1
 #define BE_USE_SOLIDIFY_MODULE          1
+#define BE_USE_INTROSPECT_MODULE        1
 #define BE_USE_STRICT_MODULE            1
 
 /* Macro: BE_EXPLICIT_XXX

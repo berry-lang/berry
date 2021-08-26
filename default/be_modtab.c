@@ -20,6 +20,7 @@ be_extern_native_module(sys);
 be_extern_native_module(debug);
 be_extern_native_module(gc);
 be_extern_native_module(solidify);
+be_extern_native_module(introspect);
 be_extern_native_module(strict);
 
 /* user-defined modules declare start */
@@ -58,6 +59,9 @@ BERRY_LOCAL const bntvmodule* const be_module_table[] = {
 #endif
 #if BE_USE_SOLIDIFY_MODULE
     &be_native_module(solidify),
+#endif
+#if BE_USE_INTROSPECT_MODULE
+    &be_native_module(introspect),
 #endif
 #if BE_USE_STRICT_MODULE
     &be_native_module(strict),
