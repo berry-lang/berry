@@ -1,4 +1,4 @@
-#- base64 encode -#
+#- introspect -#
 import introspect
 
 #- test for modules -#
