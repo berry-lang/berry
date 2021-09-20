@@ -455,6 +455,11 @@ void be_load_baselib(bvm *vm)
     be_regfunc(vm, "issubclass", l_issubclass);
     be_regfunc(vm, "isinstance", l_isinstance);
     be_regfunc(vm, "__iterator__", l_iterator);
+}
+
+/* call must be added later to respect order of builtins */
+void be_load_baselib_call(bvm *vm)
+{
     be_regfunc(vm, "call", l_call);
 }
 #else
@@ -482,12 +487,12 @@ vartab m_builtin (scope: local) {
     issubclass, func(l_issubclass)
     isinstance, func(l_isinstance)
     __iterator__, func(l_iterator)
-    call, func(l_call)
     open, func(be_nfunc_open)
     list, class(be_class_list)
     map, class(be_class_map)
     range, class(be_class_range)
     bytes, class(be_class_bytes)
+    call, func(l_call)
 }
 @const_object_info_end */
 #include "../generate/be_fixed_m_builtin.h"
