@@ -10,3 +10,5 @@ assert(math.isnan(n*0))
 
 assert(!math.isnan(0))
 assert(!math.isnan(1.5))
+
+assert(n != n)      #- nan is never identical to itself -#
