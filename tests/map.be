@@ -14,11 +14,11 @@ assert(m.find('a') == 1)
 assert(m.find('z') == nil)
 assert(m.find('z', 4) == 4)
 
-# has
-assert(m.has('a'))
-assert(m.has(0))
-assert(!m.has('z'))
-assert(!m.has())
+# contains
+assert(m.contains('a'))
+assert(m.contains(0))
+assert(!m.contains('z'))
+assert(!m.contains())
 
 # set
 m['y'] = -1
