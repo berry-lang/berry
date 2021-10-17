@@ -254,12 +254,18 @@ static void cache_module(bvm *vm, bstring *name)
 
 /* Try to run '()' function of module. Module is already loaded. */
 static void module_init(bvm *vm) {
-    if (be_getmember(vm, -1, "init")) {
-        /* found, call it with no parameter */
-        be_call(vm, 0);
-        /* we don't care about the result */
+    if (be_ismodule(vm, -1)) {
+        if (be_getmember(vm, -1, "init")) {
+            /* found, call it with current module as parameter */
+            be_pushvalue(vm, -2);
+            be_call(vm, 1);
+            /* the result of init() is cached and returned */
+            be_pop(vm, 1);
+            be_remove(vm, -2);  /* remove initial module */
+        } else {
+            be_pop(vm, 1);
+        }
     }
-    be_pop(vm, 1);
 }
 
 /* load module to vm->top */
@@ -271,12 +277,18 @@ int be_module_load(bvm *vm, bstring *path)
         if (res == BE_IO_ERROR)
             res = load_package(vm, path);
         if (res == BE_OK) {
-            cache_module(vm, path);
             /* on first load of the module, try running the '()' function */
             module_init(vm);
+            cache_module(vm, path);
         }
     }
     return res;
+}
+
+BERRY_API bbool be_getmodule(bvm *vm, const char *k)
+{
+    int res = be_module_load(vm, be_newstr(vm, k));
+    return res == BE_OK;
 }
 
 bmodule* be_module_new(bvm *vm)
@@ -339,7 +351,7 @@ bbool be_module_setmember(bvm *vm, bmodule *module, bstring *attr, bvalue *src)
     } else {
         /* if not writable, try 'setmember' */
         int type = be_module_attr(vm, module, str_literal(vm, "setmember"), vm->top);
-        if (type == BE_FUNCTION) {
+        if (basetype(type) == BE_FUNCTION) {
             bvalue *top = vm->top;
             // top[0] already has 'member'
             var_setstr(&top[1], attr);  /* attribute name */
