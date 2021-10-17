@@ -883,6 +883,9 @@ static int m_item(bvm *vm)
     buf_impl attr = bytes_check_data(vm, 0); /* we reserve 4 bytes anyways */
     if (argc >=2 && be_isint(vm, 2)) {  /* single byte */
         int index = be_toint(vm,2);
+        if (index < 0) {
+            index += attr.len;
+        }
         if (index >= 0 && index < attr.len) {
             be_pushint(vm, buf_get1(&attr, index));
             be_return(vm);
@@ -900,6 +903,9 @@ static int m_item(bvm *vm)
             be_getmember(vm, 2, "__upper__");
             upper = be_toint(vm, -1);
             be_pop(vm, 1);
+            /* handle negative limits */
+            if (upper < 0) { upper += attr.len; }
+            if (lower < 0) { lower += attr.len; }
             /* protection scope */
             upper = upper < size ? upper : size - 1;
             lower = lower < 0 ? 0 : lower;
