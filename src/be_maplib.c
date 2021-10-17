@@ -121,7 +121,7 @@ static int m_find(bvm *vm)
     be_return(vm);
 }
 
-static int m_has(bvm *vm)
+static int m_contains(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     map_check_data(vm, 2);
@@ -223,6 +223,7 @@ void be_load_maplib(bvm *vm)
         { "item", m_item },
         { "setitem", m_setitem },
         { "find", m_find },
+        { "contains", m_contains },
         { "size", m_size },
         { "insert", m_insert },
         { "iter", m_iter },
@@ -241,7 +242,7 @@ class be_class_map (scope: global, name: map) {
     item, func(m_item)
     setitem, func(m_setitem)
     find, func(m_find)
-    has, func(m_has)
+    contains, func(m_contains)
     size, func(m_size)
     insert, func(m_insert)
     iter, func(m_iter)
