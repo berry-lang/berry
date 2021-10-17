@@ -97,8 +97,11 @@ static bstring* sim2str(bvm *vm, bvalue *v)
     case BE_MODULE:
         module2str(sbuf, v);
         break;
+    case BE_COMPTR:
+        sprintf(sbuf, "<ptr: %p>", var_toobj(v));
+        break;
     default:
-        strcpy(sbuf, "(unknow value)");
+        strcpy(sbuf, "(unknown value)");
         break;
     }
     return be_newstr(vm, sbuf);
@@ -218,7 +221,7 @@ const char* be_pushvfstr(bvm *vm, const char *format, va_list arg)
             break;
         }
         default:
-            pushstr(vm, "(unknow)", 8);
+            pushstr(vm, "(unknown)", 8);
             break;
         }
         concat2(vm);

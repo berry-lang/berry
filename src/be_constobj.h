@@ -72,6 +72,11 @@ extern "C" {
     .type = BE_STRING                                           \
 }
 
+#define be_const_comptr(_val) {                                 \
+    .v.c = (const void*)(_val),                                       \
+    .type = BE_COMPTR                                           \
+}
+
 #define be_const_class(_class) {                                \
     .v.c = &(_class),                                           \
     .type = BE_CLASS                                            \
@@ -152,6 +157,14 @@ const bntvmodule be_native_module(_module) = {                  \
     .name = _cname                                              \
 }
 
+/* defines needed for solidified modules */
+#define be_local_module(_c_name, _module_name, _map)            \
+  static const bmodule m_lib##_c_name = {                       \
+    be_const_header(BE_MODULE),                                 \
+    .table = (bmap*)_map,                                       \
+    .info.name = _module_name                                   \
+}
+
 #define be_nested_map(_size, _slots)                            \
   & (const bmap) {                                              \
     be_const_header(BE_MAP),                                    \
@@ -216,6 +229,11 @@ const bntvmodule be_native_module(_module) = {                  \
 #define be_const_real_hex(_val) {                               \
     bvaldata((void*)(_val)),                                    \
     BE_REAL                                                     \
+}
+
+#define be_const_comptr(_val) {                                 \
+    bvaldata((void*)(_val)),                                    \
+    BE_COMPTR                                                   \
 }
 
 #define be_const_str(_string) {                                 \
