@@ -172,7 +172,6 @@ typedef struct bntvmodule {
     const bntvmodobj *attrs; /* native module attributes */
     size_t size; /* native module attribute count */
     const struct bmodule *module; /* const module object */
-    bntvfunc init; /* initialization function */
 } bntvmodule;
 
 /* native module node definition macro */
