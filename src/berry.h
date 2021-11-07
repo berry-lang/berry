@@ -402,8 +402,10 @@ typedef void(*bntvhook)(bvm *vm, bhookinfo *info);
 
 typedef void(*bobshook)(bvm *vm, int event, ...);
 enum beobshookevents {
-  BE_OBS_GC_START,        // start of GC, arg = allocated size
-  BE_OBS_GC_END,          // end of GC, arg = allocated size
+  BE_OBS_GC_START,        /* start of GC, arg = allocated size */
+  BE_OBS_GC_END,          /* end of GC, arg = allocated size */
+  BE_OBS_VM_HEARTBEAT,    /* VM heartbeat called every million instructions */
+  BE_OBS_STACK_RESIZE_START,    /* Berry stack resized */
 };
 
 /* FFI functions */
