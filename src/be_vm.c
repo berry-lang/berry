@@ -123,7 +123,7 @@
     _vm->cf->status = PRIM_FUNC; \
 }
 
-static void prep_closure(bvm *vm, int32_t pos, int argc, int mode);
+static void prep_closure(bvm *vm, int pos, int argc, int mode);
 
 static void attribute_error(bvm *vm, const char *t, bvalue *b, bvalue *c)
 {
@@ -1115,7 +1115,7 @@ newframe: /* a new call frame */
     }
 }
 
-static void prep_closure(bvm *vm, int32_t pos, int argc, int mode)
+static void prep_closure(bvm *vm, int pos, int argc, int mode)
 {
     bvalue *v, *end;
     bproto *proto = var2cl(vm->reg + pos)->proto;
@@ -1140,7 +1140,7 @@ static void prep_closure(bvm *vm, int32_t pos, int argc, int mode)
     }
 }
 
-static void do_closure(bvm *vm, int32_t pos, int argc)
+static void do_closure(bvm *vm, int pos, int argc)
 {
     // bvalue *v, *end;
     // bproto *proto = var2cl(reg)->proto;
@@ -1154,7 +1154,7 @@ static void do_closure(bvm *vm, int32_t pos, int argc)
     vm_exec(vm);
 }
 
-static void do_ntvclos(bvm *vm, int32_t pos, int argc)
+static void do_ntvclos(bvm *vm, int pos, int argc)
 {
     bntvclos *f = var_toobj(vm->reg + pos);
     push_native(vm, vm->reg + pos, argc, 0);
@@ -1162,7 +1162,7 @@ static void do_ntvclos(bvm *vm, int32_t pos, int argc)
     ret_native(vm);
 }
 
-static void do_ntvfunc(bvm *vm, int32_t pos, int argc)
+static void do_ntvfunc(bvm *vm, int pos, int argc)
 {
     bntvfunc f = var_tontvfunc(vm->reg + pos);
     push_native(vm, vm->reg + pos, argc, 0);
@@ -1170,7 +1170,7 @@ static void do_ntvfunc(bvm *vm, int32_t pos, int argc)
     ret_native(vm);
 }
 
-static void do_class(bvm *vm, int32_t pos, int argc)
+static void do_class(bvm *vm, int pos, int argc)
 {
     if (be_class_newobj(vm, var_toobj(vm->reg + pos), pos, ++argc, 0)) {
         be_incrtop(vm);
@@ -1183,7 +1183,7 @@ void be_dofunc(bvm *vm, bvalue *v, int argc)
 {
     be_assert(vm->reg <= v && v < vm->stacktop);
     be_assert(vm->stack <= vm->reg && vm->reg < vm->stacktop);
-    int32_t pos = v - vm->reg;
+    int pos = v - vm->reg;
     switch (var_type(v)) {
     case BE_CLASS: do_class(vm, pos, argc); break;
     case BE_CLOSURE: do_closure(vm, pos, argc); break;
