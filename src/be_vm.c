@@ -123,7 +123,7 @@
     _vm->cf->status = PRIM_FUNC; \
 }
 
-static void prep_closure(bvm *vm, bvalue *reg, int argc, int mode);
+static void prep_closure(bvm *vm, int pos, int argc, int mode);
 
 static void attribute_error(bvm *vm, const char *t, bvalue *b, bvalue *c)
 {
@@ -842,28 +842,34 @@ newframe: /* a new call frame */
                 binstance *obj = var_toobj(a);
                 bstring *attr = var_tostr(b);
                 if (!be_instance_setmember(vm, obj, attr, c)) {
+                    reg = vm->reg;
                     vm_error(vm, "attribute_error",
                         "class '%s' cannot assign to attribute '%s'",
                         str(be_instance_name(obj)), str(attr));
                 }
+                reg = vm->reg;
                 dispatch();
             }
             if (var_isclass(a) && var_isstr(b)) {
                 bclass *obj = var_toobj(a);
                 bstring *attr = var_tostr(b);
                 if (!be_class_setmember(vm, obj, attr, c)) {
+                    reg = vm->reg;
                     vm_error(vm, "attribute_error",
                         "class '%s' cannot assign to static attribute '%s'",
                         str(be_class_name(obj)), str(attr));
                 }
+                reg = vm->reg;
                 dispatch();
             }
             if (var_ismodule(a) && var_isstr(b)) {
                 bmodule *obj = var_toobj(a);
                 bstring *attr = var_tostr(b);
                 if (be_module_setmember(vm, obj, attr, c)) {
+                    reg = vm->reg;
                     dispatch();
                 } else {
+                    reg = vm->reg;
                     // fall through exception below
                 }
             }
@@ -1007,10 +1013,11 @@ newframe: /* a new call frame */
                 ++var, --argc, mode = 1;
                 goto recall;
             case BE_CLASS:
-                if (be_class_newobj(vm, var_toobj(var), var, ++argc, mode)) {  /* instanciate object and find constructor */
+                if (be_class_newobj(vm, var_toobj(var), var - reg, ++argc, mode)) {  /* instanciate object and find constructor */
                     reg = vm->reg + mode;  /* constructor found */
                     mode = 0;
                     var = RA() + 1; /* to next register */
+                    reg = vm->reg;
                     goto recall; /* call constructor */
                 }
                 break;
@@ -1046,7 +1053,7 @@ newframe: /* a new call frame */
                 //     *(reg + proto->argc - 1) = *(vm->top-2);  /* change the vararg argument to now contain the list instance */
                 //     vm->top = top_save;  /* restore top of stack pointer */
                 // }
-                prep_closure(vm, var, argc, mode);
+                prep_closure(vm, var - reg, argc, mode);
                 reg = vm->reg;  /* `reg` has changed, now new base register */
                 goto newframe;  /* continue execution of the closure */
             }
@@ -1108,14 +1115,13 @@ newframe: /* a new call frame */
     }
 }
 
-static void prep_closure(bvm *vm, bvalue *reg, int argc, int mode)
+static void prep_closure(bvm *vm, int pos, int argc, int mode)
 {
     bvalue *v, *end;
-    bproto *proto = var2cl(reg)->proto;
-    push_closure(vm, reg, proto->nstack, mode);
-    v = vm->reg + argc;
+    bproto *proto = var2cl(vm->reg + pos)->proto;
+    push_closure(vm, vm->reg + pos, proto->nstack, mode);
     end = vm->reg + proto->argc;
-    for (; v <= end; ++v) {
+    for (v = vm->reg + argc; v <= end; ++v) {
         var_setnil(v);
     }
     if (proto->varg) {  /* there are vararg at the last argument, build the list */
@@ -1134,7 +1140,7 @@ static void prep_closure(bvm *vm, bvalue *reg, int argc, int mode)
     }
 }
 
-static void do_closure(bvm *vm, bvalue *reg, int argc)
+static void do_closure(bvm *vm, int pos, int argc)
 {
     // bvalue *v, *end;
     // bproto *proto = var2cl(reg)->proto;
@@ -1144,31 +1150,31 @@ static void do_closure(bvm *vm, bvalue *reg, int argc)
     // for (; v <= end; ++v) {
     //     var_setnil(v);
     // }
-    prep_closure(vm, reg, argc, 0);
+    prep_closure(vm, pos, argc, 0);
     vm_exec(vm);
 }
 
-static void do_ntvclos(bvm *vm, bvalue *reg, int argc)
+static void do_ntvclos(bvm *vm, int pos, int argc)
 {
-    bntvclos *f = var_toobj(reg);
-    push_native(vm, reg, argc, 0);
+    bntvclos *f = var_toobj(vm->reg + pos);
+    push_native(vm, vm->reg + pos, argc, 0);
     f->f(vm); /* call C primitive function */
     ret_native(vm);
 }
 
-static void do_ntvfunc(bvm *vm, bvalue *reg, int argc)
+static void do_ntvfunc(bvm *vm, int pos, int argc)
 {
-    bntvfunc f = var_tontvfunc(reg);
-    push_native(vm, reg, argc, 0);
+    bntvfunc f = var_tontvfunc(vm->reg + pos);
+    push_native(vm, vm->reg + pos, argc, 0);
     f(vm); /* call C primitive function */
     ret_native(vm);
 }
 
-static void do_class(bvm *vm, bvalue *reg, int argc)
+static void do_class(bvm *vm, int pos, int argc)
 {
-    if (be_class_newobj(vm, var_toobj(reg), reg, ++argc, 0)) {
+    if (be_class_newobj(vm, var_toobj(vm->reg + pos), pos, ++argc, 0)) {
         be_incrtop(vm);
-        be_dofunc(vm, reg + 1, argc);
+        be_dofunc(vm, vm->reg + pos + 1, argc);
         be_stackpop(vm, 1);
     }
 }
@@ -1177,11 +1183,12 @@ void be_dofunc(bvm *vm, bvalue *v, int argc)
 {
     be_assert(vm->reg <= v && v < vm->stacktop);
     be_assert(vm->stack <= vm->reg && vm->reg < vm->stacktop);
+    int pos = v - vm->reg;
     switch (var_type(v)) {
-    case BE_CLASS: do_class(vm, v, argc); break;
-    case BE_CLOSURE: do_closure(vm, v, argc); break;
-    case BE_NTVCLOS: do_ntvclos(vm, v, argc); break;
-    case BE_NTVFUNC: do_ntvfunc(vm, v, argc); break;
+    case BE_CLASS: do_class(vm, pos, argc); break;
+    case BE_CLOSURE: do_closure(vm, pos, argc); break;
+    case BE_NTVCLOS: do_ntvclos(vm, pos, argc); break;
+    case BE_NTVFUNC: do_ntvfunc(vm, pos, argc); break;
     default: call_error(vm, v);
     }
 }
