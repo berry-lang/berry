@@ -16,3 +16,10 @@ def test(a, b)
     end
 end
 test(true, true)
+
+# bug in unary 
+def f(i)
+    var j = !i       # bug if i is erroneously modified
+    return i
+end
+assert(f(1) == 1)
