@@ -102,3 +102,39 @@ assert([1,1,nil,2].find(nil) == 2)
 assert([1,[1,nil,2],3,[3]].find(3) == 2)
 assert([1,[1,nil,2],3,[3]].find([3]) == 3)
 assert([1,[1,nil,2],3,[3]].find([1,nil,2]) == 1)
+
+#- keys() -#
+assert(str(["a",'b',0].keys()) == "(0..2)")
+assert(str([nil].keys()) == "(0..0)")
+assert(str([].keys()) == "(0..-1)")
+
+#- concat with delimiter -#
+assert(["foo","bar",0].concat() == "foobar0")
+assert([1,2,3].concat() == "123")
+assert(["foo","bar",0].concat('') == "foobar0")
+assert([1,2,3].concat('') == "123")
+
+assert(["foo","bar",0].concat('-') == "foo-bar-0")
+assert([].concat('<->') == "")
+assert(["foo"].concat('<->') == "foo")
+assert(["foo","bar",0].concat('<->') == "foo<->bar<->0")
+
+assert(["","foo","bar",0].concat('<->') == "<->foo<->bar<->0")
+assert(["","",1,"bar",0].concat('<->') == "<-><->1<->bar<->0")
+assert(["","",1,"bar",0].concat('') == "1bar0")
+
+assert([1,2,3].concat('-') == "1-2-3")
+assert([1,"2",3].concat('-') == "1-2-3")
+
+assert(["",2,3].concat('-') == "-2-3")
+
+#- negative indices -#
+assert([1,2,3,4][0] == 1)
+assert([1,2,3,4][-1] == 4)
+assert([1,2,3,4][-2] == 3)
+
+assert([1,2,3,4][1..10] == [2,3,4])
+assert([1,2,3,4][1..-1] == [2,3,4])
+assert([1,2,3,4][1..-2] == [2,3])
+assert([1,2,3,4][3..2] == [])
+assert([1,2,3,4][2..-3] == [])
