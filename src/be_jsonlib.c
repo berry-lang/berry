@@ -41,6 +41,7 @@ static const char* match_char(const char *json, int ch)
     }
     return NULL;
 }
+
 static int is_object(bvm *vm, const char *class, int idx)
 {
     if (be_isinstance(vm, idx)) {
