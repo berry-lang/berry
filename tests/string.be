@@ -52,3 +52,20 @@ assert(s[0..-2] == "azertyuio")
 assert(s[-4..-2] == "uio")
 assert(s[-2..-4] == "")  #- if range is in wrong order, returns empty string -#
 assert(s[-40..-2] == "azertyuio")  #- borders are allowed to be out of range -#
+
+# escape
+import string
+assert(string.escape("A") == '"A"')
+assert(string.escape("A", true) == "'A'")
+assert(string.escape("\"") == '"\\""')
+assert(string.escape("\"", true) == '\'"\'')
+
+var s ='"a\'b"\''
+assert(string.escape(s) == '"\\"a\'b\\"\'"')
+assert(string.escape(s, true) == '\'"a\\\'b"\\\'\'')
+
+# tr
+assert(string.tr("azer", "abcde", "ABCDE") == 'AzEr')
+assert(string.tr("azer", "", "") == 'azer')
+assert(string.tr("azer", "aaa", "ABC") == 'Azer')  # only first match works
+assert(string.tr("A_b", "_", " ") == 'A b')
