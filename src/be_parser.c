@@ -20,6 +20,7 @@
 #include "be_decoder.h"
 #include "be_debug.h"
 #include "be_exec.h"
+#include <limits.h>
 
 #define OP_NOT_BINARY           TokenNone
 #define OP_NOT_UNARY            TokenNone
@@ -29,6 +30,17 @@
 
 #define FUNC_METHOD             1
 #define FUNC_ANONYMOUS          2
+
+#if BE_INTGER_TYPE == 0 /* int */
+  #define M_IMAX    INT_MAX
+  #define M_IMIN    INT_MIN
+#elif BE_INTGER_TYPE == 1 /* long */
+  #define M_IMAX    LONG_MAX
+  #define M_IMIN    LONG_MIN
+#else /* int64_t (long long) */
+  #define M_IMAX    LLONG_MAX
+  #define M_IMIN    LLONG_MIN
+#endif
 
 /* get binary operator priority */
 #define binary_op_prio(op)      (binary_op_prio_tab[cast_int(op) - OptAdd])
@@ -602,12 +614,12 @@ static bproto* funcbody(bparser *parser, bstring *name, int type)
     return finfo.proto; /* return fully constructed `bproto` */
 }
 
-/* anonymous function, build `bproto` object with name `<anonymous>` */
+/* anonymous function, build `bproto` object with name `_anonymous_` */
 /* and build a expdesc for the bproto */
 static void anon_func(bparser *parser, bexpdesc *e)
 {
     bproto *proto;
-    bstring *name = parser_newstr(parser, "<anonymous>");
+    bstring *name = parser_newstr(parser, "_anonymous_");
     /* 'def' ID '(' varlist ')' block 'end' */
     scan_next_token(parser); /* skip 'def' */
     proto = funcbody(parser, name, FUNC_ANONYMOUS);
