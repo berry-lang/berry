@@ -24,6 +24,7 @@
 #include <string.h>
 #include <math.h>
 
+#include <stdio.h>
 #define NOT_METHOD          BE_NONE
 
 #define vm_error(vm, except, ...) \
@@ -851,9 +852,9 @@ newframe: /* a new call frame */
                 reg = vm->reg;
                 bvalue *a = RA();
                 *a = a_temp;
-                if (basetype(type) == BE_FUNCTION) {
-                    if (func_isstatic(a)) {
-                        /* static method, don't bother with the instance */
+                if (var_basetype(a) == BE_FUNCTION) {
+                    if (func_isstatic(a) || (type == BE_INDEX)) {    /* if instance variable then we consider it's non-method */
+                       /* static method, don't bother with the instance */
                         a[1] = a_temp;
                         var_settype(a, NOT_METHOD);
                     } else {
