@@ -24,7 +24,6 @@
 #include <string.h>
 #include <math.h>
 
-#include <stdio.h>
 #define NOT_METHOD          BE_NONE
 
 #define vm_error(vm, except, ...) \
