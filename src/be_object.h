@@ -34,11 +34,7 @@
 #define BE_NTVFUNC      ((0 << 5) | BE_FUNCTION)
 #define BE_CLOSURE      ((1 << 5) | BE_FUNCTION)
 #define BE_NTVCLOS      ((2 << 5) | BE_FUNCTION)
-#define BE_FUNC_STATIC  (1 << 7)
-
-#define func_isstatic(o)       (((o)->type & BE_FUNC_STATIC) != 0)
-#define func_setstatic(o)      ((o)->type |= BE_FUNC_STATIC)
-#define func_clearstatic(o)    ((o)->type &= ~BE_FUNC_STATIC)
+#define BE_STATIC       (1 << 6)
 
 #define array_count(a)   (sizeof(a) / sizeof((a)[0]))
 
@@ -196,9 +192,11 @@ typedef const char* (*breader)(void*, size_t*);
 #define cast_bool(_v)           cast(bbool, _v)
 #define basetype(_t)            ((_t) & 0x1F)
 
-#define var_type(_v)            ((_v)->type & 0x7F)
+#define var_type(_v)            ((_v)->type)
 #define var_basetype(_v)        basetype((_v)->type)
+#define var_functype(_v)        ((_v)->type & 0x3F)
 #define var_istype(_v, _t)      (var_type(_v) == _t)
+#define var_isstatic(_v)        ((var_type(_v) & BE_STATIC) == BE_STATIC)
 #define var_settype(_v, _t)     ((_v)->type = _t)
 #define var_setobj(_v, _t, _o)  { (_v)->v.p = _o; var_settype(_v, _t); }
 
@@ -235,8 +233,10 @@ typedef const char* (*breader)(void*, size_t*);
 #define var_setlist(_v, _o)     var_setobj(_v, BE_LIST, _o)
 #define var_setmap(_v, _o)      var_setobj(_v, BE_MAP, _o)
 #define var_setmodule(_v, _o)   var_setobj(_v, BE_MODULE, _o)
-#define var_setindex(_v, _i)      { var_settype(_v, BE_INDEX); (_v)->v.i = (_i); }
+#define var_setindex(_v, _i)    { var_settype(_v, BE_INDEX); (_v)->v.i = (_i); }
 #define var_setproto(_v, _o)    var_setobj(_v, BE_PROTO, _o)
+#define var_markstatic(_v)      var_settype(_v, var_type(_v) | BE_STATIC)
+#define var_clearstatic(_v)     var_settype(_v, var_type(_v) & ~BE_STATIC)
 
 #define var_tobool(_v)          ((_v)->v.b)
 #define var_toint(_v)           ((_v)->v.i)

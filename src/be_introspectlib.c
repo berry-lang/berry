@@ -114,7 +114,7 @@ static int m_fromptr(bvm *vm)
             v = (void*) be_toint(vm, 1);
         }
         if (v) {
-            bgcobject * ptr = (bgcobject*) v;
+            bgcobject *ptr = (bgcobject*)v;
             if (var_basetype(ptr) >= BE_GCOBJECT) {
                 bvalue *top = be_incrtop(vm);
                 var_setobj(top, ptr->type, ptr);

@@ -40,7 +40,7 @@ static void class_init(bvm *vm, bclass *c, const bnfuncinfo *lib)
             }
             ++lib;
         }
-        if (lib->function == (bntvfunc) BE_CLOSURE) {
+        if (lib->function == (bntvfunc)BE_CLOSURE) {
             /* next section is closures */
             struct solidfuncinfo *slib = (struct solidfuncinfo*)++lib;
             while (slib->name) {

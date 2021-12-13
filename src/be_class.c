@@ -88,7 +88,7 @@ void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p, bbool is_stati
     cl->proto = p;
     var_setclosure(attr, cl);
     if (is_static) {
-        func_setstatic(attr);
+        var_markstatic(attr);
     }
 }
 
