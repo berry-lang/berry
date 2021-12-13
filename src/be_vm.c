@@ -55,7 +55,7 @@
   #define COUNTER_HOOK()
 #endif
 
-#if BE_USE_PERF_COUNTERS && BE_USE_OBSERVABILITY_HOOK
+#if BE_USE_PERF_COUNTERS
   #define VM_HEARTBEAT() \
     if ((vm->counter_ins & ((1<<(BE_VM_OBSERVABILITY_SAMPLING - 1))-1) ) == 0) { /* call every 2^BE_VM_OBSERVABILITY_SAMPLING instructions */    \
         if (vm->obshook != NULL)                                                    \
@@ -453,17 +453,15 @@ BERRY_API bvm* be_vm_new(void)
     be_stack_init(vm, &vm->refstack, sizeof(binstance*));
     be_stack_init(vm, &vm->exceptstack, sizeof(struct bexecptframe));
     be_stack_init(vm, &vm->tracestack, sizeof(bcallsnapshot));
-    vm->stack = be_malloc(vm, sizeof(bvalue) * BE_STACK_FREE_MIN);
-    vm->stacktop = vm->stack + BE_STACK_FREE_MIN;
+    vm->stack = be_malloc(vm, sizeof(bvalue) * BE_STACK_START);
+    vm->stacktop = vm->stack + BE_STACK_START;
     vm->reg = vm->stack;
     vm->top = vm->reg;
     be_globalvar_init(vm);
     be_gc_setpause(vm, 1);
     be_loadlibs(vm);
     vm->compopt = 0;
-#if BE_USE_OBSERVABILITY_HOOK
     vm->obshook = NULL;
-#endif
 #if BE_USE_PERF_COUNTERS
     vm->counter_ins = 0;
     vm->counter_enter = 0;
@@ -1042,9 +1040,6 @@ newframe: /* a new call frame */
             dispatch();
         }
         opcase(RAISE): {
-#if BE_USE_PERF_COUNTERS
-            vm->counter_exc++;
-#endif
             if (IGET_RA(ins) < 2) {  /* A==2 means no arguments are passed to RAISE, i.e. rethrow with current exception */
                 bvalue *top = vm->top;
                 top[0] = *RKB(); /* push the exception value to top */
@@ -1278,7 +1273,5 @@ BERRY_API void be_set_obs_hook(bvm *vm, bobshook hook)
     (void)vm;       /* avoid comiler warning */
     (void)hook;     /* avoid comiler warning */
 
-#if BE_USE_OBSERVABILITY_HOOK
     vm->obshook = hook;
-#endif
 }
