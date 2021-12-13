@@ -74,3 +74,5 @@ assert(string.tr("azer", "abcde", "ABCDE") == 'AzEr')
 assert(string.tr("azer", "", "") == 'azer')
 assert(string.tr("azer", "aaa", "ABC") == 'Azer')  # only first match works
 assert(string.tr("A_b", "_", " ") == 'A b')
+# tr used to remove characters
+assert(string.tr("qwerty", "qwe", "_") == '_rty')
