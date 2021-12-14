@@ -11,14 +11,14 @@
 #include "berry.h"
 
 /* basic types, do not change value */
+#define BE_NONE        -256     /* unknown type */
 #define BE_NIL          0
 #define BE_INT          1
 #define BE_REAL         2
 #define BE_BOOL         3
-#define BE_NONE         4       /* unknown type */
-#define BE_COMPTR       5       /* common pointer */
-#define BE_INDEX        6       /* index for instance variable, previously BE_INT */
-#define BE_FUNCTION     7
+#define BE_COMPTR       4       /* common pointer */
+#define BE_INDEX        5       /* index for instance variable, previously BE_INT */
+#define BE_FUNCTION     6
 
 #define BE_GCOBJECT     16      /* from this type can be gced */
 
@@ -34,7 +34,7 @@
 #define BE_NTVFUNC      ((0 << 5) | BE_FUNCTION)
 #define BE_CLOSURE      ((1 << 5) | BE_FUNCTION)
 #define BE_NTVCLOS      ((2 << 5) | BE_FUNCTION)
-#define BE_STATIC       (1 << 6)
+#define BE_STATIC       (1 << 7)
 
 #define array_count(a)   (sizeof(a) / sizeof((a)[0]))
 
@@ -194,9 +194,7 @@ typedef const char* (*breader)(void*, size_t*);
 
 #define var_type(_v)            ((_v)->type)
 #define var_basetype(_v)        basetype((_v)->type)
-#define var_functype(_v)        ((_v)->type & 0x3F)
 #define var_istype(_v, _t)      (var_type(_v) == _t)
-#define var_isstatic(_v)        ((var_type(_v) & BE_STATIC) == BE_STATIC)
 #define var_settype(_v, _t)     ((_v)->type = _t)
 #define var_setobj(_v, _t, _o)  { (_v)->v.p = _o; var_settype(_v, _t); }
 

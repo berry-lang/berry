@@ -310,11 +310,7 @@ int be_class_member(bvm *vm, bclass *obj, bstring *name, bvalue *dst)
     be_assert(name != NULL);
     obj = class_member(vm, obj, name, dst);
     type = var_type(dst);
-    if (obj) {
-        return type;
-    } else {
-        return BE_NONE;
-    }
+    return obj ? type : BE_NONE;
 }
 
 bbool be_instance_setmember(bvm *vm, binstance *o, bstring *name, bvalue *src)
