@@ -89,7 +89,7 @@
         res = var2real(a) op var2real(b); \
     } else if (var_isinstance(a) && !var_isnil(b)) { \
         res = object_eqop(vm, #op, iseq, a, b); \
-    } else if (var_type(a) == var_type(b)) { /* same types */ \
+    } else if (var_type_safe(a) == var_type_safe(b)) { /* same types */ \
         if (var_isnil(a)) { /* nil op nil */ \
             res = 1 op 1; \
         } else if (var_isbool(a)) { /* bool op bool */ \
@@ -1238,7 +1238,7 @@ void be_dofunc(bvm *vm, bvalue *v, int argc)
     be_assert(vm->reg <= v && v < vm->stacktop);
     be_assert(vm->stack <= vm->reg && vm->reg < vm->stacktop);
     int pos = v - vm->reg;
-    switch (var_type(v)) {
+    switch (var_type_safe(v)) {
     case BE_CLASS: do_class(vm, pos, argc); break;
     case BE_CLOSURE: do_closure(vm, pos, argc); break;
     case BE_NTVCLOS: do_ntvclos(vm, pos, argc); break;

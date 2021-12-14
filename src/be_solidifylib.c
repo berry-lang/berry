@@ -35,7 +35,7 @@
 
 static void m_solidify_bvalue(bvm *vm, bvalue * value)
 {
-    int type = var_type(value);
+    int type = var_type_safe(value);
     switch (type) {
     case BE_NIL:
         logfmt("be_const_nil()");
