@@ -9,17 +9,13 @@ INCPATH   = src default
 SRCPATH   = src default
 GENERATE  = generate
 CONFIG    = default/berry_conf.h
-# COC		  = tools/coc/coc
-PY3       = python3
-PYCOC     = tools/pycoc/main.py
+COC       = python3 tools/coc/main.py
 CONST_TAB = $(GENERATE)/be_const_strtab.h
-# MAKE_COC  = $(MAKE) -C tools/coc
 
 ifeq ($(OS), Windows_NT) # Windows
     CFLAGS    += -Wno-format # for "%I64d" warning
     LFLAGS    += -Wl,--out-implib,berry.lib # export symbols lib for dll linked
     TARGET    := $(TARGET).exe
-    # COC       := $(COC).exe
     PY3       := $(PY3).exe
 else
     CFLAGS    += -DUSE_READLINE_LIB
@@ -33,7 +29,6 @@ endif
 ifneq ($(V), 1)
     Q=@
     MSG=@echo
-    # MAKE_COC += -s Q=$(Q)
 else
     MSG=@true
 endif
@@ -78,14 +73,10 @@ $(OBJS): $(CONST_TAB)
 
 $(CONST_TAB): $(GENERATE) $(SRCS) $(CONFIG)
 	$(MSG) [Prebuild] generate resources
-	$(Q) $(PY3) $(PYCOC)  -o $(GENERATE) $(SRCPATH) -c $(CONFIG)
+	$(Q) $(COC)  -o $(GENERATE) $(SRCPATH) -c $(CONFIG)
 
 $(GENERATE):
 	$(Q) $(MKDIR) $(GENERATE)
-
-# $(COC):
-# 	$(MSG) [Make] coc
-# 	$(Q) $(MAKE_COC)
 
 install:
 	cp $(TARGET) /usr/local/bin
@@ -95,7 +86,7 @@ uninstall:
 
 prebuild: $(GENERATE)
 	$(MSG) [Prebuild] generate resources
-	$(Q) $(PY3) $(PYCOC) -o $(GENERATE) $(SRCPATH) -c $(CONFIG)
+	$(Q) $(COC) -o $(GENERATE) $(SRCPATH) -c $(CONFIG)
 	$(MSG) done
 
 clean:
