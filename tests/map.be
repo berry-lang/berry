@@ -23,3 +23,10 @@ assert(!m.contains())
 # set
 m['y'] = -1
 assert(m['y'] == -1)
+
+# remove
+m={1:2}
+m.remove(2)
+assert(str(m) == '{1: 2}')
+m.remove(1)
+assert(str(m) == '{}')
