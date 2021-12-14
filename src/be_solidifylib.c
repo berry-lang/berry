@@ -191,10 +191,16 @@ static void m_solidify_bvalue(bvm *vm, bvalue * value, const char *classname, co
         }
         break;
     case BE_CLOSURE:
-        logfmt("be_const_%sclosure(%s%s%s_closure)",
-            func_isstatic(value) ? "static_" : "",
-            classname ? classname : "", classname ? "_" : "",
-            str(((bclosure*) var_toobj(value))->proto->name));
+        {
+            const char * func_name = str(((bclosure*) var_toobj(value))->proto->name);
+            size_t id_len = toidentifier_length(func_name);
+            char func_name_id[id_len];
+            toidentifier(func_name_id, func_name);
+            logfmt("be_const_%sclosure(%s%s%s_closure)",
+                func_isstatic(value) ? "static_" : "",
+                classname ? classname : "", classname ? "_" : "",
+                func_name_id);
+        }
         break;
     case BE_CLASS:
         logfmt("be_const_class(be_class_%s)", str(((bclass*) var_toobj(value))->name));
@@ -364,9 +370,14 @@ static void m_solidify_closure(bvm *vm, bclosure *cl, const char * classname, in
     logfmt("** Solidified function: %s\n", func_name);
     logfmt("********************************************************************/\n");
 
-    logfmt("be_local_closure(%s%s%s,   /* name */\n",
-        classname ? classname : "", classname ? "_" : "",
-        func_name);
+    {
+        size_t id_len = toidentifier_length(func_name);
+        char func_name_id[id_len];
+        toidentifier(func_name_id, func_name);
+        logfmt("be_local_closure(%s%s%s,   /* name */\n",
+            classname ? classname : "", classname ? "_" : "",
+            func_name_id);
+    }
 
     m_solidify_proto(vm, pr, func_name, builtins, indent);
     logfmt("\n");
