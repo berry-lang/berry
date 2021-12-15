@@ -1,7 +1,7 @@
 CFLAGS    = -Wall -Wextra -std=c99 -pedantic-errors -O2
 LIBS      = -lm
 TARGET    = berry
-CC       ?= gcc
+CC        = gcc
 MKDIR     = mkdir
 LFLAGS    = 
 
@@ -9,14 +9,14 @@ INCPATH   = src default
 SRCPATH   = src default
 GENERATE  = generate
 CONFIG    = default/berry_conf.h
-COC       = python3 tools/coc/main.py
+COC       = tools/coc/coc
 CONST_TAB = $(GENERATE)/be_const_strtab.h
 
 ifeq ($(OS), Windows_NT) # Windows
     CFLAGS    += -Wno-format # for "%I64d" warning
     LFLAGS    += -Wl,--out-implib,berry.lib # export symbols lib for dll linked
     TARGET    := $(TARGET).exe
-    PY3       := $(PY3).exe
+    COC       := python $(COC) # need python3
 else
     CFLAGS    += -DUSE_READLINE_LIB
     LIBS      += -lreadline -ldl
