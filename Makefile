@@ -38,11 +38,6 @@ else
     MSG=@true
 endif
 
-ifeq ($(TEST), 1)
-    CFLAGS += -fprofile-arcs -ftest-coverage
-    LFLAGS += -fprofile-arcs -ftest-coverage
-endif
-
 SRCS     = $(foreach dir, $(SRCPATH), $(wildcard $(dir)/*.c))
 OBJS     = $(patsubst %.c, %.o, $(SRCS))
 DEPS     = $(patsubst %.c, %.d, $(SRCS))
@@ -55,8 +50,8 @@ all: $(TARGET)
 debug: CFLAGS += -O0 -g -DBE_DEBUG
 debug: all
 
-test: CFLAGS += --coverage
-test: LFLAGS += --coverage
+test: CFLAGS += --coverage -fno-omit-frame-pointer -fsanitize=address
+test: LFLAGS += --coverage -fno-omit-frame-pointer -fsanitize=address
 test: all
 	$(MSG) [Run Testcases...]
 	$(Q) ./testall.be
