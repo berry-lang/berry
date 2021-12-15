@@ -16,7 +16,8 @@ ifeq ($(OS), Windows_NT) # Windows
     CFLAGS    += -Wno-format # for "%I64d" warning
     LFLAGS    += -Wl,--out-implib,berry.lib # export symbols lib for dll linked
     TARGET    := $(TARGET).exe
-    COC       := python $(COC) # need python3
+    PYTHON    ?= python # only for windows and need python3
+    COC       := $(PYTHON) $(COC)
 else
     CFLAGS    += -DUSE_READLINE_LIB
     LIBS      += -lreadline -ldl
