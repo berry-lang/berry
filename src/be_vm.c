@@ -1238,7 +1238,7 @@ void be_dofunc(bvm *vm, bvalue *v, int argc)
     be_assert(vm->reg <= v && v < vm->stacktop);
     be_assert(vm->stack <= vm->reg && vm->reg < vm->stacktop);
     int pos = v - vm->reg;
-    be_assert(var_type(v) == var_primetype(v));
+    be_assert(!var_isstatic(v));
     switch (var_type(v)) {
     case BE_CLASS: do_class(vm, pos, argc); break;
     case BE_CLOSURE: do_closure(vm, pos, argc); break;
