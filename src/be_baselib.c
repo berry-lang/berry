@@ -85,7 +85,7 @@ static bclass *find_class_closure(bclass *cl, bclosure *needle)
         if (members) {  /* only iterate if there are members */
             bmapiter iter = be_map_iter();
             while ((node = be_map_next(members, &iter)) != NULL) {
-                if (var_type(&node->value) == BE_CLOSURE) {  /* only native functions are considered */
+                if (var_type_safe(&node->value) == BE_CLOSURE) {  /* only native functions are considered */
                     bclosure *clos_iter = var_toobj(&node->value);  /* retrieve the method's closure */
                     if (clos_iter == needle) {
                         /* we found the closure, we now know its class */
@@ -233,8 +233,6 @@ static int l_int(bvm *vm)
             be_pushvalue(vm, 1);
         } else if (be_isbool(vm, 1)) {
             be_pushint(vm, be_tobool(vm, 1) ? 1 : 0);
-        } else if (be_iscomptr(vm, 1)) {
-            be_pushint(vm, (int) be_tocomptr(vm, 1));
         } else {
             be_return_nil(vm);
         }

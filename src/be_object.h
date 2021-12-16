@@ -235,6 +235,7 @@ typedef const char* (*breader)(void*, size_t*);
 #define var_setproto(_v, _o)    var_setobj(_v, BE_PROTO, _o)
 #define var_markstatic(_v)      var_settype(_v, var_type(_v) | BE_STATIC)
 #define var_clearstatic(_v)     var_settype(_v, var_type(_v) & ~BE_STATIC)
+#define var_type_safe(_v)       (var_type(_v) & ~BE_STATIC)
 
 #define var_tobool(_v)          ((_v)->v.b)
 #define var_toint(_v)           ((_v)->v.i)

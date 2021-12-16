@@ -138,7 +138,7 @@ static void mark_gray(bvm *vm, bgcobject *obj)
 {
     if (obj && gc_iswhite(obj) && !gc_isconst(obj)) {
         gc_setgray(obj);
-        switch (var_type(obj)) {
+        switch (var_type_safe(obj)) {
         case BE_STRING: gc_setdark(obj); break; /* just set dark */
         case BE_CLASS: link_gray(vm, cast_class(obj)); break;
         case BE_PROTO: link_gray(vm, cast_proto(obj)); break;
@@ -432,7 +432,7 @@ static void mark_unscanned(bvm *vm)
         bgcobject *obj = vm->gc.gray;
         if (obj && !gc_isdark(obj) && !gc_isconst(obj)) {
             gc_setdark(obj);
-            switch (var_type(obj)) {
+            switch (var_type_safe(obj)) {
             case BE_CLASS: mark_class(vm, obj); break;
             case BE_PROTO: mark_proto(vm, obj); break;
             case BE_INSTANCE: mark_instance(vm, obj); break;
@@ -561,5 +561,9 @@ void be_gc_collect(bvm *vm)
     reset_fixedlist(vm);
     /* step 5: calculate the next GC threshold */
     vm->gc.threshold = next_threshold(vm->gc);
+#if BE_USE_PERF_COUNTERS
     if (vm->obshook != NULL) (*vm->obshook)(vm, BE_OBS_GC_END, vm->gc.usage, vm->counter_gc_kept, vm->counter_gc_freed);
+#else
+    if (vm->obshook != NULL) (*vm->obshook)(vm, BE_OBS_GC_END, vm->gc.usage);
+#endif
 }
