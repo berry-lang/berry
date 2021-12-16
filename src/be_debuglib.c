@@ -63,7 +63,7 @@ static int m_attrdump(bvm *vm)
         bvalue *v = be_indexof(vm, 1);
         void *obj = var_toobj(v);
         dump_value(v);
-        switch (var_type_safe(v)) {
+        switch (var_type(v)) { /* only functions will be marked as static */
         case BE_MODULE: dump_module(obj); break;
         case BE_CLASS: dump_class(obj); break;
         case BE_INSTANCE: dump_instanse(obj); break;

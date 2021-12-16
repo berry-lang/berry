@@ -1,16 +1,18 @@
-CFLAGS    = -Wall -Wextra -std=c99 -pedantic-errors -O2
-LIBS      = -lm
-TARGET    = berry
-CC        = gcc
-MKDIR     = mkdir
-LFLAGS    = 
+CFLAGS    	= -Wall -Wextra -std=c99 -pedantic-errors -O2
+DEBUG_FLAGS = -O0 -g -DBE_DEBUG
+TEST_FLAGS  = $(DEBUG_FLAGS) --coverage -fno-omit-frame-pointer -fsanitize=address
+LIBS      	= -lm
+TARGET    	= berry
+CC        	= gcc
+MKDIR     	= mkdir
+LFLAGS    	=
 
-INCPATH   = src default
-SRCPATH   = src default
-GENERATE  = generate
-CONFIG    = default/berry_conf.h
-COC       = tools/coc/coc
-CONST_TAB = $(GENERATE)/be_const_strtab.h
+INCPATH   	= src default
+SRCPATH   	= src default
+GENERATE  	= generate
+CONFIG    	= default/berry_conf.h
+COC       	= tools/coc/coc
+CONST_TAB 	= $(GENERATE)/be_const_strtab.h
 
 ifeq ($(OS), Windows_NT) # Windows
     CFLAGS    += -Wno-format # for "%I64d" warning
@@ -43,11 +45,11 @@ INCFLAGS = $(foreach dir, $(INCPATH), -I"$(dir)")
 
 all: $(TARGET)
 
-debug: CFLAGS += -O0 -g -DBE_DEBUG
+debug: CFLAGS += $(DEBUG_FLAGS)
 debug: all
 
-test: CFLAGS += --coverage -fno-omit-frame-pointer -fsanitize=address
-test: LFLAGS += --coverage -fno-omit-frame-pointer -fsanitize=address
+test: CFLAGS += $(TEST_FLAGS)
+test: LFLAGS += $(TEST_FLAGS)
 test: all
 	$(MSG) [Run Testcases...]
 	$(Q) ./testall.be
