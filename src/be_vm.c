@@ -307,7 +307,6 @@ static int obj_attribute(bvm *vm, bvalue *o, bstring *attr, bvalue *dst)
             "the '%s' object has no attribute '%s'",
             str(be_instance_name(obj)), str(attr));
     }
-    var_clearstatic(dst);
     return type;
 }
 
@@ -321,7 +320,6 @@ static int class_attribute(bvm *vm, bvalue *o, bvalue *c, bvalue *dst)
             "the '%s' class has no static attribute '%s'",
             str(obj->name), str(attr));
     }
-    var_clearstatic(dst);
     return type;
 }
 
@@ -856,7 +854,7 @@ newframe: /* a new call frame */
                 bvalue *a = RA();
                 *a = result;
                 if (var_basetype(a) == BE_FUNCTION) {
-                    if ((type & BE_STATIC) || (type == BE_INDEX)) {    /* if instance variable then we consider it's non-method */
+                    if (type & BE_STATIC || type == BE_INDEX) { /* if instance variable then we consider it's non-method */
                         /* static method, don't bother with the instance */
                         a[1] = result;
                         var_settype(a, NOT_METHOD);

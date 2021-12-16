@@ -257,6 +257,7 @@ int be_instance_member_simple(bvm *vm, binstance *instance, bstring *name, bvalu
     if (obj && type == MT_VARIABLE) {
         *dst = obj->members[dst->v.i];
     }
+    var_clearstatic(dst);
     return type;
 }
 
@@ -274,12 +275,13 @@ int be_instance_member(bvm *vm, binstance *instance, bstring *name, bvalue *dst)
         *dst = obj->members[dst->v.i];
     }
     if (obj) {
+        var_clearstatic(dst);
         return type;
     } else {  /* if no method found, try virtual */
         /* if 'init' does not exist, create a virtual empty constructor */
         if (strcmp(str(name), "init") == 0) {
             var_setntvfunc(dst, default_init_native_method);
-            return var_type(dst);
+            return BE_NTVFUNC;
         } else {
             /* get method 'member' */
             obj = instance_member(vm, instance, str_literal(vm, "member"), vm->top);
@@ -296,6 +298,7 @@ int be_instance_member(bvm *vm, binstance *instance, bstring *name, bvalue *dst)
                 }
                 type = var_type(dst);
                 if (type != BE_NIL) {
+                    var_clearstatic(dst);
                     return type;
                 }
             }
@@ -310,6 +313,7 @@ int be_class_member(bvm *vm, bclass *obj, bstring *name, bvalue *dst)
     be_assert(name != NULL);
     obj = class_member(vm, obj, name, dst);
     type = var_type(dst);
+    var_clearstatic(dst);
     return obj ? type : BE_NONE;
 }
 
