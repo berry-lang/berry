@@ -1,18 +1,18 @@
-CFLAGS    	= -Wall -Wextra -std=c99 -pedantic-errors -O2
+CFLAGS      = -Wall -Wextra -std=c99 -pedantic-errors -O2
 DEBUG_FLAGS = -O0 -g -DBE_DEBUG
-TEST_FLAGS  = $(DEBUG_FLAGS) --coverage -fno-omit-frame-pointer -fsanitize=address
-LIBS      	= -lm
-TARGET    	= berry
-CC        	= gcc
-MKDIR     	= mkdir
-LFLAGS    	=
+TEST_FLAGS  = $(DEBUG_FLAGS) --coverage -fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined
+LIBS        = -lm
+TARGET      = berry
+CC          = gcc
+MKDIR       = mkdir
+LFLAGS      =
 
-INCPATH   	= src default
-SRCPATH   	= src default
-GENERATE  	= generate
-CONFIG    	= default/berry_conf.h
-COC       	= tools/coc/coc
-CONST_TAB 	= $(GENERATE)/be_const_strtab.h
+INCPATH     = src default
+SRCPATH     = src default
+GENERATE    = generate
+CONFIG      = default/berry_conf.h
+COC         = tools/coc/coc
+CONST_TAB   = $(GENERATE)/be_const_strtab.h
 
 ifeq ($(OS), Windows_NT) # Windows
     CFLAGS    += -Wno-format # for "%I64d" warning
