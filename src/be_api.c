@@ -34,9 +34,9 @@ static void class_init(bvm *vm, bclass *c, const bnfuncinfo *lib)
         while (lib->name) {
             bstring *s = be_newstr(vm, lib->name);
             if (lib->function) { /* method */
-                be_prim_method_bind(vm, c, s, lib->function);
+                be_class_native_method_bind(vm, c, s, lib->function);
             } else {
-                be_member_bind(vm, c, s, btrue); /* member */
+                be_class_member_bind(vm, c, s, btrue); /* member */
             }
             ++lib;
         }
@@ -46,7 +46,7 @@ static void class_init(bvm *vm, bclass *c, const bnfuncinfo *lib)
             while (slib->name) {
                 if (slib->function) { /* method */
                     bstring *s = be_newstr(vm, slib->name);
-                    be_closure_method_bind(vm, c, s, slib->function);
+                    be_class_closure_method_bind(vm, c, s, slib->function);
                 }
                 ++slib;
             }

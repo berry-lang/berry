@@ -7,13 +7,11 @@
 ********************************************************************/
 #include "be_class.h"
 #include "be_string.h"
-#include "be_vector.h"
 #include "be_map.h"
 #include "be_exec.h"
 #include "be_gc.h"
 #include "be_vm.h"
 #include "be_func.h"
-#include "be_var.h"
 #include <string.h>
 
 #define check_members(vm, c)            \
@@ -57,7 +55,7 @@ int be_class_attribute(bvm *vm, bclass *c, bstring *attr)
     return BE_NONE;
 }
 
-void be_member_bind(bvm *vm, bclass *c, bstring *name, bbool var)
+void be_class_member_bind(bvm *vm, bclass *c, bstring *name, bbool var)
 {
     bvalue *attr;
     set_fixed(name);
@@ -75,7 +73,7 @@ void be_member_bind(bvm *vm, bclass *c, bstring *name, bbool var)
     }
 }
 
-void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p, bbool is_static)
+void be_class_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p, bbool is_static)
 {
     bclosure *cl;
     bvalue *attr;
@@ -92,7 +90,7 @@ void be_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p, bbool is_stati
     }
 }
 
-void be_prim_method_bind(bvm *vm, bclass *c, bstring *name, bntvfunc f)
+void be_class_native_method_bind(bvm *vm, bclass *c, bstring *name, bntvfunc f)
 {
     bvalue *attr;
     set_fixed(name);
@@ -103,7 +101,7 @@ void be_prim_method_bind(bvm *vm, bclass *c, bstring *name, bntvfunc f)
     attr->type = MT_PRIMMETHOD;
 }
 
-void be_closure_method_bind(bvm *vm, bclass *c, bstring *name, bclosure *cl)
+void be_class_closure_method_bind(bvm *vm, bclass *c, bstring *name, bclosure *cl)
 {
     bvalue *attr;
     check_members(vm, c);
@@ -242,7 +240,8 @@ bbool be_class_newobj(bvm *vm, bclass *c, int pos, int argc, int mode)
 }
 
 /* Default empty constructor */
-static int default_init_native_method(bvm *vm) {
+static int default_init_native_method(bvm *vm)
+{
     be_return_nil(vm);
 }
 
@@ -269,7 +268,7 @@ int be_instance_member(bvm *vm, binstance *instance, bstring *name, bvalue *dst)
 {
     int type;
     be_assert(name != NULL);
-    binstance * obj = instance_member(vm, instance, name, dst);
+    binstance *obj = instance_member(vm, instance, name, dst);
     type = var_type(dst);
     if (obj && type == MT_VARIABLE) {
         *dst = obj->members[dst->v.i];
