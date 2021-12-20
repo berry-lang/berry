@@ -83,6 +83,8 @@
 
 #define equal_rule(op, iseq) \
     bbool res; \
+    be_assert(!var_isstatic(a)); \
+    be_assert(!var_isstatic(b)); \
     if (var_isint(a) && var_isint(b)) { \
         res = ibinop(op, a, b); \
     } else if (var_isnumber(a) && var_isnumber(b)) { \
@@ -820,41 +822,41 @@ newframe: /* a new call frame */
 #if BE_USE_PERF_COUNTERS
             vm->counter_get++;
 #endif
-            bvalue a_temp;  /* copy result to a temp variable because the stack may be relocated in virtual member calls */
+            bvalue result;  /* copy result to a temp variable because the stack may be relocated in virtual member calls */
             bvalue *b = RKB(), *c = RKC();
             if (var_isinstance(b) && var_isstr(c)) {
-                obj_attribute(vm, b, var_tostr(c), &a_temp);
+                obj_attribute(vm, b, var_tostr(c), &result);
                 reg = vm->reg;
             } else if (var_isclass(b) && var_isstr(c)) {
-                class_attribute(vm, b, c, &a_temp);
+                class_attribute(vm, b, c, &result);
                 reg = vm->reg;
             } else if (var_ismodule(b) && var_isstr(c)) {
-                module_attribute(vm, b, c, &a_temp);
+                module_attribute(vm, b, c, &result);
                 reg = vm->reg;
             } else {
                 attribute_error(vm, "attribute", b, c);
-                a_temp = *RA();     /* avoid gcc warning for uninitialized variable a_temp, this code is never reached */
+                result = *RA();     /* avoid gcc warning for uninitialized variable result, this code is never reached */
             }
             bvalue *a = RA();
-            *a = a_temp;    /* assign the resul to the specified register on the updated stack */
+            *a = result;    /* assign the resul to the specified register on the updated stack */
             dispatch();
         }
         opcase(GETMET): {
 #if BE_USE_PERF_COUNTERS
             vm->counter_get++;
 #endif
-            bvalue a_temp;  /* copy result to a temp variable because the stack may be relocated in virtual member calls */
+            bvalue result;  /* copy result to a temp variable because the stack may be relocated in virtual member calls */
             bvalue *b = RKB(), *c = RKC();
             if (var_isinstance(b) && var_isstr(c)) {
                 binstance *obj = var_toobj(b);
-                int type = obj_attribute(vm, b, var_tostr(c), &a_temp);
+                int type = obj_attribute(vm, b, var_tostr(c), &result);
                 reg = vm->reg;
                 bvalue *a = RA();
-                *a = a_temp;
+                *a = result;
                 if (var_basetype(a) == BE_FUNCTION) {
-                    if (func_isstatic(a) || (type == BE_INDEX)) {    /* if instance variable then we consider it's non-method */
-                       /* static method, don't bother with the instance */
-                        a[1] = a_temp;
+                    if (type & BE_STATIC || type == BE_INDEX) { /* if instance variable then we consider it's non-method */
+                        /* static method, don't bother with the instance */
+                        a[1] = result;
                         var_settype(a, NOT_METHOD);
                     } else {
                         /* this is a real method (i.e. non-static) */
@@ -870,16 +872,16 @@ newframe: /* a new call frame */
                         str(be_instance_name(obj)), str(var_tostr(c)));
                 }
             } else if (var_isclass(b) && var_isstr(c)) {
-                class_attribute(vm, b, c, &a_temp);
+                class_attribute(vm, b, c, &result);
                 reg = vm->reg;
                 bvalue *a = RA();
-                a[1] = a_temp;
+                a[1] = result;
                 var_settype(a, NOT_METHOD);
             } else if (var_ismodule(b) && var_isstr(c)) {
-                module_attribute(vm, b, c, &a_temp);
+                module_attribute(vm, b, c, &result);
                 reg = vm->reg;
                 bvalue *a = RA();
-                a[1] = a_temp;
+                a[1] = result;
                 var_settype(a, NOT_METHOD);
             } else {
                 attribute_error(vm, "method", b, c);
@@ -907,11 +909,11 @@ newframe: /* a new call frame */
                 /* if value is a function, we mark it as a static to distinguish from methods */
                 bclass *obj = var_toobj(a);
                 bstring *attr = var_tostr(b);
-                bvalue c_static = *c;
-                if (var_isfunction(&c_static)) {
-                    c_static.type = func_setstatic(&c_static);
+                bvalue result = *c;
+                if (var_isfunction(&result)) {
+                    var_markstatic(&result);
                 }
-                if (!be_class_setmember(vm, obj, attr, &c_static)) {
+                if (!be_class_setmember(vm, obj, attr, &result)) {
                     reg = vm->reg;
                     vm_error(vm, "attribute_error",
                         "class '%s' cannot assign to static attribute '%s'",
@@ -1105,29 +1107,6 @@ newframe: /* a new call frame */
                 goto recall; /* call '()' method */
             }
             case BE_CLOSURE: {
-                // bvalue *v, *end;
-                // bproto *proto = var2cl(var)->proto;  /* get proto for closure */
-                // push_closure(vm, var, proto->nstack, mode);  /* prepare stack for closure */
-                // reg = vm->reg;  /* `reg` has changed, now new base register */
-                // v = reg + argc;  /* end of provided arguments */
-                // end = reg + proto->argc;  /* end of expected arguments */
-                // for (; v < end; ++v) {  /* set all not provided arguments to nil */
-                //     var_setnil(v);
-                // }
-                // if (proto->varg) {  /* there are vararg at the last argument, build the list */
-                //     /* code below uses mostly low-level calls for performance */
-                //     be_stack_require(vm, argc + 2);   /* make sure we don't overflow the stack */
-                //     bvalue *top_save = vm->top;  /* save original stack, we need fresh slots to create the 'list' instance */
-                //     vm->top = v;  /* move top of stack right after last argument */
-                //     be_newobject(vm, "list");  /* this creates 2 objects on stack: list instance, BE_LIST object */
-                //     blist *list = var_toobj(vm->top-1);  /* get low-level BE_LIST structure */
-                //     v = reg + proto->argc - 1;  /* last argument */
-                //     for (; v < reg + argc; v++) {
-                //         be_list_push(vm, list, v); /* push all varargs into list */       
-                //     }
-                //     *(reg + proto->argc - 1) = *(vm->top-2);  /* change the vararg argument to now contain the list instance */
-                //     vm->top = top_save;  /* restore top of stack pointer */
-                // }
                 prep_closure(vm, var - reg, argc, mode);
                 reg = vm->reg;  /* `reg` has changed, now new base register */
                 goto newframe;  /* continue execution of the closure */
@@ -1259,6 +1238,7 @@ void be_dofunc(bvm *vm, bvalue *v, int argc)
     be_assert(vm->reg <= v && v < vm->stacktop);
     be_assert(vm->stack <= vm->reg && vm->reg < vm->stacktop);
     int pos = v - vm->reg;
+    be_assert(!var_isstatic(v));
     switch (var_type(v)) {
     case BE_CLASS: do_class(vm, pos, argc); break;
     case BE_CLOSURE: do_closure(vm, pos, argc); break;

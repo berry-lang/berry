@@ -69,3 +69,5 @@ tags
 .DS_Store
 generate/
 temp/
+.idea
+__pycache__
