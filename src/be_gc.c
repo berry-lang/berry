@@ -172,7 +172,7 @@ static void mark_map(bvm *vm, bgcobject *obj)
         while ((node = be_map_next(map, &iter)) != NULL) {
             bmapkey *key = &node->key;
             bvalue *val = &node->value;
-            if (be_isgctype((signed char)key->type)) {
+            if (be_isgcobj(key)) {
                 mark_gray(vm, var_togc(key));
             }
             mark_gray_var(vm, val);
