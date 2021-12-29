@@ -76,3 +76,7 @@ assert(string.tr("azer", "aaa", "ABC") == 'Azer')  # only first match works
 assert(string.tr("A_b", "_", " ") == 'A b')
 # tr used to remove characters
 assert(string.tr("qwerty", "qwe", "_") == '_rty')
+
+# the following should not crash
+var s1 = 'A string of more than 128 bytes 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789'
+var s2 = string.format("%i, %s", 1, s1)
