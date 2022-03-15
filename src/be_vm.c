@@ -1178,7 +1178,7 @@ static void prep_closure(bvm *vm, int pos, int argc, int mode)
     for (v = vm->reg + argc; v <= end; ++v) {
         var_setnil(v);
     }
-    if (proto->varg) {  /* there are vararg at the last argument, build the list */
+    if (proto->varg & BE_VA_VARARG) {  /* there are vararg at the last argument, build the list */
         /* code below uses mostly low-level calls for performance */
         be_stack_require(vm, argc + 2);   /* make sure we don't overflow the stack */
         bvalue *top_save = vm->top;  /* save original stack, we need fresh slots to create the 'list' instance */

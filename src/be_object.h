@@ -34,7 +34,12 @@
 #define BE_NTVFUNC      ((0 << 5) | BE_FUNCTION)
 #define BE_CLOSURE      ((1 << 5) | BE_FUNCTION)
 #define BE_NTVCLOS      ((2 << 5) | BE_FUNCTION)
+#define BE_CTYPE_FUNC   ((3 << 5) | BE_FUNCTION)
 #define BE_STATIC       (1 << 7)
+
+/* values for bproto.varg */
+#define BE_VA_VARARG    (1 << 0)    /* function has variable number of arguments */
+#define BE_VA_METHOD    (1 << 1)    /* function is a method (this is only a hint) */
 
 #define array_count(a)   (sizeof(a) / sizeof((a)[0]))
 
@@ -196,7 +201,7 @@ typedef const char* (*breader)(void*, size_t*);
 #define var_basetype(_v)        basetype((_v)->type)
 #define var_primetype(_v)       (var_type(_v) & ~BE_STATIC)
 #define var_isstatic(_v)        ((var_type(_v) & BE_STATIC) == BE_STATIC)
-#define var_istype(_v, _t)      (var_type(_v) == _t)
+#define var_istype(_v, _t)      (var_primetype(_v) == _t)
 #define var_settype(_v, _t)     ((_v)->type = _t)
 #define var_markstatic(_v)      var_settype(_v, var_type(_v) | BE_STATIC)
 #define var_clearstatic(_v)     var_settype(_v, var_type(_v) & ~BE_STATIC)
