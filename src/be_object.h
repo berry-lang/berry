@@ -34,7 +34,6 @@
 #define BE_NTVFUNC      ((0 << 5) | BE_FUNCTION)
 #define BE_CLOSURE      ((1 << 5) | BE_FUNCTION)
 #define BE_NTVCLOS      ((2 << 5) | BE_FUNCTION)
-#define BE_CTYPE_FUNC   ((3 << 5) | BE_FUNCTION)
 #define BE_STATIC       (1 << 7)
 
 /* values for bproto.varg */

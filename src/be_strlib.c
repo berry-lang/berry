@@ -87,7 +87,7 @@ static bstring* sim2str(bvm *vm, bvalue *v)
     case BE_REAL:
         sprintf(sbuf, "%g", var_toreal(v));
         break;
-    case BE_CLOSURE: case BE_NTVCLOS: case BE_NTVFUNC: case BE_CTYPE_FUNC:
+    case BE_CLOSURE: case BE_NTVCLOS: case BE_NTVFUNC:
         sprintf(sbuf, "<function: %p>", var_toobj(v));
         break;
     case BE_CLASS:
