@@ -91,7 +91,7 @@
         res = var2real(a) op var2real(b); \
     } else if (var_isinstance(a) && !var_isnil(b)) { \
         res = object_eqop(vm, #op, iseq, a, b); \
-    } else if (var_type(a) == var_type(b)) { /* same types */ \
+    } else if (var_primetype(a) == var_primetype(b)) { /* same types */ \
         if (var_isnil(a)) { /* nil op nil */ \
             res = 1 op 1; \
         } else if (var_isbool(a)) { /* bool op bool */ \
@@ -854,7 +854,7 @@ newframe: /* a new call frame */
                 bvalue *a = RA();
                 *a = result;
                 if (var_basetype(a) == BE_FUNCTION) {
-                    if (type & BE_STATIC || type == BE_INDEX) { /* if instance variable then we consider it's non-method */
+                    if ((type & BE_STATIC) || (type == BE_INDEX)) {    /* if instance variable then we consider it's non-method */
                         /* static method, don't bother with the instance */
                         a[1] = result;
                         var_settype(a, NOT_METHOD);
@@ -896,7 +896,11 @@ newframe: /* a new call frame */
             if (var_isinstance(a) && var_isstr(b)) {
                 binstance *obj = var_toobj(a);
                 bstring *attr = var_tostr(b);
-                if (!be_instance_setmember(vm, obj, attr, c)) {
+                bvalue result = *c;
+                if (var_isfunction(&result)) {
+                    var_markstatic(&result);
+                }
+                if (!be_instance_setmember(vm, obj, attr, &result)) {
                     reg = vm->reg;
                     vm_error(vm, "attribute_error",
                         "class '%s' cannot assign to attribute '%s'",
