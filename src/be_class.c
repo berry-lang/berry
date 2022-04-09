@@ -42,6 +42,7 @@ void be_class_compress(bvm *vm, bclass *c)
     }
 }
 
+/* Return the type of the class attribute, only used to check if the attribute already exists */
 int be_class_attribute(bvm *vm, bclass *c, bstring *attr)
 {
     for (; c; c = c->super) {
@@ -252,10 +253,10 @@ int be_instance_member_simple(bvm *vm, binstance *instance, bstring *name, bvalu
     int type;
     be_assert(name != NULL);
     binstance * obj = instance_member(vm, instance, name, dst);
-    type = var_type(dst);
-    if (obj && type == MT_VARIABLE) {
+    if (obj && var_type(dst) == MT_VARIABLE) {
         *dst = obj->members[dst->v.i];
     }
+    type = var_type(dst);
     var_clearstatic(dst);
     return type;
 }
@@ -269,10 +270,10 @@ int be_instance_member(bvm *vm, binstance *instance, bstring *name, bvalue *dst)
     int type;
     be_assert(name != NULL);
     binstance *obj = instance_member(vm, instance, name, dst);
-    type = var_type(dst);
-    if (obj && type == MT_VARIABLE) {
+    if (obj && var_type(dst) == MT_VARIABLE) {
         *dst = obj->members[dst->v.i];
     }
+    type = var_type(dst);
     if (obj) {
         var_clearstatic(dst);
         return type;
@@ -280,7 +281,7 @@ int be_instance_member(bvm *vm, binstance *instance, bstring *name, bvalue *dst)
         /* if 'init' does not exist, create a virtual empty constructor */
         if (strcmp(str(name), "init") == 0) {
             var_setntvfunc(dst, default_init_native_method);
-            return BE_NTVFUNC;
+            return var_primetype(dst);
         } else {
             /* get method 'member' */
             obj = instance_member(vm, instance, str_literal(vm, "member"), vm->top);

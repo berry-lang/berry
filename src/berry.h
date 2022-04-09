@@ -409,6 +409,8 @@ enum beobshookevents {
   BE_OBS_STACK_RESIZE_START,    /* Berry stack resized */
 };
 
+typedef int (*bctypefunc)(bvm*, const void*);
+
 /* FFI functions */
 #define be_writestring(s)       be_writebuffer((s), strlen(s))
 #define be_writenewline()       be_writebuffer("\n", 1)

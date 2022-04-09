@@ -140,7 +140,7 @@ static int l_super(bvm *vm)
             if (size >= 2) {  /* need at least 2 stackframes: current (for super() native) and caller (the one we are interested in) */
                 bcallframe *caller = be_vector_at(&vm->callstack, size - 2);  /* get the callframe of caller */
                 bvalue *func = caller->func;  /* function object of caller */
-                if (var_type(func) == BE_CLOSURE) {  /* only useful if the caller is a Berry closure (i.e. not native) */
+                if (var_primetype(func) == BE_CLOSURE) {  /* only useful if the caller is a Berry closure (i.e. not native) */
                     bclosure *clos_ctx = var_toobj(func);  /* this is the closure we look for in the class chain */
                     base_class = find_class_closure(o->_class, clos_ctx);  /* iterate on current and super classes to find where the closure belongs */
                 }
@@ -233,6 +233,9 @@ static int l_int(bvm *vm)
             be_pushvalue(vm, 1);
         } else if (be_isbool(vm, 1)) {
             be_pushint(vm, be_tobool(vm, 1) ? 1 : 0);
+        } else if (be_iscomptr(vm, 1)) {
+            intptr_t p = (intptr_t) be_tocomptr(vm, 1);
+            be_pushint(vm, (int) p);
         } else {
             be_return_nil(vm);
         }

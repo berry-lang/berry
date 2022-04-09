@@ -91,7 +91,7 @@
         res = var2real(a) op var2real(b); \
     } else if (var_isinstance(a) && !var_isnil(b)) { \
         res = object_eqop(vm, #op, iseq, a, b); \
-    } else if (var_type(a) == var_type(b)) { /* same types */ \
+    } else if (var_primetype(a) == var_primetype(b)) { /* same types */ \
         if (var_isnil(a)) { /* nil op nil */ \
             res = 1 op 1; \
         } else if (var_isbool(a)) { /* bool op bool */ \
@@ -464,6 +464,7 @@ BERRY_API bvm* be_vm_new(void)
     be_loadlibs(vm);
     vm->compopt = 0;
     vm->obshook = NULL;
+    vm->ctypefunc = NULL;
 #if BE_USE_PERF_COUNTERS
     vm->counter_ins = 0;
     vm->counter_enter = 0;
@@ -488,6 +489,7 @@ BERRY_API void be_vm_delete(bvm *vm)
     be_stack_delete(vm, &vm->tracestack);
     be_free(vm, vm->stack, (vm->stacktop - vm->stack) * sizeof(bvalue));
     be_globalvar_deinit(vm);
+    be_gc_free_memory_pools(vm);
 #if BE_USE_DEBUG_HOOK
     /* free native hook */
     if (var_istype(&vm->hook, BE_COMPTR))
@@ -854,7 +856,7 @@ newframe: /* a new call frame */
                 bvalue *a = RA();
                 *a = result;
                 if (var_basetype(a) == BE_FUNCTION) {
-                    if (type & BE_STATIC || type == BE_INDEX) { /* if instance variable then we consider it's non-method */
+                    if ((type & BE_STATIC) || (type == BE_INDEX)) {    /* if instance variable then we consider it's non-method */
                         /* static method, don't bother with the instance */
                         a[1] = result;
                         var_settype(a, NOT_METHOD);
@@ -896,7 +898,11 @@ newframe: /* a new call frame */
             if (var_isinstance(a) && var_isstr(b)) {
                 binstance *obj = var_toobj(a);
                 bstring *attr = var_tostr(b);
-                if (!be_instance_setmember(vm, obj, attr, c)) {
+                bvalue result = *c;
+                if (var_isfunction(&result)) {
+                    var_markstatic(&result);
+                }
+                if (!be_instance_setmember(vm, obj, attr, &result)) {
                     reg = vm->reg;
                     vm_error(vm, "attribute_error",
                         "class '%s' cannot assign to attribute '%s'",
@@ -1125,6 +1131,17 @@ newframe: /* a new call frame */
                 ret_native(vm);
                 break;
             }
+            case BE_CTYPE_FUNC: {
+                if (vm->ctypefunc) {
+                    push_native(vm, var, argc, mode);
+                    const void* args = var_toobj(var);
+                    vm->ctypefunc(vm, args);
+                    ret_native(vm);
+                } else {
+                    vm_error(vm, "internal_error", "missing ctype_func handler");
+                }
+                break;
+            }
             case BE_MODULE: {
                 bvalue attr;
                 var_setstr(&attr, str_literal(vm, "()"));
@@ -1254,4 +1271,14 @@ BERRY_API void be_set_obs_hook(bvm *vm, bobshook hook)
     (void)hook;     /* avoid comiler warning */
 
     vm->obshook = hook;
+}
+
+BERRY_API void be_set_ctype_func_hanlder(bvm *vm, bctypefunc handler)
+{
+    vm->ctypefunc = handler;
+}
+
+BERRY_API bctypefunc be_get_ctype_func_hanlder(bvm *vm)
+{
+    return vm->ctypefunc;
 }
