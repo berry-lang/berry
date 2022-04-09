@@ -200,7 +200,7 @@ typedef const char* (*breader)(void*, size_t*);
 #define var_basetype(_v)        basetype((_v)->type)
 #define var_primetype(_v)       (var_type(_v) & ~BE_STATIC)
 #define var_isstatic(_v)        ((var_type(_v) & BE_STATIC) == BE_STATIC)
-#define var_istype(_v, _t)      (var_primetype(_v) == _t)
+#define var_istype(_v, _t)      (var_type(_v) == _t)
 #define var_settype(_v, _t)     ((_v)->type = _t)
 #define var_markstatic(_v)      var_settype(_v, var_type(_v) | BE_STATIC)
 #define var_clearstatic(_v)     var_settype(_v, var_type(_v) & ~BE_STATIC)
