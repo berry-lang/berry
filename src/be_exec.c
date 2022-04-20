@@ -15,7 +15,6 @@
 #include "be_bytecode.h"
 #include "be_decoder.h"
 #include <stdlib.h>
-#include <string.h>
 
 #if !BE_USE_SCRIPT_COMPILER && !BE_USE_BYTECODE_LOADER
   #error no compiler or bytecode loader enabled.
