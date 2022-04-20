@@ -15,6 +15,7 @@
 #include "be_bytecode.h"
 #include "be_decoder.h"
 #include <stdlib.h>
+#include <string.h>
 
 #if !BE_USE_SCRIPT_COMPILER && !BE_USE_BYTECODE_LOADER
   #error no compiler or bytecode loader enabled.
@@ -258,7 +259,7 @@ BERRY_API int be_loadmode(bvm *vm, const char *name, bbool islocal)
 {
     int res = load_bytecode(vm, name);
 #if BE_USE_SCRIPT_COMPILER
-    if (res && res != BE_IO_ERROR) {
+    if (res && res != BE_IO_ERROR && res != BE_EXCEPTION) {
         res = fileparser(vm, name, islocal);
     }
 #else
