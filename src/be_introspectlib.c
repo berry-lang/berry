@@ -127,6 +127,22 @@ static int m_fromptr(bvm *vm)
     be_return_nil(vm);
 }
 
+/* checks if the function (berry bytecode bproto only) is hinted as a method */
+static int m_ismethod(bvm *vm)
+{
+    int top = be_top(vm);
+    if (top >= 1) {
+        bvalue *v = be_indexof(vm, 1);
+        if (var_isclosure(v)) {
+            bclosure *cl = var_toobj(v);
+            bproto *pr = cl->proto;
+            be_pushbool(vm, pr->varg & BE_VA_METHOD);
+            be_return(vm);
+        }
+    }
+    be_return_nil(vm);
+}
+
 #if !BE_USE_PRECOMPILED_OBJECT
 be_native_module_attr_table(introspect) {
     be_native_module_function("members", m_attrlist),
@@ -136,6 +152,8 @@ be_native_module_attr_table(introspect) {
 
     be_native_module_function("toptr", m_toptr),
     be_native_module_function("fromptr", m_fromptr),
+
+    be_native_module_function("ismethod", m_ismethod),
 };
 
 be_define_native_module(introspect, NULL);
@@ -149,6 +167,8 @@ module introspect (scope: global, depend: BE_USE_INTROSPECT_MODULE) {
 
     toptr, func(m_toptr)
     fromptr, func(m_fromptr)
+
+    ismethod, func(m_ismethod)
 }
 @const_object_info_end */
 #include "../generate/be_fixed_introspect.h"
