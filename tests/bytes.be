@@ -183,3 +183,10 @@ assert(b[5..10] == bytes("5566778899AA"))
 assert(b[-10..-5] == bytes("66778899AABB"))
 assert(b[5..-10] == bytes("5566"))
 assert(b[7..-12] == bytes())
+
+#- float -#
+b = bytes("00000000")
+b.setfloat(0, 0.33)
+assert(b == bytes('C3F5A83E'))
+b = bytes("0000C03F")
+assert(b.getfloat(0) == 1.5)
