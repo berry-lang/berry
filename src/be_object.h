@@ -190,7 +190,7 @@ struct bntvclos {
 typedef struct {
     bcommon_header;
     void *data;
-    bntvfunc destory;
+    bntvfunc destroy;
 } bcommomobj;
 
 typedef const char* (*breader)(void*, size_t*);
