@@ -551,6 +551,8 @@ BERRY_API void be_vm_delete(bvm *vm);
 
 /* Observability hook */
 BERRY_API void be_set_obs_hook(bvm *vm, bobshook hook);
+BERRY_API void be_set_ctype_func_hanlder(bvm *vm, bctypefunc handler);
+BERRY_API bctypefunc be_get_ctype_func_hanlder(bvm *vm);
 
 /* code load APIs */
 BERRY_API int be_loadbuffer(bvm *vm,
