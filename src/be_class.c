@@ -12,6 +12,7 @@
 #include "be_gc.h"
 #include "be_vm.h"
 #include "be_func.h"
+#include "be_module.h"
 #include <string.h>
 
 #define check_members(vm, c)            \
@@ -297,10 +298,15 @@ int be_instance_member(bvm *vm, binstance *instance, bstring *name, bvalue *dst)
                     *dst = obj->members[dst->v.i];
                 }
                 type = var_type(dst);
-                if (type != BE_NIL) {
+                if (type == BE_MODULE) {
+                    /* check if the module is named `undefined` */
+                    bmodule *mod = var_toobj(dst);
+                    if (strcmp(be_module_name(mod), "undefined") == 0) {
+                        return BE_NONE;     /* if the return value is module `undefined`, consider it is an error */
+                    }
+                }
                     var_clearstatic(dst);
                     return type;
-                }
             }
         }
     }

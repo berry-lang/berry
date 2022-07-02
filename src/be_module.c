@@ -327,9 +327,16 @@ int be_module_attr(bvm *vm, bmodule *module, bstring *attr, bvalue *dst)
             be_dofunc(vm, top, 1); /* call method 'method' */
             vm->top -= 2;
             *dst = *vm->top;   /* copy result to R(A) */
-            if (var_basetype(dst) != BE_NIL) {
-                return var_type(dst);
+            
+            int type = var_type(dst);
+            if (type == BE_MODULE) {
+                /* check if the module is named `undefined` */
+                bmodule *mod = var_toobj(dst);
+                if (strcmp(be_module_name(mod), "undefined") == 0) {
+                    return BE_NONE;     /* if the return value is module `undefined`, consider it is an error */
             }
+            }
+            return type;
         }
         return BE_NONE;
     }
