@@ -87,7 +87,7 @@ static bstring* sim2str(bvm *vm, bvalue *v)
     case BE_REAL:
         sprintf(sbuf, "%g", var_toreal(v));
         break;
-    case BE_CLOSURE: case BE_NTVCLOS: case BE_NTVFUNC:
+    case BE_CLOSURE: case BE_NTVCLOS: case BE_NTVFUNC: case BE_CTYPE_FUNC:
         sprintf(sbuf, "<function: %p>", var_toobj(v));
         break;
     case BE_CLASS:
@@ -266,18 +266,18 @@ BERRY_API bint be_str2int(const char *str, const char **endstr)
         return sum;
     } else {
         /* decimal literal */
-    sign = c = *str++;
-    if (c == '+' || c == '-') {
-        c = *str++;
-    }
-    while (is_digit(c)) {
-        sum = sum * 10 + c - '0';
-        c = *str++;
-    }
-    if (endstr) {
-        *endstr = str - 1;
-    }
-    return sign == '-' ? -sum : sum;
+        sign = c = *str++;
+        if (c == '+' || c == '-') {
+            c = *str++;
+        }
+        while (is_digit(c)) {
+            sum = sum * 10 + c - '0';
+            c = *str++;
+        }
+        if (endstr) {
+            *endstr = str - 1;
+        }
+        return sign == '-' ? -sum : sum;
     }
 }
 

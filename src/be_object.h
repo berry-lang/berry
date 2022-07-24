@@ -21,6 +21,7 @@
 #define BE_FUNCTION     6
 
 #define BE_GCOBJECT     16      /* from this type can be gced */
+#define BE_GCOBJECT_MAX (3<<5)  /* from this type can't be gced */
 
 #define BE_STRING       16
 #define BE_CLASS        17
@@ -258,5 +259,6 @@ typedef const char* (*breader)(void*, size_t*);
 const char* be_vtype2str(bvalue *v);
 bvalue* be_indexof(bvm *vm, int idx);
 void be_commonobj_delete(bvm *vm, bgcobject *obj);
+int be_commonobj_destroy_generic(bvm* vm);
 
 #endif
