@@ -6,6 +6,8 @@ TARGET      = berry
 CC          = gcc
 MKDIR       = mkdir
 LFLAGS      =
+PREFIX      = /usr/local
+BINDIR      = $(PREFIX)/bin
 
 INCPATH     = src default
 SRCPATH     = src default
@@ -77,10 +79,11 @@ $(GENERATE):
 	$(Q) $(MKDIR) $(GENERATE)
 
 install:
-	cp $(TARGET) /usr/local/bin
+	mkdir -p $(DESTDIR)$(BINDIR)
+	cp $(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
 
 uninstall:
-	$(RM) /usr/local/bin/$(TARGET)
+	$(RM) $(DESTDIR)$(BINDIR)/$(TARGET)
 
 prebuild: $(GENERATE)
 	$(MSG) [Prebuild] generate resources
