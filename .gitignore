@@ -71,3 +71,6 @@ generate/
 temp/
 .idea
 __pycache__
+.cproject
+.project
+.settings/
