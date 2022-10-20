@@ -132,26 +132,34 @@ methods can be called via the class or via an instance.
 
 .. code:: berry
 
-   > class static_demo
-         static def increment_static(i)
-             return i + 1
-         end
-         def increment_instance(i)
-             return i + 1
-         end
-     end
-   > a = static_demo()
-   > static_demo.increment_static(1)    # call via class
-   2
-   > a.increment_static(1)              # call via instance
-   > 
-   > static_demo.increment_instance(1)
-   type_error: unsupported operand type(s) for +: 'nil' and 'int'
-   stack traceback:
-      stdin:6: in function `increment_instance`
-      stdin:1: in function `main`
-   > a.increment_instance(1)
-   2
+   class static_demo
+       static def increment_static(i)
+           return i + 1
+       end
+       def increment_instance(i)
+           return i + 1
+       end
+   end
+   a = static_demo()
+   static_demo.increment_static(1)    # call via class
+
+2
+
+.. code:: berry
+
+   a.increment_static(1)              # call via instance
+   static_demo.increment_instance(1)
+
+type_error: unsupported operand type(s) for +: 'nil' and 'int'
+stack traceback:
+stdin:6: in function `increment_instance`
+stdin:1: in function `main`
+
+.. code:: berry
+   
+   a.increment_instance(1)
+
+2
 
 Constructor and Destructor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -240,26 +248,22 @@ to perform operations on the instance. An overloaded operator is a
 method with a special name, and the overloaded function form of a binary
 operator is
 
-.. container:: algorithm
+.. code::
 
-   .. code:: ebnf
-
-      ´def’ operator ´(´ other ´)´
+   ´def’ operator ´(´ other ´)´
         block
-      ´end’
+   ´end’
 
 **operator** is an overloaded binary operator. The left operand of the
 binary operator is the ``self`` object, and the right operand is the
 value of the parameter **other**. The overloaded function form of the
 unary operator is
 
-.. container:: algorithm
+.. code::
 
-   .. code:: ebnf
-
-      ´def’ operator ´()´
+   ´def’ operator ´()´
         block
-      ´end’
+   ´end’
 
 **operator** is an overloaded unary operator. To distinguish it from the
 subtraction operator, the unary minus sign is written as ``-*`` when

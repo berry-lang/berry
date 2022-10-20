@@ -14,7 +14,7 @@ de los lectores.
 
 La definición EBNF de la gramática del lenguaje Berry es la siguiente:
 
-.. code:: ebnf
+.. code::
 
    (* program define *)
    program = block;
@@ -99,7 +99,7 @@ La siguiente es la definición de gramática JSON admitida por el módulo
 JSON en la biblioteca estándar de Berry. El uso de EBNF aún cumple con
 las convenciones anteriores:
 
-.. code:: ebnf
+.. code::
 
    json = value;
    value = object | array |

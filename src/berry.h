@@ -199,22 +199,22 @@ typedef struct bntvmodobj {
 #endif
     } u;                                            /**< u */
 #ifdef __cplusplus
-    BE_CONSTEXPR bntvmodobj(const char *name) :
+    BE_CONSTEXPR bntvmodobj_t(const char *name) :
         name(name), type(BE_CNIL), u(bint(0)) {}    /**< bntvmodobj */
-    BE_CONSTEXPR bntvmodobj(const char *name, bint v) :
+    BE_CONSTEXPR bntvmodobj_t(const char *name, bint v) :
         name(name), type(BE_CINT), u(v) {}          /**< bntvmodobj */
-    BE_CONSTEXPR bntvmodobj(const char *name, breal v) :
+    BE_CONSTEXPR bntvmodobj_t(const char *name, breal v) :
         name(name), type(BE_CREAL), u(v) {}         /**< bntvmodobj */
-    BE_CONSTEXPR bntvmodobj(const char *name, bbool v) :
+    BE_CONSTEXPR bntvmodobj_t(const char *name, bbool v) :
         name(name), type(BE_CBOOL), u(v) {}         /**< bntvmodobj */
-    BE_CONSTEXPR bntvmodobj(const char *name, bntvfunc v) :
+    BE_CONSTEXPR bntvmodobj_t(const char *name, bntvfunc v) :
         name(name), type(BE_CFUNCTION), u(v) {}     /**< bntvmodobj */
-    BE_CONSTEXPR bntvmodobj(const char *name, const char *v) :
+    BE_CONSTEXPR bntvmodobj_t(const char *name, const char *v) :
         name(name), type(BE_CSTRING), u(v) {}       /**< bntvmodobj */
-    BE_CONSTEXPR bntvmodobj(const char *name, int _tpye, const void *v) :
+    BE_CONSTEXPR bntvmodobj_t(const char *name, int _tpye, const void *v) :
         name(name), type(_tpye), u(v) {}            /**< bntvmodobj */
 #endif
-} bntvmodobj;
+} bntvmodobj_t; /**< bntvmodobj_t */
 
 /**
  * @struct bntvmodule
@@ -223,10 +223,10 @@ typedef struct bntvmodobj {
  */
 typedef struct bntvmodule {
     const char *name;              /**< native module name */
-    const bntvmodobj *attrs;       /**< native module attributes */
+    const bntvmodobj_t *attrs;       /**< native module attributes */
     size_t size;                   /**< native module attribute count */
     const struct bmodule *module;  /**< const module object */
-} bntvmodule;
+} bntvmodule_t; /**< bntvmodule_t */
 
 /**
  * @struct bclass
@@ -387,7 +387,7 @@ typedef bclass_ptr bclass_array[];
  *
  */
 #define be_extern_native_module(name)                   \
-    extern const bntvmodule be_native_module(name)
+    extern const bntvmodule_t be_native_module(name)
 
 /**
  * @def be_extern_native_class
@@ -617,7 +617,7 @@ typedef struct bhookinfo {
     const char *source;     /**< source path information */
     const char *func_name;  /**< current function name */
     void *data;             /**< user extended data */
-} bhookinfo; /**< bhookinfo_ */
+} bhookinfo_t; /**< bhookinfo_ */
 
 /**
  * @fn void (*bntvhook)(bvm *vm, bhookinfo *info)
@@ -626,7 +626,7 @@ typedef struct bhookinfo {
  * @param vm virtual machine instance
  * @param info
  */
-typedef void (*bntvhook)(bvm *vm, bhookinfo *info);
+typedef void (*bntvhook)(bvm *vm, bhookinfo_t *info);
 
 /**
  * @def be_assert

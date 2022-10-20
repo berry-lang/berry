@@ -46,9 +46,7 @@ función se define como **Parámetros formales**, y al parámetro cuando
 llamamos a la función como **Argumentos**. La forma general de la
 definición de la función es:
 
-.. container:: algorithm
-
-   .. code:: ebnf
+.. code::
 
       ’def’ name ´(´ argumentos ´)´
         bloque
@@ -87,9 +85,7 @@ Función anónima
 A diferencia de las funciones con nombre, la **función anónima** no
 tiene nombre y su expresión de definición tiene la forma:
 
-.. container:: algorithm
-
-   .. code:: ebnf
+.. code::
 
       ´def’ ´(´ argumentos ´)´
         bloque
@@ -747,7 +743,7 @@ La **Expresión lambda** es una función anónima especial. La expresión
 lambda se compone de una lista de parámetros y un cuerpo de función,
 pero la forma es diferente de la función general:
 
-.. code:: ebnf
+.. code::
 
    ´/´ args ´->´ expr ´end’
 

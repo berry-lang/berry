@@ -319,11 +319,9 @@ determined at runtime, and the variable can store any type of value.
 The first way to define a variable is to use an assignment statement to
 assign a value to a new variable name:
 
-.. container:: algorithm
+.. code::
 
-   .. code:: ebnf
-
-      ’var’ = expression
+   ’var’ = expression
 
 **variable** is the name of the variable, and the variable name is an
 identifier (see section identifier). **expression** is the expression to
@@ -355,7 +353,7 @@ the new variable name cannot meet the requirement, because the
 identifier ``i`` already exists in the outer scope. In this case, the
 variable can be defined by the ``var`` keyword:
 
-.. code:: ebnf
+.. code::
 
    ’var’ variable
    ’var’ variable = expression

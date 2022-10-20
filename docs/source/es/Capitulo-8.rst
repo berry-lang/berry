@@ -165,17 +165,20 @@ Ejemplo de uso:
 
 .. code:: berry
 
-   > a = dyn()
-   > a.a
-   attribute_error: el objeto 'dyn' no tiene el atributo 'a'
-   stack traceback:
-       stdin:1: en función `main`
-   > a.a = 1
-   > a.a
-   1
-   > a.a = nil
-   > a.a
-   >
+   a = dyn()
+   a.a
+
+attribute_error: el objeto 'dyn' no tiene el atributo 'a'
+stack traceback:
+stdin:1: en función `main`
+
+   a.a = 1
+   a.a
+   
+1
+
+   a.a = nil
+   a.a
 
 Llamada implícita de ``member()``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -324,7 +327,7 @@ Ejemplo más avanzado:
 
 .. code:: berry
 
-   > class A
+   class A
        var i
 
        def member(n)
@@ -336,20 +339,25 @@ Ejemplo más avanzado:
          if n == 'ii' self.i = v end
        end
      end
-   > a=A()
+   a=A()
 
-   > a.i      # devuelve nil
-   > a.ii     # i llama implícitamente `a.member("ii")`
-   attribute_error: el objeto 'A' no tiene atributo 'ii'
-   stack traceback:
-       stdin:1: en función `main`
+   a.i      # devuelve nil
+   a.ii     # i llama implícitamente `a.member("ii")`
+   
+attribute_error: el objeto 'A' no tiene atributo 'ii'
+stack traceback:
+stdin:1: en función `main`
+
    # devuelve un excepción ya que el miembro es nulo (considerado inexistente)
 
-   > a.ii = 42    # llama implícitamente `a.setmember("ii", 42)`
-   > a.ii         # llama implícitamente `a.member("ii")` and returns `42`
-   42
-   > a.i          #  la variable concreta también fue cambiada
-   42
+   a.ii = 42    # llama implícitamente `a.setmember("ii", 42)`
+   a.ii         # llama implícitamente `a.member("ii")` and returns `42`
+   
+42
+
+   a.i          #  la variable concreta también fue cambiada
+   
+42
 
 8.3 Cómo empaquetar un módulo
 -----------------------------
@@ -422,19 +430,23 @@ Ejemplo de uso:
 
 .. code:: berry
 
-   > import demo_modulo
+   import demo_modulo
 
-   > demo_modulo
+   demo_modulo
    <module: demo_modulo>
 
-   > demo_module.decir_hola()
-   Hola Berry!
+   demo_module.decir_hola()
+   
+Hola Berry!
 
-   > demo_modulo.foo
-   'bar'
-   > demo_modulo.foo = "baz"   # el módulo se puede escribir, aunque esto es muy desaconsejado
-   > demo_modulo.foo
-   'baz'
+   demo_modulo.foo
+   
+'bar'
+
+   demo_modulo.foo = "baz"   # el módulo se puede escribir, aunque esto es muy desaconsejado
+   demo_modulo.foo
+   
+'baz'
 
 Empaquetar un singleton (mónada)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -492,21 +504,24 @@ Ejemplo:
 
 .. code:: berry
 
-   > import demo_monad
-   > demo_monad
+   import demo_monad
+   demo_monad
    <instance: my_monad()>     # es una instancia no un modulo
 
-   > demo_monad.say_hello()
-   Hola Berry!
+   demo_monad.say_hello()
+   
+Hola Berry!
 
-   > demo_monad.i = 42        #  puedes usarlo como cualquier instancia
-   > demo_monad.i
-   42
+   demo_monad.i = 42        #  puedes usarlo como cualquier instancia
+   demo_monad.i
+   
+42
 
-   > demo_monad.j = 0         # hay una fuerte verificación de miembros en comparación con los módulos 
-   Attribute_error: la clase 'my_monad' no puede asignarse al atributo 'j'
-   stack traceback:
-       stdin:1: en función `main`
+   demo_monad.j = 0         # hay una fuerte verificación de miembros en comparación con los módulos 
+   
+Attribute_error: la clase 'my_monad' no puede asignarse al atributo 'j'
+stack traceback:
+stdin:1: en función `main`
 
 8.4 Solidificación
 ------------------

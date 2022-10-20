@@ -253,7 +253,7 @@ void be_tracestack(bvm *vm)
 
 static void hook_callnative(bvm *vm, int mask)
 {
-    bhookinfo info;
+    bhookinfo_t info;
     int top = be_top(vm);
     bcallframe *cf = vm->cf;
     bclosure *cl = var_toobj(cf->func);

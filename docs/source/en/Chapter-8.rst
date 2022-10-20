@@ -155,17 +155,24 @@ Exemple of usage:
 
 .. code:: berry
 
-   > a = dyn()
-   > a.a
-   attribute_error: the 'dyn' object has no attribute 'a'
-   stack traceback:
-       stdin:1: in function `main`
-   > a.a = 1
-   > a.a
-   1
-   > a.a = nil
-   > a.a
-   >
+   a = dyn()
+   a.a
+
+attribute_error: the 'dyn' object has no attribute 'a'
+stack traceback:
+stdin:1: in function `main`
+
+.. code:: berry
+
+   a.a = 1
+   a.a
+
+1
+
+.. code:: berry
+
+   a.a = nil
+   a.a
 
 implicit call of ``member()``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -280,14 +287,21 @@ Now let’s try it:
 
 .. code:: berry
 
-   > t.a
-   'a'
-   > t.b
-   'member b'
-   > t.foo
-   'member foo'
-   > t.bar = 2
-   Set 'bar': 2
+   t.a
+
+'a'
+
+   t.b
+
+'member b'
+
+    t.foo
+
+'member foo'
+   
+   t.bar = 2
+
+Set 'bar': 2
 
 This works for modules too:
 
@@ -318,7 +332,7 @@ More advanced example:
 
 .. code:: berry
 
-   > class A
+   class A
        var i
      
        def member(n)
@@ -330,20 +344,25 @@ More advanced example:
          if n == 'ii' self.i = v end
        end
      end
-   > a=A()
+   a=A()
 
-   > a.i      # returns nil
-   > a.ii     # implicitly calls `a.member("ii")`
-   attribute_error: the 'A' object has no attribute 'ii'
-   stack traceback:
-       stdin:1: in function `main`
+   a.i      # returns nil
+   a.ii     # implicitly calls `a.member("ii")`
+   
+attribute_error: the 'A' object has no attribute 'ii'
+stack traceback:
+stdin:1: in function `main`
+
    # returns an exception since the member is nil (considered is non-existant)
 
-   > a.ii = 42    # implicitly calls `a.setmember("ii", 42)`
-   > a.ii         # implicitly calls `a.member("ii")` and returns `42`
-   42
-   > a.i          # the concrete variable was changed too
-   42
+   a.ii = 42    # implicitly calls `a.setmember("ii", 42)`
+   a.ii         # implicitly calls `a.member("ii")` and returns `42`
+   
+42
+
+   a.i          # the concrete variable was changed too
+
+42
 
 8.3 How-to package a module
 ---------------------------
@@ -481,21 +500,24 @@ Example:
 
 .. code:: berry
 
-   > import demo_monad
-   > demo_monad
+   import demo_monad
+   demo_monad
    <instance: my_monad()>     # it's an instance not a module
 
-   > demo_monad.say_hello()
-   Hello Berry!
+   demo_monad.say_hello()
 
-   > demo_monad.i = 42        # you can use it like any instance
-   > demo_monad.i
-   42
+Hello Berry!
 
-   > demo_monad.j = 0         # there is strong member checking compared to modules
-   attribute_error: class 'my_monad' cannot assign to attribute 'j'
-   stack traceback:
-       stdin:1: in function `main`
+   demo_monad.i = 42        # you can use it like any instance
+   demo_monad.i
+ 
+42
+
+   demo_monad.j = 0         # there is strong member checking compared to modules
+   
+attribute_error: class 'my_monad' cannot assign to attribute 'j'
+stack traceback:
+stdin:1: in function `main`
 
 8.4 Solidification
 ------------------

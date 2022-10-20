@@ -40,9 +40,7 @@ of parentheses. We call the parameter when the function is defined as
 **Formal parameters**, and the parameter when calling the function as
 **Arguments**. The general form of the function definition is:
 
-.. container:: algorithm
-
-   .. code:: ebnf
+.. code::
 
       ’def’ name ´(´ arguments ´)´
         block
@@ -81,9 +79,7 @@ Anonymous Function
 Unlike named functions, **anonymous function** has no name, and its
 definition expression has the form:
 
-.. container:: algorithm
-
-   .. code:: ebnf
+.. code::
 
       ´def’ ´(´ arguments ´)´
         block
@@ -730,7 +726,7 @@ Lambda expression
 is composed of parameter list and function body, but the form is
 different from general function:
 
-.. code:: ebnf
+.. code::
 
    ´/´ args ´->´ expr ´end’
 

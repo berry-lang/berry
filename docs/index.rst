@@ -3,9 +3,9 @@ Welcome to berry's documentation!
 
 .. toctree::
 
-   English <en/Home>
-   Spanish <es/Home>
-   Berry API <api>
+   English <source/en/Home>
+   Spanish <source/es/Home>
+   Berry API <source/api>
    
 Indices and tables
 ==================

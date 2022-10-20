@@ -343,7 +343,7 @@ asignación para asignar un valor a un nuevo nombre de variable:
 
    <div class="algorithm">
 
-.. code:: ebnf
+.. code::
 
    ’var’ =  expresión
 
@@ -377,7 +377,7 @@ directa al nuevo nombre de variable no puede cumplir el requisito,
 porque el identificador ``i`` ya existe en el ámbito externo. En este
 caso, la variable se puede definir mediante la palabra clave ``var``:
 
-.. code:: ebnf
+.. code::
 
    ’var’ variable
    ’var’ variable = expresión

@@ -142,7 +142,7 @@ a través de una instancia.
 
 .. code:: berry
 
-   > class static_demo
+   class static_demo
          static def incremento_static(i)
              return i + 1
          end
@@ -150,18 +150,23 @@ a través de una instancia.
              return i + 1
          end
      end
-   > a = static_demo()
-   > static_demo.incremento_static(1)    # llamada via clase
-   2
-   > a.incremento_static(1)              # llamada via instancia
-   >
-   > static_demo.incremento_instancia(1)
-   type_error: unsupported operand type(s) for +: 'nil' and 'int'
-   stack traceback:
-      stdin:6: in function `increment_instancia`
-      stdin:1: in function `main`
-   > a.increment_instancia(1)
-   2
+   a = static_demo()
+   static_demo.incremento_static(1)    # llamada via clase
+   
+2
+
+   a.incremento_static(1)              # llamada via instancia
+   
+   static_demo.incremento_instancia(1)
+   
+type_error: unsupported operand type(s) for +: 'nil' and 'int'
+stack traceback:
+stdin:6: in function `increment_instancia`
+stdin:1: in function `main`
+
+   a.increment_instancia(1)
+  
+2
 
 Constructor y Destructor
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -257,9 +262,7 @@ de suma para realizar operaciones en la instancia. Un operador
 sobrecargado es un método con un nombre especial, y la forma de función
 sobrecargada de un operador binario es
 
-.. container:: algorithm
-
-   .. code:: ebnf
+.. code::
 
       ´def’ operador ´(´ otro ´)´
         bloque
@@ -270,9 +273,7 @@ del operador binario es el objeto ``self`` y el operando derecho es el
 valor del parámetro **otro**. La forma de función sobrecargada del
 operador unario es
 
-.. container:: algorithm
-
-   .. code:: ebnf
+.. code::
 
       ´def’ operador ´()´
         bloque

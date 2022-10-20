@@ -31,7 +31,6 @@ release = '1.1.0'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-        'myst_parser',
         'sphinx.ext.autodoc',
         'sphinx.ext.doctest',
         'sphinx.ext.mathjax',
@@ -98,7 +97,6 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
 # html_static_path = ['_static']
 
 source_suffix = {
-     '.md': 'markdown',
     '.rst': 'restructuredtext',
 }
 
@@ -111,12 +109,14 @@ breathe_projects_source = {
     )
 }
 
+# exclude prefix
 c_id_attributes = ["BERRY_API"]
 c_paren_attributes = ["BERRY_API"]
 
 cpp_id_attributes = ["BERRY_API"]
 cpp_paren_attributes = ["BERRY_API"]
 
+# add Berry lexer for highlighting
 import sys
 def setup(sphinx):
     sys.path.insert(0, os.path.abspath('../tools/highlighters/Pygments'))

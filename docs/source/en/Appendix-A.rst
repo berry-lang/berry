@@ -9,7 +9,7 @@ understanding of the grammar.
 
 The EBNF definition of Berry language grammar is as follows:
 
-.. code:: ebnf
+.. code::
 
    (* program define *)
    program = block;
@@ -93,7 +93,7 @@ The following is the JSON grammar definition supported by the JSON
 module in the Berry standard library. The usage of EBNF still complies
 with the above conventions:
 
-.. code:: ebnf
+.. code::
 
    json = value;
    value = object | array |
