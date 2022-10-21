@@ -23,7 +23,8 @@ Guan Wenliang
 abril 2019
 
 .. toctree::
-
+   :hidden:
+   
    Capítulo 1 - Información básica <Capitulo-1>
    Capítulo 2 - Tipos y variables <Capitulo-2>
    Capítulo 3 - Expresión <Capitulo-3>
