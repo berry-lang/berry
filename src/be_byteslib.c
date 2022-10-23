@@ -1619,6 +1619,7 @@ void be_load_byteslib(bvm *vm)
         { "geti", m_geti },
         { "set", m_set },
         { "seti", m_set },      // setters for signed and unsigned are identical
+        { "setbytes", m_setbytes },
         { "getfloat", m_getfloat },
         { "setfloat", m_setfloat },
         { "item", m_item },
