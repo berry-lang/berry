@@ -13,8 +13,10 @@ The EBNF definition of Berry language grammar is as follows:
 
    (* program define *)
    program = block;
+   
    (* block define *)
    block = {statement};
+   
    (* statement define *)
    statement = class_stmt | func_stmt | var_stmt | if_stmt | while_stmt |
             for_stmt | break_stmt | return_stmt | expr_stmt | import_stmt |
@@ -24,21 +26,26 @@ The EBNF definition of Berry language grammar is as follows:
    for_stmt = 'for' ID ':' expr block 'end';
    break_stmt = 'break' | 'continue';
    return_stmt = 'return' [expr];
+   
    (* function define statement *)
    func_stmt = 'def' ID func_body;
    func_body = '(' [arg_field {',' arg_field}] ')' block 'end';
    arg_field = ['*'] ID;
+   
    (* class define statement *)
    class_stmt = 'class' ID [':' ID] class_block 'end';
    class_block = {'var' ID {',' ID} | 'static' ['var'] ID ['=' expr] {',' ID ['=' expr] } | 'static' func_stmt | func_stmt};
    import_stmt = 'import' (ID (['as' ID] | {',' ID}) | STRING 'as' ID);
+   
    (* exceptional handling statement *)
    try_stmt = 'try' block except_block {except_block} 'end';
    except_block = except_stmt block;
    except_stmt = 'except' (expr {',' expr} | '..') ['as' ID [',' ID]];
    throw_stmt = 'raise' expr [',' expr];
+   
    (* variable define statement *)
    var_stmt = 'var' ID ['=' expr] {',' ID ['=' expr]};
+   
    (* expression define *)
    expr_stmt = expr [assign_op expr];
    expr = suffix_expr | unop expr | expr binop expr | range_expr | cond_expr;
@@ -55,7 +62,9 @@ The EBNF definition of Berry language grammar is as follows:
    call_expr = '(' [expr {',' expr}] ')';
    list_expr = '[' {expr ','} [expr] ']';
    map_expr = '{' {expr ':' expr ','} [expr ':' expr] '}';
-   anon_func = 'def' func_body; (* anonymous function *)
+   anon_func = 'def' func_body;
+   
+   (* anonymous function *)
    lambda_expr = '/' [arg_field {',' arg_field}] | {arg_field}] '->' expr;
 
 The standard EBNF format can be found in related materials. Here is an

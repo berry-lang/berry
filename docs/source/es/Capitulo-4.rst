@@ -1,7 +1,3 @@
-.. raw:: html
-
-   <!-- Spanish Translation: Emiliano Gonzalez (egonzalez . hiperion @ gmail . com) -->
-
 4. Declaración
 ==============
 
@@ -164,7 +160,7 @@ simplificar el diseño, Berry no admite sentencias ``switch``.
 Declaración ``if``
 ~~~~~~~~~~~~~~~~~~
 
-La instrucción **``if``** se utiliza para implementar la estructura de
+La instrucción ``if`` se utiliza para implementar la estructura de
 rama, que selecciona la rama del programa de acuerdo con el verdadero o
 falso de una determinada condición de juicio. La sentencia también puede
 incluir la rama ``else`` o la rama ``elif``. La forma simple de
@@ -297,7 +293,7 @@ estilo C.
 Sentencia ``while``
 ~~~~~~~~~~~~~~~~~~~
 
-La declaración **``while``** es una declaración iterativa básica. La
+La declaración ``while`` es una declaración iterativa básica. La
 instrucción ``while`` utiliza una condición de juicio. Cuando la
 condición es verdadera, el cuerpo del ciclo se ejecuta repetidamente; de
 lo contrario, el ciclo finaliza. El patrón de la declaración es
@@ -342,7 +338,7 @@ finaliza cuando el número de bucles alcanza la longitud de la matriz.
 Sentencia ``for``
 ~~~~~~~~~~~~~~~~~
 
-La instrucción **``for``** de Berry se usa para recorrer los elementos
+La instrucción ``for`` de Berry se usa para recorrer los elementos
 en el contenedor, y su forma es
 
 ``for`` **variable** ``:`` **expresión** **bloque** ``end``
@@ -709,15 +705,18 @@ emparejado con la sentencia ``try``, es decir, un bloque de sentencia
 ``try`` debe ir seguido de uno o más bloques de sentencia ``except``. La
 forma básica de la oración ``try-except`` es
 
-\`\ ``try`` **bloque** ``except`` **…** **bloque**   ``end``
+| ``try`` **bloque**
+| ``except`` **…**   **bloque**   ``end``
+
 
 La rama ``except`` puede tener las siguientes formas
 
-``except ..`` ``except`` **excepciones** ``except``
-**excepciones**\ ``as`` **variable** ``except`` **excepciones**\ ``as``
-**variable** ``,`` \*\*
-mensaje\ **``except .. as``**\ variable\ **``except .. as``**\ variable*\*
-``,`` **mensaje**
+| ``except ..`` ``except`` **excepciones**
+| ``except`` **excepciones**\ ``as`` **variable**
+| ``except`` **excepciones**\ ``as`` **variable** ``,`` **mensaje**
+| ``except .. as`` **variable**
+| ``except .. as`` **variable** ``,`` **mensaje**
+
 
 La instrucción ``except`` más básica no usa parámetros, esta rama
 ``except`` capturará todas las excepciones; **Lista de excepciones de

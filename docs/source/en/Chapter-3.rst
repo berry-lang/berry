@@ -231,9 +231,15 @@ operand, and allow the left and right operands to have different types.
 Other relational operators allow the use of the following combinations
 of operands:
 
-   **integer** relop **integer**\  **real** relop **real**\  **integer**
-   relop **real**\  **real** relop **integer**\  **string** relop
-   **string**
+   **integer** relop **integer**
+   
+   **real** relop **real**
+   
+   **integer** relop **real**
+   
+   **real** relop **integer**
+   
+   **string** relop **string**
 
 In relational operations, the equal sign ``==`` and inequality sign
 ``!=`` satisfy the commutative law. If the left and right operands are
@@ -310,7 +316,7 @@ of bit operators is shown in Table 1.5. Bit operation refers to the
 operation of binary bits directly on integers. Logical operations can be
 extended to bit operations. Taking logical AND as an example, we can
 perform this operation on each binary bit to achieve bitwise AND, such
-as :math:`110_b\\ {\\rm AND}\\ 011_b = 010_b`. Bit operations also
+as 110\ :sub:`b`\  AND 011\ :sub:`b`\  = 010\ :sub:`b`\ . Bit operations also
 support shift operations, which move numbers on a binary basis.
 
 .. container::
@@ -338,33 +344,33 @@ with high execution efficiency, shift operations can also be used to
 optimize multiplication and division (usually there is no obvious effect
 in scripting languages).
 
-The bitwise AND operator “``&``” is a binary operator, which performs
+The bitwise AND operator "``&``" is a binary operator, which performs
 the binary AND operation of two integer operands: only when the binary
 bits corresponding to the operands are all ``1``, the result It was
-``1``. For example, 1110\ *b*\  & 0111\ *b*\  = 0110\ *b*\ .
+``1``. For example, 1110\ :sub:`b`\  & 0111\ :sub:`b`\  = 0110\ :sub:`b`\ .
 
-The bitwise OR operator “``|``” is a binary operator, which performs a
+The bitwise OR operator "``|``" is a binary operator, which performs a
 binary-bit OR operation on two integer operands: only when the binary
 bits corresponding to the operands are both ``0``, the bit of the result
-It was ``0``. For example, 1000\ *b*\  | 0001\ *b*\  = 1001\ *b*\ .
+It was ``0``. For example, 1000\ :sub:`b`\  \| 0001\ :sub:`b`\  = 1001\ :sub:`b`\ .
 
-The bitwise exclusive OR operator “``^``” is a binary operator, which
+The bitwise exclusive OR operator "``^``" is a binary operator, which
 performs binary exclusive OR operation on two integer operands: when the
 binary bits corresponding to the operands are different, the bit value
 of the result is ``1``. For example,
-:math:`1100_b\\ \\hat{}\\ 0101_b = 1001_b`.
+1100\ :sub:`b`\  \^ 0101\ :sub:`b`\  = 1001\ :sub:`b`\ .
 
-The left shift operator “``<<``” is a binary operator, which moves the
+The left shift operator "``<<``" is a binary operator, which moves the
 left operand to the left by the number of bits specified by the right
 operand on a binary basis. For example
-00001010\ *b*\  ≪ 3 = 01010000\ *b*\ .The right shift operator “``>>``”
+00001010\ :sub:`b`\  << 3 = 01010000\ :sub:`b`\ .The right shift operator "``>>``"
 is a binary operator, which shifts the left operand to the right by the
 number of bits specified by the right operand on a binary basis. For
-example, 10100000\ *b*\  ≫ 3 = 00010100\ *b*\ .
+example, 10100000\ :sub:`b`\  >> 3 = 00010100\ :sub:`b`\ .
 
-The bitwise flip operator “~” is a unary operator, and the result of the
+The bitwise flip operator "``~``" is a unary operator, and the result of the
 expression is to flip the value of each binary bit of the operand. For
-example, ``∼``\ 10100011\ *b*\  = 01011100\ *b*\ .
+example, ``∼``\ 10100011\ :sub:`b`\  = 01011100\ :sub:`b`\ .
 
 The following are some examples of using bit operations. Usually we
 don’t use binary directly. The results in the examples have been
@@ -507,10 +513,9 @@ The conditional operator (``? :``) is similar to the **if else**
 statement, but the former can be used in expressions. The usage form of
 the conditional operator is:
 
-.. math::
+.. code::
 
-   \\begin{gathered}
-       cond\\ \\bm{?}\\ expr1\\ \\bm{:}\\ expr2\\end{gathered}
+   cond ? expr1 : expr2
 
 **cond** is the expression used to judge the condition. The evaluation
 process of the conditional operator is: first find the value of

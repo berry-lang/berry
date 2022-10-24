@@ -153,7 +153,7 @@ not support ``switch`` statements.
 ``if`` Statement
 ~~~~~~~~~~~~~~~~
 
-**``if`` statement** is used to implement the branch structure, which
+``if`` statement is used to implement the branch structure, which
 selects the branch of the program according to the true or false of a
 certain judgment condition. The statement can also include ``else``
 branch or ``elif`` branch. The simple ``if`` statement form without
@@ -293,7 +293,7 @@ The C-style ``for`` statement is not supported.
 ``while`` Statement
 ~~~~~~~~~~~~~~~~~~~
 
-**``while`` statement** is a basic iterative statement. ``while``
+``while`` statement is a basic iterative statement. ``while``
 statement uses a judgment condition. When the condition is true, the
 loop body is executed repeatedly, otherwise the loop is ended. The
 pattern of the statement is
@@ -337,7 +337,7 @@ array.
 ``for`` Statement
 ~~~~~~~~~~~~~~~~~
 
-Berry’s **``for`` statement** is used to traverse the elements in the
+Berry’s ``for`` statement is used to traverse the elements in the
 container, and its form is
 
 | ``for`` **variable** ``:`` **expression**

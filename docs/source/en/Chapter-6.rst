@@ -150,10 +150,11 @@ methods can be called via the class or via an instance.
    a.increment_static(1)              # call via instance
    static_demo.increment_instance(1)
 
-type_error: unsupported operand type(s) for +: 'nil' and 'int'
-stack traceback:
-stdin:6: in function `increment_instance`
-stdin:1: in function `main`
+| type_error: unsupported operand type(s) for +: 'nil' and 'int'
+|     stack traceback:
+|     stdin:6: in function `increment_instance`
+| stdin:1: in function `main`
+|
 
 .. code:: berry
    

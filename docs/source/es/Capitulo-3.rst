@@ -241,9 +241,15 @@ cualquier tipo de operando y permiten que los operandos izquierdo y
 derecho tengan diferentes tipos. Otros operadores relacionales permiten
 el uso de las siguientes combinaciones de operandos:
 
-   **integer** relop **integer**\  **real** relop **real**\  **integer**
-   relop **real**\  **real** relop **integer**\  **string** relop
-   **string**
+   **integer** relop **integer**
+   
+   **real** relop **real**
+   
+   **integer** relop **real**
+   
+   **real** relop **integer**
+   
+   **string** relop **string**
 
 En operaciones relacionales, el signo igual ``==`` y el signo de
 desigualdad ``!=`` satisfacen la ley conmutativa. Si los operandos
@@ -324,7 +330,7 @@ la Tabla 6 . La operación de bits se refiere a la operación de bits
 binarios directamente en números enteros. Las operaciones lógicas se
 pueden extender a operaciones de bits. Tomando AND lógico como ejemplo,
 podemos realizar esta operación en cada bit binario para lograr AND bit
-a bit, como :math:`110_b\\ {\\rm AND}\\ 011_b = 010_b`. Las operaciones
+a bit, como 110\ :sub:`b`\  AND 011\ :sub:`b`\  = 010\ :sub:`b`\ . Las operaciones
 de bits también admiten operaciones de cambio, que mueven números de
 forma binaria.
 
@@ -354,35 +360,34 @@ eficiencia de ejecución, las operaciones de cambio también se pueden
 usar para optimizar la multiplicación y la división (por lo general, no
 hay un efecto obvio en los lenguajes de secuencias de comandos).
 
-El operador AND bit a bit “``&``” es un operador binario, que realiza la
+El operador AND bit a bit "``&``" es un operador binario, que realiza la
 operación AND binaria de dos operandos enteros: solo cuando los bits
 binarios correspondientes a los operandos son todos ``1``, el resultado
-es ``1``. Por ejemplo, 1110 \ *b*\  & 0111 \ *b*\  = 0110 \ *b*\  .
+es ``1``. Por ejemplo, 1110\ :sub:`b`\  & 0111\ :sub:`b`\  = 0110\ :sub:`b`\ .
 
-El operador OR bit a bit “``|``” es un operador binario, que realiza una
+El operador OR bit a bit "``|``" es un operador binario, que realiza una
 operación OR de bits binarios en dos operandos enteros: solo cuando los
 bits binarios correspondientes a los operandos son ambos ``0``, el bit
-del resultado es ``0``. Por ejemplo, 1000 \ *b*\  \| 0001 \ *b*\  = 1001
-\ *b*\  .
+del resultado es ``0``. Por ejemplo, 1000\ :sub:`b`\  \| 0001\ :sub:`b`\  = 1001\ :sub:`b`\ .
 
-El operador OR exclusivo bit a bit “``^``” es un operador binario, que
+El operador OR exclusivo bit a bit "``^``" es un operador binario, que
 realiza una operación OR exclusiva binaria en dos operandos enteros:
 cuando los bits binarios correspondientes a los operandos son
-diferentes, el valor de bit del resultado es ``1``. Por ejemplo,
-:math:`1100_b\\ \\hat{}\\ 0101_b = 1001_b`.
+diferentes, el valor de bit del resultado es ``1``. Por ejemplo, 
+1100\ :sub:`b`\  \^ 0101\ :sub:`b`\  = 1001\ :sub:`b`\ .
 
-El operador de desplazamiento a la izquierda “``<<``” es un operador
+El operador de desplazamiento a la izquierda "``<<``" es un operador
 binario, que mueve el operando izquierdo hacia la izquierda el número de
 bits especificado por el operando derecho sobre una base binaria. Por
-ejemplo, 00001010 \ *b*\  ≪ 3 = 01010000 \ *b*\  . El operador de
+ejemplo, 00001010\ :sub:`b`\  << 3 = 01010000\ :sub:`b`\ . El operador de
 desplazamiento a la derecha “``>>``” es un operador binario, que
 desplaza el operando izquierdo hacia la derecha el número de bits
 especificado por el operando derecho en un binario. base. Por ejemplo,
-10100000 \ *b*\  ≫ 3 = 00010100 \ *b*\  .
+10100000\ :sub:`b`\  >> 3 = 00010100\ :sub:`b`\ .
 
-El operador de inversión bit a bit “~” es un operador unario, y el
+El operador de inversión bit a bit "``~``" es un operador unario, y el
 resultado de la expresión es invertir el valor de cada bit binario del
-operando. Por ejemplo, ``∼``\ 10100011 \ *b*\  = 01011100 \ *b*\  .
+operando. Por ejemplo, ``∼``\ 10100011\ :sub:`b`\  = 01011100\ :sub:`b`\ .
 
 Los siguientes son algunos ejemplos del uso de operaciones con bits. Por
 lo general, no usamos binario directamente. Los resultados de los
@@ -528,10 +533,9 @@ El operador condicional (``? :``) es similar a la declaración **if
 else**, pero la primera puede usarse en expresiones. La forma de uso del
 operador condicional es:
 
-.. math::
+.. code:: 
 
-   \\begin{gathered}
-       cond\\ \\bm{?}\\ expr1\\ \\bm{:}\\ expr2\\end{gathered}
+   cond ? expr1 : expr2
 
 **cond** es la expresión utilizada para juzgar la condición. El proceso
 de evaluación del operador condicional es: primero encuentra el valor de

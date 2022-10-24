@@ -155,14 +155,18 @@ a través de una instancia.
    
 2
 
+.. code:: berry
+
    a.incremento_static(1)              # llamada via instancia
-   
    static_demo.incremento_instancia(1)
    
-type_error: unsupported operand type(s) for +: 'nil' and 'int'
-stack traceback:
-stdin:6: in function `increment_instancia`
-stdin:1: in function `main`
+| type_error: unsupported operand type(s) for +: 'nil' and 'int'
+|     stack traceback:
+|     stdin:6: in function `increment_instancia`
+| stdin:1: in function `main`
+|
+
+.. code:: berry
 
    a.increment_instancia(1)
   
