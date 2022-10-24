@@ -34,9 +34,6 @@
 /** @} */
 
 /**
- * @note function extern
- * @{
-/**
  * @fn void be_vector_init(bvm*, bvector*, int)
  * @brief (???)
  *

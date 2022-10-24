@@ -1,10 +1,11 @@
-/********************************************************************
-** Copyright (c) 2018-2020 Guan Wenliang
-** This file is part of the Berry default interpreter.
-** skiars@qq.com, https://github.com/Skiars/berry
-** See Copyright Notice in the LICENSE file or at
-** https://github.com/Skiars/berry/blob/master/LICENSE
-********************************************************************/
+/**
+ * @file       be_mem.h
+ * @brief      Main berry entry API
+ * @details    This file is part of the Berry default interpreter.
+ * @author     skiars@qq.com, https://github.com/Skiars/berry
+ * @copyright  (c) 2018-2022 Guan Wenliang MIT License (https://github.com/Skiars/berry/blob/master/LICENSE)
+ */
+
 #ifndef BE_MEM_H
 #define BE_MEM_H
 
@@ -14,8 +15,8 @@
 extern "C" {
 #endif
 
-#define be_malloc(vm, size)         be_realloc((vm), NULL, 0, (size))
-#define be_free(vm, ptr, size)      be_realloc((vm), (ptr), (size), 0)
+#define be_malloc(vm, size)         be_realloc((vm), NULL, 0, (size))  /**< be_malloc */
+#define be_free(vm, ptr, size)      be_realloc((vm), (ptr), (size), 0) /**< be_free */
 
 BERRY_API void* be_os_malloc(size_t size);
 BERRY_API void be_os_free(void *ptr);
