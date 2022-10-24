@@ -1,7 +1,3 @@
-.. raw:: html
-
-   <!-- Spanish Translation: Emiliano Gonzalez (egonzalez . hiperion @ gmail . com) -->
-
 9. FFI
 ======
 

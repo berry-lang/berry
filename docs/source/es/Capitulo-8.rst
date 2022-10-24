@@ -26,17 +26,19 @@ estricto rechaza la asignación si no hay un global con el mismo nombre.
 
 No más permitido:
 
-::
+.. code:: berry
 
    def f()
      i = 0    # this is a local variable
      var j = 0
    end
-   syntax_error: stdin:2: strict: no global 'i', ¿quiso decir 'var i'?
+
+| syntax_error: stdin:2: strict: no global 'i', ¿quiso decir 'var i'?
+|
 
 Pero todavía funciona para globales:
 
-::
+.. code:: berry
 
    g_i = 0
    def f()
@@ -289,14 +291,27 @@ Ahora intentémoslo:
 
 .. code:: berry
 
-   > t.a
-   'a'
-   > t.b
-   'miembro b'
-   > t.foo
-   'miembro foo'
-   > t.bar = 2
-   Almacenar 'bar': 2
+   t.a
+
+'a'
+
+.. code:: berry
+
+   t.b
+
+'miembro b'
+
+.. code:: berry
+
+   t.foo
+
+'miembro foo'
+
+.. code:: berry
+
+   t.bar = 2
+
+Almacenar 'bar': 2
 
 Esto también funciona para los módulos:
 
@@ -313,15 +328,24 @@ Esto también funciona para los módulos:
 
 Intentemoslo:
 
-::
+.. code:: berry
 
-   > m.a
-   1
-   > m.b
-   'miembro b'
-   > m.c = 3   # la asignación es válida por lo que no se llama a `setmember()
-   > m.c
-   3
+   m.a
+
+1
+
+.. code:: berry
+
+   m.b
+
+'miembro b'
+
+.. code:: berry
+
+   m.c = 3   # la asignación es válida por lo que no se llama a `setmember()
+   m.c
+
+3
 
 Ejemplo más avanzado:
 
@@ -344,9 +368,12 @@ Ejemplo más avanzado:
    a.i      # devuelve nil
    a.ii     # i llama implícitamente `a.member("ii")`
    
-attribute_error: el objeto 'A' no tiene atributo 'ii'
-stack traceback:
-stdin:1: en función `main`
+| attribute_error: el objeto 'A' no tiene atributo 'ii'
+| stack traceback:
+| stdin:1: en función `main`
+|
+
+.. code:: berry
 
    # devuelve un excepción ya que el miembro es nulo (considerado inexistente)
 
@@ -354,6 +381,8 @@ stdin:1: en función `main`
    a.ii         # llama implícitamente `a.member("ii")` and returns `42`
    
 42
+
+.. code:: berry
 
    a.i          #  la variable concreta también fue cambiada
    
@@ -439,9 +468,13 @@ Ejemplo de uso:
    
 Hola Berry!
 
+.. code:: berry
+
    demo_modulo.foo
    
 'bar'
+
+.. code:: berry
 
    demo_modulo.foo = "baz"   # el módulo se puede escribir, aunque esto es muy desaconsejado
    demo_modulo.foo
@@ -512,10 +545,14 @@ Ejemplo:
    
 Hola Berry!
 
+.. code:: berry
+
    demo_monad.i = 42        #  puedes usarlo como cualquier instancia
    demo_monad.i
    
 42
+
+.. code:: berry
 
    demo_monad.j = 0         # hay una fuerte verificación de miembros en comparación con los módulos 
    

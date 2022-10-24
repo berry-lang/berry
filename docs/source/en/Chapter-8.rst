@@ -22,17 +22,19 @@ rejects the assignment if there is no global with the same name.
 
 No more allowed:
 
-::
+.. code:: berry
 
    def f()
      i = 0    # this is a local variable
      var j = 0
    end
-   syntax_error: stdin:2: strict: no global 'i', did you mean 'var i'?
+
+| syntax_error: stdin:2: strict: no global 'i', did you mean 'var i'?
+| 
 
 But still works for globals:
 
-::
+.. code:: berry
 
    g_i = 0
    def f()
@@ -291,14 +293,20 @@ Now let’s try it:
 
 'a'
 
+.. code:: berry
+
    t.b
 
 'member b'
 
+.. code:: berry
+
     t.foo
 
 'member foo'
-   
+
+.. code:: berry
+
    t.bar = 2
 
 Set 'bar': 2
@@ -318,15 +326,24 @@ This works for modules too:
 
 Trying:
 
-::
+.. code:: berry
 
-   > m.a
-   1
-   > m.b
-   'member b'
-   > m.c = 3   # the allocation is valid so `setmember()` is not called
-   > m.c
-   3
+   m.a
+  
+1
+
+.. code:: berry
+
+   m.b
+  
+'member b'
+  
+.. code:: berry
+
+   m.c = 3   # the allocation is valid so `setmember()` is not called
+   m.c
+  
+3
 
 More advanced example:
 
@@ -349,9 +366,12 @@ More advanced example:
    a.i      # returns nil
    a.ii     # implicitly calls `a.member("ii")`
    
-attribute_error: the 'A' object has no attribute 'ii'
-stack traceback:
-stdin:1: in function `main`
+| attribute_error: the 'A' object has no attribute 'ii'
+| stack traceback:
+| stdin:1: in function `main`
+|
+
+.. code:: berry
 
    # returns an exception since the member is nil (considered is non-existant)
 
@@ -359,6 +379,8 @@ stdin:1: in function `main`
    a.ii         # implicitly calls `a.member("ii")` and returns `42`
    
 42
+
+.. code:: berry
 
    a.i          # the concrete variable was changed too
 
@@ -430,19 +452,27 @@ Example of use:
 
 .. code:: berry
 
-   > import demo_module
+   import demo_module
 
-   > demo_module
+   demo_module
    <module: demo_module>
 
-   > demo_module.say_hello()
-   Hello Berry!
+   demo_module.say_hello()
 
-   > demo_module.foo
-   'bar'
-   > demo_module.foo = "baz"     # the module is writable, although this is highly discouraged
-   > demo_module.foo
-   'baz'
+Hello Berry!
+
+.. code:: berry
+   
+   demo_module.foo
+
+'bar'
+
+.. code:: berry
+   
+   demo_module.foo = "baz"     # the module is writable, although this is highly discouraged
+   demo_module.foo
+   
+'baz'
 
 Package a singleton (monad)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -508,10 +538,14 @@ Example:
 
 Hello Berry!
 
+.. code:: berry
+
    demo_monad.i = 42        # you can use it like any instance
    demo_monad.i
  
 42
+
+.. code:: berry
 
    demo_monad.j = 0         # there is strong member checking compared to modules
    
