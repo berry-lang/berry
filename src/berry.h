@@ -214,7 +214,7 @@ typedef struct bntvmodobj {
     BE_CONSTEXPR bntvmodobj_t(const char *name, int _tpye, const void *v) :
         name(name), type(_tpye), u(v) {}            /**< bntvmodobj */
 #endif
-} bntvmodobj_t; /**< bntvmodobj_t */
+} bntvmodobj_t;                                     /**< bntvmodobj_t */
 
 /**
  * @struct bntvmodule
@@ -223,10 +223,10 @@ typedef struct bntvmodobj {
  */
 typedef struct bntvmodule {
     const char *name;              /**< native module name */
-    const bntvmodobj_t *attrs;       /**< native module attributes */
+    const bntvmodobj_t *attrs;     /**< native module attributes */
     size_t size;                   /**< native module attribute count */
     const struct bmodule *module;  /**< const module object */
-} bntvmodule_t; /**< bntvmodule_t */
+} bntvmodule_t;                    /**< bntvmodule_t */
 
 /**
  * @struct bclass
@@ -617,7 +617,7 @@ typedef struct bhookinfo {
     const char *source;     /**< source path information */
     const char *func_name;  /**< current function name */
     void *data;             /**< user extended data */
-} bhookinfo_t; /**< bhookinfo_ */
+} bhookinfo_t;              /**< bhookinfo_t */
 
 /**
  * @fn void (*bntvhook)(bvm *vm, bhookinfo *info)
