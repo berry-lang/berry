@@ -1,6 +1,6 @@
 /**
  * @file       berry_conf.h
- * @brief      Main berry entry API
+ * @brief      Berry file
  * @details    This file is part of the Berry default interpreter.
  * @author     skiars@qq.com, https://github.com/Skiars/berry
  * @copyright  (c) 2018-2022 Guan Wenliang MIT License (https://github.com/Skiars/berry/blob/master/LICENSE)
