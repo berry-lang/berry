@@ -47,9 +47,9 @@
 #define func_clearstatic(o)    ((o)->type &= ~BE_STATIC)      /**< func_clearstatic */
 /** @} */
 
-#define BE_VA_VARARG    (1 << 0)                      /**< value for bproto.varg: function has variable number of arguments */
-#define BE_VA_METHOD    (1 << 1)                      /**< value for bproto.varg: function is a method (this is only a hint) */
-#define array_count(a)   (sizeof(a) / sizeof((a)[0])) /**< value for bproto.varg: array_count */
+#define BE_VA_VARARG    (1 << 0)                              /**< value for bproto.varg: function has variable number of arguments */
+#define BE_VA_METHOD    (1 << 1)                              /**< value for bproto.varg: function is a method (this is only a hint) */
+#define array_count(a)   (sizeof(a) / sizeof((a)[0]))         /**< value for bproto.varg: array_count */
 
 /**
  * @def bcommon_header
@@ -58,8 +58,8 @@
  */
 #define bcommon_header          \
     struct bgcobject *next;     \
-    bbyte type;                 \
-    bbyte marked
+    bbyte_t type;               \
+    bbyte_t marked
 
 /**
  * @def bstring_header
@@ -68,8 +68,8 @@
  */
 #define bstring_header          \
     bcommon_header;             \
-    bbyte extra;                \
-    bbyte slen
+    bbyte_t extra;              \
+    bbyte_t slen
 
 /**
  * @struct bgcobject
@@ -78,17 +78,17 @@
  */
 typedef struct bgcobject {
     bcommon_header; /**< bcommon_header */
-} bgcobject;        /**< bgcobject */
+} bgcobject_t;      /**< bgcobject_t */
 
-typedef struct bclosure bclosure;   /**< bclosure */
-typedef struct bntvclos bntvclos;   /**< bntvclos */
-typedef struct bclass bclass;       /**< bclass */
-typedef struct binstance binstance; /**< binstance */
-typedef struct blist blist;         /**< blist */
-typedef struct bmap bmap;           /**< bmap */
-typedef struct bupval bupval;       /**< bupval */
+typedef struct bclosure bclosure_t;   /**< bclosure_t */
+typedef struct bntvclos bntvclos_t;   /**< bntvclos_t */
+typedef struct bclass bclass_t;       /**< bclass_t */
+typedef struct binstance binstance_t; /**< binstance_t */
+typedef struct blist blist_t;         /**< blist_t */
+typedef struct bmap bmap_t;           /**< bmap_t */
+typedef struct bupval bupval_t;       /**< bupval_t */
 
-typedef uint32_t binstruction;      /**< binstruction */
+typedef uint32_t binstruction_t;      /**< binstruction_t */
 
 /**
  * @struct bstring
@@ -97,19 +97,25 @@ typedef uint32_t binstruction;      /**< binstruction */
  */
 typedef struct bstring {
     bstring_header; /**< bstring_header */
-} bstring;          /**< bstring */
+} bstring_t;        /**< bstring_t */
 
-/* the definition of the vector and stack data structures.
- * in fact, the stack is implemented by vector. */
+/**
+ * @struct bvector
+ * @brief bvector
+ *
+ * the definition of the vector and stack data structures.
+ * in fact, the stack is implemented by vector
+ *
+ */
 typedef struct bvector {
-    int capacity;   /**< the number of elements that the vector can store */
-    int size;       /**< the size of each element (bytes) */
-    int count;      /**< number of elements of the vector */
-    void *data;     /**< the data block pointer, if vector is empty,
-                       it will point to the first element */
-    void *end;      /**< pointer to the last element, if the vector is empty,
-                       the end pointer will be smaller than the data pointer */
-} bvector, bstack;  /**< bvector */  /**< bstack */
+    int capacity;       /**< the number of elements that the vector can store */
+    int size;           /**< the size of each element (bytes) */
+    int count;          /**< number of elements of the vector */
+    void *data;         /**< the data block pointer, if vector is empty,
+                             it will point to the first element */
+    void *end;          /**< pointer to the last element, if the vector is empty,
+                             the end pointer will be smaller than the data pointer */
+} bvector_t, bstack_t;  /**< bvector_t */  /**< bstack_t */
 
 /**
  * @note berry value data union, a berry value is always described
@@ -117,18 +123,18 @@ typedef struct bvector {
  * @{
  */
 union bvaldata {
-    bbool b;        /**< boolean */
-    breal r;        /**< real number */
-    bint i;         /**< integer number */
-    void *p;        /**< object pointer */
-    const void *c;  /**< const object pointer */
-    bstring *s;     /**< string pointer */
-    bgcobject *gc;  /**< GC object */
-    bntvfunc nf;    /**< native C function */
+    bbool b;                                       /**< boolean */
+    breal_t r;                                     /**< real number */
+    bint_t i;                                      /**< integer number */
+    void *p;                                       /**< object pointer */
+    const void *c;                                 /**< const object pointer */
+    bstring_t *s;                                  /**< string pointer */
+    bgcobject_t *gc;                               /**< GC object */
+    bntvfunc nf;                                   /**< native C function */
 #ifdef __cplusplus
     BE_CONSTEXPR bvaldata(bbool v) : b(v) {}       /**< bvaldata(bbool v) */
-    BE_CONSTEXPR bvaldata(breal v) : r(v) {}       /**< bvaldata(breal v) */
-    BE_CONSTEXPR bvaldata(bint v) : i(v) {}        /**< bvaldata(bint v) */
+    BE_CONSTEXPR bvaldata(breal_t v) : r(v) {}     /**< bvaldata(breal v) */
+    BE_CONSTEXPR bvaldata(bint_t v) : i(v) {}      /**< bvaldata(bint v) */
     BE_CONSTEXPR bvaldata(void *v) : p(v) {}       /**< bvaldata(void *v) */
     BE_CONSTEXPR bvaldata(const void *v) : c(v) {} /**< bvaldata(const void *v) */
     BE_CONSTEXPR bvaldata(bntvfunc v) : nf(v) {}   /**< bvaldata(bntvfunc v)  */
@@ -147,24 +153,24 @@ union bvaldata {
 typedef struct bvalue {
     union bvaldata v; /**< the value data */
     int type;         /**< the value type */
-} bvalue; /**< bvalue */
+} bvalue_t;           /**< bvalue_t */
 
 /**
- * @typedef bupvaldesc
- * @brief bupvaldesc
+ * @typedef bupvaldesc_t
+ * @brief bupvaldesc_t
  *
  */
 typedef struct {
 #if BE_DEBUG_VAR_INFO
-    bstring *name; /**< name */
+    bstring_t *name; /**< name */
 #endif
-    bbyte instack; /**< instack */
-    bbyte idx;     /**< idx */
-} bupvaldesc;
+    bbyte_t instack; /**< instack */
+    bbyte_t idx;     /**< idx */
+} bupvaldesc_t;
 
 /**
- * @typedef blineinfo
- * @brief blineinfo
+ * @typedef blineinfo_t
+ * @brief blineinfo_t
  *
  */
 typedef struct {
@@ -175,15 +181,15 @@ typedef struct {
     int linenumber;      /**< linenumber */
     int endpc;           /**< endpc */
 #endif
-} blineinfo;
+} blineinfo_t;
 
 /**
- * @typedef bvarinfo
- * @brief bvarinfo
+ * @typedef bvarinfo_t
+ * @brief bvarinfo_t
  *
  */
 typedef struct {
-    bstring *name; /**<  */
+    bstring_t *name; /**<  */
 #if BE_DEBUG_RUNTIME_INFO > 1
     uint16_t beginpc; /**< beginpc */
     uint16_t endpc;   /**< endpc */
@@ -191,38 +197,38 @@ typedef struct {
     int beginpc;      /**< beginpc */
     int endpc;        /**< endpc */
 #endif
-} bvarinfo;
+} bvarinfo_t;
 
 /**
- * @struct bproto
- * @brief bproto
+ * @struct bproto_t
+ * @brief bproto_t
  *
  */
 typedef struct bproto {
     bcommon_header;       /**< bcommon_header */
-    bbyte nstack;         /**< number of stack size by this function */
-    bbyte nupvals;        /**< upvalue count */
-    bbyte argc;           /**< argument count */
-    bbyte varg;           /**< variable argument position + 1 */
-    bgcobject *gray;      /**< for gc gray list */
-    bupvaldesc *upvals;   /**< upvals */
-    bvalue *ktab;         /**< constants table */
+    bbyte_t nstack;       /**< number of stack size by this function */
+    bbyte_t nupvals;      /**< upvalue count */
+    bbyte_t argc;         /**< argument count */
+    bbyte_t varg;         /**< variable argument position + 1 */
+    bgcobject_t *gray;    /**< for gc gray list */
+    bupvaldesc_t *upvals; /**< upvals */
+    bvalue_t *ktab;       /**< constants table */
     struct bproto **ptab; /**< proto table */
-    binstruction *code;   /**< instructions sequence */
-    bstring *name;        /**< function name */
+    binstruction_t *code; /**< instructions sequence */
+    bstring_t *name;      /**< function name */
     int codesize;         /**< code size */
     int nconst;           /**< constants count */
     int nproto;           /**< proto count */
-    bstring *source;      /**< source file name */
+    bstring_t *source;    /**< source file name */
 #if BE_DEBUG_RUNTIME_INFO /* debug information */
-    blineinfo *lineinfo;  /**< lineinfo */
+    blineinfo_t *lineinfo;/**< lineinfo */
     int nlineinfo;        /**< nlineinfo */
 #endif
 #if BE_DEBUG_VAR_INFO
-    bvarinfo *varinfo;    /**< varinfo */
+    bvarinfo_t *varinfo;  /**< varinfo */
     int nvarinfo;         /**< nvarinfo */
 #endif
-} bproto;                 /**< bproto */
+} bproto_t;               /**< bproto_t */
 
 /**
  * @struct bclosure
@@ -230,11 +236,11 @@ typedef struct bproto {
  *
  */
 struct bclosure {
-    bcommon_header;    /**< bcommon_header */
-    bbyte nupvals;     /**< nupvals */
-    bgcobject *gray;   /**< for gc gray list */
-    bproto *proto;     /**< proto */
-    bupval *upvals[1]; /**< upvals */
+    bcommon_header;      /**< bcommon_header */
+    bbyte_t nupvals;     /**< nupvals */
+    bgcobject_t *gray;   /**< for gc gray list */
+    bproto_t *proto;     /**< proto */
+    bupval_t *upvals[1]; /**< upvals */
 };
 
 /**
@@ -243,14 +249,14 @@ struct bclosure {
  *
  */
 struct bntvclos {
-    bcommon_header;  /**< bcommon_header */
-    bbyte nupvals;   /**< nupvals */
-    bgcobject *gray; /**< for gc gray list */
-    bntvfunc f;      /**< f */
+    bcommon_header;    /**< bcommon_header */
+    bbyte_t nupvals;   /**< nupvals */
+    bgcobject_t *gray; /**< for gc gray list */
+    bntvfunc f;        /**< f */
 };
 
 /**
- * @typedef bcommomobj
+ * @typedef bcommomobj_t
  * @brief common object
  *
  */
@@ -258,7 +264,7 @@ typedef struct {
     bcommon_header;   /**< bcommon_header */
     void *data;       /**< data */
     bntvfunc destroy; /**< destroy */
-} bcommomobj;
+} bcommomobj_t;
 
 /**
  * @fn const char* (*breader)(void*, size_t*)
@@ -270,39 +276,39 @@ typedef struct {
  */
 typedef const char* (*breader)(void*, size_t*);
 
-#define cast(_T, _v)            ((_T)(_v))       /**< cast */
-#define cast_int(_v)            cast(int, _v)    /**< cast_int */
-#define cast_bool(_v)           cast(bbool, _v)  /**< cast_bool */
-#define basetype(_t)            ((_t) & 0x1F)    /**< basetype */
+#define cast(_T, _v)            ((_T)(_v))                                             /**< cast */
+#define cast_int(_v)            cast(int, _v)                                          /**< cast_int */
+#define cast_bool(_v)           cast(bbool, _v)                                        /**< cast_bool */
+#define basetype(_t)            ((_t) & 0x1F)                                          /**< basetype */
 
-#define var_type(_v)            ((_v)->type)                               /**< var_type */
-#define var_basetype(_v)        basetype((_v)->type)                       /**< var_basetype */
-#define var_primetype(_v)       (var_type(_v) & ~BE_STATIC)                /**< var_primetype */
-#define var_isstatic(_v)        ((var_type(_v) & BE_STATIC) == BE_STATIC)  /**< var_isstatic */
-#define var_istype(_v, _t)      (var_primetype(_v) == _t)                  /**< var_istype */
-#define var_settype(_v, _t)     ((_v)->type = _t)                          /**< var_settype */
-#define var_markstatic(_v)      var_settype(_v, var_type(_v) | BE_STATIC)  /**< var_markstatic */
-#define var_clearstatic(_v)     var_settype(_v, var_type(_v) & ~BE_STATIC) /**< var_clearstatic */
-#define var_setobj(_v, _t, _o)  { (_v)->v.p = _o; var_settype(_v, _t); }   /**< var_setobj */
+#define var_type(_v)            ((_v)->type)                                           /**< var_type */
+#define var_basetype(_v)        basetype((_v)->type)                                   /**< var_basetype */
+#define var_primetype(_v)       (var_type(_v) & ~BE_STATIC)                            /**< var_primetype */
+#define var_isstatic(_v)        ((var_type(_v) & BE_STATIC) == BE_STATIC)              /**< var_isstatic */
+#define var_istype(_v, _t)      (var_primetype(_v) == _t)                              /**< var_istype */
+#define var_settype(_v, _t)     ((_v)->type = _t)                                      /**< var_settype */
+#define var_markstatic(_v)      var_settype(_v, var_type(_v) | BE_STATIC)              /**< var_markstatic */
+#define var_clearstatic(_v)     var_settype(_v, var_type(_v) & ~BE_STATIC)             /**< var_clearstatic */
+#define var_setobj(_v, _t, _o)  { (_v)->v.p = _o; var_settype(_v, _t); }               /**< var_setobj */
 
-#define var_isnil(_v)           var_istype(_v, BE_NIL)            /**< var_isnil */
-#define var_isbool(_v)          var_istype(_v, BE_BOOL)           /**< var_isbool */
-#define var_isint(_v)           var_istype(_v, BE_INT)            /**< var_isint */
-#define var_isreal(_v)          var_istype(_v, BE_REAL)           /**< var_isreal */
-#define var_isstr(_v)           var_istype(_v, BE_STRING)         /**< var_isstr */
-#define var_isclosure(_v)       var_istype(_v, BE_CLOSURE)        /**< var_isclosure */
-#define var_isntvclos(_v)       var_istype(_v, BE_NTVCLOS)        /**< var_isntvclos */
-#define var_isntvfunc(_v)       var_istype(_v, BE_NTVFUNC)        /**< var_isntvfunc */
-#define var_isfunction(_v)      (var_basetype(_v) == BE_FUNCTION) /**< var_isfunction */
-#define var_isproto(_v)         var_istype(_v, BE_PROTO)          /**< var_isproto */
-#define var_isclass(_v)         var_istype(_v, BE_CLASS)          /**< var_isclass */
-#define var_isinstance(_v)      var_istype(_v, BE_INSTANCE)       /**< var_isinstance */
-#define var_islist(_v)          var_istype(_v, BE_LIST)           /**< var_islist */
-#define var_ismap(_v)           var_istype(_v, BE_MAP)            /**< var_ismap */
-#define var_ismodule(_v)        var_istype(_v, BE_MODULE)         /**< var_ismodule */
-#define var_isindex(_v)         var_istype(_v, BE_INDEX)          /**< var_isindex */
-#define var_iscomptr(_v)        var_istype(_v, BE_COMPTR)         /**< var_iscomptr */
-#define var_isnumber(_v)        (var_isint(_v) || var_isreal(_v)) /**< var_isnumber */
+#define var_isnil(_v)           var_istype(_v, BE_NIL)                                 /**< var_isnil */
+#define var_isbool(_v)          var_istype(_v, BE_BOOL)                                /**< var_isbool */
+#define var_isint(_v)           var_istype(_v, BE_INT)                                 /**< var_isint */
+#define var_isreal(_v)          var_istype(_v, BE_REAL)                                /**< var_isreal */
+#define var_isstr(_v)           var_istype(_v, BE_STRING)                              /**< var_isstr */
+#define var_isclosure(_v)       var_istype(_v, BE_CLOSURE)                             /**< var_isclosure */
+#define var_isntvclos(_v)       var_istype(_v, BE_NTVCLOS)                             /**< var_isntvclos */
+#define var_isntvfunc(_v)       var_istype(_v, BE_NTVFUNC)                             /**< var_isntvfunc */
+#define var_isfunction(_v)      (var_basetype(_v) == BE_FUNCTION)                      /**< var_isfunction */
+#define var_isproto(_v)         var_istype(_v, BE_PROTO)                               /**< var_isproto */
+#define var_isclass(_v)         var_istype(_v, BE_CLASS)                               /**< var_isclass */
+#define var_isinstance(_v)      var_istype(_v, BE_INSTANCE)                            /**< var_isinstance */
+#define var_islist(_v)          var_istype(_v, BE_LIST)                                /**< var_islist */
+#define var_ismap(_v)           var_istype(_v, BE_MAP)                                 /**< var_ismap */
+#define var_ismodule(_v)        var_istype(_v, BE_MODULE)                              /**< var_ismodule */
+#define var_isindex(_v)         var_istype(_v, BE_INDEX)                               /**< var_isindex */
+#define var_iscomptr(_v)        var_istype(_v, BE_COMPTR)                              /**< var_iscomptr */
+#define var_isnumber(_v)        (var_isint(_v) || var_isreal(_v))                      /**< var_isnumber */
 
 #define var_setnil(_v)          var_settype(_v, BE_NIL)                                /**< var_setnil */
 #define var_setval(_v, _s)      (*(_v) = *(_s))                                        /**< var_setval */
@@ -321,50 +327,50 @@ typedef const char* (*breader)(void*, size_t*);
 #define var_setindex(_v, _i)    { var_settype(_v, BE_INDEX); (_v)->v.i = (_i); }       /**< var_setindex */
 #define var_setproto(_v, _o)    var_setobj(_v, BE_PROTO, _o)                           /**< var_setproto */
 
-#define var_tobool(_v)          ((_v)->v.b)             /**< var_tobool */
-#define var_toint(_v)           ((_v)->v.i)             /**< var_toint */
-#define var_toreal(_v)          ((_v)->v.r)             /**< var_toreal */
-#define var_tostr(_v)           ((_v)->v.s)             /**< var_tostr */
-#define var_togc(_v)            ((_v)->v.gc)            /**< var_togc */
-#define var_toobj(_v)           ((_v)->v.p)             /**< var_toobj */
-#define var_tontvfunc(_v)       ((_v)->v.nf)            /**< var_tontvfunc */
-#define var_toidx(_v)           cast_int(var_toint(_v)) /**< var_toidx */
+#define var_tobool(_v)          ((_v)->v.b)                                            /**< var_tobool */
+#define var_toint(_v)           ((_v)->v.i)                                            /**< var_toint */
+#define var_toreal(_v)          ((_v)->v.r)                                            /**< var_toreal */
+#define var_tostr(_v)           ((_v)->v.s)                                            /**< var_tostr */
+#define var_togc(_v)            ((_v)->v.gc)                                           /**< var_togc */
+#define var_toobj(_v)           ((_v)->v.p)                                            /**< var_toobj */
+#define var_tontvfunc(_v)       ((_v)->v.nf)                                           /**< var_tontvfunc */
+#define var_toidx(_v)           cast_int(var_toint(_v))                                /**< var_toidx */
 
 /**
- * @fn const char be_vtype2str*(bvalue*)
+ * @fn const char be_vtype2str*(bvalue_t*)
  * @brief (???)
  *
  * @param v (???)
  * @return (???)
  */
-const char* be_vtype2str(bvalue *v);
+const char* be_vtype2str(bvalue_t *v);
 
 /**
- * @fn bvalue be_indexof*(bvm*, int)
+ * @fn bvalue_t be_indexof*(bvm_t*, int)
  * @brief (???)
  *
  * @param vm (???)
  * @param idx (???)
  * @return (???)
  */
-bvalue* be_indexof(bvm *vm, int idx);
+bvalue_t* be_indexof(bvm_t *vm, int idx);
 
 /**
- * @fn void be_commonobj_delete(bvm*, bgcobject*)
+ * @fn void be_commonobj_delete(bvm_t*, bgcobject_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param obj (???)
  */
-void be_commonobj_delete(bvm *vm, bgcobject *obj);
+void be_commonobj_delete(bvm_t *vm, bgcobject_t *obj);
 
 /**
- * @fn int be_commonobj_destroy_generic(bvm*)
+ * @fn int be_commonobj_destroy_generic(bvm_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @return (???)
  */
-int be_commonobj_destroy_generic(bvm* vm);
+int be_commonobj_destroy_generic(bvm_t* vm);
 
 #endif

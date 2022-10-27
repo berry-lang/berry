@@ -22,14 +22,14 @@
 #define global(vm)      ((vm)->gbldesc.global)
 #define builtin(vm)     ((vm)->gbldesc.builtin)
 
-static void dump_map_keys(bvm *vm, bmap *map)
+static void dump_map_keys(bvm_t *vm, bmap_t *map)
 {
     if (!map) { return; }   /* protect agains potential null pointer */
-    bmapnode *node;
-    bmapiter iter = be_map_iter();
+    bmapnode_t *node;
+    bmapiter_t iter = be_map_iter();
     while ((node = be_map_next(map, &iter)) != NULL) {
         if (var_isstr(&node->key)) {
-            bstring *s = var_tostr(&node->key);
+            bstring_t *s = var_tostr(&node->key);
             be_pushstring(vm, str(s));
             be_data_push(vm, -2);
             be_pop(vm, 1);
@@ -37,18 +37,18 @@ static void dump_map_keys(bvm *vm, bmap *map)
     }
 }
 
-static int m_attrlist(bvm *vm)
+static int m_attrlist(bvm_t *vm)
 {
     int top = be_top(vm);
     be_newobject(vm, "list");
     if (top >= 1) {
-        bvalue *v = be_indexof(vm, 1);
+        bvalue_t *v = be_indexof(vm, 1);
         void *obj = var_toobj(v);
         switch (var_type(v)) {
         case BE_NIL: dump_map_keys(vm, global(vm).vtab); break;
-        case BE_MODULE: dump_map_keys(vm, ((bmodule*)obj)->table); break;
-        case BE_CLASS: dump_map_keys(vm, ((bclass*)obj)->members); break;
-        case BE_INSTANCE: dump_map_keys(vm, ((binstance*)obj)->_class->members); break;
+        case BE_MODULE: dump_map_keys(vm, ((bmodule_t*)obj)->table); break;
+        case BE_CLASS: dump_map_keys(vm, ((bclass_t*)obj)->members); break;
+        case BE_INSTANCE: dump_map_keys(vm, ((binstance_t*)obj)->_class->members); break;
         default: break;
         }
     } else {    /* if no parameter, then dump globals */
@@ -58,12 +58,12 @@ static int m_attrlist(bvm *vm)
     be_return(vm);
 }
 
-static void m_findmember_protected(bvm *vm, void* data)
+static void m_findmember_protected(bvm_t *vm, void* data)
 {
     be_getmember(vm, 1, (const char*) data);
 }
 
-static int m_findmember(bvm *vm)
+static int m_findmember(bvm_t *vm)
 {
     int top = be_top(vm);
     bbool protected = btrue; /* run protected, i.e. don't raise an exception if not found */
@@ -90,7 +90,7 @@ static int m_findmember(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_setmember(bvm *vm)
+static int m_setmember(bvm_t *vm)
 {
     int top = be_top(vm);
     if (top >= 3 && (be_isinstance(vm, 1) || be_ismodule(vm, 1)) && be_isstring(vm, 2)) {
@@ -100,11 +100,11 @@ static int m_setmember(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_toptr(bvm *vm)
+static int m_toptr(bvm_t *vm)
 {
     int top = be_top(vm);
     if (top >= 1) {
-        bvalue *v = be_indexof(vm, 1);
+        bvalue_t *v = be_indexof(vm, 1);
         if (var_basetype(v) >= BE_FUNCTION || var_type(v) == BE_COMPTR) {
             be_pushcomptr(vm, var_toobj(v));
             be_return(vm);
@@ -118,7 +118,7 @@ static int m_toptr(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_fromptr(bvm *vm)
+static int m_fromptr(bvm_t *vm)
 {
     int top = be_top(vm);
     if (top >= 1) {
@@ -129,9 +129,9 @@ static int m_fromptr(bvm *vm)
             v = (void*) be_toint(vm, 1);
         }
         if (v) {
-            bgcobject *ptr = (bgcobject*)v;
+            bgcobject_t *ptr = (bgcobject_t*)v;
             if (var_basetype(ptr) >= BE_GCOBJECT) {
-                bvalue *top = be_incrtop(vm);
+                bvalue_t *top = be_incrtop(vm);
                 var_setobj(top, ptr->type, ptr);
             } else {
                 be_raise(vm, "value_error", "unsupported for this type");
@@ -143,11 +143,11 @@ static int m_fromptr(bvm *vm)
 }
 
 /* load module by name, like `import` would do. But don't create a global variable from it. */
-static int m_getmodule(bvm *vm)
+static int m_getmodule(bvm_t *vm)
 {
     int top = be_top(vm);
     if (top >= 1) {
-        bvalue *v = be_indexof(vm, 1);
+        bvalue_t *v = be_indexof(vm, 1);
         if (var_isstr(v)) {
             int ret = be_module_load(vm, var_tostr(v));
             if (ret == BE_OK) {
@@ -159,11 +159,11 @@ static int m_getmodule(bvm *vm)
 }
 
 /* set or chang the cached value for the named module, this allows monkey patching. **USE WITH CARE** */
-static int m_setmodule(bvm *vm)
+static int m_setmodule(bvm_t *vm)
 {
     int top = be_top(vm);
     if (top >= 2) {
-        bvalue *v = be_indexof(vm, 1);
+        bvalue_t *v = be_indexof(vm, 1);
         if (var_isstr(v)) {
             be_pushvalue(vm, 2);  /* ensure the second arg is at top of stack */
             be_cache_module(vm, var_tostr(v));
@@ -173,14 +173,14 @@ static int m_setmodule(bvm *vm)
 }
 
 /* checks if the function (berry bytecode bproto only) is hinted as a method */
-static int m_ismethod(bvm *vm)
+static int m_ismethod(bvm_t *vm)
 {
     int top = be_top(vm);
     if (top >= 1) {
-        bvalue *v = be_indexof(vm, 1);
+        bvalue_t *v = be_indexof(vm, 1);
         if (var_isclosure(v)) {
-            bclosure *cl = var_toobj(v);
-            bproto *pr = cl->proto;
+            bclosure_t *cl = var_toobj(v);
+            bproto_t *pr = cl->proto;
             be_pushbool(vm, pr->varg & BE_VA_METHOD);
             be_return(vm);
         }

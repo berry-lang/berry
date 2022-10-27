@@ -1,7 +1,3 @@
-.. raw:: html
-
-   <!-- Spanish Translation: Emiliano Gonzalez (egonzalez . hiperion @ gmail . com) -->
-
 Información básica
 ==================
 
@@ -74,7 +70,7 @@ Inicie el intérprete directamente (ingrese ``berry`` en la terminal o en
 la ventana de comandos sin parámetros, o haga doble clic en berry.exe en
 Windows) para ingresar al modo REPL y verá la siguiente interfaz:
 
-.. code:: berry
+.. code::
 
    Berry 1.0.0 (build in Feb 1 2022, 13:14:04)
    [GCC 8.1.0] on Windows (default)

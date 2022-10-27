@@ -11,14 +11,14 @@
 #include "be_constobj.h"
 #include <string.h>
 
-#define next(_s)    cast(void*, cast(bstring*, (_s)->next))
-#define sstr(_s)    cast(char*, cast(bsstring*, _s) + 1)
-#define lstr(_s)    cast(char*, cast(blstring*, _s) + 1)
-#define cstr(_s)    (cast(bcstring*, _s)->s)
+#define next(_s)    cast(void*, cast(bstring_t*, (_s)->next))
+#define sstr(_s)    cast(char*, cast(bsstring_t*, _s) + 1)
+#define lstr(_s)    cast(char*, cast(blstring_t*, _s) + 1)
+#define cstr(_s)    (cast(bcstring_t*, _s)->s)
 
 #define be_define_const_str(_name, _s, _hash, _extra, _len, _next) \
-    BERRY_LOCAL const bcstring be_const_str_##_name = {            \
-        .next = (bgcobject *)_next,                                \
+    BERRY_LOCAL const bcstring_t be_const_str_##_name = {            \
+        .next = (bgcobject_t *)_next,                                \
         .type = BE_STRING,                                         \
         .marked = GC_CONST,                                        \
         .extra = _extra,                                           \
@@ -29,7 +29,7 @@
 
 /* const string table */
 struct bconststrtab {
-    const bstring* const *table;
+    const bstring_t* const *table;
     int count; /* string count */
     int size;
 };
@@ -38,7 +38,7 @@ struct bconststrtab {
 #include "../generate/be_const_strtab_def.h"
 #endif
 
-int be_eqstr(bstring *s1, bstring *s2)
+int be_eqstr(bstring_t *s1, bstring_t *s2)
 {
     int slen;
     if (s1 == s2) { /* short string or the same string */
@@ -51,14 +51,14 @@ int be_eqstr(bstring *s1, bstring *s2)
     }
     /* long string */
     if (slen == 255) {  /* s2->slen is also 255 */
-        blstring *ls1 = cast(blstring*, s1);
-        blstring *ls2 = cast(blstring*, s2);
+        blstring_t *ls1 = cast(blstring_t*, s1);
+        blstring_t *ls2 = cast(blstring_t*, s2);
         return ls1->llen == ls2->llen && !strcmp(lstr(ls1), lstr(ls2));
     }
     /* const short strings */
     if (gc_isconst(s1) || gc_isconst(s2)) { /* one of the two string is short const */
-        uint32_t hash1 = cast(bcstring*, s1)->hash;
-        uint32_t hash2 = cast(bcstring*, s2)->hash;
+        uint32_t hash1 = cast(bcstring_t*, s1)->hash;
+        uint32_t hash2 = cast(bcstring_t*, s2)->hash;
         if (hash1 && hash2 && hash1 != hash2) {
             return 0; /* if hash differ, since we know both are non-null */
         }
@@ -72,22 +72,22 @@ int be_eqstr(bstring *s1, bstring *s2)
     return 0;
 }
 
-static void resize(bvm *vm, int size)
+static void resize(bvm_t *vm, int size)
 {
     int i;
     struct bstringtable *tab = &vm->strtab;
     if (size > tab->size) {
         tab->table = be_realloc(vm, tab->table,
-            tab->size * sizeof(bstring*), size * sizeof(bstring*));
+            tab->size * sizeof(bstring_t*), size * sizeof(bstring_t*));
         for (i = tab->size; i < size; ++i) {
             tab->table[i] = NULL;
         }
     }
     for (i = 0; i < tab->size; ++i) { /* rehash */
-        bstring *p = tab->table[i];
+        bstring_t *p = tab->table[i];
         tab->table[i] = NULL;
         while (p) { /* for each node in the list */
-            bstring *hnext = next(p);
+            bstring_t *hnext = next(p);
             uint32_t hash = be_strhash(p) & (size - 1);
             p->next = cast(void*, tab->table[hash]);
             tab->table[hash] = p;
@@ -99,14 +99,14 @@ static void resize(bvm *vm, int size)
             tab->table[i] = NULL;
         }
         tab->table = be_realloc(vm, tab->table,
-            tab->size * sizeof(bstring*), size * sizeof(bstring*));
+            tab->size * sizeof(bstring_t*), size * sizeof(bstring_t*));
     }
     tab->size = size;
 }
 
-static void free_sstring(bvm *vm, bstring *str)
+static void free_sstring(bvm_t *vm, bstring_t *str)
 {
-    be_free(vm, str, sizeof(bsstring) + str->slen + 1);
+    be_free(vm, str, sizeof(bsstring_t) + str->slen + 1);
 }
 
 /* FNV-1a Hash */
@@ -120,40 +120,40 @@ static uint32_t str_hash(const char *str, size_t len)
     return hash;
 }
 
-void be_string_init(bvm *vm)
+void be_string_init(bvm_t *vm)
 {
     resize(vm, 8);
 #if !BE_USE_PRECOMPILED_OBJECT
     /* the destructor name deinit needs to exist all the time, to ensure
      * that it does not need to be created when the heap is exhausted. */
-    be_gc_fix(vm, cast(bgcobject*, str_literal(vm, "deinit")));
+    be_gc_fix(vm, cast(bgcobject_t*, str_literal(vm, "deinit")));
 #endif
     /* be_const_str_deinit --> for precompiled */
 }
 
-void be_string_deleteall(bvm *vm)
+void be_string_deleteall(bvm_t *vm)
 {
     int i;
     struct bstringtable *tab = &vm->strtab;
     for (i = 0; i < tab->size; ++i) {
-        bstring *node = tab->table[i];
+        bstring_t *node = tab->table[i];
         while (node) {
-            bstring *next = next(node);
+            bstring_t *next = next(node);
             free_sstring(vm, node);
             node = next;
         }
     }
-    be_free(vm, tab->table, tab->size * sizeof(bstring*));
+    be_free(vm, tab->table, tab->size * sizeof(bstring_t*));
 }
 
-static bstring* createstrobj(bvm *vm, size_t len, int islong)
+static bstring_t* createstrobj(bvm_t *vm, size_t len, int islong)
 {
-    size_t size = (islong ? sizeof(blstring)
-                : sizeof(bsstring)) + len + 1;
-    bgcobject *gco = be_gc_newstr(vm, size, islong);
-    bstring *s = cast_str(gco);
+    size_t size = (islong ? sizeof(blstring_t)
+                : sizeof(bsstring_t)) + len + 1;
+    bgcobject_t *gco = be_gc_newstr(vm, size, islong);
+    bstring_t *s = cast_str(gco);
     if (s) {
-        s->slen = islong ? 255 : (bbyte)len;
+        s->slen = islong ? 255 : (bbyte_t)len;
         char *str = cast(char *, islong ? lstr(s) : sstr(s));
         str[len] = '\0';
     }
@@ -161,26 +161,26 @@ static bstring* createstrobj(bvm *vm, size_t len, int islong)
 }
 
 #if BE_USE_PRECOMPILED_OBJECT
-static bstring* find_conststr(const char *str, size_t len)
+static bstring_t* find_conststr(const char *str, size_t len)
 {
     const struct bconststrtab *tab = &m_const_string_table;
     uint32_t hash = str_hash(str, len);
-    bcstring *s = (bcstring*)tab->table[hash % tab->size];
+    bcstring_t *s = (bcstring_t*)tab->table[hash % tab->size];
     for (; s != NULL; s = next(s)) {
         if (len == s->slen && !strncmp(str, s->s, len)) {
-            return (bstring*)s;
+            return (bstring_t*)s;
         }
     }
     return NULL;
 }
 #endif
 
-static bstring* newshortstr(bvm *vm, const char *str, size_t len)
+static bstring_t* newshortstr(bvm_t *vm, const char *str, size_t len)
 {
-    bstring *s;
+    bstring_t *s;
     int size = vm->strtab.size;
     uint32_t hash = str_hash(str, len);
-    bstring **list = vm->strtab.table + (hash & (size - 1));
+    bstring_t **list = vm->strtab.table + (hash & (size - 1));
 
     for (s = *list; s != NULL; s = next(s)) {
         if (len == s->slen && !strncmp(str, sstr(s), len)) {
@@ -193,7 +193,7 @@ static bstring* newshortstr(bvm *vm, const char *str, size_t len)
         s->extra = 0;
         s->next = cast(void*, *list);
 #if BE_USE_STR_HASH_CACHE
-        cast(bsstring*, s)->hash = hash;
+        cast(bsstring_t*, s)->hash = hash;
 #endif
         *list = s;
         vm->strtab.count++;
@@ -204,12 +204,12 @@ static bstring* newshortstr(bvm *vm, const char *str, size_t len)
     return s;
 }
 
-bstring* be_newlongstr(bvm *vm, const char *str, size_t len)
+bstring_t* be_newlongstr(bvm_t *vm, const char *str, size_t len)
 {
-    bstring *s;
-    blstring *ls;
+    bstring_t *s;
+    blstring_t *ls;
     s = createstrobj(vm, len, 1);
-    ls = cast(blstring*, s);
+    ls = cast(blstring_t*, s);
     s->extra = 0;
     ls->llen = cast_int(len);
     if (str) { /* if the argument 'str' is NULL, we just allocate space */
@@ -218,16 +218,16 @@ bstring* be_newlongstr(bvm *vm, const char *str, size_t len)
     return s;
 }
 
-bstring* be_newstr(bvm *vm, const char *str)
+bstring_t* be_newstr(bvm_t *vm, const char *str)
 {
     return be_newstrn(vm, str, strlen(str));
 }
 
-bstring *be_newstrn(bvm *vm, const char *str, size_t len)
+bstring_t *be_newstrn(bvm_t *vm, const char *str, size_t len)
 {
     if (len <= SHORT_STR_MAX_LEN) {
 #if BE_USE_PRECOMPILED_OBJECT
-        bstring *s = find_conststr(str, len);
+        bstring_t *s = find_conststr(str, len);
         return s ? s : newshortstr(vm, str, len);
 #else
         return newshortstr(vm, str, len);
@@ -236,13 +236,13 @@ bstring *be_newstrn(bvm *vm, const char *str, size_t len)
     return be_newlongstr(vm, str, len); /* long string */
 }
 
-void be_gcstrtab(bvm *vm)
+void be_gcstrtab(bvm_t *vm)
 {
     struct bstringtable *tab = &vm->strtab;
     int size = tab->size, i;
     for (i = 0; i < size; ++i) {
-        bstring **list = tab->table + i;
-        bstring *prev = NULL, *node, *next;
+        bstring_t **list = tab->table + i;
+        bstring_t *prev = NULL, *node, *next;
         for (node = *list; node; node = next) {
             next = next(node);
             if (!gc_isfixed(node) && gc_iswhite(node)) {
@@ -264,10 +264,10 @@ void be_gcstrtab(bvm *vm)
     }
 }
 
-uint32_t be_strhash(const bstring *s)
+uint32_t be_strhash(const bstring_t *s)
 {
     if (gc_isconst(s)) {
-        bcstring* cs = cast(bcstring*, s);
+        bcstring_t* cs = cast(bcstring_t*, s);
         if (cs->hash) {  /* if hash is null we need to compute it */
             return cs->hash;
         } else {
@@ -276,13 +276,13 @@ uint32_t be_strhash(const bstring *s)
     }
 #if BE_USE_STR_HASH_CACHE
     if (s->slen != 255) {
-        return cast(bsstring*, s)->hash;
+        return cast(bsstring_t*, s)->hash;
     }
 #endif
     return str_hash(str(s), str_len(s));
 }
 
-const char* be_str2cstr(const bstring *s)
+const char* be_str2cstr(const bstring_t *s)
 {
     be_assert(cast_str(s) != NULL);
     if (gc_isconst(s)) {
@@ -294,9 +294,9 @@ const char* be_str2cstr(const bstring *s)
     return sstr(s);
 }
 
-void be_str_setextra(bstring *s, int extra)
+void be_str_setextra(bstring_t *s, int extra)
 {
     if (!gc_isconst(s)) {
-        s->extra = cast(bbyte, extra);
+        s->extra = cast(bbyte_t, extra);
     }
 }

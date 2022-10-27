@@ -37,7 +37,7 @@ precedencia y asociatividad de los operadores garantizan la unicidad del
 orden de evaluación de la expresión. Por ejemplo, una expresión
 combinada:
 
-.. code:: python
+.. code:: berry
 
    1 + 10/2 * 3
 

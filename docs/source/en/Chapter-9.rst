@@ -142,7 +142,7 @@ If you really need to expand the stack, you can call the FFI function
 
 .. code:: c
 
-   void be_stack_require(bvm *vm, int count);
+   void be_stack_require(bvm_t *vm, int count);
 
 The parameter ``count`` is the amount of space needed. When the
 remaining space in the virtual stack is insufficient, the stack capacity
@@ -165,11 +165,11 @@ commonly used FFIs to get values from the stack:
 
 .. code:: c
 
-   bint be_toint(bvm *vm, int index);
-   breal be_toreal(bvm *vm, int index);
-   int be_tobool(bvm *vm, int index);
-   const char* be_tostring(bvm *vm, int index);
-   void* be_tocomptr(bvm *vm, int index);
+   bint_t be_toint(bvm *vm_t, int index);
+   breal_t be_toreal(bvm_t *vm, int index);
+   int be_tobool(bvm_t *vm, int index);
+   const char* be_tostring(bvm_t *vm, int index);
+   void* be_tocomptr(bvm_t*vm, int index);
 
 The parameter form of these functions is the same, but the return value
 is different. The first four functions are easy to understand. Just like
@@ -209,7 +209,7 @@ form. The definition of the native function is:
 
 .. code:: c
 
-   int a_native_function(bvm *vm)
+   int a_native_function(bvm_t *vm)
    {
        // do something ...
    }
@@ -224,8 +224,8 @@ return:
 
 .. code:: c
 
-   be_return(bvm *vm);
-   be_return_nil(bvm *vm);
+   be_return(bvm_t *vm);
+   be_return_nil(bvm_t *vm);
 
 These FFIs are actually two macros, and there is no need to use the C
 ``return`` statement when using them. ``be_return`` Will put the top of
@@ -242,7 +242,7 @@ is called **registered**. The FFI of the registered native function is:
 
 .. code:: c
 
-   void be_regfunc(bvm *vm, const char *name, bntvfunc f);
+   void be_regfunc(bvm_t *vm, const char *name, bntvfunc f);
 
 ``vm`` is the current virtual machine instance, ``name`` is the name of
 the native function, and ``f`` is the pointer of the native function.
@@ -255,7 +255,7 @@ of native function type ``bntvfunc`` is:
 
 .. code:: c
 
-   typedef int (*bntvfunc)(bvm*);
+   typedef int (*bntvfunc)(bvm_t*);
 
 In fact, the ``bntvfunc`` type is the function pointer type with the
 parameter ``bvm`` and the return value type ``int``. ``be_regfunc`` The
@@ -275,7 +275,7 @@ implement this function:
 
 .. code:: c
 
-   static int l_add(bvm *vm)
+   static int l_add(bvm_t *vm)
    {
        int top = be_top(vm); // Get the number of arguments
        /* Verify the number and type of arguments */
@@ -309,7 +309,7 @@ simplicity, we register it after loading the library:
 
 .. code:: c
 
-   bvm *vm = be_vm_new(); // Construct a VM
+   bvm_t *vm = be_vm_new(); // Construct a VM
    be_regfunc(vm, "myadd", l_add); // Register the native function "myadd"
 
 The second line is where the native function is registered, and we named
@@ -320,14 +320,31 @@ results like this:
 
 .. code:: berry
 
-   > myadd
-   <function: 0x562a210f0f90>
-   > myadd(1.0, 2.5)
-   3.5
-   > myadd(2.5, 2)
-   4.5
-   > myadd(1, 2)
-   3
+   myadd
+   
+|<function: 0x562a210f0f90>
+|   
+
+.. code:: berry
+
+   myadd(1.0, 2.5)
+
+|3.5
+|   
+ 
+.. code:: berry
+  
+   myadd(2.5, 2)
+   
+|4.5
+|
+
+.. code:: berry
+   
+   myadd(1, 2)
+   
+|3
+|
 
 Types and Functions
 -------------------
@@ -347,7 +364,7 @@ Therefore, this definition can only be found in the *berry.h* file:
 
 .. code:: c
 
-   typedef struct bvm bvm;
+   typedef struct bvm bvm_t;
 
 Most FFI functions use the ``bvm`` type as the first parameter, because
 they all operate on the virtual machine internally. Hiding the internal
@@ -361,7 +378,7 @@ Native function type. The definition of this type is:
 
 .. code:: c
 
-   typedef int (*bntvfunc)(bvm*);
+   typedef int (*bntvfunc)(bvm_t*);
 
 This type is a native function pointer, and some FFIs that register or
 add native functions to the virtual machine use parameters of this type.
@@ -393,9 +410,9 @@ floating point type in C language. ``breal`` is defined as:
 .. code:: c
 
    #if BE_SINGLE_FLOAT != 0
-       typedef float breal;
+       typedef float breal_t;
    #else
-       typedef double breal;
+       typedef double breal_t;
    #endif
 
 You can use the macro ``BE_SINGLE_FLOAT`` to control the specific
@@ -456,7 +473,7 @@ function prototype is:
 
 .. code:: c
 
-   bvm* be_vm_new(void);
+   bvm_t* be_vm_new(void);
 
 The return value of the function is a pointer to the virtual machine
 instance. ``be_vm_new`` The number is the first function called when the
@@ -470,7 +487,7 @@ function prototype is:
 
 .. code:: c
 
-   void be_vm_delete(bvm *vm);
+   void be_vm_delete(bvm_t *vm);
 
 The parameter ``vm`` is the pointer of the virtual machine object to be
 destroyed. Destroying the virtual machine will release all the objects
@@ -483,7 +500,7 @@ compile it into bytecode. The prototype of the function is:
 
 .. code:: c
 
-   int be_loadbuffer(bvm *vm, const char *name, const char *buffer, size_t length);
+   int be_loadbuffer(bvm_t *vm, const char *name, const char *buffer, size_t length);
 
 The parameter ``vm`` is the virtual machine pointer. ``name`` is a
 string, which is usually used to mark the source of the source code. For
@@ -540,7 +557,7 @@ prototype is:
 
 .. code:: c
 
-   int be_loadfile(bvm *vm, const char *name);
+   int be_loadfile(bvm_t *vm, const char *name);
 
 The function of this function is similar to the ``be_loadbuffer``
 function, except that the function will be compiled by reading the
@@ -569,7 +586,7 @@ parameters of the native function. The prototype of this function is:
 
 .. code:: c
 
-   int be_top(bvm *vm);
+   int be_top(bvm_t *vm);
 
 This function is usually used to obtain the number of parameters of a
 native function. When used for this purpose, it is recommended to call
@@ -577,7 +594,7 @@ native function. When used for this purpose, it is recommended to call
 
 .. code:: c
 
-   static int native_function_example(bvm *vm)
+   static int native_function_example(bvm_t *vm)
    {
        int argc = be_top(vm); // Get the number of arguments
        // ...
@@ -589,7 +606,7 @@ returns it. For example, it returns ``"int"`` for an integer object, and
 
 .. code:: c
 
-   const char* be_typename(bvm *vm, int index);
+   const char* be_typename(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 ``index`` is the index of the object to be operated. The ``type``
@@ -602,7 +619,7 @@ function prototype is:
 
 .. code:: c
 
-   const char* be_classname(bvm *vm, int index);
+   const char* be_classname(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 ``index`` is the index of the object to be operated. If the value at
@@ -616,7 +633,7 @@ function prototype is:
 
 .. code:: c
 
-   int be_strlen(bvm *vm, int index);
+   int be_strlen(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 ``index`` is the index of the object to be operated. This function
@@ -635,7 +652,7 @@ prototype is:
 
 .. code:: c
 
-   void be_strconcat(bvm *vm, int index);
+   void be_strconcat(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance.
 This function will concatenate the string at the parameter position of
@@ -647,7 +664,7 @@ prototype is:
 
 .. code:: c
 
-   void be_pop(bvm *vm, int n);
+   void be_pop(bvm_t *vm, int n);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 the parameter ``n`` is the number of values to be popped from the stack.
@@ -658,7 +675,7 @@ is:
 
 .. code:: c
 
-   void be_remove(bvm *vm, int index);
+   void be_remove(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 the parameter ``index`` is the index of the object to be removed. After
@@ -671,7 +688,7 @@ and its function prototype is:
 
 .. code:: c
 
-   int be_absindex(bvm *vm, int index);
+   int be_absindex(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 the parameter ``index`` is the input index value. If ``index`` is
@@ -686,7 +703,7 @@ is:
 
 .. code:: c
 
-   void be_newlist(bvm *vm);
+   void be_newlist(bvm_t *vm);
 
 The parameter ``vm`` is the pointer of the virtual machine instance.
 After this function is successfully called, the new ``list`` value will
@@ -699,7 +716,7 @@ is:
 
 .. code:: c
 
-   void be_newmap(bvm *vm);
+   void be_newmap(bvm_t *vm);
 
 The parameter ``vm`` is the pointer of the virtual machine instance.
 After this function is successfully called, the new ``map`` value will
@@ -712,7 +729,7 @@ the stack. Its function prototype is:
 
 .. code:: c
 
-   void be_getglobal(bvm *vm, const char *name);
+   void be_getglobal(bvm_t *vm, const char *name);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 the parameter ``name`` is the name of the global variable. After this
@@ -724,7 +741,7 @@ instance object class. The function prototype is:
 
 .. code:: c
 
-   void be_setmember(bvm *vm, int index, const char *k);
+   void be_setmember(bvm_t *vm, int index, const char *k);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, the
 parameter ``index`` is the index of the instance object, and the
@@ -738,7 +755,7 @@ instance object class. The function prototype is:
 
 .. code:: c
 
-   void be_getmember(bvm *vm, int index, const char *k);
+   void be_getmember(bvm_t *vm, int index, const char *k);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, the
 parameter ``index`` is the index of the instance object, and the
@@ -751,7 +768,7 @@ function prototype is:
 
 .. code:: c
 
-   void be_getindex(bvm *vm, int index);
+   void be_getindex(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 the parameter ``index`` is the index of the object to be operated. This
@@ -783,7 +800,7 @@ function prototype is:
 
 .. code:: c
 
-   void be_setindex(bvm *vm, int index);
+   void be_setindex(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 the parameter ``index`` is the subscript of the object to be operated.
@@ -814,7 +831,7 @@ function prototype is:
 
 .. code:: c
 
-   void be_getupval(bvm *vm, int index, int pos);
+   void be_getupval(bvm_t *vm, int index, int pos);
 
 The parameter ``vm`` is the pointer of the virtual machine instance;
 ``index`` is the native closure index value of the Up Value to be read;
@@ -827,7 +844,7 @@ function prototype is:
 
 .. code:: c
 
-   void be_setupval(bvm *vm, int index, int pos);
+   void be_setupval(bvm_t *vm, int index, int pos);
 
 The parameter ``vm`` is the pointer of the virtual machine instance;
 ``index`` is the native closure index value to be written into the Up
@@ -842,7 +859,7 @@ instance of the class. The function prototype is:
 
 .. code:: c
 
-   void be_getsuper(bvm *vm, int index);
+   void be_getsuper(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance;
 ``index`` is the class or object to be operated. If the value at
@@ -857,7 +874,7 @@ container. The function prototype is:
 
 .. code:: c
 
-   int be_data_size(bvm *vm, int index);
+   int be_data_size(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance;
 ``index`` is the index of the container object to be operated. If the
@@ -870,7 +887,7 @@ container. The function prototype is:
 
 .. code:: c
 
-   void be_data_push(bvm *vm, int index);
+   void be_data_push(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance;
 ``index`` is the index of the container object to be operated. The
@@ -884,7 +901,7 @@ The function prototype is:
 
 .. code:: c
 
-   void be_data_insert(bvm *vm, int index);
+   void be_data_insert(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance;
 ``index`` is the index of the container object to be operated. The
@@ -901,7 +918,7 @@ function prototype is:
 
 .. code:: c
 
-   void be_data_remove(bvm *vm, int index);
+   void be_data_remove(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance;
 ``index`` is the index of the container object to be operated. The
@@ -918,7 +935,7 @@ function prototype is:
 
 .. code:: c
 
-   void be_data_resize(bvm *vm, int index);
+   void be_data_resize(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance;
 ``index`` is the index of the container object to be operated. This
@@ -930,7 +947,7 @@ function prototype is:
 
 .. code:: c
 
-   int be_iter_next(bvm *vm, int index);
+   int be_iter_next(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance;
 ``index`` is the index of the iterator to be operated. The iterator
@@ -948,7 +965,7 @@ iterator. The function prototype is:
 
 .. code:: c
 
-   int map_hasnext(bvm *vm, int index)
+   int map_hasnext(bvm_t *vm, int index)
 
 The parameter ``vm`` is the pointer of the virtual machine instance;
 ``index`` is the index of the iterator to be operated. The iterator
@@ -964,7 +981,7 @@ prototype is:
 
 .. code:: c
 
-   int be_refcontains(bvm *vm, int index);
+   int be_refcontains(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance;
 ``index`` is the index of the object to be operated. This function is
@@ -977,7 +994,7 @@ function prototype is:
 
 .. code:: c
 
-   int be_refpush(bvm *vm, int index);
+   int be_refpush(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance;
 ``index`` is the index of the object to be operated. This function is
@@ -988,7 +1005,7 @@ is:
 
 .. code:: c
 
-   int be_refpop(bvm *vm);
+   int be_refpop(bvm_t *vm);
 
 The parameter ``vm`` is the pointer of the virtual machine instance.
 This function is used in pairs with ``be_refpush``. The following is the
@@ -997,7 +1014,7 @@ recursive traversal when the object itself is referenced:
 
 .. code:: c
 
-   int list_traversal(bvm *vm)
+   int list_traversal(bvm_t *vm)
    {
        // ...
        if (be_refcontains(vm, 1)) {
@@ -1024,7 +1041,7 @@ the stack space if it is insufficient. The function prototype is:
 
 .. code:: c
 
-   void be_stack_require(bvm *vm, int count);
+   void be_stack_require(bvm_t *vm, int count);
 
 The parameter ``vm`` is the pointer of the virtual machine instance;
 ``count`` is the required free stack capacity. If the free capacity of
@@ -1037,7 +1054,7 @@ otherwise it returns ``0``. The prototype of this function is:
 
 .. code:: c
 
-   int be_isnil(bvm *vm, int index);
+   int be_isnil(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 ``index`` is the index of the value to be measured.
@@ -1049,7 +1066,7 @@ this function is:
 
 .. code:: c
 
-   int be_isbool(bvm *vm, int index);
+   int be_isbool(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 ``index`` is the index of the value to be measured.
@@ -1060,7 +1077,7 @@ This function returns whether the value indexed by the parameter
 
 .. code:: c
 
-   int be_isint(bvm *vm, int index);
+   int be_isint(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 ``index`` is the index of the value to be measured.
@@ -1072,7 +1089,7 @@ function is:
 
 .. code:: c
 
-   int be_isreal(bvm *vm, int index);
+   int be_isreal(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 ``index`` is the index of the value to be measured.
@@ -1084,7 +1101,7 @@ this function is:
 
 .. code:: c
 
-   int be_isnumber(bvm *vm, int index);
+   int be_isnumber(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 ``index`` is the index of the value to be measured.
@@ -1095,7 +1112,7 @@ This function returns whether the value indexed by the parameter
 
 .. code:: c
 
-   int be_isstring(bvm *vm, int index);
+   int be_isstring(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 ``index`` is the index of the value to be measured.
@@ -1106,7 +1123,7 @@ This function returns whether the value indexed by the parameter
 
 .. code:: c
 
-   int be_isclosure(bvm *vm, int index);
+   int be_isclosure(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 ``index`` is the index of the value to be measured.
@@ -1118,7 +1135,7 @@ function is:
 
 .. code:: c
 
-   int be_isntvclos(bvm *vm, int index);
+   int be_isntvclos(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 ``index`` is the index of the value to be measured.
@@ -1129,7 +1146,7 @@ This function returns whether the value indexed by the parameter
 
 .. code:: c
 
-   int be_isfunction(bvm *vm, int index);
+   int be_isfunction(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 ``index`` is the index of the value to be measured. There are three
@@ -1142,7 +1159,7 @@ function is:
 
 .. code:: c
 
-   int be_isproto(bvm *vm, int index);
+   int be_isproto(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 ``index`` is the index of the value to be measured. ``proto`` The type
@@ -1155,7 +1172,7 @@ function is:
 
 .. code:: c
 
-   int be_isclass(bvm *vm, int index);
+   int be_isclass(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 ``index`` is the index of the value to be measured.
@@ -1167,7 +1184,7 @@ function is:
 
 .. code:: c
 
-   int be_isinstance(bvm *vm, int index);
+   int be_isinstance(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 ``index`` is the index of the value to be measured.
@@ -1179,7 +1196,7 @@ prototype of this function is:
 
 .. code:: c
 
-   int be_isbytes(bvm *vm, int index);
+   int be_isbytes(bvm_t *vm, int index);
 
 This function returns whether the value indexed by the parameter
 ``index`` in the virtual stack is of type ``list``, if it is, it returns
@@ -1187,7 +1204,7 @@ This function returns whether the value indexed by the parameter
 
 .. code:: c
 
-   int be_islist(bvm *vm, int index);
+   int be_islist(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 ``index`` is the index of the value to be measured.
@@ -1198,7 +1215,7 @@ This function returns whether the value indexed by the parameter
 
 .. code:: c
 
-   int be_ismap(bvm *vm, int index);
+   int be_ismap(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 ``index`` is the index of the value to be measured.
@@ -1210,14 +1227,14 @@ function is:
 
 .. code:: c
 
-   int be_iscomptr(bvm *vm, int index);
+   int be_iscomptr(bvm_t *vm, int index);
 
 The parameter ``vm`` is the pointer of the virtual machine instance, and
 ``index`` is the index of the value to be measured.
 
 .. code:: c
 
-   bint be_toint(bvm *vm, int index);
+   bint be_toint(bvm_t *vm, int index);
 
 Get the value of the index position of ``index`` from the virtual stack
 and return it as an integer type. This function does not check the
@@ -1226,7 +1243,7 @@ correctness of the type. If the value is an instance, the method
 
 .. code:: c
 
-   breal be_toreal(bvm *vm, int index);
+   breal be_toreal(bvm_t *vm, int index);
 
 Get the value of the index position of ``index`` from the virtual stack
 and return it as a floating-point number type. This function does not
@@ -1234,7 +1251,7 @@ check the correctness of the type.
 
 .. code:: c
 
-   bint be_toindex(bvm *vm, int index);
+   bint be_toindex(bvm_t *vm, int index);
 
 Get the value of the index position of ``index`` from the virtual stack
 and return it as an integer type. This function does not check the
@@ -1244,7 +1261,7 @@ correctness of the type. Unlike ``be_toint``, the return value type of
 
 .. code:: c
 
-   bbool be_tobool(bvm *vm, int index);
+   bbool be_tobool(bvm_t *vm, int index);
 
 Get the value of the index position of ``index`` from the virtual stack
 and return it as a Boolean type. If the indexed value is not of Boolean
@@ -1255,7 +1272,7 @@ exists.
 
 .. code:: c
 
-   const char* be_tostring(bvm *vm, int index);
+   const char* be_tostring(bvm_t *vm, int index);
 
 Get the value of the index position of ``index`` from the virtual stack
 and return it as a string type. If the indexed value is not a string
@@ -1267,7 +1284,7 @@ instance, the method ``tostring()`` is called if it exists.
 
 .. code:: c
 
-   void* be_tocomptr(bvm* vm, int index);
+   void* be_tocomptr(bvm_t *vm, int index);
 
 Get the value of the index position of ``index`` from the virtual stack
 and return it as a general pointer type. This function does not check
@@ -1275,7 +1292,7 @@ the correctness of the type.
 
 .. code:: c
 
-   const void* be_tobytes(bvm *vm, int index, size_t *len);
+   const void* be_tobytes(bvm_t *vm, int index, size_t *len);
 
 Get the value of the index position of ``index`` from the virtual stack
 and return it as a bytes buffer. The pointer of the buffer is returned,
@@ -1285,13 +1302,13 @@ function works only for instances of the ``bytes`` class, or returns
 
 .. code:: c
 
-   void be_pushnil(bvm *vm);
+   void be_pushnil(bvm_t *vm);
 
 Push a ``nil`` value onto the virtual stack.
 
 .. code:: c
 
-   void be_pushbool(bvm *vm, int b);
+   void be_pushbool(bvm_t *vm, int b);
 
 Push a Boolean value onto the virtual stack. The parameter ``b`` is the
 boolean value to be pushed onto the stack. When the value is ``0``, it
@@ -1299,19 +1316,19 @@ means false, otherwise it is true.
 
 .. code:: c
 
-   void be_pushint(bvm *vm, bint i);
+   void be_pushint(bvm_t *vm, bint i);
 
 Push an integer value ``i`` onto the virtual stack.
 
 .. code:: c
 
-   void be_pushreal(bvm *vm, breal r);
+   void be_pushreal(bvm_t *vm, breal r);
 
 Push a floating point value ``r`` onto the virtual stack.
 
 .. code:: c
 
-   void be_pushstring(bvm *vm, const char *str)
+   void be_pushstring(bvm_t *vm, const char *str)
 
 Push the string ``str`` onto the virtual stack. The parameter ``str``
 must point to a C string that ends with a null character ``’\0’``, and a
@@ -1319,7 +1336,7 @@ null pointer cannot be passed in.
 
 .. code:: c
 
-   void be_pushnstring(bvm *vm, const char *str, size_t n);
+   void be_pushnstring(bvm_t *vm, const char *str, size_t n);
 
 Push the string ``str`` of length ``n`` onto the virtual stack. The
 length of the string is subject to the parameter ``n``, and the null
@@ -1327,7 +1344,7 @@ character is not used as the end mark of the string.
 
 .. code:: c
 
-   const char* be_pushfstring(bvm *vm, const char *format, ...);
+   const char* be_pushfstring(bvm_t *vm, const char *format, ...);
 
 Push the formatted string into the virtual stack. The parameter
 ``format`` is a formatted string, which contains the text to be pushed
@@ -1381,13 +1398,13 @@ operations. If the requirements cannot be met, it is recommended to use
 
 .. code:: c
 
-   void be_pushvalue(bvm *vm, int index);
+   void be_pushvalue(bvm_t *vm, int index);
 
 Push the value with index ``index`` onto the top of the virtual stack.
 
 .. code:: c
 
-   void be_pushntvclosure(bvm *vm, bntvfunc f, int nupvals);
+   void be_pushntvclosure(bvm_t *vm, bntvfunc f, int nupvals);
 
 Push a native closure onto the top of the virtual stack. The parameter
 ``f`` is the C function pointer of the native closure, and ``nupvals``
@@ -1395,14 +1412,14 @@ is the upvalue number of the closure.
 
 .. code:: c
 
-   void be_pushntvfunction(bvm *vm, bntvfunc f);
+   void be_pushntvfunction(bvm_t *vm, bntvfunc f);
 
 Push a native function onto the top of the virtual stack, and the
 parameter ``f`` is the native function pointer.
 
 .. code:: c
 
-   void be_pushclass(bvm *vm, const char *name, const bnfuncinfo *lib);
+   void be_pushclass(bvm_t *vm, const char *name, const bnfuncinfo *lib);
 
 Push a native class onto the top of the virtual stack. The parameter
 ``name`` is the name of the native class, and the parameter ``lib`` is
@@ -1410,7 +1427,7 @@ the attribute description of the native class.
 
 .. code:: c
 
-   void be_pushcomptr(bvm *vm, void *ptr);
+   void be_pushcomptr(bvm_t *vm, void *ptr);
 
 Push a general pointer onto the top of the virtual stack. The general
 pointer ``ptr`` points to a certain C data area. Since the content
@@ -1419,7 +1436,7 @@ collector, users have to maintain the life cycle of the data themselves.
 
 .. code:: c
 
-   void* be_pushbytes(bvm *vm, const void *buf, size_t len);
+   void* be_pushbytes(bvm_t *vm, const void *buf, size_t len);
 
 Push a ``bytes()`` buffer starting at position ``buf`` and of size
 ``len``. The buffer is copied into Berry allocated memory, you don’t
@@ -1427,7 +1444,7 @@ need to keep the buffer valid after this call.
 
 .. code:: c
 
-   bbool be_pushiter(bvm *vm, int index);
+   bbool be_pushiter(bvm_t *vm, int index);
 
 Push an iterator onto the top of the virtual stack.
 
@@ -1438,7 +1455,7 @@ executed. The function prototype is:
 
 .. code:: c
 
-   void be_pusherror(bvm *vm, const char *msg);
+   void be_pusherror(bvm_t *vm, const char *msg);
 
 The parameter ``vm`` is the pointer of the virtual machine instance;
 ``msg`` is the string containing the error information.

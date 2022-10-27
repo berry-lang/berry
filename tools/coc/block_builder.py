@@ -106,7 +106,7 @@ class block_builder:
             index += 1
         
         ostr += self.map_tostring(idxblk, block.name + "_map", True, False) + "\n"
-        ostr += "static const bvalue __vlist_array[] = {\n";
+        ostr += "static const bvalue_t __vlist_array[] = {\n";
         for it in varvec:
             ostr += "    be_const_" + it + ",\n"
         ostr += "};\n\n"

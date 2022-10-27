@@ -25,14 +25,14 @@
         be_return(vm);                                  \
     }
 
-static void list_getindex(bvm *vm, int index)
+static void list_getindex(bvm_t *vm, int index)
 {
     if (!be_getindex(vm, index)) {
         be_raise(vm, "index_error", "list index out of range");
     }
 }
 
-static int m_init(bvm *vm)
+static int m_init(bvm_t *vm)
 {
     int i, argc = be_top(vm);
     if (argc > 1 && be_islist(vm, 2)) {
@@ -50,14 +50,14 @@ static int m_init(bvm *vm)
     be_return_nil(vm);
 }
 
-static void push_element(bvm *vm)
+static void push_element(bvm_t *vm)
 {
     be_toescape(vm, -1, 'x'); /* escape string */
     be_strconcat(vm, -3);
     be_pop(vm, 1);
 }
 
-static int m_tostring(bvm *vm)
+static int m_tostring(bvm_t *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 1);
@@ -82,7 +82,7 @@ static int m_tostring(bvm *vm)
     be_return(vm);
 }
 
-static int m_push(bvm *vm)
+static int m_push(bvm_t *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 2);
@@ -91,7 +91,7 @@ static int m_push(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_pop(bvm *vm)
+static int m_pop(bvm_t *vm)
 {
     int argc = be_top(vm);
     be_getmember(vm, 1, ".p");
@@ -108,7 +108,7 @@ static int m_pop(bvm *vm)
     be_return(vm);
 }
 
-static int m_insert(bvm *vm)
+static int m_insert(bvm_t *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 3);
@@ -118,7 +118,7 @@ static int m_insert(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_remove(bvm *vm)
+static int m_remove(bvm_t *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 2);
@@ -127,10 +127,10 @@ static int m_remove(bvm *vm)
     be_return_nil(vm);
 }
 
-static int item_range(bvm *vm)
+static int item_range(bvm_t *vm)
 {
-    bint lower, upper;
-    bint size = be_data_size(vm, -1); /* get source list size */
+    bint_t lower, upper;
+    bint_t size = be_data_size(vm, -1); /* get source list size */
     /* get index range */
     be_getmember(vm, 2, "__lower__");
     lower = be_toint(vm, -1);
@@ -161,7 +161,7 @@ static int item_range(bvm *vm)
     be_return(vm);
 }
 
-static int item_list(bvm *vm)
+static int item_list(bvm_t *vm)
 {
     int i, srcsize, idxsize;
     be_getmember(vm, 2, ".p"); /* get index list */
@@ -191,7 +191,7 @@ static int item_list(bvm *vm)
     be_return(vm);
 }
 
-static int m_item(bvm *vm)
+static int m_item(bvm_t *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 2);
@@ -213,7 +213,7 @@ static int m_item(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_find(bvm *vm)
+static int m_find(bvm_t *vm)
 {
     bbool found = bfalse;
     int idx;
@@ -242,7 +242,7 @@ static int m_find(bvm *vm)
     }
 }
 
-static int m_setitem(bvm *vm)
+static int m_setitem(bvm_t *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 3);
@@ -254,7 +254,7 @@ static int m_setitem(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_size(bvm *vm)
+static int m_size(bvm_t *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 1);
@@ -262,7 +262,7 @@ static int m_size(bvm *vm)
     be_return(vm);
 }
 
-static int m_resize(bvm *vm)
+static int m_resize(bvm_t *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 2);
@@ -271,7 +271,7 @@ static int m_resize(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_clear(bvm *vm)
+static int m_clear(bvm_t *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 1);
@@ -280,15 +280,15 @@ static int m_clear(bvm *vm)
     be_return_nil(vm);
 }
 
-static int iter_closure(bvm *vm)
+static int iter_closure(bvm_t *vm)
 {
     /* for better performance, we operate the upvalues
      * directly without using by the stack. */
-    bntvclos *func = var_toobj(vm->cf->func);
-    bvalue *uv0 = be_ntvclos_upval(func, 0)->value; /* list value */
-    bvalue *uv1 = be_ntvclos_upval(func, 1)->value; /* iter value */
-    bvalue *next = cast(bvalue*, var_toobj(uv1)) + 1;
-    blist *list = var_toobj(uv0);
+    bntvclos_t *func = var_toobj(vm->cf->func);
+    bvalue_t *uv0 = be_ntvclos_upval(func, 0)->value; /* list value */
+    bvalue_t *uv1 = be_ntvclos_upval(func, 1)->value; /* iter value */
+    bvalue_t *next = cast(bvalue_t*, var_toobj(uv1)) + 1;
+    blist_t *list = var_toobj(uv0);
     if (next >= be_list_end(list)) {
         be_stop_iteration(vm);
     }
@@ -299,7 +299,7 @@ static int iter_closure(bvm *vm)
     be_return(vm);
 }
 
-static int m_iter(bvm *vm)
+static int m_iter(bvm_t *vm)
 {
     be_pushntvclosure(vm, iter_closure, 2);
     be_getmember(vm, 1, ".p");
@@ -310,7 +310,7 @@ static int m_iter(bvm *vm)
     be_return(vm);
 }
 
-static int m_connect(bvm *vm)
+static int m_connect(bvm_t *vm)
 {
     int argc = be_top(vm);
     if (argc >= 2) {
@@ -322,7 +322,7 @@ static int m_connect(bvm *vm)
     be_return(vm); /* return self */
 }
 
-static int m_merge(bvm *vm)
+static int m_merge(bvm_t *vm)
 {
     int argc = be_top(vm);
     if (argc >= 2) {
@@ -339,12 +339,12 @@ static int m_merge(bvm *vm)
     be_return(vm); /* return self */
 }
 
-static void connect(bvm *vm, bvalue *begin, bvalue *end, const char * delimiter, bbool first_element)
+static void connect(bvm_t *vm, bvalue_t *begin, bvalue_t *end, const char * delimiter, bbool first_element)
 {
     size_t l0 = be_strlen(vm, -1), len = l0;
     size_t d = delimiter ? strlen(delimiter) : 0;   /* len of delimiter */
     char *buf, *p;
-    bvalue *it;
+    bvalue_t *it;
     for (it = begin; it < end; ++it) {
         len += str_len(var_tostr(it)) + d;
     }
@@ -360,7 +360,7 @@ static void connect(bvm *vm, bvalue *begin, bvalue *end, const char * delimiter,
             memcpy(p, delimiter, d);
             p += d;
         }
-        bstring *s = var_tostr(it);
+        bstring_t *s = var_tostr(it);
         size_t l = str_len(s);
         memcpy(p, str(s), l);
         p += l;
@@ -370,10 +370,10 @@ static void connect(bvm *vm, bvalue *begin, bvalue *end, const char * delimiter,
     be_pop(vm, 2);
 }
 
-static void list_concat(bvm *vm, blist *list, const char * delimiter)
+static void list_concat(bvm_t *vm, blist_t *list, const char * delimiter)
 {
-    bvalue *it, *begin = be_list_data(list);
-    bvalue *end = be_list_end(list);
+    bvalue_t *it, *begin = be_list_data(list);
+    bvalue_t *end = be_list_end(list);
     be_pushstring(vm, ""); /* push a empty string */
     bbool first_element = btrue;
     for (it = begin; it < end;) {
@@ -400,9 +400,9 @@ static void list_concat(bvm *vm, blist *list, const char * delimiter)
     }
 }
 
-static int m_concat(bvm *vm)
+static int m_concat(bvm_t *vm)
 {
-    bvalue *value;
+    bvalue_t *value;
     int top = be_top(vm);
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 1);
@@ -415,7 +415,7 @@ static int m_concat(bvm *vm)
     be_return(vm);
 }
 
-static int m_reverse(bvm *vm)
+static int m_reverse(bvm_t *vm)
 {
     int top = be_top(vm);
     be_getmember(vm, 1, ".p");
@@ -425,7 +425,7 @@ static int m_reverse(bvm *vm)
     be_return(vm);
 }
 
-static int m_copy(bvm *vm)
+static int m_copy(bvm_t *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 1);
@@ -436,10 +436,10 @@ static int m_copy(bvm *vm)
     be_return(vm);
 }
 
-static int list_equal(bvm *vm, bbool iseq)
+static int list_equal(bvm_t *vm, bbool iseq)
 {
     int i, j, res;
-    bbool (*eqfunc)(bvm*) = iseq ? be_iseq : be_isneq;
+    bbool (*eqfunc)(bvm_t*) = iseq ? be_iseq : be_isneq;
     be_getmember(vm, 1, ".p");
     be_getmember(vm, 2, ".p");
     i = be_data_size(vm, -2);
@@ -462,7 +462,7 @@ static int list_equal(bvm *vm, bbool iseq)
     be_return(vm);
 }
 
-static int m_keys(bvm *vm)
+static int m_keys(bvm_t *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 1);
@@ -475,18 +475,18 @@ static int m_keys(bvm *vm)
     be_return(vm);
 }
 
-static int m_equal(bvm *vm)
+static int m_equal(bvm_t *vm)
 {
     return list_equal(vm, btrue);
 }
 
-static int m_nequal(bvm *vm)
+static int m_nequal(bvm_t *vm)
 {
     return list_equal(vm, bfalse);
 }
 
 #if !BE_USE_PRECOMPILED_OBJECT
-void be_load_listlib(bvm *vm)
+void be_load_listlib(bvm_t *vm)
 {
     static const bnfuncinfo members[] = {
         { ".p", NULL },

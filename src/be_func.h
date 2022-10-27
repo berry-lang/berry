@@ -25,56 +25,56 @@
  *
  */
 #define be_ntvclos_upval(cc, n) \
-    (((bupval**)((size_t)cc + sizeof(bntvclos)))[n])
+    (((bupval_t**)((size_t)cc + sizeof(bntvclos_t)))[n])
 
 /**
- * @fn void be_initupvals(bvm*, bclosure*)
+ * @fn void be_initupvals(bvm_t*, bclosure_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param cl (???)
  */
-void be_initupvals(bvm *vm, bclosure *cl);
+void be_initupvals(bvm_t *vm, bclosure_t *cl);
 
 /**
- * @fn void be_upvals_close(bvm*, bvalue*)
+ * @fn void be_upvals_close(bvm_t*, bvalue_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param level (???)
  */
-void be_upvals_close(bvm *vm, bvalue *level);
+void be_upvals_close(bvm_t *vm, bvalue_t *level);
 
 /**
- * @fn void be_release_upvalues(bvm*, bclosure*)
+ * @fn void be_release_upvalues(bvm_t*, bclosure_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param cl (???)
  */
-void be_release_upvalues(bvm *vm, bclosure *cl);
+void be_release_upvalues(bvm_t *vm, bclosure_t *cl);
 
 /**
- * @fn bproto be_newproto*(bvm*)
+ * @fn bproto_t be_newproto*(bvm_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @return (???)
  */
-bproto* be_newproto(bvm *vm);
+bproto_t* be_newproto(bvm_t *vm);
 
 /**
- * @fn bclosure be_newclosure*(bvm*, int)
+ * @fn bclosure_t be_newclosure*(bvm_t*, int)
  * @brief (???)
  *
  * @param vm (???)
  * @param nupval (???)
  * @return (???)
  */
-bclosure* be_newclosure(bvm *vm, int nupval);
+bclosure_t* be_newclosure(bvm_t *vm, int nupval);
 
 /**
- * @fn bntvclos be_newntvclosure*(bvm*, bntvfunc, int)
+ * @fn bntvclos_t be_newntvclosure*(bvm_t*, bntvfunc, int)
  * @brief (???)
  *
  * @param vm (???)
@@ -82,10 +82,10 @@ bclosure* be_newclosure(bvm *vm, int nupval);
  * @param nupvals (???)
  * @return (???)
  */
-bntvclos* be_newntvclosure(bvm *vm, bntvfunc cf, int nupvals);
+bntvclos_t* be_newntvclosure(bvm_t *vm, bntvfunc cf, int nupvals);
 
 /**
- * @fn bstring be_func_varname*(bproto*, int, int)
+ * @fn bstring_t be_func_varname*(bproto_t*, int, int)
  * @brief (???)
  *
  * @param proto (???)
@@ -93,6 +93,6 @@ bntvclos* be_newntvclosure(bvm *vm, bntvfunc cf, int nupvals);
  * @param pc (???)
  * @return (???)
  */
-bstring* be_func_varname(bproto *proto, int index, int pc);
+bstring_t* be_func_varname(bproto_t *proto, int index, int pc);
 
 #endif

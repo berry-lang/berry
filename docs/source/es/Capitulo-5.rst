@@ -1,7 +1,3 @@
-.. raw:: html
-
-   <!-- Spanish Translation: Emiliano Gonzalez (egonzalez . hiperion @ gmail . com) -->
-
 5. Función
 ==========
 
@@ -407,9 +403,7 @@ momento, el intérprete generará una declaración ``return``
 predeterminada para garantizar que la función regrese ``return``. Hay
 dos formas de escribir oraciones:
 
-.. container:: algorithm
-
-   ::
+.. code::
 
       ´return’
       ´return’ expresión

@@ -13,17 +13,17 @@
 #include <string.h>
 
 #define clousersize(n) \
-    (sizeof(bclosure) + sizeof(bupval*) * ((size_t)(n) - 1))
+    (sizeof(bclosure_t) + sizeof(bupval_t*) * ((size_t)(n) - 1))
 
-static bupval* findupval(bvm *vm, bvalue *level)
+static bupval_t* findupval(bvm_t *vm, bvalue_t *level)
 {
-    bupval *node = vm->upvalist;
+    bupval_t *node = vm->upvalist;
     while (node != NULL && node->value > level) {
         node = node->u.next;
     }
     if (!node || node->value != level) {
         /* not found */
-        node = be_malloc(vm, sizeof(bupval));
+        node = be_malloc(vm, sizeof(bupval_t));
         node->value = level;
         node->refcnt = 0;
         /* insert to list head */
@@ -33,16 +33,16 @@ static bupval* findupval(bvm *vm, bvalue *level)
     return node;
 }
 
-void be_initupvals(bvm *vm, bclosure *cl)
+void be_initupvals(bvm_t *vm, bclosure_t *cl)
 {
     int count = cl->proto->nupvals;
-    bupvaldesc *desc = cl->proto->upvals;
-    bvalue *stack = vm->reg;
-    bupval **uv = cl->upvals;
-    bupval **superuv = cast(bclosure*, var_toobj(vm->cf->func))->upvals;
+    bupvaldesc_t *desc = cl->proto->upvals;
+    bvalue_t *stack = vm->reg;
+    bupval_t **uv = cl->upvals;
+    bupval_t **superuv = cast(bclosure_t*, var_toobj(vm->cf->func))->upvals;
     for (; count--; desc++, uv++) {
         if (desc->instack) {
-            bvalue *ref = stack + desc->idx;
+            bvalue_t *ref = stack + desc->idx;
             *uv = findupval(vm, ref);
         } else {
             *uv = superuv[desc->idx];
@@ -51,15 +51,15 @@ void be_initupvals(bvm *vm, bclosure *cl)
     }
 }
 
-void be_upvals_close(bvm *vm, bvalue *level)
+void be_upvals_close(bvm_t *vm, bvalue_t *level)
 {
-    bupval *node = vm->upvalist, *next;
-    bupval **prev = &vm->upvalist;
+    bupval_t *node = vm->upvalist, *next;
+    bupval_t **prev = &vm->upvalist;
     while (node) {
         next = node->u.next;
         if (node->value >= level) {
             if (!node->refcnt) {
-                be_free(vm, node, sizeof(bupval));
+                be_free(vm, node, sizeof(bupval_t));
             } else {
                 node->u.value = *node->value; /* move value to upvalue slot */
                 node->value = &node->u.value;
@@ -72,27 +72,27 @@ void be_upvals_close(bvm *vm, bvalue *level)
     }
 }
 
-void be_release_upvalues(bvm *vm, bclosure *cl)
+void be_release_upvalues(bvm_t *vm, bclosure_t *cl)
 {
     int i, count = cl->nupvals;
     for (i = 0; i < count; ++i) {
-        bupval *uv = cl->upvals[i];
+        bupval_t *uv = cl->upvals[i];
         if (uv) {
             if (uv->refcnt) {
                 --uv->refcnt;
             }
             /* delete non-referenced closed upvalue */
             if (uv->value == &uv->u.value && !uv->refcnt) {
-                be_free(vm, uv, sizeof(bupval));
+                be_free(vm, uv, sizeof(bupval_t));
             }
         }
     }
 }
 
-bproto* be_newproto(bvm *vm)
+bproto_t* be_newproto(bvm_t *vm)
 {
-    bgcobject *gco = be_gcnew(vm, BE_PROTO, bproto);
-    bproto *p = cast_proto(gco);
+    bgcobject_t *gco = be_gcnew(vm, BE_PROTO, bproto_t);
+    bproto_t *p = cast_proto(gco);
     if (p) {
         p->upvals = NULL;
         p->ktab = NULL;
@@ -121,13 +121,13 @@ bproto* be_newproto(bvm *vm)
     return p;
 }
 
-bclosure* be_newclosure(bvm *vm, int nupval)
+bclosure_t* be_newclosure(bvm_t *vm, int nupval)
 {
-    bgcobject *gco = be_newgcobj(vm, BE_CLOSURE, clousersize(nupval));
-    bclosure *cl = cast_closure(gco);
+    bgcobject_t *gco = be_newgcobj(vm, BE_CLOSURE, clousersize(nupval));
+    bclosure_t *cl = cast_closure(gco);
     if (cl) {
         cl->proto = NULL;
-        cl->nupvals = (bbyte)nupval;
+        cl->nupvals = (bbyte_t)nupval;
         while (nupval--) {
             cl->upvals[nupval] = NULL;
         }
@@ -135,12 +135,12 @@ bclosure* be_newclosure(bvm *vm, int nupval)
     return cl;
 }
 
-static void init_upvals(bvm *vm, bntvclos *f)
+static void init_upvals(bvm_t *vm, bntvclos_t *f)
 {
     int count = f->nupvals;
-    bupval **upvals = &be_ntvclos_upval(f, 0);
+    bupval_t **upvals = &be_ntvclos_upval(f, 0);
     while (count--) {
-        bupval *uv = be_malloc(vm, sizeof(bupval)); /* was closed */
+        bupval_t *uv = be_malloc(vm, sizeof(bupval_t)); /* was closed */
         uv->value = &uv->u.value;
         uv->refcnt = 1;
         var_setnil(uv->value);
@@ -148,14 +148,14 @@ static void init_upvals(bvm *vm, bntvclos *f)
     }
 }
 
-bntvclos* be_newntvclosure(bvm *vm, bntvfunc cf, int nupvals)
+bntvclos_t* be_newntvclosure(bvm_t *vm, bntvfunc cf, int nupvals)
 {
-    size_t size = sizeof(bntvclos) + sizeof(bupval*) * nupvals;
-    bgcobject *gco = be_newgcobj(vm, BE_NTVCLOS, size);
-    bntvclos *f = cast_ntvclos(gco);
+    size_t size = sizeof(bntvclos_t) + sizeof(bupval_t*) * nupvals;
+    bgcobject_t *gco = be_newgcobj(vm, BE_NTVCLOS, size);
+    bntvclos_t *f = cast_ntvclos(gco);
     if (f) {
         f->f = cf;
-        f->nupvals = (bbyte)nupvals;
+        f->nupvals = (bbyte_t)nupvals;
         if (nupvals) {
             var_setntvclos(vm->top, f);
             be_incrtop(vm);
@@ -167,10 +167,10 @@ bntvclos* be_newntvclosure(bvm *vm, bntvfunc cf, int nupvals)
 }
 
 #if BE_DEBUG_VAR_INFO
-bstring* be_func_varname(bproto *proto, int index, int pc)
+bstring_t* be_func_varname(bproto_t *proto, int index, int pc)
 {
     int i, nvarinfo = proto->nvarinfo;
-    bvarinfo *varinfo = proto->varinfo;
+    bvarinfo_t *varinfo = proto->varinfo;
     for (i = 0; i < nvarinfo && varinfo[i].beginpc <= pc; ++i) {
         if (pc <= varinfo[i].endpc && index-- == 0) {
             return varinfo[i].name;

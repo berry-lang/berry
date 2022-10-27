@@ -20,62 +20,62 @@
  */
 typedef struct bmodule {
     bcommon_header;                                             /**< bcommon_header */
-    bmap *table;                                                /**< table */
+    bmap_t *table;                                              /**< table */
     union infodata {                                            /**< infodata */
         const bntvmodule_t *native;                             /**< native */
         const char *name;                                       /**< name */
-        const bstring *sname;                                   /**< sname */
+        const bstring_t *sname;                                 /**< sname */
 #ifdef __cplusplus
         BE_CONSTEXPR infodata(const char *name) : name(name) {} /**< infodata */
 #endif
     } info;                                                     /**< info */
-    bgcobject *gray;                                            /**< for gc gray list */
+    bgcobject_t *gray;                                          /**< for gc gray list */
 #ifdef __cplusplus
-    BE_CONSTEXPR bmodule(bmap *tab, const char *name) :
+    BE_CONSTEXPR bmodule_t(bmap_t *tab, const char *name) :
         next(0), type(BE_MODULE), marked(GC_CONST),
-        table(tab), info(infodata(name)), gray(0) {}            /**< bmodule */
+        table(tab), info(infodata(name)), gray(0) {}            /**< bmodule_t */
 #endif
-} bmodule;                                                      /**< bmodule */
+} bmodule_t;                                                    /**< bmodule_t */
 
 /**
- * @fn bmodule be_module_new*(bvm*)
+ * @fn bmodule_t be_module_new*(bvm_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @return (???)
  */
-bmodule* be_module_new(bvm *vm);
+bmodule_t* be_module_new(bvm_t *vm);
 
 /**
- * @fn void be_module_delete(bvm*, bmodule*)
+ * @fn void be_module_delete(bvm_t*, bmodule_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param module (???)
  */
-void be_module_delete(bvm *vm, bmodule *module);
+void be_module_delete(bvm_t *vm, bmodule_t *module);
 
 /**
- * @fn int be_module_load(bvm*, bstring*)
+ * @fn int be_module_load(bvm_t*, bstring_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param path (???)
  * @return (???)
  */
-int be_module_load(bvm *vm, bstring *path);
+int be_module_load(bvm_t *vm, bstring_t *path);
 
 /**
- * @fn void be_cache_module(bvm*, bstring*)
+ * @fn void be_cache_module(bvm_t*, bstring_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param name (???)
  */
-void be_cache_module(bvm *vm, bstring *name);
+void be_cache_module(bvm_t *vm, bstring_t *name);
 
 /**
- * @fn int be_module_attr(bvm*, bmodule*, bstring*, bvalue*)
+ * @fn int be_module_attr(bvm_t*, bmodule_t*, bstring_t*, bvalue_t*)
  * @brief (???)
  *
  * @param vm (???)
@@ -84,10 +84,10 @@ void be_cache_module(bvm *vm, bstring *name);
  * @param dst (???)
  * @return (???)
  */
-int be_module_attr(bvm *vm, bmodule *module, bstring *attr, bvalue *dst);
+int be_module_attr(bvm_t *vm, bmodule_t *module, bstring_t *attr, bvalue_t *dst);
 
 /**
- * @fn bool be_module_setmember(bvm*, bmodule*, bstring*, bvalue*)
+ * @fn bool be_module_setmember(bvm_t*, bmodule_t*, bstring_t*, bvalue_t*)
  * @brief (???)
  *
  * @param vm (???)
@@ -96,25 +96,25 @@ int be_module_attr(bvm *vm, bmodule *module, bstring *attr, bvalue *dst);
  * @param src (???)
  * @return (???)
  */
-bbool be_module_setmember(bvm *vm, bmodule *module, bstring *attr, bvalue *src);
+bbool be_module_setmember(bvm_t *vm, bmodule_t *module, bstring_t *attr, bvalue_t *src);
 
 /**
- * @fn const char be_module_name*(bmodule*)
+ * @fn const char be_module_name*(bmodule_t*)
  * @brief (???)
  *
  * @param module (???)
  * @return (???)
  */
-const char* be_module_name(bmodule *module);
+const char* be_module_name(bmodule_t *module);
 
 /**
- * @fn bool be_module_setname(bmodule*, bstring*)
+ * @fn bool be_module_setname(bmodule_t*, bstring_t*)
  * @brief (???)
  *
  * @param module (???)
  * @param name (???)
  * @return (???)
  */
-bbool be_module_setname(bmodule *module, bstring *name);
+bbool be_module_setname(bmodule_t *module, bstring_t *name);
 
 #endif

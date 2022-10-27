@@ -20,7 +20,7 @@
   #error the dependent macro BE_USE_FILE_SYSTEM must be enabled
 #endif
 
-static int m_getcwd(bvm *vm)
+static int m_getcwd(bvm_t *vm)
 {
     char *buf = be_malloc(vm, FNAME_BUF_SIZE);
     if (be_getcwd(buf, FNAME_BUF_SIZE)) {
@@ -32,7 +32,7 @@ static int m_getcwd(bvm *vm)
     be_return(vm);
 }
 
-static int m_chdir(bvm *vm)
+static int m_chdir(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isstring(vm, 1)) {
         int res = be_chdir(be_tostring(vm, 1));
@@ -41,7 +41,7 @@ static int m_chdir(bvm *vm)
     be_return(vm);
 }
 
-static int m_mkdir(bvm *vm)
+static int m_mkdir(bvm_t *vm)
 {
     int res = 1;
     if (be_top(vm) >= 1 && be_isstring(vm, 1)) {
@@ -51,7 +51,7 @@ static int m_mkdir(bvm *vm)
     be_return(vm);
 }
 
-static int m_remove(bvm *vm)
+static int m_remove(bvm_t *vm)
 {
     int res = 1;
     if (be_top(vm) >= 1 && be_isstring(vm, 1)) {
@@ -61,10 +61,10 @@ static int m_remove(bvm *vm)
     be_return(vm);
 }
 
-static int m_listdir(bvm *vm)
+static int m_listdir(bvm_t *vm)
 {
     int res;
-    bdirinfo info;
+    bdirinfo_t info;
     if (be_top(vm) >= 1 && be_isstring(vm, 1)) {
         res = be_dirfirst(&info, be_tostring(vm, 1));
     } else {
@@ -85,7 +85,7 @@ static int m_listdir(bvm *vm)
     be_return(vm);
 }
 
-static int m_system(bvm *vm)
+static int m_system(bvm_t *vm)
 {
     int res = -1, i, argc = be_top(vm);
     if (argc > 0) {
@@ -105,7 +105,7 @@ static int m_system(bvm *vm)
     be_return(vm);
 }
 
-static int m_exit(bvm *vm)
+static int m_exit(bvm_t *vm)
 {
     int status = 0;
     if (be_top(vm)) {
@@ -121,7 +121,7 @@ static int m_exit(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_path_isdir(bvm *vm)
+static int m_path_isdir(bvm_t *vm)
 {
     const char *path = NULL;
     if (be_top(vm) >= 1 && be_isstring(vm, 1)) {
@@ -131,7 +131,7 @@ static int m_path_isdir(bvm *vm)
     be_return(vm);
 }
 
-static int m_path_isfile(bvm *vm)
+static int m_path_isfile(bvm_t *vm)
 {
     const char *path = NULL;
     if (be_top(vm) >= 1 && be_isstring(vm, 1)) {
@@ -141,7 +141,7 @@ static int m_path_isfile(bvm *vm)
     be_return(vm);
 }
 
-static int m_path_split(bvm *vm)
+static int m_path_split(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isstring(vm, 1)) {
         const char *path = be_tostring(vm, 1);
@@ -163,7 +163,7 @@ static int m_path_split(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_path_splitext(bvm *vm)
+static int m_path_splitext(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isstring(vm, 1)) {
         const char *path = be_tostring(vm, 1);
@@ -177,7 +177,7 @@ static int m_path_splitext(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_path_exists(bvm *vm)
+static int m_path_exists(bvm_t *vm)
 {
     const char *path = NULL;
     if (be_top(vm) >= 1 && be_isstring(vm, 1)) {
@@ -187,7 +187,7 @@ static int m_path_exists(bvm *vm)
     be_return(vm);
 }
 
-static int m_path_join(bvm *vm)
+static int m_path_join(bvm_t *vm)
 {
     char *buf, *p;
     int i, len = 0, argc = be_top(vm);

@@ -11,30 +11,30 @@
 
 #include "be_parser.h"
 
-#define be_code_freeregs(f, n)      ((f)->freereg -= (bbyte)(n)) /**< be_code_freeregs */
+#define be_code_freeregs(f, n)      ((f)->freereg -= (bbyte_t)(n)) /**< be_code_freeregs */
 
 /**
- * @fn int be_code_allocregs(bfuncinfo*, int)
+ * @fn int be_code_allocregs(bfuncinfo_t*, int)
  * @brief (???)
  *
  * @param finfo (???)
  * @param count (???)
  * @return (???)
  */
-int be_code_allocregs(bfuncinfo *finfo, int count);
+int be_code_allocregs(bfuncinfo_t *finfo, int count);
 
 /**
- * @fn void be_code_prebinop(bfuncinfo*, int, bexpdesc*)
+ * @fn void be_code_prebinop(bfuncinfo_t*, int, bexpdesc_t*)
  * @brief (???)
  *
  * @param finfo (???)
  * @param op (???)
  * @param e (???)
  */
-void be_code_prebinop(bfuncinfo *finfo, int op, bexpdesc *e);
+void be_code_prebinop(bfuncinfo_t *finfo, int op, bexpdesc_t *e);
 
 /**
- * @fn void be_code_binop(bfuncinfo*, int, bexpdesc*, bexpdesc*, int)
+ * @fn void be_code_binop(bfuncinfo_t*, int, bexpdesc_t*, bexpdesc_t*, int)
  * @brief (???)
  *
  * @param finfo (???)
@@ -43,10 +43,10 @@ void be_code_prebinop(bfuncinfo *finfo, int op, bexpdesc *e);
  * @param e2 (???)
  * @param dst (???)
  */
-void be_code_binop(bfuncinfo *finfo, int op, bexpdesc *e1, bexpdesc *e2, int dst);
+void be_code_binop(bfuncinfo_t *finfo, int op, bexpdesc_t *e1, bexpdesc_t *e2, int dst);
 
 /**
- * @fn int be_code_unop(bfuncinfo*, int, bexpdesc*)
+ * @fn int be_code_unop(bfuncinfo_t*, int, bexpdesc_t*)
  * @brief (???)
  *
  * @param finfo (???)
@@ -54,10 +54,10 @@ void be_code_binop(bfuncinfo *finfo, int op, bexpdesc *e1, bexpdesc *e2, int dst
  * @param e (???)
  * @return (???)
  */
-int be_code_unop(bfuncinfo *finfo, int op, bexpdesc *e);
+int be_code_unop(bfuncinfo_t *finfo, int op, bexpdesc_t *e);
 
 /**
- * @fn int be_code_setvar(bfuncinfo*, bexpdesc*, bexpdesc*)
+ * @fn int be_code_setvar(bfuncinfo_t*, bexpdesc_t*, bexpdesc_t*)
  * @brief (???)
  *
  * @param finfo (???)
@@ -65,114 +65,114 @@ int be_code_unop(bfuncinfo *finfo, int op, bexpdesc *e);
  * @param e2 (???)
  * @return (???)
  */
-int be_code_setvar(bfuncinfo *finfo, bexpdesc *e1, bexpdesc *e2);
+int be_code_setvar(bfuncinfo_t *finfo, bexpdesc_t *e1, bexpdesc_t *e2);
 
 /**
- * @fn int be_code_nextreg(bfuncinfo*, bexpdesc*)
+ * @fn int be_code_nextreg(bfuncinfo_t*, bexpdesc_t*)
  * @brief (???)
  *
  * @param finfo (???)
  * @param e (???)
  * @return (???)
  */
-int be_code_nextreg(bfuncinfo *finfo, bexpdesc *e);
+int be_code_nextreg(bfuncinfo_t *finfo, bexpdesc_t *e);
 
 /**
- * @fn int be_code_jump(bfuncinfo*)
+ * @fn int be_code_jump(bfuncinfo_t*)
  * @brief (???)
  *
  * @param finfo (???)
  * @return (???)
  */
-int be_code_jump(bfuncinfo *finfo);
+int be_code_jump(bfuncinfo_t *finfo);
 
 /**
- * @fn void be_code_jumpto(bfuncinfo*, int)
+ * @fn void be_code_jumpto(bfuncinfo_t*, int)
  * @brief (???)
  *
  * @param finfo (???)
  * @param dst (???)
  */
-void be_code_jumpto(bfuncinfo *finfo, int dst);
+void be_code_jumpto(bfuncinfo_t *finfo, int dst);
 
 /**
- * @fn void be_code_jumpbool(bfuncinfo*, bexpdesc*, int)
+ * @fn void be_code_jumpbool(bfuncinfo_t*, bexpdesc_t*, int)
  * @brief (???)
  *
  * @param finfo (???)
  * @param e (???)
  * @param jumptrue (???)
  */
-void be_code_jumpbool(bfuncinfo *finfo, bexpdesc *e, int jumptrue);
+void be_code_jumpbool(bfuncinfo_t *finfo, bexpdesc_t *e, int jumptrue);
 
 /**
- * @fn void be_code_conjump(bfuncinfo*, int*, int)
+ * @fn void be_code_conjump(bfuncinfo_t*, int*, int)
  * @brief (???)
  *
  * @param finfo (???)
  * @param list (???)
  * @param jmp (???)
  */
-void be_code_conjump(bfuncinfo *finfo, int *list, int jmp);
+void be_code_conjump(bfuncinfo_t *finfo, int *list, int jmp);
 
 /**
- * @fn void be_code_patchlist(bfuncinfo*, int, int)
+ * @fn void be_code_patchlist(bfuncinfo_t*, int, int)
  * @brief (???)
  *
  * @param finfo (???)
  * @param list (???)
  * @param dst (???)
  */
-void be_code_patchlist(bfuncinfo *finfo, int list, int dst);
+void be_code_patchlist(bfuncinfo_t *finfo, int list, int dst);
 
 /**
- * @fn void be_code_patchjump(bfuncinfo*, int)
+ * @fn void be_code_patchjump(bfuncinfo_t*, int)
  * @brief (???)
  *
  * @param finfo (???)
  * @param jmp (???)
  */
-void be_code_patchjump(bfuncinfo *finfo, int jmp);
+void be_code_patchjump(bfuncinfo_t *finfo, int jmp);
 
 /**
- * @fn int be_code_getmethod(bfuncinfo*, bexpdesc*)
+ * @fn int be_code_getmethod(bfuncinfo_t*, bexpdesc_t*)
  * @brief (???)
  *
  * @param finfo (???)
  * @param e (???)
  * @return (???)
  */
-int be_code_getmethod(bfuncinfo *finfo, bexpdesc *e);
+int be_code_getmethod(bfuncinfo_t *finfo, bexpdesc_t *e);
 
 /**
- * @fn void be_code_call(bfuncinfo*, int, int)
+ * @fn void be_code_call(bfuncinfo_t*, int, int)
  * @brief (???)
  *
  * @param finfo (???)
  * @param base (???)
  * @param argc (???)
  */
-void be_code_call(bfuncinfo *finfo, int base, int argc);
+void be_code_call(bfuncinfo_t *finfo, int base, int argc);
 
 /**
- * @fn int be_code_proto(bfuncinfo*, bproto*)
+ * @fn int be_code_proto(bfuncinfo_t*, bproto_t*)
  * @brief (???)
  *
  * @param finfo (???)
  * @param proto (???)
  * @return (???)
  */
-int be_code_proto(bfuncinfo *finfo, bproto *proto);
+int be_code_proto(bfuncinfo_t *finfo, bproto_t *proto);
 
 /**
- * @fn void be_code_closure(bfuncinfo*, bexpdesc*, int)
+ * @fn void be_code_closure(bfuncinfo_t*, bexpdesc_t*, int)
  * @brief (???)
  *
  * @param finfo (???)
  * @param e (???)
  * @param idx (???)
  */
-void be_code_closure(bfuncinfo *finfo, bexpdesc *e, int idx);
+void be_code_closure(bfuncinfo_t *finfo, bexpdesc_t *e, int idx);
 
 /**
  * @fn void be_code_close(bfuncinfo*, int)
@@ -181,89 +181,89 @@ void be_code_closure(bfuncinfo *finfo, bexpdesc *e, int idx);
  * @param finfo (???)
  * @param isret (???)
  */
-void be_code_close(bfuncinfo *finfo, int isret);
+void be_code_close(bfuncinfo_t *finfo, int isret);
 
 /**
- * @fn void be_code_class(bfuncinfo*, bexpdesc*, bclass*)
+ * @fn void be_code_class(bfuncinfo_t*, bexpdesc_t*, bclass_t*)
  * @brief (???)
  *
  * @param finfo (???)
  * @param dst (???)
  * @param c (???)
  */
-void be_code_class(bfuncinfo *finfo, bexpdesc *dst, bclass *c);
+void be_code_class(bfuncinfo_t *finfo, bexpdesc_t *dst, bclass_t *c);
 
 /**
- * @fn void be_code_ret(bfuncinfo*, bexpdesc*)
+ * @fn void be_code_ret(bfuncinfo_t*, bexpdesc_t*)
  * @brief (???)
  *
  * @param finfo (???)
  * @param e (???)
  */
-void be_code_ret(bfuncinfo *finfo, bexpdesc *e);
+void be_code_ret(bfuncinfo_t *finfo, bexpdesc_t *e);
 
 /**
- * @fn int be_code_nglobal(bfuncinfo*, bexpdesc*)
+ * @fn int be_code_nglobal(bfuncinfo_t*, bexpdesc_t*)
  * @brief (???)
  *
  * @param finfo (???)
  * @param k (???)
  * @return (???)
  */
-int be_code_nglobal(bfuncinfo *finfo, bexpdesc *k);
+int be_code_nglobal(bfuncinfo_t *finfo, bexpdesc_t *k);
 
 /**
- * @fn void be_code_member(bfuncinfo*, bexpdesc*, bexpdesc*)
+ * @fn void be_code_member(bfuncinfo_t*, bexpdesc_t*, bexpdesc_t*)
  * @brief (???)
  *
  * @param finfo (???)
  * @param e1 (???)
  * @param e2 (???)
  */
-void be_code_member(bfuncinfo *finfo, bexpdesc *e1, bexpdesc *e2);
+void be_code_member(bfuncinfo_t *finfo, bexpdesc_t *e1, bexpdesc_t *e2);
 
 /**
- * @fn void be_code_index(bfuncinfo*, bexpdesc*, bexpdesc*)
+ * @fn void be_code_index(bfuncinfo_t*, bexpdesc_t*, bexpdesc_t*)
  * @brief (???)
  *
  * @param finfo (???)
  * @param c (???)
  * @param k (???)
  */
-void be_code_index(bfuncinfo *finfo, bexpdesc *c, bexpdesc *k);
+void be_code_index(bfuncinfo_t *finfo, bexpdesc_t *c, bexpdesc_t *k);
 
 /**
- * @fn void be_code_setsuper(bfuncinfo*, bexpdesc*, bexpdesc*)
+ * @fn void be_code_setsuper(bfuncinfo_t*, bexpdesc_t*, bexpdesc_t*)
  * @brief (???)
  *
  * @param finfo (???)
  * @param c (???)
  * @param s (???)
  */
-void be_code_setsuper(bfuncinfo *finfo, bexpdesc *c, bexpdesc *s);
+void be_code_setsuper(bfuncinfo_t *finfo, bexpdesc_t *c, bexpdesc_t *s);
 
 /**
- * @fn void be_code_import(bfuncinfo*, bexpdesc*, bexpdesc*)
+ * @fn void be_code_import(bfuncinfo_t*, bexpdesc_t*, bexpdesc_t*)
  * @brief (???)
  *
  * @param finfo (???)
  * @param m (???)
  * @param v (???)
  */
-void be_code_import(bfuncinfo *finfo, bexpdesc *m, bexpdesc *v);
+void be_code_import(bfuncinfo_t *finfo, bexpdesc_t *m, bexpdesc_t *v);
 
 /**
- * @fn int be_code_exblk(bfuncinfo*, int)
+ * @fn int be_code_exblk(bfuncinfo_t*, int)
  * @brief (???)
  *
  * @param finfo (???)
  * @param depth (???)
  * @return (???)
  */
-int be_code_exblk(bfuncinfo *finfo, int depth);
+int be_code_exblk(bfuncinfo_t *finfo, int depth);
 
 /**
- * @fn void be_code_catch(bfuncinfo*, int, int, int, int*)
+ * @fn void be_code_catch(bfuncinfo_t*, int, int, int, int*)
  * @brief (???)
  *
  * @param finfo (???)
@@ -272,16 +272,16 @@ int be_code_exblk(bfuncinfo *finfo, int depth);
  * @param vcnt (???)
  * @param jmp (???)
  */
-void be_code_catch(bfuncinfo *finfo, int base, int ecnt, int vcnt, int *jmp);
+void be_code_catch(bfuncinfo_t *finfo, int base, int ecnt, int vcnt, int *jmp);
 
 /**
- * @fn void be_code_raise(bfuncinfo*, bexpdesc*, bexpdesc*)
+ * @fn void be_code_raise(bfuncinfo_t*, bexpdesc_t*, bexpdesc_t*)
  * @brief (???)
  *
  * @param finfo (???)
  * @param e1 (???)
  * @param e2 (???)
  */
-void be_code_raise(bfuncinfo *finfo, bexpdesc *e1, bexpdesc *e2);
+void be_code_raise(bfuncinfo_t *finfo, bexpdesc_t *e1, bexpdesc_t *e2);
 
 #endif

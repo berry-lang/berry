@@ -39,7 +39,7 @@ extern "C" {
  *
  */
 #define be_define_const_str_weak(_name, _s, _len)               \
-    const bcstring be_const_str_##_name = {                     \
+    const bcstring_t be_const_str_##_name = {                   \
         .next = NULL,                                           \
         .type = BE_STRING,                                      \
         .marked = GC_CONST,                                     \
@@ -80,7 +80,7 @@ extern "C" {
  *
  */
 #define be_const_key_literal(_str, _next) {                     \
-    .v.c = be_str_literal(#_str),                                \
+    .v.c = be_str_literal(#_str),                               \
     .type = BE_STRING,                                          \
     .next = (uint32_t)(_next) & 0xFFFFFF                        \
 }
@@ -132,7 +132,7 @@ extern "C" {
  *
  */
 #define be_const_int(_val) {                                    \
-    .v.i = (bint)(_val),                                        \
+    .v.i = (bint_t)(_val),                                      \
     .type = BE_INT                                              \
 }
 
@@ -141,8 +141,8 @@ extern "C" {
  * @brief be_const_var
  *
  */
-#define be_const_var(_val) {                                  \
-    .v.i = (bint)(_val),                                        \
+#define be_const_var(_val) {                                    \
+    .v.i = (bint_t)(_val),                                      \
     .type = BE_INDEX                                            \
 }
 
@@ -152,7 +152,7 @@ extern "C" {
  *
  */
 #define be_const_real(_val) {                                   \
-    .v.r = (breal)(_val),                                       \
+    .v.r = (breal_t)(_val),                                     \
     .type = BE_REAL                                             \
 }
 
@@ -182,7 +182,7 @@ extern "C" {
  *
  */
 #define be_const_str(_str) {                                    \
-    .v.s = (bstring*)(_str),                                    \
+    .v.s = (bstring_t*)(_str),                                  \
     .type = BE_STRING                                           \
 }
 
@@ -272,7 +272,7 @@ extern "C" {
  *
  */
 #define be_define_const_map_slots(_name)                        \
-const bmapnode _name##_slots[] =
+const bmapnode_t _name##_slots[] =
 
 /**
  * @def be_define_const_map
@@ -280,9 +280,9 @@ const bmapnode _name##_slots[] =
  *
  */
 #define be_define_const_map(_name, _size)                       \
-const bmap _name = {                                            \
+const bmap_t _name = {                                          \
     be_const_header(BE_MAP),                                    \
-    .slots = (bmapnode*)_name##_slots,                          \
+    .slots = (bmapnode_t*)_name##_slots,                        \
     .lastfree = NULL,                                           \
     .size = _size,                                              \
     .count = _size                                              \
@@ -294,12 +294,12 @@ const bmap _name = {                                            \
  *
  */
 #define be_define_const_class(_name, _nvar, _super, _name_)     \
-const bclass _name = {                                          \
+const bclass_t _name = {                                        \
     be_const_header(BE_CLASS),                                  \
     .nvar = _nvar,                                              \
     .super = _super,                                            \
-    .members = (bmap*)&_name##_map,                             \
-    .name = (bstring*)&be_const_str_##_name_                    \
+    .members = (bmap_t*)&_name##_map,                           \
+    .name = (bstring_t*)&be_const_str_##_name_                  \
 }
 
 /**
@@ -313,7 +313,7 @@ const bclass _name = {                                          \
     .nvar = 0,                                                  \
     .super = (bclass*)_super,                                   \
     .members = NULL,                                            \
-    .name = (bstring*)&be_const_str_##_name_                    \
+    .name = (bstring_t*)&be_const_str_##_name_                  \
 }
 
 /**
@@ -322,9 +322,9 @@ const bclass _name = {                                          \
  *
  */
 #define be_define_const_module(_name, _name_)                   \
-const bmodule _name = {                                         \
+const bmodule_t _name = {                                       \
     be_const_header(BE_MODULE),                                 \
-    .table = (bmap*)&_name##_map,                               \
+    .table = (bmap_t*)&_name##_map,                             \
     .info.name = _name_,                                        \
 }
 
@@ -334,9 +334,9 @@ const bmodule _name = {                                         \
  *
  */
 #define be_define_const_vector(_name, _data, _size)             \
-const bvector _name = {                                         \
+const bvector_t _name = {                                       \
     .capacity = _size,                                          \
-    .size = sizeof(bvalue),                                     \
+    .size = sizeof(bvalue_t),                                   \
     .count = _size,                                             \
     .data = (void*)_data,                                       \
     .end = (void*)(_data + (_size) - 1)                         \
@@ -348,11 +348,11 @@ const bvector _name = {                                         \
  *
  */
 #define be_define_const_native_module(_module)                  \
-const bntvmodule_t be_native_module(_module) = {                  \
+const bntvmodule_t be_native_module(_module) = {                \
     .name = #_module,                                           \
     .attrs = NULL,                                              \
     .size = 0,                                                  \
-    .module = (bmodule*)&(m_lib##_module)                       \
+    .module = (bmodule_t*)&(m_lib##_module)                     \
 }
 
 /**
@@ -375,7 +375,7 @@ const bntvmodule_t be_native_module(_module) = {                  \
  *
  */
 #define be_local_module(_c_name, _module_name, _map)            \
-  static const bmodule m_lib##_c_name = {                       \
+  static const bmodule_t m_lib##_c_name = {                     \
     be_const_header(BE_MODULE),                                 \
     .table = (bmap*)_map,                                       \
     .info.name = _module_name                                   \
@@ -432,7 +432,7 @@ const bntvmodule_t be_native_module(_module) = {                  \
  */
 #define be_nested_str(_name_)                                   \
   {                                                             \
-    { .s=((bstring*)&be_const_str_##_name_) },                  \
+    { .s=((bstring_t*)&be_const_str_##_name_) },                \
     BE_STRING                                                   \
   }
 
@@ -443,7 +443,7 @@ const bntvmodule_t be_native_module(_module) = {                  \
  */
 #define be_nested_str_weak(_name_)                              \
   {                                                             \
-    { .s=((bstring*)&be_const_str_##_name_) },                  \
+    { .s=((bstring_t*)&be_const_str_##_name_) },                \
     BE_STRING                                                   \
   }
 
@@ -473,7 +473,7 @@ const bntvmodule_t be_native_module(_module) = {                  \
  *
  */
 #define be_str_weak(_str)                                       \
-  (bstring*) &be_const_str_##_str
+  (bstring_t*) &be_const_str_##_str
 
 /**
  * @def be_nested_string
@@ -507,7 +507,7 @@ const bntvmodule_t be_native_module(_module) = {                  \
  *
  */
 #define be_define_const_str_weak(_name, _s, _len)               \
-const bcstring be_const_str_##_name = {                         \
+const bcstring_t be_const_str_##_name = {                       \
     NULL,                                                       \
     BE_STRING,                                                  \
     GC_CONST,                                                   \
@@ -608,7 +608,7 @@ const bcstring be_const_str_##_name = {                         \
  * @brief be_const_var
  *
  */
-#define be_const_var(_val) {                                  \
+#define be_const_var(_val) {                                    \
     bvaldata(bint(_val)),                                       \
     BE_INDEX                                                    \
 }
@@ -649,7 +649,7 @@ const bcstring be_const_str_##_name = {                         \
  *
  */
 #define be_const_str(_string) {                                 \
-    bvaldata(bstring(_string)),                                 \
+    bvaldata(bstring_t(_string)),                               \
     BE_STRING                                                   \
 }
 
@@ -699,7 +699,7 @@ const bcstring be_const_str_##_name = {                         \
  *
  */
 #define be_define_const_map_slots(_name)                        \
-const bmapnode _name##_slots[] =
+const bmapnode_t _name##_slots[] =
 
 /**
  * @def be_define_const_map
@@ -708,7 +708,7 @@ const bmapnode _name##_slots[] =
  */
 #define be_define_const_map(_name, _size)                       \
 const bmap _name(                                               \
-    (bmapnode*)_name##_slots, _size                             \
+    (bmapnode_t*)_name##_slots, _size                           \
 )
 
 /**
@@ -717,9 +717,9 @@ const bmap _name(                                               \
  *
  */
 #define be_define_const_class(_name, _nvar, _super, _name_)     \
-const bclass _name(                                             \
-    _nvar, (bclass*)_super, (bmap*)&_name##_map,                         \
-    (bstring*)&be_const_str_##_name_                            \
+const bclass_t _name(                                           \
+    _nvar, (bclass_t*)_super, (bmap_t*)&_name##_map,            \
+    (bstring_t*)&be_const_str_##_name_                          \
 )
 
 /**
@@ -728,9 +728,9 @@ const bclass _name(                                             \
  *
  */
 #define be_define_const_empty_class(_name, _super, _name_)      \
-const bclass _name(                                             \
-    0, (bclass*)_super, NULL,                                            \
-    (bstring*)&be_const_str_##_name_                            \
+const bclass_t _name(                                           \
+    0, (bclass_t*)_super, NULL,                                 \
+    (bstring_t*)&be_const_str_##_name_                          \
 )
 
 /**
@@ -739,7 +739,7 @@ const bclass _name(                                             \
  *
  */
 #define be_define_const_module(_name, _name_)                   \
-const bmodule _name((bmap*)&_name##_map, _name_)
+const bmodule_t _name((bmap_t*)&_name##_map, _name_)
 
 /**
  * @def be_define_const_vector
@@ -748,7 +748,7 @@ const bmodule _name((bmap*)&_name##_map, _name_)
  */
 #define be_define_const_vector(_name, _data, _size)             \
 const bvector _name = {                                         \
-    _size, sizeof(bvalue), _size,                               \
+    _size, sizeof(bvalue_t), _size,                             \
     (void*)_data, (void*)(_data + (_size) - 1)                  \
 }
 
@@ -758,17 +758,17 @@ const bvector _name = {                                         \
  *
  */
 #define be_define_const_native_module(_module)                  \
-const bntvmodule be_native_module_##_module = {                 \
+const bntvmodule_t be_native_module_##_module = {               \
     #_module,                                                   \
     0, 0,                                                       \
-    (bmodule*)&(m_lib##_module)                                 \
+    (bmodule_t*)&(m_lib##_module)                               \
 }
 
 #endif
 
 /* provide pointers to map and list classes for solidified code */
-extern const bclass be_class_list; /**< be_class_list */
-extern const bclass be_class_map;  /**< be_class_map */
+extern const bclass_t be_class_list; /**< be_class_list */
+extern const bclass_t be_class_map;  /**< be_class_map */
 
 #ifdef __cplusplus
 }

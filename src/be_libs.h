@@ -12,11 +12,11 @@
 #include "berry.h"
 
 /**
- * @fn void be_loadlibs(bvm*)
+ * @fn void be_loadlibs(bvm_t*)
  * @brief (???)
  *
  * @param vm (???)
  */
-void be_loadlibs(bvm *vm);
+void be_loadlibs(bvm_t *vm);
 
 #endif

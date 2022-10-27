@@ -11,17 +11,17 @@
 
 #include "be_object.h"
 
-#define gc_object(o)        cast(bgcobject*, o)                        /**< gc_object */
+#define gc_object(o)        cast(bgcobject_t*, o)                      /**< gc_object */
 #define gc_cast(o, t, T)    ((o) && (o)->type == (t) ? (T*)(o) : NULL) /**< gc_cast */
-#define cast_proto(o)       gc_cast(o, BE_PROTO, bproto)               /**< cast_proto */
-#define cast_closure(o)     gc_cast(o, BE_CLOSURE, bclosure)           /**< cast_closure */
-#define cast_ntvclos(o)     gc_cast(o, BE_NTVCLOS, bntvclos)           /**< cast_ntvclos */
-#define cast_str(o)         gc_cast(o, BE_STRING, bstring)             /**< cast_str */
-#define cast_class(o)       gc_cast(o, BE_CLASS, bclass)               /**< cast_class */
-#define cast_instance(o)    gc_cast(o, BE_INSTANCE, binstance)         /**< cast_instance */
-#define cast_map(o)         gc_cast(o, BE_MAP, bmap)                   /**< cast_map */
-#define cast_list(o)        gc_cast(o, BE_LIST, blist)                 /**< cast_list */
-#define cast_module(o)      gc_cast(o, BE_MODULE, bmodule)             /**< cast_module */
+#define cast_proto(o)       gc_cast(o, BE_PROTO, bproto_t)             /**< cast_proto */
+#define cast_closure(o)     gc_cast(o, BE_CLOSURE, bclosure_t)         /**< cast_closure */
+#define cast_ntvclos(o)     gc_cast(o, BE_NTVCLOS, bntvclos_t)         /**< cast_ntvclos */
+#define cast_str(o)         gc_cast(o, BE_STRING, bstring_t)           /**< cast_str */
+#define cast_class(o)       gc_cast(o, BE_CLASS, bclass_t)             /**< cast_class */
+#define cast_instance(o)    gc_cast(o, BE_INSTANCE, binstance_t)       /**< cast_instance */
+#define cast_map(o)         gc_cast(o, BE_MAP, bmap_t)                 /**< cast_map */
+#define cast_list(o)        gc_cast(o, BE_LIST, blist_t)               /**< cast_list */
+#define cast_module(o)      gc_cast(o, BE_MODULE, bmodule_t)           /**< cast_module */
 
 #define gc_ismark(o, m)     (((o)->marked & 0x03) == m)                /**< gc_ismark */
 #define gc_iswhite(o)       gc_ismark((o), GC_WHITE)                   /**< gc_iswhite */
@@ -56,11 +56,11 @@ if (!gc_isconst(o)) { \
 #define be_isgcobj(o)       (var_primetype(o) >= BE_GCOBJECT && var_primetype(o) < BE_GCOBJECT_MAX) /**< be_isgcobj */
 #define be_gcnew(v, t, s)   be_newgcobj((v), (t), sizeof(s))                                        /**< be_gcnew */
 
-#define set_fixed(s)        bbool _was_fixed = be_gc_fix_set(vm, cast(bgcobject*, (s)), 1)          /**< set_fixed */
-#define restore_fixed(s)    be_gc_fix_set(vm, cast(bgcobject*, (s)), _was_fixed);                   /**< restore_fixed */
+#define set_fixed(s)        bbool _was_fixed = be_gc_fix_set(vm, cast(bgcobject_t*, (s)), 1)        /**< set_fixed */
+#define restore_fixed(s)    be_gc_fix_set(vm, cast(bgcobject_t*, (s)), _was_fixed);                 /**< restore_fixed */
 
 /**
- * @enum bgcmark
+ * @typedef bgcmark_t
  * @brief GC mark
  *
  * the GC mark uses bit4:0 of the `object->marked` field,
@@ -73,53 +73,53 @@ typedef enum {
      GC_DARK = 0x02, /**< scanned object */
     GC_FIXED = 0x04, /**< disable collection mark */
     GC_CONST = 0x08  /**< constant object mark */
-} bgcmark;
+} bgcmark_t;
 
 /**
- * @fn void be_gc_init(bvm*)
+ * @fn void be_gc_init(bvm_t*)
  * @brief (???)
  *
  * @param vm (???)
  */
-void be_gc_init(bvm *vm);
+void be_gc_init(bvm_t *vm);
 
 /**
- * @fn void be_gc_deleteall(bvm*)
+ * @fn void be_gc_deleteall(bvm_t*)
  * @brief (???)
  *
  * @param vm (???)
  */
-void be_gc_deleteall(bvm *vm);
+void be_gc_deleteall(bvm_t *vm);
 
 /**
- * @fn void be_gc_setsteprate(bvm*, int)
+ * @fn void be_gc_setsteprate(bvm_t*, int)
  * @brief (???)
  *
  * @param vm (???)
  * @param rate (???)
  */
-void be_gc_setsteprate(bvm *vm, int rate);
+void be_gc_setsteprate(bvm_t *vm, int rate);
 
 /**
- * @fn void be_gc_setpause(bvm*, int)
+ * @fn void be_gc_setpause(bvm_t*, int)
  * @brief (???)
  *
  * @param vm (???)
  * @param pause (???)
  */
-void be_gc_setpause(bvm *vm, int pause);
+void be_gc_setpause(bvm_t *vm, int pause);
 
 /**
- * @fn size_t be_gc_memcount(bvm*)
+ * @fn size_t be_gc_memcount(bvm_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @return (???)
  */
-size_t be_gc_memcount(bvm *vm);
+size_t be_gc_memcount(bvm_t *vm);
 
 /**
- * @fn bgcobject be_newgcobj*(bvm*, int, size_t)
+ * @fn bgcobject_t be_newgcobj*(bvm_t*, int, size_t)
  * @brief (???)
  *
  * @param vm (???)
@@ -127,10 +127,10 @@ size_t be_gc_memcount(bvm *vm);
  * @param size (???)
  * @return (???)
  */
-bgcobject *be_newgcobj(bvm *vm, int type, size_t size);
+bgcobject_t *be_newgcobj(bvm_t *vm, int type, size_t size);
 
 /**
- * @fn bgcobject be_gc_newstr*(bvm*, size_t, int)
+ * @fn bgcobject_t be_gc_newstr*(bvm_t*, size_t, int)
  * @brief (???)
  *
  * @param vm (???)
@@ -138,28 +138,28 @@ bgcobject *be_newgcobj(bvm *vm, int type, size_t size);
  * @param islong (???)
  * @return (???)
  */
-bgcobject* be_gc_newstr(bvm *vm, size_t size, int islong);
+bgcobject_t* be_gc_newstr(bvm_t *vm, size_t size, int islong);
 
 /**
- * @fn void be_gc_fix(bvm*, bgcobject*)
+ * @fn void be_gc_fix(bvm_t*, bgcobject_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param obj (???)
  */
-void be_gc_fix(bvm *vm, bgcobject *obj);
+void be_gc_fix(bvm_t *vm, bgcobject_t *obj);
 
 /**
- * @fn void be_gc_unfix(bvm*, bgcobject*)
+ * @fn void be_gc_unfix(bvm_t*, bgcobject_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param obj (???)
  */
-void be_gc_unfix(bvm *vm, bgcobject *obj);
+void be_gc_unfix(bvm_t *vm, bgcobject_t *obj);
 
 /**
- * @fn bool be_gc_fix_set(bvm*, bgcobject*, bool)
+ * @fn bool be_gc_fix_set(bvm_t*, bgcobject_t*, bool)
  * @brief (???)
  *
  * @param vm (???)
@@ -167,22 +167,22 @@ void be_gc_unfix(bvm *vm, bgcobject *obj);
  * @param fix (???)
  * @return (???)
  */
-bbool be_gc_fix_set(bvm *vm, bgcobject *obj, bbool fix);
+bbool be_gc_fix_set(bvm_t *vm, bgcobject_t *obj, bbool fix);
 
 /**
- * @fn void be_gc_collect(bvm*)
+ * @fn void be_gc_collect(bvm_t*)
  * @brief (???)
  *
  * @param vm (???)
  */
-void be_gc_collect(bvm *vm);
+void be_gc_collect(bvm_t *vm);
 
 /**
- * @fn void be_gc_auto(bvm*)
+ * @fn void be_gc_auto(bvm_t*)
  * @brief (???)
  *
  * @param vm (???)
  */
-void be_gc_auto(bvm *vm);
+void be_gc_auto(bvm_t *vm);
 
 #endif

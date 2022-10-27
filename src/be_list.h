@@ -18,9 +18,9 @@
  */
 struct blist {
     bcommon_header;      /**< bcommon_header */
-    bgcobject *gray;     /**< for gc gray list */
+    bgcobject_t *gray;   /**< for gc gray list */
     int count, capacity; /**< capacity, count */
-    bvalue *data;        /**< data */
+    bvalue_t *data;      /**< data */
 };
 
 #define be_list_data(list)          ((list)->data)                 /**< be_list_data */
@@ -29,45 +29,45 @@ struct blist {
 #define be_list_end(list)           ((list)->data + (list)->count) /**< be_list_end */
 
 /**
- * @fn blist be_list_new*(bvm*)
+ * @fn blist_t be_list_new*(bvm_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @return (???)
  */
-blist* be_list_new(bvm *vm);
+blist_t* be_list_new(bvm_t *vm);
 
 /**
- * @fn void be_list_delete(bvm*, blist*)
+ * @fn void be_list_delete(bvm_t*, blist_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param list (???)
  */
-void be_list_delete(bvm *vm, blist *list);
+void be_list_delete(bvm_t *vm, blist_t *list);
 
 /**
- * @fn blist be_list_copy*(bvm*, blist*)
+ * @fn blist_t be_list_copy*(bvm_t*, blist_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param original (???)
  * @return (???)
  */
-blist* be_list_copy(bvm *vm, blist *original);
+blist_t* be_list_copy(bvm_t *vm, blist_t *original);
 
 /**
- * @fn bvalue be_list_index*(blist*, int)
+ * @fn bvalue_t be_list_index*(blist_t*, int)
  * @brief (???)
  *
  * @param list (???)
  * @param index (???)
  * @return (???)
  */
-bvalue* be_list_index(blist *list, int index);
+bvalue_t* be_list_index(blist_t *list, int index);
 
 /**
- * @fn bvalue be_list_push*(bvm*, blist*, bvalue*)
+ * @fn bvalue_t be_list_push*(bvm_t*, blist_t*, bvalue_t*)
  * @brief (???)
  *
  * @param vm (???)
@@ -75,10 +75,10 @@ bvalue* be_list_index(blist *list, int index);
  * @param value (???)
  * @return (???)
  */
-bvalue* be_list_push(bvm *vm, blist *list, bvalue *value);
+bvalue_t* be_list_push(bvm_t *vm, blist_t *list, bvalue_t *value);
 
 /**
- * @fn bvalue be_list_insert*(bvm*, blist*, int, bvalue*)
+ * @fn bvalue_t be_list_insert*(bvm_t*, blist_t*, int, bvalue_t*)
  * @brief (???)
  *
  * @param vm (???)
@@ -87,10 +87,10 @@ bvalue* be_list_push(bvm *vm, blist *list, bvalue *value);
  * @param value (???)
  * @return (???)
  */
-bvalue* be_list_insert(bvm *vm, blist *list, int index, bvalue *value);
+bvalue_t* be_list_insert(bvm_t *vm, blist_t *list, int index, bvalue_t *value);
 
 /**
- * @fn int be_list_remove(bvm*, blist*, int)
+ * @fn int be_list_remove(bvm_t*, blist_t*, int)
  * @brief (???)
  *
  * @param vm (???)
@@ -98,47 +98,47 @@ bvalue* be_list_insert(bvm *vm, blist *list, int index, bvalue *value);
  * @param index (???)
  * @return (???)
  */
-int be_list_remove(bvm *vm, blist *list, int index);
+int be_list_remove(bvm_t *vm, blist_t *list, int index);
 
 /**
- * @fn void be_list_resize(bvm*, blist*, int)
+ * @fn void be_list_resize(bvm_t*, blist_t*, int)
  * @brief (???)
  *
  * @param vm (???)
  * @param list (???)
  * @param count (???)
  */
-void be_list_resize(bvm *vm, blist *list, int count);
+void be_list_resize(bvm_t *vm, blist_t *list, int count);
 
 /**
- * @fn void be_list_merge(bvm*, blist*, const blist*)
+ * @fn void be_list_merge(bvm_t*, blist_t*, const blist_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param list (???)
  * @param other (???)
  */
-void be_list_merge(bvm *vm, blist *list, const blist *other);
+void be_list_merge(bvm_t *vm, blist_t *list, const blist_t *other);
 
 /**
- * @fn void be_list_reverse(blist*)
+ * @fn void be_list_reverse(blist_t*)
  * @brief (???)
  *
  * @param list (???)
  */
-void be_list_reverse(blist *list);
+void be_list_reverse(blist_t *list);
 
 /**
- * @fn void be_list_pool_init(bvm*, blist*)
+ * @fn void be_list_pool_init(bvm_t*, blist_t*)
  * @brief  (???)
  *
  * @param vm (???)
  * @param list (???)
  */
-void be_list_pool_init(bvm *vm, blist *list);
+void be_list_pool_init(bvm_t *vm, blist_t *list);
 
 /**
- * @fn int be_list_pool_alloc(bvm*, blist*, bvalue*)
+ * @fn int be_list_pool_alloc(bvm_t*, blist_t*, bvalue_t*)
  * @brief (???)
  *
  * @param vm (???)
@@ -146,15 +146,15 @@ void be_list_pool_init(bvm *vm, blist *list);
  * @param src (???)
  * @return (???)
  */
-int be_list_pool_alloc(bvm *vm, blist *list, bvalue *src);
+int be_list_pool_alloc(bvm_t *vm, blist_t *list, bvalue_t *src);
 
 /**
- * @fn void be_list_pool_free(blist*, int)
+ * @fn void be_list_pool_free(blist_t*, int)
  * @brief (???)
  *
  * @param list (???)
  * @param id (???)
  */
-void be_list_pool_free(blist *list, int id);
+void be_list_pool_free(blist_t *list, int id);
 
 #endif

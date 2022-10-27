@@ -36,8 +36,8 @@ typedef enum {
 } exptype_t;
 
 /**
- * @typedef bexpdesc
- * @brief bexpdesc
+ * @typedef bexpdesc_t
+ * @brief bexpdesc_t
  *
  */
 typedef struct {
@@ -47,17 +47,17 @@ typedef struct {
             unsigned int obj:9; /**< object RK index */
             unsigned int tt:5;  /**< object type */
         } ss;                   /**< ss */
-        breal r;                /**< for ETREAL */
-        bint i;                 /**< for ETINT */
-        bstring *s;             /**< for ETSTRING */
-        bproto *p;              /**< for ETPROTO */
+        breal_t r;              /**< for ETREAL */
+        bint_t i;               /**< for ETINT */
+        bstring_t *s;           /**< for ETSTRING */
+        bproto_t *p;            /**< for ETPROTO */
         int idx;                /**< variable index */
     } v;                        /**< v */
     int t;                      /**< patch list of 'exit when true' */
     int f;                      /**< patch list of 'exit when false' */
-    bbyte not;                  /**< not mark */
-    bbyte type;                 /**< type */
-} bexpdesc;
+    bbyte_t not;                /**< not mark */
+    bbyte_t type;               /**< type */
+} bexpdesc_t;
 
 /**
  * @struct bblockinfo
@@ -66,13 +66,13 @@ typedef struct {
  */
 typedef struct bblockinfo {
     struct bblockinfo *prev;
-    bbyte nactlocals; /**< number of active local variables */
-    bbyte type;       /**< block type mask */
-    bbyte hasupval;   /**< has upvalue mark */
-    int breaklist;    /**< break list */
-    int beginpc;      /**< begin pc */
-    int continuelist; /**< continue list */
-} bblockinfo;         /**< bblockinfo */
+    bbyte_t nactlocals; /**< number of active local variables */
+    bbyte_t type;       /**< block type mask */
+    bbyte_t hasupval;   /**< has upvalue mark */
+    int breaklist;      /**< break list */
+    int beginpc;        /**< begin pc */
+    int continuelist;   /**< continue list */
+} bblockinfo_t;         /**< bblockinfo_t */
 
 /**
  * @struct bfuncinfo
@@ -81,30 +81,30 @@ typedef struct bblockinfo {
  */
 typedef struct bfuncinfo {
     struct bfuncinfo *prev; /**< outer function */
-    bproto *proto;          /**< the function prototype */
-    bblockinfo *binfo;      /**< block information */
+    bproto_t *proto;        /**< the function prototype */
+    bblockinfo_t *binfo;    /**< block information */
     struct blexer *lexer;   /**< the lexer pointer */
-    blist *local;           /**< local variable */
-    bmap *upval;            /**< upvalue variable */
-    bvector code;           /**< code vector */
-    bvector kvec;           /**< constants table */
-    bvector pvec;           /**< proto table */
+    blist_t *local;         /**< local variable */
+    bmap_t *upval;          /**< upvalue variable */
+    bvector_t code;         /**< code vector */
+    bvector_t kvec;         /**< constants table */
+    bvector_t pvec;         /**< proto table */
 #if BE_DEBUG_RUNTIME_INFO /* debug information */
-    bvector linevec;        /**< linevec */
+    bvector_t linevec;      /**< linevec */
 #endif
 #if BE_DEBUG_VAR_INFO
-    bvector varvec;         /**< varvec */
+    bvector_t varvec;       /**< varvec */
 #endif
     int pc;                 /**< program count */
-    bbyte freereg;          /**< first free register */
-    bbyte flags;            /**< some flages */
-} bfuncinfo;                /**< bfuncinfo */
+    bbyte_t freereg;        /**< first free register */
+    bbyte_t flags;          /**< some flages */
+} bfuncinfo_t;              /**< bfuncinfo_t */
 
-#define BLOCK_LOOP      1 /**< code block type definition: BLOCK_LOOP */
-#define BLOCK_EXCEPT    2 /**< code block type definition: BLOCK_EXCEPT */
+#define BLOCK_LOOP      1   /**< code block type definition: BLOCK_LOOP */
+#define BLOCK_EXCEPT    2   /**< code block type definition: BLOCK_EXCEPT */
 
 /**
- * @fn bclosure be_parser_source*(bvm*, const char*, breader, void*, bool)
+ * @fn bclosure_t be_parser_source*(bvm_t*, const char*, breader, void*, bool)
  * @brief (???)
  *
  * @param vm (???)
@@ -114,6 +114,6 @@ typedef struct bfuncinfo {
  * @param islocal (???)
  * @return (???)
  */
-bclosure *be_parser_source(bvm *vm, const char *fname, breader reader, void *data, bbool islocal);
+bclosure_t *be_parser_source(bvm_t *vm, const char *fname, breader reader, void *data, bbool islocal);
 
 #endif

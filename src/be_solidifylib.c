@@ -20,8 +20,8 @@
 #include <stdio.h>
 #include <ctype.h>
 
-extern const bclass be_class_list;
-extern const bclass be_class_map;
+extern const bclass_t be_class_list;
+extern const bclass_t be_class_map;
 
 #if BE_USE_SOLIDIFY_MODULE
 #include <inttypes.h>
@@ -100,18 +100,18 @@ static void toidentifier(char *to, const char *p)
     *to = 0;      // final NULL
 }
 
-static void m_solidify_bvalue(bvm *vm, bbool str_literal, bvalue * value, const char *classname, const char *key, void* fout);
+static void m_solidify_bvalue(bvm_t *vm, bbool str_literal, bvalue_t * value, const char *classname, const char *key, void* fout);
 
-static void m_solidify_map(bvm *vm, bbool str_literal, bmap * map, const char *class_name, void* fout)
+static void m_solidify_map(bvm_t *vm, bbool str_literal, bmap_t * map, const char *class_name, void* fout)
 {
     // compact first
     be_map_compact(vm, map);
     
     logfmt("    be_nested_map(%i,\n", map->count);
 
-    logfmt("    ( (struct bmapnode*) &(const bmapnode[]) {\n");
+    logfmt("    ( (struct bmapnode_t*) &(const bmapnode[]) {\n");
     for (int i = 0; i < map->size; i++) {
-        bmapnode * node = &map->slots[i];
+        bmapnode_t * node = &map->slots[i];
         if (node->key.type == BE_NIL) {
             continue;   /* key not used */
         }
@@ -150,7 +150,7 @@ static void m_solidify_map(bvm *vm, bbool str_literal, bmap * map, const char *c
 
 }
 
-static void m_solidify_list(bvm *vm, bbool str_literal, blist * list, const char *class_name, void* fout)
+static void m_solidify_list(bvm_t *vm, bbool str_literal, blist_t * list, const char *class_name, void* fout)
 {
     logfmt("    be_nested_list(%i,\n", list->count);
 
@@ -164,7 +164,7 @@ static void m_solidify_list(bvm *vm, bbool str_literal, blist * list, const char
 }
 
 // pass key name in case of class, or NULL if none
-static void m_solidify_bvalue(bvm *vm, bbool str_literal, bvalue * value, const char *classname, const char *key, void* fout)
+static void m_solidify_bvalue(bvm_t *vm, bbool str_literal, bvalue_t * value, const char *classname, const char *key, void* fout)
 {
     int type = var_primetype(value);
     switch (type) {
@@ -214,7 +214,7 @@ static void m_solidify_bvalue(bvm *vm, bbool str_literal, bvalue * value, const 
         break;
     case BE_CLOSURE:
         {
-            const char * func_name = str(((bclosure*) var_toobj(value))->proto->name);
+            const char * func_name = str(((bclosure_t*) var_toobj(value))->proto->name);
             size_t id_len = toidentifier_length(func_name);
             char func_name_id[id_len];
             toidentifier(func_name_id, func_name);
@@ -225,7 +225,7 @@ static void m_solidify_bvalue(bvm *vm, bbool str_literal, bvalue * value, const 
         }
         break;
     case BE_CLASS:
-        logfmt("be_const_class(be_class_%s)", str(((bclass*) var_toobj(value))->name));
+        logfmt("be_const_class(be_class_%s)", str(((bclass_t*) var_toobj(value))->name));
         break;
     case BE_COMPTR:
         logfmt("be_const_comptr(&be_ntv_%s_%s)", classname ? classname : "unknown", key ? key : "unknown");
@@ -237,8 +237,8 @@ static void m_solidify_bvalue(bvm *vm, bbool str_literal, bvalue * value, const 
         break;
     case BE_INSTANCE:
     {
-        binstance * ins = (binstance *) var_toobj(value);
-        bclass * cl = ins->_class;
+        binstance_t * ins = (binstance_t *) var_toobj(value);
+        bclass_t * cl = ins->_class;
         if (ins->super || ins->sub) {
             be_raise(vm, "internal_error", "instance must not have a super/sub class");
         } else if (cl->nvar != 1) {
@@ -259,10 +259,10 @@ static void m_solidify_bvalue(bvm *vm, bbool str_literal, bvalue * value, const 
     }
         break;
     case BE_MAP:
-        m_solidify_map(vm, str_literal, (bmap *) var_toobj(value), classname, fout);
+        m_solidify_map(vm, str_literal, (bmap_t *) var_toobj(value), classname, fout);
         break;
     case BE_LIST:
-        m_solidify_list(vm, str_literal, (blist *) var_toobj(value), classname, fout);
+        m_solidify_list(vm, str_literal, (blist_t *) var_toobj(value), classname, fout);
         break;
     default:
         {
@@ -273,24 +273,24 @@ static void m_solidify_bvalue(bvm *vm, bbool str_literal, bvalue * value, const 
     }
 }
 
-static void m_solidify_subclass(bvm *vm, bbool str_literal, bclass *cl, void* fout);
+static void m_solidify_subclass(bvm_t *vm, bbool str_literal, bclass_t *cl, void* fout);
 
 /* solidify any inner class */
-static void m_solidify_proto_inner_class(bvm *vm, bbool str_literal, bproto *pr, void* fout)
+static void m_solidify_proto_inner_class(bvm_t *vm, bbool str_literal, bproto_t *pr, void* fout)
 {
     // parse any class in constants to output it first
     if (pr->nconst > 0) {
         for (int k = 0; k < pr->nconst; k++) {
             if (var_type(&pr->ktab[k]) == BE_CLASS) {
                 // output the class
-                m_solidify_subclass(vm, str_literal, (bclass*) var_toobj(&pr->ktab[k]), fout);
+                m_solidify_subclass(vm, str_literal, (bclass_t*) var_toobj(&pr->ktab[k]), fout);
             }
         }
     }
 }
 
 
-static void m_solidify_proto(bvm *vm, bbool str_literal, bproto *pr, const char * func_name, int indent, void* fout)
+static void m_solidify_proto(bvm_t *vm, bbool str_literal, bproto_t *pr, const char * func_name, int indent, void* fout)
 {
     // const char * func_name = str(pr->name);
     // const char * func_source = str(pr->source);
@@ -359,7 +359,7 @@ static void m_solidify_proto(bvm *vm, bbool str_literal, bproto *pr, const char 
         uint32_t ins = pr->code[pc];
         logfmt("%*s  0x%08X,  //", indent, "", ins);
         be_print_inst(ins, pc, fout);
-        bopcode op = IGET_OP(ins);
+        bopcode_t op = IGET_OP(ins);
         if (op == OP_GETGBL || op == OP_SETGBL) {
             // check if the global is in built-ins
             int glb = IGET_Bx(ins);
@@ -376,9 +376,9 @@ static void m_solidify_proto(bvm *vm, bbool str_literal, bproto *pr, const char 
 
 }
 
-static void m_solidify_closure(bvm *vm, bbool str_literal, bclosure *cl, const char * classname, void* fout)
+static void m_solidify_closure(bvm_t *vm, bbool str_literal, bclosure_t *cl, const char * classname, void* fout)
 {   
-    bproto *pr = cl->proto;
+    bproto_t *pr = cl->proto;
     const char * func_name = str(pr->name);
 
     if (cl->nupvals > 0) {
@@ -412,17 +412,17 @@ static void m_solidify_closure(bvm *vm, bbool str_literal, bclosure *cl, const c
     logfmt("/*******************************************************************/\n\n");
 }
 
-static void m_solidify_subclass(bvm *vm, bbool str_literal, bclass *cl, void* fout)
+static void m_solidify_subclass(bvm_t *vm, bbool str_literal, bclass_t *cl, void* fout)
 {
     const char * class_name = str(cl->name);
 
     /* iterate on members to dump closures */
     if (cl->members) {
-        bmapnode *node;
-        bmapiter iter = be_map_iter();
+        bmapnode_t *node;
+        bmapiter_t iter = be_map_iter();
         while ((node = be_map_next(cl->members, &iter)) != NULL) {
             if (var_isstr(&node->key) && var_isclosure(&node->value)) {
-                bclosure *f = var_toobj(&node->value);
+                bclosure_t *f = var_toobj(&node->value);
                 m_solidify_closure(vm, str_literal, f, class_name, fout);
             }
         }
@@ -457,7 +457,7 @@ static void m_solidify_subclass(bvm *vm, bbool str_literal, bclass *cl, void* fo
     char id_buf[id_len];
     toidentifier(id_buf, class_name);
     if (!str_literal) {
-        logfmt("    (bstring*) &be_const_str_%s\n", id_buf);
+        logfmt("    (bstring_t*) &be_const_str_%s\n", id_buf);
     } else {
         logfmt("    be_str_weak(%s)\n", id_buf);
     }
@@ -465,7 +465,7 @@ static void m_solidify_subclass(bvm *vm, bbool str_literal, bclass *cl, void* fo
 
 }
 
-static void m_solidify_class(bvm *vm, bbool str_literal, bclass *cl, void* fout)
+static void m_solidify_class(bvm_t *vm, bbool str_literal, bclass_t *cl, void* fout)
 {
     const char * class_name = str(cl->name);
     m_solidify_subclass(vm, str_literal, cl, fout);
@@ -478,22 +478,22 @@ static void m_solidify_class(bvm *vm, bbool str_literal, bclass *cl, void* fout)
     logfmt("}\n");
 }
 
-static void m_solidify_module(bvm *vm, bbool str_literal, bmodule *ml, void* fout)
+static void m_solidify_module(bvm_t *vm, bbool str_literal, bmodule_t *ml, void* fout)
 {
     const char * module_name = be_module_name(ml);
     if (!module_name) { module_name = ""; }
 
     /* iterate on members to dump closures and classes */
     if (ml->table) {
-        bmapnode *node;
-        bmapiter iter = be_map_iter();
+        bmapnode_t *node;
+        bmapiter_t iter = be_map_iter();
         while ((node = be_map_next(ml->table, &iter)) != NULL) {
             if (var_isstr(&node->key) && var_isclosure(&node->value)) {
-                bclosure *f = var_toobj(&node->value);
+                bclosure_t *f = var_toobj(&node->value);
                 m_solidify_closure(vm, str_literal, f, module_name, fout);
             }
             if (var_isstr(&node->key) && var_isclass(&node->value)) {
-                bclass *cl = var_toobj(&node->value);
+                bclass_t *cl = var_toobj(&node->value);
                 m_solidify_subclass(vm, str_literal, cl, fout);
             }
         }
@@ -520,11 +520,11 @@ static void m_solidify_module(bvm *vm, bbool str_literal, bmodule *ml, void* fou
 
 }
 
-static int m_dump(bvm *vm)
+static int m_dump(bvm_t *vm)
 {
     int top = be_top(vm);
     if (top >= 1) {
-        bvalue *v = be_indexof(vm, 1);
+        bvalue_t *v = be_indexof(vm, 1);
         bbool str_literal = bfalse;
         if (top >= 2) {
             str_literal = be_tobool(vm, 2);

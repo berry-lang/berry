@@ -18,7 +18,7 @@
 
 #define READLINE_STEP       100
 
-static int l_assert(bvm *vm)
+static int l_assert(bvm_t *vm)
 {
     int argc = be_top(vm);
     /* assertion fails when there is no argument
@@ -33,7 +33,7 @@ static int l_assert(bvm *vm)
     be_return_nil(vm);
 }
 
-static int l_print(bvm *vm)
+static int l_print(bvm_t *vm)
 {
     int i, argc = be_top(vm);
     for (i = 1; i <= argc; ++i) {
@@ -48,7 +48,7 @@ static int l_print(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_readline(bvm *vm)
+static int m_readline(bvm_t *vm)
 {
     size_t pos = 0, size = READLINE_STEP;
     char *buffer = be_malloc(vm, size);
@@ -68,7 +68,7 @@ static int m_readline(bvm *vm)
     be_return(vm);
 }
 
-static int l_input(bvm *vm)
+static int l_input(bvm_t *vm)
 {
     if (be_top(vm) && be_isstring(vm, 1)) { /* echo prompt */
         be_writestring(be_tostring(vm, 1));
@@ -77,16 +77,16 @@ static int l_input(bvm *vm)
 }
 
 /* Look in the current class and all super classes for a method corresponding to a specific closure pointer */
-static bclass *find_class_closure(bclass *cl, bclosure *needle)
+static bclass_t *find_class_closure(bclass_t *cl, bclosure_t *needle)
 {
     while (cl) {
-        bmapnode *node;  /* iterate on members of the class */
-        bmap *members = be_class_members(cl);
+        bmapnode_t *node;  /* iterate on members of the class */
+        bmap_t *members = be_class_members(cl);
         if (members) {  /* only iterate if there are members */
-            bmapiter iter = be_map_iter();
+            bmapiter_t iter = be_map_iter();
             while ((node = be_map_next(members, &iter)) != NULL) {
                 if (var_primetype(&node->value) == BE_CLOSURE) {  /* only native functions are considered */
-                    bclosure *clos_iter = var_toobj(&node->value);  /* retrieve the method's closure */
+                    bclosure_t *clos_iter = var_toobj(&node->value);  /* retrieve the method's closure */
                     if (clos_iter == needle) {
                         /* we found the closure, we now know its class */
                         return cl;
@@ -99,10 +99,10 @@ static bclass *find_class_closure(bclass *cl, bclosure *needle)
     return NULL;  /* not found */
 }
 
-static bbool obj2int(bvm *vm, bvalue *var, bint *val)
+static bbool obj2int(bvm_t *vm, bvalue_t *var, bint_t *val)
 {
-    binstance *obj = var_toobj(var);
-    bstring *toint = str_literal(vm, "toint");
+    binstance_t *obj = var_toobj(var);
+    bstring_t *toint = str_literal(vm, "toint");
     /* get operator method */
     // TODO what if `tobool` is static
     int type = be_instance_member(vm, obj, toint, vm->top);
@@ -118,7 +118,7 @@ static bbool obj2int(bvm *vm, bvalue *var, bint *val)
     return bfalse;
 }
 
-static int l_super(bvm *vm)
+static int l_super(bvm_t *vm)
 {
     int argc = be_top(vm);
 
@@ -135,9 +135,9 @@ static int l_super(bvm *vm)
 
     /* arg 1 is an instance */
     if (be_isinstance(vm, 1)) {
-        binstance *o = var_toobj(be_indexof(vm, 1));
-        bclass *target_class = NULL;  /* the minimal class expected, or any super class */
-        bclass *base_class = NULL;  /* current class of the caller, if any */
+        binstance_t *o = var_toobj(be_indexof(vm, 1));
+        bclass_t *target_class = NULL;  /* the minimal class expected, or any super class */
+        bclass_t *base_class = NULL;  /* current class of the caller, if any */
 
         /* if arg 2 is present, it must be a class */
         if (argc >= 2) {
@@ -157,10 +157,10 @@ static int l_super(bvm *vm)
             /* we look in the callstack for the caller's closure */
             int size = be_stack_count(&vm->callstack);
             if (size >= 2) {  /* need at least 2 stackframes: current (for super() native) and caller (the one we are interested in) */
-                bcallframe *caller = be_vector_at(&vm->callstack, size - 2);  /* get the callframe of caller */
-                bvalue *func = caller->func;  /* function object of caller */
+                bcallframe_t *caller = be_vector_at(&vm->callstack, size - 2);  /* get the callframe of caller */
+                bvalue_t *func = caller->func;  /* function object of caller */
                 if (var_primetype(func) == BE_CLOSURE) {  /* only useful if the caller is a Berry closure (i.e. not native) */
-                    bclosure *clos_ctx = var_toobj(func);  /* this is the closure we look for in the class chain */
+                    bclosure_t *clos_ctx = var_toobj(func);  /* this is the closure we look for in the class chain */
                     base_class = find_class_closure(o->_class, clos_ctx);  /* iterate on current and super classes to find where the closure belongs */
                 }
             }
@@ -176,11 +176,11 @@ static int l_super(bvm *vm)
                 o = be_instance_super(o);   /* always skip the current class and move to super */
             }
             while (o) {
-                bclass *c = be_instance_class(o);
+                bclass_t *c = be_instance_class(o);
                 if (c == target_class) break;         /* found */
                 o = be_instance_super(o);
             }
-            bvalue *top = be_incrtop(vm);
+            bvalue_t *top = be_incrtop(vm);
             if (o) {
                 var_setinstance(top, o);    /* return the instance with the specified parent class */
             } else {
@@ -197,7 +197,7 @@ static int l_super(bvm *vm)
     be_return_nil(vm);
 }
 
-static int l_type(bvm *vm)
+static int l_type(bvm_t *vm)
 {
     if (be_top(vm)) {
         be_pushstring(vm, be_typename(vm, 1));
@@ -206,7 +206,7 @@ static int l_type(bvm *vm)
     be_return_nil(vm);
 }
 
-static int l_classname(bvm *vm)
+static int l_classname(bvm_t *vm)
 {
     if (be_top(vm)) {
         const char *t = be_classname(vm, 1);
@@ -218,7 +218,7 @@ static int l_classname(bvm *vm)
     be_return_nil(vm);
 }
 
-static int l_classof(bvm *vm)
+static int l_classof(bvm_t *vm)
 {
     if (be_top(vm) && be_classof(vm, 1)) {
         be_return(vm);
@@ -226,7 +226,7 @@ static int l_classof(bvm *vm)
     be_return_nil(vm);
 }
 
-static int l_number(bvm *vm)
+static int l_number(bvm_t *vm)
 {
     if (be_top(vm)) {
         if (be_isstring(vm, 1)) {
@@ -240,14 +240,14 @@ static int l_number(bvm *vm)
     be_return_nil(vm);
 }
 
-static int l_int(bvm *vm)
+static int l_int(bvm_t *vm)
 {
     if (be_top(vm)) {
         if (be_isstring(vm, 1)) {
             const char *s = be_tostring(vm, 1);
             be_pushint(vm, be_str2int(s, NULL));
         } else if (be_isreal(vm, 1)) {
-            be_pushint(vm, (bint)be_toreal(vm, 1));
+            be_pushint(vm, (bint_t)be_toreal(vm, 1));
         } else if (be_isint(vm, 1)) {
             be_pushvalue(vm, 1);
         } else if (be_isbool(vm, 1)) {
@@ -257,8 +257,8 @@ static int l_int(bvm *vm)
             be_pushint(vm, (int) p);
         } else if (be_isinstance(vm, 1)) {
             /* try to call `toint` method */
-            bvalue *v = be_indexof(vm, 1);
-            bint val;
+            bvalue_t *v = be_indexof(vm, 1);
+            bint_t val;
             if (obj2int(vm, v, &val)) {
                 be_pushint(vm, val);
             } else {
@@ -272,14 +272,14 @@ static int l_int(bvm *vm)
     be_return_nil(vm);
 }
 
-static int l_real(bvm *vm)
+static int l_real(bvm_t *vm)
 {
     if (be_top(vm)) {
         if (be_isstring(vm, 1)) {
             const char *s = be_tostring(vm, 1);
             be_pushreal(vm, be_str2real(s, NULL));
         } else if (be_isint(vm, 1)) {
-            be_pushreal(vm, (breal)be_toint(vm, 1));
+            be_pushreal(vm, (breal_t)be_toint(vm, 1));
         } else if (be_isreal(vm, 1)) {
             be_pushvalue(vm, 1);
         } else {
@@ -290,13 +290,13 @@ static int l_real(bvm *vm)
     be_return_nil(vm);
 }
 
-static int check_method(bvm *vm, const char *attr)
+static int check_method(bvm_t *vm, const char *attr)
 {
     return be_top(vm) &&
         be_isinstance(vm, 1) && be_getmethod(vm, 1, attr);
 }
 
-static int l_iterator(bvm *vm)
+static int l_iterator(bvm_t *vm)
 {
     if (be_top(vm) && be_isfunction(vm, 1)) {
         be_return(vm); /* return the argument[0]::function */
@@ -315,7 +315,7 @@ static int l_iterator(bvm *vm)
 /* then all subsequent arguments are pushed except the last one */
 /* If the last argument is a 'list', then all elements are pushed as arguments */
 /* otherwise the last argument is pushed as well */
-static int l_call(bvm *vm)
+static int l_call(bvm_t *vm)
 {
     int top = be_top(vm);
     if (top >= 1 && be_isfunction(vm, 1)) {
@@ -357,7 +357,7 @@ static int l_call(bvm *vm)
     be_return_nil(vm);
 }
 
-static int l_str(bvm *vm)
+static int l_str(bvm_t *vm)
 {
     if (be_top(vm)) {
         be_tostring(vm, 1);
@@ -367,7 +367,7 @@ static int l_str(bvm *vm)
     be_return(vm);
 }
 
-static int l_bool(bvm *vm)
+static int l_bool(bvm_t *vm)
 {
     if (be_top(vm)) {
         be_pushbool(vm, be_tobool(vm, 1));
@@ -378,7 +378,7 @@ static int l_bool(bvm *vm)
 }
 
 
-static int l_size(bvm *vm)
+static int l_size(bvm_t *vm)
 {
     if (be_top(vm) && be_isstring(vm, 1)) {
         be_pushint(vm, be_strlen(vm, 1));
@@ -393,7 +393,7 @@ static int l_size(bvm *vm)
     be_return_nil(vm);
 }
 
-static int l_module(bvm *vm)
+static int l_module(bvm_t *vm)
 {
     int argc = be_top(vm);
     be_newmodule(vm);
@@ -404,14 +404,14 @@ static int l_module(bvm *vm)
 }
 
 #if BE_USE_SCRIPT_COMPILER
-static int raise_compile_error(bvm *vm)
+static int raise_compile_error(bvm_t *vm)
 {
     be_pop(vm, 2); /* pop the exception value and message */
     be_throw(vm, BE_EXCEPTION);
     return 0;
 }
 
-static int m_compile_str(bvm *vm)
+static int m_compile_str(bvm_t *vm)
 {
     int len = be_strlen(vm, 1);
     const char *src = be_tostring(vm, 1);
@@ -422,7 +422,7 @@ static int m_compile_str(bvm *vm)
     return raise_compile_error(vm);
 }
 
-static int m_compile_file(bvm *vm)
+static int m_compile_file(bvm_t *vm)
 {
     const char *fname = be_tostring(vm, 1);
     int res = be_loadfile(vm, fname);
@@ -436,7 +436,7 @@ static int m_compile_file(bvm *vm)
 }
 #endif
 
-static int l_compile(bvm *vm)
+static int l_compile(bvm_t *vm)
 {
 #if BE_USE_SCRIPT_COMPILER
     if (be_top(vm) && be_isstring(vm, 1)) {
@@ -456,7 +456,7 @@ static int l_compile(bvm *vm)
     be_return_nil(vm);
 }
 
-static int _issubv(bvm *vm, bbool (*filter)(bvm*, int))
+static int _issubv(bvm_t *vm, bbool (*filter)(bvm_t*, int))
 {
     bbool status = bfalse;
     if (be_top(vm) >= 2 && filter(vm, 1)) {
@@ -467,18 +467,18 @@ static int _issubv(bvm *vm, bbool (*filter)(bvm*, int))
     be_return(vm);
 }
 
-static int l_issubclass(bvm *vm)
+static int l_issubclass(bvm_t *vm)
 {
     return _issubv(vm, be_isclass);
 }
 
-static int l_isinstance(bvm *vm)
+static int l_isinstance(bvm_t *vm)
 {
     return _issubv(vm, be_isinstance);
 }
 
 #if !BE_USE_PRECOMPILED_OBJECT
-void be_load_baselib(bvm *vm)
+void be_load_baselib(bvm_t *vm)
 {
     be_regfunc(vm, "assert", l_assert);
     be_regfunc(vm, "print", l_print);
@@ -500,17 +500,17 @@ void be_load_baselib(bvm *vm)
 }
 
 /* call must be added later to respect order of builtins */
-void be_load_baselib_next(bvm *vm)
+void be_load_baselib_next(bvm_t *vm)
 {
     be_regfunc(vm, "call", l_call);
     be_regfunc(vm, "bool", l_bool);
 }
 #else
-extern const bclass be_class_list;
-extern const bclass be_class_map;
-extern const bclass be_class_range;
-extern const bclass be_class_bytes;
-extern int be_nfunc_open(bvm *vm);
+extern const bclass_t be_class_list;
+extern const bclass_t be_class_map;
+extern const bclass_t be_class_range;
+extern const bclass_t be_class_bytes;
+extern int be_nfunc_open(bvm_t *vm);
 /* @const_object_info_begin
 vartab m_builtin (scope: local) {
     assert, func(l_assert)
@@ -542,7 +542,7 @@ vartab m_builtin (scope: local) {
 #include "../generate/be_fixed_m_builtin.h"
 #include "be_var.h"
 
-void be_load_baselib(bvm *vm)
+void be_load_baselib(bvm_t *vm)
 {
     be_const_builtin_set(vm, &m_builtin_map, &m_builtin_vector);
 }

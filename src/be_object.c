@@ -11,9 +11,9 @@
 #include "be_gc.h"
 #include "be_vm.h"
 
-#define cast_comobj(o)      gc_cast(o, BE_COMOBJ, bcommomobj)
+#define cast_comobj(o)      gc_cast(o, BE_COMOBJ, bcommomobj_t)
 
-const char* be_vtype2str(bvalue *v)
+const char* be_vtype2str(bvalue_t *v)
 {
     switch(var_primetype(v)) {
     case BE_NIL: return "nil";
@@ -35,7 +35,7 @@ const char* be_vtype2str(bvalue *v)
     }
 }
 
-bvalue* be_indexof(bvm *vm, int idx)
+bvalue_t* be_indexof(bvm_t *vm, int idx)
 {
     if (idx > 0) { /* absolute index */
         be_assert(vm->reg + idx <= vm->top);
@@ -46,21 +46,21 @@ bvalue* be_indexof(bvm *vm, int idx)
     return vm->top + idx;
 }
 
-BERRY_API void be_newcomobj(bvm *vm, void *data, bntvfunc destroy)
+BERRY_API void be_newcomobj(bvm_t *vm, void *data, bntvfunc destroy)
 {
-    bcommomobj *obj;
-    bgcobject *gco = be_gcnew(vm, BE_COMOBJ, bcommomobj);
+    bcommomobj_t *obj;
+    bgcobject_t *gco = be_gcnew(vm, BE_COMOBJ, bcommomobj_t);
     if ((obj = cast_comobj(gco)) != NULL) {
-        bvalue* top = be_incrtop(vm);
+        bvalue_t* top = be_incrtop(vm);
         obj->data = data;
         obj->destroy = destroy;
         var_setobj(top, BE_COMOBJ, obj);
     }
 }
 
-void be_commonobj_delete(bvm *vm, bgcobject *obj)
+void be_commonobj_delete(bvm_t *vm, bgcobject_t *obj)
 {
-    bcommomobj *co = cast_comobj(obj);
+    bcommomobj_t *co = cast_comobj(obj);
     if (co) {
         if (co->destroy && co->data) {
             be_pushntvfunction(vm, co->destroy);
@@ -68,12 +68,12 @@ void be_commonobj_delete(bvm *vm, bgcobject *obj)
             be_call(vm, 1);
             be_pop(vm, 2);
         }
-        be_free(vm, co, sizeof(bcommomobj));
+        be_free(vm, co, sizeof(bcommomobj_t));
     }
 }
 
 /* generic destroy method for comobj, just call be_os_free() on the pointer */
-int be_commonobj_destroy_generic(bvm* vm)
+int be_commonobj_destroy_generic(bvm_t* vm)
 {
     int argc = be_top(vm);
     if (argc > 0) {

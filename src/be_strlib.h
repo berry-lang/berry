@@ -17,7 +17,7 @@ extern "C" {
 #endif
 
 /**
- * @fn bstring be_strcat*(bvm*, bstring*, bstring*)
+ * @fn bstring_t be_strcat*(bvm_t*, bstring_t*, bstring_t*)
  * @brief (???)
  *
  * @param vm (???)
@@ -25,36 +25,36 @@ extern "C" {
  * @param s2 (???)
  * @return (???)
  */
-bstring* be_strcat(bvm *vm, bstring *s1, bstring *s2);
+bstring_t* be_strcat(bvm_t *vm, bstring_t *s1, bstring_t *s2);
 
 /**
- * @fn int be_strcmp(bstring*, bstring*)
+ * @fn int be_strcmp(bstring_t*, bstring_t*)
  * @brief (???)
  *
  * @param s1 (???)
  * @param s2 (???)
  * @return (???)
  */
-int be_strcmp(bstring *s1, bstring *s2);
+int be_strcmp(bstring_t *s1, bstring_t *s2);
 
 /**
- * @fn bstring be_num2str*(bvm*, bvalue*)
+ * @fn bstring_t be_num2str*(bvm_t*, bvalue_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param v (???)
  * @return (???)
  */
-bstring* be_num2str(bvm *vm, bvalue *v);
+bstring_t* be_num2str(bvm_t *vm, bvalue_t *v);
 
 /**
- * @fn void be_val2str(bvm*, int)
+ * @fn void be_val2str(bvm_t*, int)
  * @brief (???)
  *
  * @param vm (???)
  * @param index (???)
  */
-void be_val2str(bvm *vm, int index);
+void be_val2str(bvm_t *vm, int index);
 
 /**
  * @fn int be_char2hex(int)
@@ -95,7 +95,7 @@ const char* be_splitpath(const char *path);
 const char* be_splitname(const char *path);
 
 /**
- * @fn const char be_pushvfstr*(bvm*, const char*, va_list)
+ * @fn const char be_pushvfstr*(bvm_t*, const char*, va_list)
  * @brief (???)
  *
  * @param vm (???)
@@ -103,10 +103,10 @@ const char* be_splitname(const char *path);
  * @param arg (???)
  * @return (???)
  */
-const char* be_pushvfstr(bvm *vm, const char *format, va_list arg);
+const char* be_pushvfstr(bvm_t *vm, const char *format, va_list arg);
 
 /**
- * @fn bstring be_strindex*(bvm*, bstring*, bvalue*)
+ * @fn bstring be_strindex*(bvm_t*, bstring_t*, bvalue_t*)
  * @brief (???)
  *
  * @param vm (???)
@@ -114,7 +114,7 @@ const char* be_pushvfstr(bvm *vm, const char *format, va_list arg);
  * @param idx (???)
  * @return (???)
  */
-bstring* be_strindex(bvm *vm, bstring *str, bvalue *idx);
+bstring_t* be_strindex(bvm_t *vm, bstring_t *str, bvalue_t *idx);
 
 #ifdef __cplusplus
 }

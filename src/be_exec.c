@@ -44,18 +44,18 @@
 #define exec_try(j) if      (be_setjmp((j)->b) == 0)
 #define exec_throw(j)       be_longjmp((j)->b, 1)
 
-#define fixup_ptr(ptr, offset)  ((ptr) = (void*)((bbyte*)(ptr) + (offset)))
-#define ptr_offset(ptr1, ptr2)  ((bbyte*)(ptr1) - (bbyte*)(ptr2))
+#define fixup_ptr(ptr, offset)  ((ptr) = (void*)((bbyte_t*)(ptr) + (offset)))
+#define ptr_offset(ptr1, ptr2)  ((bbyte_t*)(ptr1) - (bbyte_t*)(ptr2))
 
 struct pparser {
     const char *fname;
     breader reader;
     void *data;
-    bbyte islocal;
+    bbyte_t islocal;
 };
 
 struct pcall {
-    bvalue *v;
+    bvalue_t *v;
     int argc;
 };
 
@@ -74,7 +74,7 @@ struct filebuf {
     char buf[FILE_BUFFER_SIZE];
 };
 
-void be_throw(bvm *vm, int errorcode)
+void be_throw(bvm_t *vm, int errorcode)
 {
 #if BE_USE_PERF_COUNTERS
     vm->counter_exc++;
@@ -89,7 +89,7 @@ void be_throw(bvm *vm, int errorcode)
 
 /* Fatal error Exit */
 /* Raise a BE_EXIT exception if within a try/catch block, or exit VM */
-BERRY_API void be_exit(bvm *vm, int status)
+BERRY_API void be_exit(bvm_t *vm, int status)
 {
     if (vm->errjmp) {
         be_pushint(vm, status);
@@ -100,7 +100,7 @@ BERRY_API void be_exit(bvm *vm, int status)
     }
 }
 
-void be_throw_message(bvm *vm, int errorcode, const char *msg)
+void be_throw_message(bvm_t *vm, int errorcode, const char *msg)
 {
     be_pushstring(vm, msg);
     be_throw(vm, errorcode);
@@ -108,7 +108,7 @@ void be_throw_message(bvm *vm, int errorcode, const char *msg)
 
 /* Exec protected: exec function and capture any exception and contain it within call */
 /* Exceptions or fatal errors are not propagated */
-int be_execprotected(bvm *vm, bpfunc f, void *data)
+int be_execprotected(bvm_t *vm, bpfunc f, void *data)
 {
     struct blongjmp jmp;
     jmp.status = 0;
@@ -121,7 +121,7 @@ int be_execprotected(bvm *vm, bpfunc f, void *data)
     return jmp.status;
 }
 
-static void vm_state_save(bvm *vm, struct vmstate *state)
+static void vm_state_save(bvm_t *vm, struct vmstate *state)
 {
     state->depth = be_stack_count(&vm->callstack);
     state->top = cast_int(vm->top - vm->stack);
@@ -129,11 +129,11 @@ static void vm_state_save(bvm *vm, struct vmstate *state)
     state->refcount = vm->refstack.count;
 }
 
-static void copy_exception(bvm *vm, int res, int dstindex)
+static void copy_exception(bvm_t *vm, int res, int dstindex)
 {
-    bvalue *dst = vm->stack + dstindex;
+    bvalue_t *dst = vm->stack + dstindex;
     if (res == BE_EXCEPTION || res == BE_EXIT) {
-        bvalue *src = vm->top;
+        bvalue_t *src = vm->top;
         *dst++ = *src++;
         if (res == BE_EXCEPTION) {
             *dst++ = *src++;
@@ -142,7 +142,7 @@ static void copy_exception(bvm *vm, int res, int dstindex)
     vm->top = dst;
 }
 
-static void vm_state_restore(bvm *vm, const struct vmstate *state, int res)
+static void vm_state_restore(bvm_t *vm, const struct vmstate *state, int res)
 {
     vm->reg = vm->stack + state->reg;
     be_vector_resize(vm, &vm->refstack, state->refcount);
@@ -156,16 +156,16 @@ static void vm_state_restore(bvm *vm, const struct vmstate *state, int res)
 }
 
 #if BE_USE_SCRIPT_COMPILER
-static void m_parser(bvm *vm, void *data)
+static void m_parser(bvm_t *vm, void *data)
 {
     struct pparser *p = cast(struct pparser*, data);
-    bclosure *cl = be_parser_source(vm,
+    bclosure_t *cl = be_parser_source(vm,
         p->fname, p->reader, p->data, p->islocal);
     var_setclosure(vm->top, cl);
     be_incrtop(vm);
 }
 
-int be_protectedparser(bvm *vm,
+int be_protectedparser(bvm_t *vm,
     const char *fname, breader reader, void *data, bbool islocal)
 {
     int res;
@@ -174,7 +174,7 @@ int be_protectedparser(bvm *vm,
     s.fname = fname;
     s.reader = reader;
     s.data = data;
-    s.islocal = (bbyte)(islocal != 0);
+    s.islocal = (bbyte_t)(islocal != 0);
     vm_state_save(vm, &state);
     res = be_execprotected(vm, m_parser, &s);
     if (res) { /* restore call stack */
@@ -204,7 +204,7 @@ static const char* _fgets(void *data, size_t *size)
     return NULL;
 }
 
-BERRY_API int be_loadbuffer(bvm *vm,
+BERRY_API int be_loadbuffer(bvm_t *vm,
     const char *name, const char *buffer, size_t length)
 {
     struct strbuf sbuf;
@@ -213,7 +213,7 @@ BERRY_API int be_loadbuffer(bvm *vm,
     return be_protectedparser(vm, name, _sgets, &sbuf, bfalse);
 }
 
-static int fileparser(bvm *vm, const char *name, bbool islocal)
+static int fileparser(bvm_t *vm, const char *name, bbool islocal)
 {
     int res = BE_IO_ERROR;
     struct filebuf *fbuf = be_malloc(vm, sizeof(struct filebuf));
@@ -228,9 +228,9 @@ static int fileparser(bvm *vm, const char *name, bbool islocal)
 #endif /* BE_USE_SCRIPT_COMPILER */
 
 #if BE_USE_BYTECODE_LOADER
-static void bytecode_loader(bvm *vm, void *data)
+static void bytecode_loader(bvm_t *vm, void *data)
 {
-    bclosure *cl = be_bytecode_load(vm, (const char *)data);
+    bclosure_t *cl = be_bytecode_load(vm, (const char *)data);
     if (cl != NULL) {
         var_setclosure(vm->top, cl);
     } else {
@@ -240,7 +240,7 @@ static void bytecode_loader(bvm *vm, void *data)
 }
 
 /* load bytecode file */
-static int load_bytecode(bvm *vm, const char *name)
+static int load_bytecode(bvm_t *vm, const char *name)
 {
     int res = BE_SYNTAX_ERROR;
     if (be_bytecode_check(name)) {
@@ -258,7 +258,7 @@ static int load_bytecode(bvm *vm, const char *name)
 #define load_bytecode(vm, name) BE_SYNTAX_ERROR
 #endif /* BE_USE_BYTECODE_LOADER */
 
-BERRY_API int be_loadmode(bvm *vm, const char *name, bbool islocal)
+BERRY_API int be_loadmode(bvm_t *vm, const char *name, bbool islocal)
 {
     int res = load_bytecode(vm, name);
 #if BE_USE_SCRIPT_COMPILER
@@ -275,16 +275,16 @@ BERRY_API int be_loadmode(bvm *vm, const char *name, bbool islocal)
 }
 
 #if BE_USE_BYTECODE_SAVER
-static void _bytecode_save(bvm *vm, void *data)
+static void _bytecode_save(bvm_t *vm, void *data)
 {
     if (be_top(vm) > 0 && var_isclosure(vm->top - 1)) {
-        bclosure *cl = var_toobj(vm->top - 1);
+        bclosure_t *cl = var_toobj(vm->top - 1);
         be_bytecode_save(vm, (const char *)data, cl->proto);
     }
 }
 
 /* save bytecode file */
-BERRY_API int be_savecode(bvm *vm, const char *name)
+BERRY_API int be_savecode(bvm_t *vm, const char *name)
 {
     int res;
     struct vmstate state;
@@ -297,14 +297,14 @@ BERRY_API int be_savecode(bvm *vm, const char *name)
 }
 #endif
 
-static void m_pcall(bvm *vm, void *data)
+static void m_pcall(bvm_t *vm, void *data)
 {
     struct pcall *p = cast(struct pcall*, data);
     be_dofunc(vm, p->v, p->argc);
 }
 
 /* Protected call: contain any exception of fatal error and restore context if something went wrong */
-int be_protectedcall(bvm *vm, bvalue *v, int argc)
+int be_protectedcall(bvm_t *vm, bvalue_t *v, int argc)
 {
     int res;
     struct pcall s;
@@ -322,16 +322,16 @@ int be_protectedcall(bvm *vm, bvalue *v, int argc)
 #if BE_DEBUG && defined(be_assert)
 /* increase top register and return new top */
 /* Does not expand the stack if there is not enough room, but may corrupt memory */
-bvalue* be_incrtop(bvm *vm)
+bvalue_t* be_incrtop(bvm_t *vm)
 {
-    bvalue *top = vm->top++;
+    bvalue_t *top = vm->top++;
     be_assert(top < vm->stacktop);
     return top;
 }
 #endif
 
 /* TODO what is the difference with be_stack_push? */
-void be_stackpush(bvm *vm)
+void be_stackpush(bvm_t *vm)
 {
     /* make sure there is enough stack space */
     be_stack_require(vm, 1 + BE_STACK_FREE_MIN);
@@ -339,7 +339,7 @@ void be_stackpush(bvm *vm)
 }
 
 /* check that the stack is able to store `count` items, and increase stack if needed */
-BERRY_API void be_stack_require(bvm *vm, int count)
+BERRY_API void be_stack_require(bvm_t *vm, int count)
 {
 #if BE_USE_DEBUG_STACK == 0
     if (vm->top + count >= vm->stacktop) {
@@ -351,10 +351,10 @@ BERRY_API void be_stack_require(bvm *vm, int count)
 }
 
 /* Scan the entire callstack and adjust all pointer by `offset` */
-static void update_callstack(bvm *vm, intptr_t offset)
+static void update_callstack(bvm_t *vm, intptr_t offset)
 {
-    bcallframe *cf = be_stack_top(&vm->callstack);
-    bcallframe *base = be_stack_base(&vm->callstack);
+    bcallframe_t *cf = be_stack_top(&vm->callstack);
+    bcallframe_t *base = be_stack_base(&vm->callstack);
     for (; cf >= base; --cf) {
         fixup_ptr(cf->func, offset);
         fixup_ptr(cf->top, offset);
@@ -364,9 +364,9 @@ static void update_callstack(bvm *vm, intptr_t offset)
     fixup_ptr(vm->reg, offset);
 }
 
-static void update_upvalues(bvm *vm, intptr_t offset)
+static void update_upvalues(bvm_t *vm, intptr_t offset)
 {
-    bupval *node = vm->upvalist;
+    bupval_t *node = vm->upvalist;
     /* update the value referenced by open upvalues */
     for (; node != NULL; node = node->u.next) {
         fixup_ptr(node->value, offset);
@@ -375,15 +375,15 @@ static void update_upvalues(bvm *vm, intptr_t offset)
 
 /* Resize the stack to new `size` as number of elements */
 /* Then update all pointers in callstack and upvalues with the new stack address */
-static void stack_resize(bvm *vm, size_t size)
+static void stack_resize(bvm_t *vm, size_t size)
 {
     intptr_t offset;
-    bvalue *old = vm->stack;  /* save original pointer of stack before resize */
-    size_t os = (vm->stacktop - old) * sizeof(bvalue);  /* size of current stack allocated in bytes */
+    bvalue_t *old = vm->stack;  /* save original pointer of stack before resize */
+    size_t os = (vm->stacktop - old) * sizeof(bvalue_t);  /* size of current stack allocated in bytes */
 #if BE_USE_DEBUG_STACK == 0
-    vm->stack = be_realloc(vm, old, os, sizeof(bvalue) * size);  /* reallocate with the new size */
+    vm->stack = be_realloc(vm, old, os, sizeof(bvalue_t) * size);  /* reallocate with the new size */
 #else   /* force a reallocation */
-    size_t ns = sizeof(bvalue) * size;
+    size_t ns = sizeof(bvalue_t) * size;
     vm->stack = be_malloc(vm, ns);
     size_t transf = (os < ns) ? os : ns;        /* min size */
     memmove(vm->stack, old, transf);            /* copy to new location */
@@ -401,7 +401,7 @@ static void stack_resize(bvm *vm, size_t size)
 /* Stack resize internal API */
 /* Increases the stack by `n` elements, reallocate stack if needed and update all callstacks and upvals */
 /* Check if we are above the max allowed stack */
-void be_stack_expansion(bvm *vm, int n)
+void be_stack_expansion(bvm_t *vm, int n)
 {
     int size = vm->stacktop - vm->stack;    /* with debug enabled, stack increase may be negative */
     /* check new stack size */
@@ -410,21 +410,21 @@ void be_stack_expansion(bvm *vm, int n)
         stack_resize(vm, size + 1);
         be_raise(vm, "runtime_error", STACK_OVER_MSG(BE_STACK_TOTAL_MAX));
     }
-    if (vm->obshook != NULL) (*vm->obshook)(vm, BE_OBS_STACK_RESIZE_START, size * sizeof(bvalue), (size + n) * sizeof(bvalue));
+    if (vm->obshook != NULL) (*vm->obshook)(vm, BE_OBS_STACK_RESIZE_START, size * sizeof(bvalue_t), (size + n) * sizeof(bvalue_t));
     stack_resize(vm, size + n);
 }
 
-static void fixup_exceptstack(bvm* vm, struct bexecptframe* lbase)
+static void fixup_exceptstack(bvm_t* vm, struct bexecptframe* lbase)
 {
     struct bexecptframe *base = be_stack_base(&vm->exceptstack);
     if (lbase != base) { /* the address has changed when the stack is expanded */
         struct bexecptframe *top = be_stack_top(&vm->exceptstack);
-        bbyte *begin = (bbyte*)&lbase->errjmp;
-        bbyte *end = (bbyte*)&(lbase + (top - base))->errjmp;
+        bbyte_t *begin = (bbyte_t*)&lbase->errjmp;
+        bbyte_t *end = (bbyte_t*)&(lbase + (top - base))->errjmp;
         intptr_t offset = ptr_offset(base, lbase);
         struct blongjmp *errjmp = vm->errjmp;
         while (errjmp) {
-            bbyte *prev = (bbyte*)errjmp->prev;
+            bbyte_t *prev = (bbyte_t*)errjmp->prev;
             if (prev >= begin && prev < end) {
                 fixup_ptr(prev, offset); /* fixup the prev pointer */
                 errjmp->prev = (struct blongjmp*)prev;
@@ -436,7 +436,7 @@ static void fixup_exceptstack(bvm* vm, struct bexecptframe* lbase)
 
 /* set an exception handling recovery point. To do this, we have to
  * push some VM states into the exception stack. */
-void be_except_block_setup(bvm *vm)
+void be_except_block_setup(bvm_t *vm)
 {
     struct bexecptframe *frame;
     struct bexecptframe *lbase = be_stack_base(&vm->exceptstack);
@@ -453,7 +453,7 @@ void be_except_block_setup(bvm *vm)
 }
 
 /* resumes to the state of the previous frame when an exception occurs. */
-void be_except_block_resume(bvm *vm)
+void be_except_block_resume(bvm_t *vm)
 {
     int errorcode = vm->errjmp->status;
     struct bexecptframe *frame = be_stack_top(&vm->exceptstack);
@@ -463,8 +463,8 @@ void be_except_block_resume(bvm *vm)
         /* jump to except instruction */
         vm->ip = frame->ip + IGET_sBx(frame->ip[-1]);
         if (be_stack_count(&vm->callstack) > frame->depth) {
-            bvalue *top = vm->top;
-            bcallframe *cf = be_vector_at(&vm->callstack, frame->depth);
+            bvalue_t *top = vm->top;
+            bcallframe_t *cf = be_vector_at(&vm->callstack, frame->depth);
             vm->top = cf->top;
             vm->reg = cf->reg;
             vm->cf = frame->depth ? cf - 1 : NULL;
@@ -487,7 +487,7 @@ void be_except_block_resume(bvm *vm)
 }
 
 /* only close the except block, no other operations */
-void be_except_block_close(bvm *vm, int count)
+void be_except_block_close(bvm_t *vm, int count)
 {
     struct bexecptframe *frame;
     int size = be_stack_count(&vm->exceptstack);
@@ -497,16 +497,16 @@ void be_except_block_close(bvm *vm, int count)
     be_vector_resize(vm, &vm->exceptstack, size - count);
 }
 
-void be_save_stacktrace(bvm *vm)
+void be_save_stacktrace(bvm_t *vm)
 {
-    bstack *stack = &vm->tracestack;
+    bstack_t *stack = &vm->tracestack;
     be_stack_clear(stack);
     if (be_stack_count(&vm->callstack)) {
-        bcallframe *cf;
-        bcallframe *base = be_stack_base(&vm->callstack);
-        bcallframe *top = be_stack_top(&vm->callstack);
+        bcallframe_t *cf;
+        bcallframe_t *base = be_stack_base(&vm->callstack);
+        bcallframe_t *top = be_stack_top(&vm->callstack);
         for (cf = base; cf <= top; ++cf) {
-            bcallsnapshot *st;
+            bcallsnapshot_t *st;
             be_stack_push(vm, stack, NULL);
             st = be_stack_top(stack);
             st->func = *cf->func;

@@ -20,14 +20,14 @@
 
 #define global(vm)      ((vm)->gbldesc.global)
 
-static void dump_map_keys(bvm *vm, bmap *map)
+static void dump_map_keys(bvm_t *vm, bmap_t *map)
 {
     if (!map) { return; }   /* protect agains potential null pointer */
-    bmapnode *node;
-    bmapiter iter = be_map_iter();
+    bmapnode_t *node;
+    bmapiter_t iter = be_map_iter();
     while ((node = be_map_next(map, &iter)) != NULL) {
         if (var_isstr(&node->key)) {
-            bstring *s = var_tostr(&node->key);
+            bstring_t *s = var_tostr(&node->key);
             be_pushstring(vm, str(s));
             be_data_push(vm, -2);
             be_pop(vm, 1);
@@ -35,7 +35,7 @@ static void dump_map_keys(bvm *vm, bmap *map)
     }
 }
 
-static int m_globals(bvm *vm)
+static int m_globals(bvm_t *vm)
 {
     be_newobject(vm, "list");
     dump_map_keys(vm, global(vm).vtab);
@@ -43,7 +43,7 @@ static int m_globals(bvm *vm)
     be_return(vm);
 }
 
-static int m_contains(bvm *vm)
+static int m_contains(bvm_t *vm)
 {
     int top = be_top(vm);
     if (top >= 1 && be_isstring(vm, 1)) {
@@ -55,7 +55,7 @@ static int m_contains(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_findglobal(bvm *vm)
+static int m_findglobal(bvm_t *vm)
 {
     int top = be_top(vm);
     if (top >= 1 && be_isstring(vm, 1)) {
@@ -66,7 +66,7 @@ static int m_findglobal(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_setglobal(bvm *vm)
+static int m_setglobal(bvm_t *vm)
 {
     int top = be_top(vm);
     if (top >= 2 && be_isstring(vm, 1)) {

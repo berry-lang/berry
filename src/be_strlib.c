@@ -20,9 +20,9 @@
 #define is_digit(c)     ((c) >= '0' && (c) <= '9')
 #define skip_space(s)   while (is_space(*(s))) { ++(s); }
 
-typedef bint (*str_opfunc)(const char*, const char*, bint, bint);
+typedef bint_t (*str_opfunc)(const char*, const char*, bint_t, bint_t);
 
-bstring* be_strcat(bvm *vm, bstring *s1, bstring *s2)
+bstring_t* be_strcat(bvm_t *vm, bstring_t *s1, bstring_t *s2)
 {
     size_t len = (size_t)str_len(s1) + str_len(s2);
     if (len <= SHORT_STR_MAX_LEN) {
@@ -31,7 +31,7 @@ bstring* be_strcat(bvm *vm, bstring *s1, bstring *s2)
         strncat(buf, str(s2), len);
         return be_newstrn(vm, buf, len);
     } else { /* long string */
-        bstring *s = be_newstrn(vm, NULL, len);
+        bstring_t *s = be_newstrn(vm, NULL, len);
         char *sbuf = (char*)str(s);
         strcpy(sbuf, str(s1));
         strcpy(sbuf + str_len(s1), str(s2));
@@ -39,7 +39,7 @@ bstring* be_strcat(bvm *vm, bstring *s1, bstring *s2)
     }
 }
 
-int be_strcmp(bstring *s1, bstring *s2)
+int be_strcmp(bstring_t *s1, bstring_t *s2)
 {
     if (be_eqstr(s1, s2)) {
         return 0;
@@ -47,7 +47,7 @@ int be_strcmp(bstring *s1, bstring *s2)
     return strcmp(str(s1), str(s2));
 }
 
-bstring* be_num2str(bvm *vm, bvalue *v)
+bstring_t* be_num2str(bvm_t *vm, bvalue_t *v)
 {
     char buf[25];
     if (var_isint(v)) {
@@ -60,9 +60,9 @@ bstring* be_num2str(bvm *vm, bvalue *v)
     return be_newstr(vm, buf);
 }
 
-static void module2str(char *buf, bvalue *v)
+static void module2str(char *buf, bvalue_t *v)
 {
-    const char *name = be_module_name(cast(bmodule*, var_toobj(v)));
+    const char *name = be_module_name(cast(bmodule_t*, var_toobj(v)));
     if (name) {
         sprintf(buf, "<module: %s>", name);
     } else {
@@ -70,7 +70,7 @@ static void module2str(char *buf, bvalue *v)
     }
 }
 
-static bstring* sim2str(bvm *vm, bvalue *v)
+static bstring_t* sim2str(bvm_t *vm, bvalue_t *v)
 {
     char sbuf[64]; /* BUG: memory overflow */
     switch (var_type(v)) {
@@ -92,7 +92,7 @@ static bstring* sim2str(bvm *vm, bvalue *v)
         break;
     case BE_CLASS:
         sprintf(sbuf, "<class: %s>",
-            str(be_class_name(cast(bclass*, var_toobj(v)))));
+            str(be_class_name(cast(bclass_t*, var_toobj(v)))));
         break;
     case BE_MODULE:
         module2str(sbuf, v);
@@ -107,15 +107,15 @@ static bstring* sim2str(bvm *vm, bvalue *v)
     return be_newstr(vm, sbuf);
 }
 
-static bstring* ins2str(bvm *vm, int idx)
+static bstring_t* ins2str(bvm_t *vm, int idx)
 {
-    bstring *s = str_literal(vm, "tostring");
-    binstance *obj = var_toobj(vm->reg + idx);
+    bstring_t *s = str_literal(vm, "tostring");
+    binstance_t *obj = var_toobj(vm->reg + idx);
     /* get method 'tostring' */
     int type = be_instance_member(vm, obj, s, vm->top);
     be_incrtop(vm); /* push the obj::tostring to stack */
     if (basetype(type) != BE_FUNCTION) {
-        bstring *name = be_class_name(be_instance_class(obj));
+        bstring_t *name = be_class_name(be_instance_class(obj));
         char *sbuf = be_malloc(vm, (size_t)str_len(name) + 16);
         sprintf(sbuf, "<instance: %s()>", str(name));
         be_stackpop(vm, 1); /* pop the obj::tostring */
@@ -136,33 +136,33 @@ static bstring* ins2str(bvm *vm, int idx)
     return s;
 }
 
-void be_val2str(bvm *vm, int index)
+void be_val2str(bvm_t *vm, int index)
 {
-    bstring *s;
+    bstring_t *s;
     int idx = be_absindex(vm, index) - 1;
-    bvalue *v = vm->reg + idx;
+    bvalue_t *v = vm->reg + idx;
     if (var_isstr(v)) return; /* do nothing */
     s = var_isinstance(v) ? ins2str(vm, idx) : sim2str(vm, v);
     v = vm->reg + idx; /* the stack may change */
     var_setstr(v, s);
 }
 
-static void pushstr(bvm *vm, const char *s, size_t len)
+static void pushstr(bvm_t *vm, const char *s, size_t len)
 {
     /* to create a string and then update the top pointer,
      * otherwise the GC may crash due to uninitialized values.
      **/
-    bstring *str = be_newstrn(vm, s, len);
-    bvalue *reg = be_incrtop(vm);
+    bstring_t *str = be_newstrn(vm, s, len);
+    bvalue_t *reg = be_incrtop(vm);
     var_setstr(reg, str);
 }
 
-static const char* concat2(bvm *vm)
+static const char* concat2(bvm_t *vm)
 {
-    bvalue *dst = vm->top - 2;
-    bstring *s1 = var_tostr(dst);
-    bstring *s2 = var_tostr(dst + 1);
-    bstring *s = be_strcat(vm, s1, s2);
+    bvalue_t *dst = vm->top - 2;
+    bstring_t *s1 = var_tostr(dst);
+    bstring_t *s2 = var_tostr(dst + 1);
+    bstring_t *s = be_strcat(vm, s1, s2);
     be_assert(var_isstr(vm->top - 2) && var_isstr(vm->top - 1));
     dst = vm->top - 2; /* the stack may change */
     var_setstr(dst, s);
@@ -170,7 +170,7 @@ static const char* concat2(bvm *vm)
     return str(s);
 }
 
-const char* be_pushvfstr(bvm *vm, const char *format, va_list arg)
+const char* be_pushvfstr(bvm_t *vm, const char *format, va_list arg)
 {
     pushstr(vm, "", 0);
     for (;;) {
@@ -190,17 +190,17 @@ const char* be_pushvfstr(bvm *vm, const char *format, va_list arg)
             break;
         }
         case 'd': {
-            bstring *s;
-            bvalue *v = be_incrtop(vm);
+            bstring_t *s;
+            bvalue_t *v = be_incrtop(vm);
             var_setint(v, va_arg(arg, int));
             s = be_num2str(vm, v);
             var_setstr(v, s);
             break;
         }
         case 'f': case 'g': {
-            bstring *s;
-            bvalue *v = be_incrtop(vm);
-            var_setreal(v, cast(breal, va_arg(arg, double)));
+            bstring_t *s;
+            bvalue_t *v = be_incrtop(vm);
+            var_setreal(v, cast(breal_t, va_arg(arg, double)));
             s = be_num2str(vm, v);
             var_setstr(v, s);
             break;
@@ -252,10 +252,10 @@ int be_char2hex(int c)
  *                    +- 0x or 0X ---hex_digits--+
  * 
  *******************************************************************/
-BERRY_API bint be_str2int(const char *str, const char **endstr)
+BERRY_API bint_t be_str2int(const char *str, const char **endstr)
 {
     int c, sign;
-    bint sum = 0;
+    bint_t sum = 0;
     skip_space(str);
     if (str[0] == '0' && (str[1] == 'x' || str[1] == 'X')) {
         /* hex literal */
@@ -295,10 +295,10 @@ BERRY_API bint be_str2int(const char *str, const char **endstr)
  *      '-E-'  +- + -+             
  *             '- - -'  
  *******************************************************************/
-BERRY_API breal be_str2real(const char *str, const char **endstr)
+BERRY_API breal_t be_str2real(const char *str, const char **endstr)
 {
     int c, sign;
-    breal sum = 0, deci = 0, point = (breal)0.1;
+    breal_t sum = 0, deci = 0, point = (breal_t)0.1;
     skip_space(str);
     sign = c = *str++;
     if (c == '+' || c == '-') {
@@ -311,15 +311,15 @@ BERRY_API breal be_str2real(const char *str, const char **endstr)
     if (c == '.') {
         c = *str++;
         while (is_digit(c)) {
-            deci = deci + ((breal)c - '0') * point;
-            point *= (breal)0.1;
+            deci = deci + ((breal_t)c - '0') * point;
+            point *= (breal_t)0.1;
             c = *str++;
         }
     }
     sum = sum + deci;
     if (c == 'e' || c == 'E') {
         int e = 0;
-        breal ratio = (c = *str++) == '-' ? (breal)0.1 : 10;
+        breal_t ratio = (c = *str++) == '-' ? (breal_t)0.1 : 10;
         if (c == '+' || c == '-') {
             c = *str++;
         }
@@ -341,10 +341,10 @@ BERRY_API breal be_str2real(const char *str, const char **endstr)
  * 1. skip \s*[\+\-]?\d*
  * 2. matched [.eE]? yes: real, no: integer.
  **/
-BERRY_API const char *be_str2num(bvm *vm, const char *str)
+BERRY_API const char *be_str2num(bvm_t *vm, const char *str)
 {
     const char *sout; 
-    bint c, vint = be_str2int(str, &sout);
+    bint_t c, vint = be_str2int(str, &sout);
     c = *sout;
     if (c == '.' || c == 'e' || c == 'E') {
         be_pushreal(vm, be_str2real(str, &sout));
@@ -354,12 +354,12 @@ BERRY_API const char *be_str2num(bvm *vm, const char *str)
     return sout;
 }
 
-static bstring* string_range(bvm *vm, bstring *str, binstance *range)
+static bstring_t* string_range(bvm_t *vm, bstring_t *str, binstance_t *range)
 {
-    bint lower, upper;
-    bint size = str_len(str);   /* size of source string */
+    bint_t lower, upper;
+    bint_t size = str_len(str);   /* size of source string */
     /* get index range */
-    bvalue temp;
+    bvalue_t temp;
     be_instance_member(vm, range, be_newstr(vm, "__lower__"), &temp);
     lower = var_toint(&temp);
     be_instance_member(vm, range, be_newstr(vm, "__upper__"), &temp);
@@ -377,7 +377,7 @@ static bstring* string_range(bvm *vm, bstring *str, binstance *range)
 }
 
 /* string subscript operation */
-bstring* be_strindex(bvm *vm, bstring *str, bvalue *idx)
+bstring_t* be_strindex(bvm_t *vm, bstring_t *str, bvalue_t *idx)
 {
     if (var_isint(idx)) {
         int pos = var_toidx(idx);
@@ -388,7 +388,7 @@ bstring* be_strindex(bvm *vm, bstring *str, bvalue *idx)
         }
         be_raise(vm, "index_error", "string index out of range");
     } else if (var_isinstance(idx)) {
-        binstance * ins = var_toobj(idx);
+        binstance_t * ins = var_toobj(idx);
         const char *cname = str(be_instance_name(ins));
         if (!strcmp(cname, "range")) {
             return string_range(vm, str, ins);
@@ -488,7 +488,7 @@ static char* escape(char *q, unsigned c, int quote)
     return q;
 }
 
-static void toescape(bvm *vm, int index, int quote)
+static void toescape(bvm_t *vm, int index, int quote)
 {
     char *buf, *q;
     const char *p, *s = be_tostring(vm, index);
@@ -506,7 +506,7 @@ static void toescape(bvm *vm, int index, int quote)
     be_pop(vm, 2); /* remove buffer & top string */
 }
 
-BERRY_API const char* be_toescape(bvm *vm, int index, int mode)
+BERRY_API const char* be_toescape(bvm_t *vm, int index, int mode)
 {
     if (be_isstring(vm, index)) {
         index = be_absindex(vm, index);
@@ -556,7 +556,7 @@ static void mode_fixlen(char *mode, const char *lenmode)
     mode[l + lm] = '\0';
 }
 
-static int str_format(bvm *vm)
+static int str_format(bvm_t *vm)
 {
     int top = be_top(vm);
     if (top > 0 && be_isstring(vm, 1)) {
@@ -632,7 +632,7 @@ static int str_format(bvm *vm)
 }
 
 /* string.op(s1, s2, begin=0, end=length(s2)) */
-static bint str_operation(bvm *vm, str_opfunc func, bint error)
+static bint_t str_operation(bvm_t *vm, str_opfunc func, bint_t error)
 {
     int top = be_top(vm);
     /* check the number and type of arguments */
@@ -643,8 +643,8 @@ static bint str_operation(bvm *vm, str_opfunc func, bint error)
         const char *s1 = be_tostring(vm, 1);
         const char *s2 = be_tostring(vm, 2);
         /* get begin and end indexes (may use default values) */
-        bint begin = top >= 3 && be_isint(vm, 3) ? be_toint(vm, 3) : 0;
-        bint end = top >= 4 && be_isint(vm, 4) ? be_toint(vm, 4) : len1;
+        bint_t begin = top >= 3 && be_isint(vm, 3) ? be_toint(vm, 3) : 0;
+        bint_t end = top >= 4 && be_isint(vm, 4) ? be_toint(vm, 4) : len1;
         /* basic range check:
          * 1. begin position must be greater than 0 and
          *    less than the length of the source string.
@@ -659,25 +659,25 @@ static bint str_operation(bvm *vm, str_opfunc func, bint error)
     return error; /* returns the default error value */
 }
 
-static bint _sfind(const char *s1, const char *s2, bint begin, bint end)
+static bint_t _sfind(const char *s1, const char *s2, bint_t begin, bint_t end)
 {
     const char *res = strstr(s1 + begin, s2);
     if (res) {
-        bint pos = (bint)(res - s1);
+        bint_t pos = (bint_t)(res - s1);
         return pos <= end ? pos : -1;
     }
     return -1;
 }
 
-static int str_find(bvm *vm)
+static int str_find(bvm_t *vm)
 {
     be_pushint(vm, str_operation(vm, _sfind, -1));
     be_return(vm);
 }
 
-static bint _scount(const char *s1, const char *s2, bint begin, bint end)
+static bint_t _scount(const char *s1, const char *s2, bint_t begin, bint_t end)
 {
-    bint count = 0;
+    bint_t count = 0;
     const char *res = s1 + begin, *send = s1 + end;
     while ((res = strstr(res, s2)) != NULL && res <= send) {
         count += 1;
@@ -686,13 +686,13 @@ static bint _scount(const char *s1, const char *s2, bint begin, bint end)
     return count;
 }
 
-static int str_count(bvm *vm)
+static int str_count(bvm_t *vm)
 {
     be_pushint(vm, str_operation(vm, _scount, 0));
     be_return(vm);
 }
 
-static bbool _split_string(bvm *vm, int top)
+static bbool _split_string(bvm_t *vm, int top)
 {
     if (be_isstring(vm, 2)) {
         const char *res;
@@ -700,7 +700,7 @@ static bbool _split_string(bvm *vm, int top)
         int len2 = be_strlen(vm, 2);
         const char *s1 = be_tostring(vm, 1);
         const char *s2 = be_tostring(vm, 2);
-        bint count = len2 /* match when the pattern string is not empty */
+        bint_t count = len2 /* match when the pattern string is not empty */
             ? top >= 3 && be_isint(vm, 3) ? be_toint(vm, 3) : len1
             : 0; /* cannot match empty pattern string */
         while (count-- && (res = strstr(s1, s2)) != NULL) {
@@ -717,7 +717,7 @@ static bbool _split_string(bvm *vm, int top)
     return bfalse;
 }
 
-static bbool _split_index(bvm *vm)
+static bbool _split_index(bvm_t *vm)
 {
     if (be_isint(vm, 2)) {
         int len = be_strlen(vm, 1), idx = be_toindex(vm, 2);
@@ -737,7 +737,7 @@ static bbool _split_index(bvm *vm)
     return bfalse;
 }
 
-static int str_split(bvm *vm)
+static int str_split(bvm_t *vm)
 {
     int top = be_top(vm);
     be_newobject(vm, "list");
@@ -749,14 +749,14 @@ static int str_split(bvm *vm)
     be_return(vm);
 }
 
-static int str_i2hex(bvm *vm)
+static int str_i2hex(bvm_t *vm)
 {
     int top = be_top(vm);
     if (top && be_isint(vm, 1)) {
-        bint value = be_toint(vm, 1);
+        bint_t value = be_toint(vm, 1);
         char fmt[10] = { "%" BE_INT_FMTLEN "X" }, buf[18];
         if (top >= 2 && be_isint(vm, 2)) {
-            bint num = be_toint(vm, 2);
+            bint_t num = be_toint(vm, 2);
             if (num > 0 && num <= 16) {
                 sprintf(fmt, "%%.%d" BE_INT_FMTLEN "X", (int)num);
             }
@@ -768,17 +768,17 @@ static int str_i2hex(bvm *vm)
     be_return_nil(vm);
 }
 
-static int str_byte(bvm *vm)
+static int str_byte(bvm_t *vm)
 {
     if (be_top(vm) && be_isstring(vm, 1)) {
-        const bbyte *s = (const bbyte *)be_tostring(vm, 1);
+        const bbyte_t *s = (const bbyte_t *)be_tostring(vm, 1);
         be_pushint(vm, *s);
         be_return(vm);
     }
     be_return_nil(vm);
 }
 
-static int str_char(bvm *vm)
+static int str_char(bvm_t *vm)
 {
     if (be_top(vm) && be_isint(vm, 1)) {
         char c = be_toint(vm, 1) & 0xFF;
@@ -789,7 +789,7 @@ static int str_char(bvm *vm)
 }
 
 // boolean to select whether we call toupper() or tolower()
-static int str_touplower(bvm *vm, bbool up)
+static int str_touplower(bvm_t *vm, bbool up)
 {
     if (be_top(vm) && be_isstring(vm, 1)) {
         const char *p, *s = be_tostring(vm, 1);
@@ -807,15 +807,15 @@ static int str_touplower(bvm *vm, bbool up)
     be_return_nil(vm);
 }
 
-static int str_tolower(bvm *vm) {
+static int str_tolower(bvm_t *vm) {
     return str_touplower(vm, bfalse);
 }
 
-static int str_toupper(bvm *vm) {
+static int str_toupper(bvm_t *vm) {
     return str_touplower(vm, btrue);
 }
 
-static int str_tr(bvm *vm)
+static int str_tr(bvm_t *vm)
 {
     if (be_top(vm) == 3 && be_isstring(vm, 1) && be_isstring(vm, 2) && be_isstring(vm, 3)) {
         const char *p, *s = be_tostring(vm, 1);
@@ -848,7 +848,7 @@ static int str_tr(bvm *vm)
     be_return_nil(vm);
 }
 
-static int str_replace(bvm *vm)
+static int str_replace(bvm_t *vm)
 {
     int top = be_top(vm);
     if (top >= 3 && be_isstring(vm, 1) && be_isstring(vm, 2) && be_isstring(vm, 3)) {
@@ -868,7 +868,7 @@ static int str_replace(bvm *vm)
     be_return_nil(vm);
 }
 
-static int str_escape(bvm *vm)
+static int str_escape(bvm_t *vm)
 {
     int top = be_top(vm);
     if (top >= 1 && be_isstring(vm, 1)) {

@@ -54,49 +54,49 @@
 #define comp_clear_strict(vm)       ((vm)->compopt &= ~(1<<COMP_STRICT))
 
 /**
- * @enum compoptmask
+ * @typedef compoptmask_t
  * @brief Compilation options
  *
  */
 typedef enum {
     COMP_NAMED_GBL = 0x00, /**< compile with named globals */
        COMP_STRICT = 0x01, /**< compile with named globals */
-} compoptmask;             /**< compoptmask */
+} compoptmask_t;
 
 /**
- * @struct bglobaldesc
- * @brief bglobaldesc
+ * @typedef bglobaldesc_t
+ * @brief bglobaldesc_t
  *
  */
 typedef struct {
     struct {
-        bmap *vtab;    /**< global variable index table */
-        bvector vlist; /**< global variable list */
+        bmap_t *vtab;    /**< global variable index table */
+        bvector_t vlist; /**< global variable list */
     } global;
     struct {
-        bmap *vtab;    /**< built-in variable index table */
-        bvector vlist; /**< built-in variable list */
+        bmap_t *vtab;    /**< built-in variable index table */
+        bvector_t vlist; /**< built-in variable list */
     } builtin;
-} bglobaldesc;         /**< bglobaldesc */
+} bglobaldesc_t;
 
 /**
- * @struct bcallframe
- * @brief bcallframe
+ * @typedef bcallframe_t
+ * @brief bcallframe_t
  *
  */
 typedef struct {
-    bvalue *func;        /**< function register pointer */
-    bvalue *top;         /**< top register pointer */
-    bvalue *reg;         /**< base register pointer */
-    binstruction *ip;    /**< instruction pointer (only berry-function) */
+    bvalue_t *func;        /**< function register pointer */
+    bvalue_t *top;         /**< top register pointer */
+    bvalue_t *reg;         /**< base register pointer */
+    binstruction_t *ip;    /**< instruction pointer (only berry-function) */
 #if BE_USE_DEBUG_HOOK
-    blineinfo *lineinfo; /**< lineinfo */
+    blineinfo_t *lineinfo; /**< lineinfo */
 #endif
     int status;
-} bcallframe;
+} bcallframe_t;
 
-struct gc16_t;           /**< memory pool for 0-16 bytes or less objects */
-struct gc32_t;           /**< memory pool for 17-32 bytes */
+struct gc16_t;             /**< memory pool for 0-16 bytes or less objects */
+struct gc32_t;             /**< memory pool for 17-32 bytes */
 
 /**
  * @struct bgc
@@ -104,15 +104,15 @@ struct gc32_t;           /**< memory pool for 17-32 bytes */
  *
  */
 struct bgc {
-    bgcobject *list;       /**< the GC-object list */
-    bgcobject *gray;       /**< the gray object list */
-    bgcobject *fixed;      /**< the fixed objecct list  */
+    bgcobject_t *list;     /**< the GC-object list */
+    bgcobject_t *gray;     /**< the gray object list */
+    bgcobject_t *fixed;    /**< the fixed object list  */
     struct gc16_t* pool16; /**< pool16 */
     struct gc32_t* pool32; /**< pool32 */
     size_t usage;          /**< the count of bytes currently allocated */
     size_t threshold;      /**< The threshold of allocation for the next GC */
-    bbyte steprate;        /**< the rate of increase in the distribution between two GCs (percentage) */
-    bbyte status;          /**< status */
+    bbyte_t steprate;      /**< the rate of increase in the distribution between two GCs (percentage) */
+    bbyte_t status;        /**< status */
 };
 
 /**
@@ -121,9 +121,9 @@ struct bgc {
  *
  */
 struct bstringtable {
-    bstring **table; /**< table */
-    int count;       /**< string count */
-    int size;        /**< size */
+    bstring_t **table; /**< table */
+    int count;         /**< string count */
+    int size;          /**< size */
 };
 
 /**
@@ -132,19 +132,19 @@ struct bstringtable {
  *
  */
 struct bmoduledesc {
-    bmap *loaded; /**< loaded module map */
-    blist *path;  /**< module load path list */
+    bmap_t *loaded; /**< loaded module map */
+    blist_t *path;  /**< module load path list */
 };
 
 /**
- * @struct bcallsnapshot
- * @brief bcallsnapshot
+ * @typedef bcallsnapshot_t
+ * @brief bcallsnapshot_t
  *
  */
 typedef struct {
-    bvalue func;      /**< func */
-    binstruction *ip; /**< ip */
-} bcallsnapshot;      /**< bcallsnapshot */
+    bvalue_t func;      /**< func */
+    binstruction_t *ip; /**< ip */
+} bcallsnapshot_t;
 
 /**
  * @struct bupval
@@ -152,9 +152,9 @@ typedef struct {
  *
  */
 struct bupval {
-    bvalue* value;           /**< value */
+    bvalue_t* value;         /**< value */
     union {
-        bvalue value;        /**< value */
+        bvalue_t value;      /**< value */
         struct bupval* next; /**< next */
     } u;                     /**< u */
     int refcnt;              /**< refcnt */
@@ -166,25 +166,25 @@ struct bupval {
  *
  */
 struct bvm {
-    bglobaldesc gbldesc;        /**< global description */
-    bvalue *stack;              /**< stack space */
-    bvalue *stacktop;           /**< stack top register */
-    bupval *upvalist;           /**< open upvalue list */
-    bstack callstack;           /**< function call stack */
-    bstack exceptstack;         /**< exception stack */
-    bcallframe *cf;             /**< function call frame */
-    bvalue *reg;                /**< function base register */
-    bvalue *top;                /**< function top register */
-    binstruction *ip;           /**< function instruction pointer */
+    bglobaldesc_t gbldesc;      /**< global description */
+    bvalue_t *stack;            /**< stack space */
+    bvalue_t *stacktop;         /**< stack top register */
+    bupval_t *upvalist;         /**< open upvalue list */
+    bstack_t callstack;         /**< function call stack */
+    bstack_t exceptstack;       /**< exception stack */
+    bcallframe_t *cf;           /**< function call frame */
+    bvalue_t *reg;              /**< function base register */
+    bvalue_t *top;              /**< function top register */
+    binstruction_t *ip;         /**< function instruction pointer */
     struct blongjmp *errjmp;    /**< error jump point */
-    bstack refstack;            /**< object reference stack */
+    bstack_t refstack;          /**< object reference stack */
     struct bmoduledesc module;  /**< module description */
     struct bstringtable strtab; /**< short string table */
-    bstack tracestack;          /**< call state trace-stack */
-    bmap *ntvclass;             /**< native class table */
+    bstack_t tracestack;        /**< call state trace-stack */
+    bmap_t *ntvclass;           /**< native class table */
     struct bgc gc;              /**< gc */
     bctypefunc ctypefunc;       /**< handler to ctype_func */
-    bbyte compopt;              /**< compilation options */
+    bbyte_t compopt;            /**< compilation options */
     int32_t bytesmaxsize;       /**< max allowed size for bytes() object, default 32kb but can be increased */
     bobshook obshook;           /**< obshook */
 #if BE_USE_PERF_COUNTERS
@@ -199,8 +199,8 @@ struct bvm {
     uint32_t counter_gc_freed;  /**< counter for objects freed by last gc */
 #endif
 #if BE_USE_DEBUG_HOOK
-    bvalue hook;                /**< hook */
-    bbyte hookmask;             /**< hookmask */
+    bvalue_t hook;              /**< hook */
+    bbyte_t hookmask;           /**< hookmask */
 #endif
 };
 
@@ -226,36 +226,36 @@ struct bvm {
 #define PRIM_FUNC           (1 << 1)
 
 /**
- * @fn int be_default_init_native_function(bvm*)
+ * @fn int be_default_init_native_function(bvm_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @return (???)
  */
-int be_default_init_native_function(bvm *vm);
+int be_default_init_native_function(bvm_t *vm);
 
 /**
- * @fn void be_dofunc(bvm*, bvalue*, int)
+ * @fn void be_dofunc(bvm_t*, bvalue_t*, int)
  * @brief  (???)
  *
  * @param vm (???)
  * @param v (???)
  * @param argc (???)
  */
-void be_dofunc(bvm *vm, bvalue *v, int argc);
+void be_dofunc(bvm_t *vm, bvalue_t *v, int argc);
 
 /**
- * @fn bool be_value2bool(bvm*, bvalue*)
+ * @fn bool be_value2bool(bvm_t*, bvalue_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param v (???)
  * @return (???)
  */
-bbool be_value2bool(bvm *vm, bvalue *v);
+bbool be_value2bool(bvm_t *vm, bvalue_t *v);
 
 /**
- * @fn bool be_vm_iseq(bvm*, bvalue*, bvalue*)
+ * @fn bool be_vm_iseq(bvm_t*, bvalue_t*, bvalue_t*)
  * @brief (???)
  *
  * @param vm (???)
@@ -263,10 +263,10 @@ bbool be_value2bool(bvm *vm, bvalue *v);
  * @param b (???)
  * @return (???)
  */
-bbool be_vm_iseq(bvm *vm, bvalue *a, bvalue *b);
+bbool be_vm_iseq(bvm_t *vm, bvalue_t *a, bvalue_t *b);
 
 /**
- * @fn bool be_vm_isneq(bvm*, bvalue*, bvalue*)
+ * @fn bool be_vm_isneq(bvm_t*, bvalue_t*, bvalue_t*)
  * @brief (???)
  *
  * @param vm (???)
@@ -274,10 +274,10 @@ bbool be_vm_iseq(bvm *vm, bvalue *a, bvalue *b);
  * @param b (???)
  * @return (???)
  */
-bbool be_vm_isneq(bvm *vm, bvalue *a, bvalue *b);
+bbool be_vm_isneq(bvm_t *vm, bvalue_t *a, bvalue_t *b);
 
 /**
- * @fn bool be_vm_islt(bvm*, bvalue*, bvalue*)
+ * @fn bool be_vm_islt(bvm_t*, bvalue_t*, bvalue_t*)
  * @brief (???)
  *
  * @param vm (???)
@@ -285,10 +285,10 @@ bbool be_vm_isneq(bvm *vm, bvalue *a, bvalue *b);
  * @param b (???)
  * @return (???)
  */
-bbool be_vm_islt(bvm *vm, bvalue *a, bvalue *b);
+bbool be_vm_islt(bvm_t *vm, bvalue_t *a, bvalue_t *b);
 
 /**
- * @fn bool be_vm_isle(bvm*, bvalue*, bvalue*)
+ * @fn bool be_vm_isle(bvm_t*, bvalue_t*, bvalue_t*)
  * @brief (???)
  *
  * @param vm (???)
@@ -296,10 +296,10 @@ bbool be_vm_islt(bvm *vm, bvalue *a, bvalue *b);
  * @param b (???)
  * @return (???)
  */
-bbool be_vm_isle(bvm *vm, bvalue *a, bvalue *b);
+bbool be_vm_isle(bvm_t *vm, bvalue_t *a, bvalue_t *b);
 
 /**
- * @fn bool be_vm_isgt(bvm*, bvalue*, bvalue*)
+ * @fn bool be_vm_isgt(bvm_t*, bvalue_t*, bvalue_t*)
  * @brief (???)
  *
  * @param vm (???)
@@ -307,10 +307,10 @@ bbool be_vm_isle(bvm *vm, bvalue *a, bvalue *b);
  * @param b (???)
  * @return (???)
  */
-bbool be_vm_isgt(bvm *vm, bvalue *a, bvalue *b);
+bbool be_vm_isgt(bvm_t *vm, bvalue_t *a, bvalue_t *b);
 
 /**
- * @fn bool be_vm_isge(bvm*, bvalue*, bvalue*)
+ * @fn bool be_vm_isge(bvm_t*, bvalue_t*, bvalue_t*)
  * @brief (???)
  *
  * @param vm (???)
@@ -318,6 +318,6 @@ bbool be_vm_isgt(bvm *vm, bvalue *a, bvalue *b);
  * @param b (???)
  * @return (???)
  */
-bbool be_vm_isge(bvm *vm, bvalue *a, bvalue *b);
+bbool be_vm_isge(bvm_t *vm, bvalue_t *a, bvalue_t *b);
 
 #endif

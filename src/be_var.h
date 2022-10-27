@@ -15,105 +15,105 @@
 #define be_builtin_count(vm)  be_vector_count(&(vm)->gbldesc.builtin.vlist) /**< be_builtin_count */
 
 /**
- * @fn void be_globalvar_init(bvm*)
+ * @fn void be_globalvar_init(bvm_t*)
  * @brief (???)
  *
  * @param vm (???)
  */
-void be_globalvar_init(bvm *vm);
+void be_globalvar_init(bvm_t *vm);
 
 /**
- * @fn void be_globalvar_deinit(bvm*)
+ * @fn void be_globalvar_deinit(bvm_t*)
  * @brief (???)
  *
  * @param vm (???)
  */
-void be_globalvar_deinit(bvm *vm);
+void be_globalvar_deinit(bvm_t *vm);
 
 /**
- * @fn int be_global_find(bvm*, bstring*)
- * @brief (???)
- *
- * @param vm (???)
- * @param name (???)
- * @return (???)
- */
-int be_global_find(bvm *vm, bstring *name);
-
-/**
- * @fn int be_global_new(bvm*, bstring*)
+ * @fn int be_global_find(bvm_t*, bstring_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param name (???)
  * @return (???)
  */
-int be_global_new(bvm *vm, bstring *name);
+int be_global_find(bvm_t *vm, bstring_t *name);
 
 /**
- * @fn bvalue be_global_var*(bvm*, int)
+ * @fn int be_global_new(bvm_t*, bstring_t*)
+ * @brief (???)
+ *
+ * @param vm (???)
+ * @param name (???)
+ * @return (???)
+ */
+int be_global_new(bvm_t *vm, bstring_t *name);
+
+/**
+ * @fn bvalue_t be_global_var*(bvm_t*, int)
  * @brief (???)
  *
  * @param vm (???)
  * @param index (???)
  * @return (???)
  */
-bvalue* be_global_var(bvm *vm, int index);
+bvalue_t* be_global_var(bvm_t *vm, int index);
 
 /**
- * @fn void be_global_release_space(bvm*)
+ * @fn void be_global_release_space(bvm_t*)
  * @brief (???)
  *
  * @param vm (???)
  */
-void be_global_release_space(bvm *vm);
+void be_global_release_space(bvm_t *vm);
 
 /**
- * @fn int be_builtin_find(bvm*, bstring*)
+ * @fn int be_builtin_find(bvm_t*, bstring_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param name (???)
  * @return (???)
  */
-int be_builtin_find(bvm *vm, bstring *name);
+int be_builtin_find(bvm_t *vm, bstring_t *name);
 
 /**
- * @fn bstring be_builtin_name*(bvm*, int)
+ * @fn bstring_t be_builtin_name*(bvm_t*, int)
  * @brief (???)
  *
  * @param vm (???)
  * @param index (???)
  * @return (???)
  */
-bstring* be_builtin_name(bvm *vm, int index);
+bstring_t* be_builtin_name(bvm_t *vm, int index);
 
 /**
- * @fn int be_builtin_new(bvm*, bstring*)
+ * @fn int be_builtin_new(bvm_t*, bstring_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param name (???)
  * @return (???)
  */
-int be_builtin_new(bvm *vm, bstring *name);
+int be_builtin_new(bvm_t *vm, bstring_t *name);
 
 /**
- * @fn void be_bulitin_release_space(bvm*)
+ * @fn void be_bulitin_release_space(bvm_t*)
  * @brief (???)
  *
  * @param vm (???)
  */
-void be_bulitin_release_space(bvm *vm);
+void be_bulitin_release_space(bvm_t *vm);
 
 /**
- * @fn void be_const_builtin_set(bvm*, const bmap*, const bvector*)
+ * @fn void be_const_builtin_set(bvm_t*, const bmap_t*, const bvector_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param map (???)
  * @param vec (???)
  */
-void be_const_builtin_set(bvm *vm, const bmap *map, const bvector *vec);
+void be_const_builtin_set(bvm_t *vm, const bmap_t *map, const bvector_t *vec);
 
 #endif

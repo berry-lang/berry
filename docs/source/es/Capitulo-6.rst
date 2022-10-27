@@ -1,7 +1,3 @@
-.. raw:: html
-
-   <!-- Spanish Translation: Emiliano Gonzalez (egonzalez . hiperion @ gmail . com) -->
-
 6. Función orientada a objetos
 ==============================
 
@@ -106,7 +102,7 @@ imprimen el valor de la instancia ‘objeto’ de la clase ``Test`` y el
 valor de retorno del método ‘metodo’ respectivamente. El resultado de
 ejecución de este ejemplo es:
 
-::
+.. code::
 
    <instance: Test()>
    <instance: Test()>
@@ -466,28 +462,32 @@ Ejemplo:
 
 .. code:: berry
 
-   > class A
+   class A
          def init()
              print("In A::init, self es de tipo", classname(self))
          end
-     end
-   > class B:A
+   end
+   
+   class B:A
          def init()
              print("In B::init, self es de tipo", classname(self))
              super(self).init()
          end
-     end
-   > class C:B
+   end
+   
+   class C:B
          def init()
              print("En C::init, self es de tipo", classname(self))
              super(self).init()
          end
-     end
-   > c = C()
-   En C::init, self es de tipo C
-   In B::init, self es de tipo C
-   In A::init, self es de tipo C
-   >
+   end
+   
+   c = C()
+   
+|En C::init, self es de tipo C
+|In B::init, self es de tipo C
+|In A::init, self es de tipo C
+|
 
 Explicación:
 

@@ -33,20 +33,20 @@
     (vm)->gc.gray = gc_object(obj); \
 }
 
-static void destruct_object(bvm *vm, bgcobject *obj);
-static void free_object(bvm *vm, bgcobject *obj);
+static void destruct_object(bvm_t *vm, bgcobject_t *obj);
+static void free_object(bvm_t *vm, bgcobject_t *obj);
 
-void be_gc_init(bvm *vm)
+void be_gc_init(bvm_t *vm)
 {
-    vm->gc.usage = sizeof(bvm);
+    vm->gc.usage = sizeof(bvm_t);
     be_gc_setsteprate(vm, 200);
     be_gc_init_memory_pools(vm);
 }
 
-void be_gc_deleteall(bvm *vm)
+void be_gc_deleteall(bvm_t *vm)
 {
-    bupval *uv, *uvnext;
-    bgcobject *node, *next;
+    bupval_t *uv, *uvnext;
+    bgcobject_t *node, *next;
     /* halt GC and delete all objects */
     vm->gc.status |= GC_HALT;
     /* first: call destructor */
@@ -61,18 +61,18 @@ void be_gc_deleteall(bvm *vm)
     /* delete open upvalue list */
     for (uv = vm->upvalist; uv; uv = uvnext) {
         uvnext = uv->u.next;
-        be_free(vm, uv, sizeof(bupval));
+        be_free(vm, uv, sizeof(bupval_t));
     }
 }
 
-void be_gc_setsteprate(bvm *vm, int rate)
+void be_gc_setsteprate(bvm_t *vm, int rate)
 {
     be_assert(rate >= 100 && rate <= 355);
-    vm->gc.steprate = (bbyte)(rate - 100);
+    vm->gc.steprate = (bbyte_t)(rate - 100);
     vm->gc.threshold = next_threshold(vm->gc);
 }
 
-void be_gc_setpause(bvm *vm, int pause)
+void be_gc_setpause(bvm_t *vm, int pause)
 {
     if (pause) {
         vm->gc.status |= GC_PAUSE;
@@ -81,20 +81,20 @@ void be_gc_setpause(bvm *vm, int pause)
     }
 }
 
-bgcobject* be_newgcobj(bvm *vm, int type, size_t size)
+bgcobject_t* be_newgcobj(bvm_t *vm, int type, size_t size)
 {
-    bgcobject *obj = be_malloc(vm, size);
+    bgcobject_t *obj = be_malloc(vm, size);
     be_gc_auto(vm);
-    var_settype(obj, (bbyte)type); /* mark the object type */
+    var_settype(obj, (bbyte_t)type); /* mark the object type */
     obj->marked = GC_WHITE; /* default gc object type is white */
     obj->next = vm->gc.list; /* link to the next field */
     vm->gc.list = obj; /* insert to head */
     return obj;
 }
 
-bgcobject* be_gc_newstr(bvm *vm, size_t size, int islong)
+bgcobject_t* be_gc_newstr(bvm_t *vm, size_t size, int islong)
 {
-    bgcobject *obj;
+    bgcobject_t *obj;
     if (islong) { /* creating long strings is similar to ordinary GC objects */
         return be_newgcobj(vm, BE_STRING, size);
     }
@@ -105,7 +105,7 @@ bgcobject* be_gc_newstr(bvm *vm, size_t size, int islong)
     return obj;
 }
 
-void be_gc_fix(bvm *vm, bgcobject *obj)
+void be_gc_fix(bvm_t *vm, bgcobject_t *obj)
 {
     (void)vm;
     if (!gc_isconst(obj)) {
@@ -113,7 +113,7 @@ void be_gc_fix(bvm *vm, bgcobject *obj)
     }
 }
 
-void be_gc_unfix(bvm *vm, bgcobject *obj)
+void be_gc_unfix(bvm_t *vm, bgcobject_t *obj)
 {
     (void)vm;
     if (!gc_isconst(obj)) {
@@ -121,7 +121,7 @@ void be_gc_unfix(bvm *vm, bgcobject *obj)
     }
 }
 
-bbool be_gc_fix_set(bvm *vm, bgcobject *obj, bbool fix)
+bbool be_gc_fix_set(bvm_t *vm, bgcobject_t *obj, bbool fix)
 {
     (void)vm;
     bbool was_fixed = gc_isfixed(obj);
@@ -135,7 +135,7 @@ bbool be_gc_fix_set(bvm *vm, bgcobject *obj, bbool fix)
     return was_fixed;
 }
 
-static void mark_gray(bvm *vm, bgcobject *obj)
+static void mark_gray(bvm_t *vm, bgcobject_t *obj)
 {
     if (obj && gc_iswhite(obj) && !gc_isconst(obj)) {
         gc_setgray(obj);
@@ -156,23 +156,23 @@ static void mark_gray(bvm *vm, bgcobject *obj)
     }
 }
 
-static void mark_gray_var(bvm *vm, bvalue *value)
+static void mark_gray_var(bvm_t *vm, bvalue_t *value)
 {
     if (be_isgcobj(value)) {
         mark_gray(vm, var_togc(value));
     }
 }
 
-static void mark_map(bvm *vm, bgcobject *obj)
+static void mark_map(bvm_t *vm, bgcobject_t *obj)
 {
-    bmap *map = cast_map(obj);
+    bmap_t *map = cast_map(obj);
     gc_try (map != NULL) {
-        bmapnode *node;
-        bmapiter iter = be_map_iter();
+        bmapnode_t *node;
+        bmapiter_t iter = be_map_iter();
         vm->gc.gray = map->gray; /* remove object from gray list */
         while ((node = be_map_next(map, &iter)) != NULL) {
-            bmapkey *key = &node->key;
-            bvalue *val = &node->value;
+            bmapkey_t *key = &node->key;
+            bvalue_t *val = &node->value;
             if (be_isgcobj(key)) {
                 mark_gray(vm, var_togc(key));
             }
@@ -181,12 +181,12 @@ static void mark_map(bvm *vm, bgcobject *obj)
     }
 }
 
-static void mark_list(bvm *vm, bgcobject *obj)
+static void mark_list(bvm_t *vm, bgcobject_t *obj)
 {
-    blist *list = cast_list(obj);
+    blist_t *list = cast_list(obj);
     gc_try (list != NULL) {
-        bvalue *val = be_list_data(list);
-        bvalue *end = be_list_end(list);
+        bvalue_t *val = be_list_data(list);
+        bvalue_t *end = be_list_end(list);
         vm->gc.gray = list->gray; /* remove object from gray list */
         for (; val < end; val++) {
             mark_gray_var(vm, val);
@@ -194,13 +194,13 @@ static void mark_list(bvm *vm, bgcobject *obj)
     }
 }
 
-static void mark_proto(bvm *vm, bgcobject *obj)
+static void mark_proto(bvm_t *vm, bgcobject_t *obj)
 {
-    bproto *p = cast_proto(obj);
+    bproto_t *p = cast_proto(obj);
     gc_try (p != NULL) {
         int count;
-        bvalue *k = p->ktab;
-        bproto **ptab = p->ptab;
+        bvalue_t *k = p->ktab;
+        bproto_t **ptab = p->ptab;
         vm->gc.gray = p->gray; /* remove object from gray list */
         for (count = p->nconst; count--; ++k) {
             mark_gray_var(vm, k);
@@ -212,7 +212,7 @@ static void mark_proto(bvm *vm, bgcobject *obj)
         gc_setdark_safe(p->source);
 #if BE_DEBUG_VAR_INFO
         if (p->nvarinfo) {
-            bvarinfo *vinfo = p->varinfo;
+            bvarinfo_t *vinfo = p->varinfo;
             be_assert(vinfo != NULL);
             for (count = p->nvarinfo; count--; ++vinfo) {
                 gc_setdark_safe(vinfo->name);
@@ -222,12 +222,12 @@ static void mark_proto(bvm *vm, bgcobject *obj)
     }
 }
 
-static void mark_closure(bvm *vm, bgcobject *obj)
+static void mark_closure(bvm_t *vm, bgcobject_t *obj)
 {
-    bclosure *cl = cast_closure(obj);
+    bclosure_t *cl = cast_closure(obj);
     gc_try (cl != NULL) {
         int count = cl->nupvals;
-        bupval **uv = cl->upvals;
+        bupval_t **uv = cl->upvals;
         vm->gc.gray = cl->gray; /* remove object from gray list */
         for (; count--; ++uv) {
             if (*uv && (*uv)->refcnt) {
@@ -238,12 +238,12 @@ static void mark_closure(bvm *vm, bgcobject *obj)
     }
 }
 
-static void mark_ntvclos(bvm *vm, bgcobject *obj)
+static void mark_ntvclos(bvm_t *vm, bgcobject_t *obj)
 {
-    bntvclos *f = cast_ntvclos(obj);
+    bntvclos_t *f = cast_ntvclos(obj);
     gc_try (f != NULL) {
         int count = f->nupvals;
-        bupval **uv = &be_ntvclos_upval(f, 0);
+        bupval_t **uv = &be_ntvclos_upval(f, 0);
         vm->gc.gray = f->gray; /* remove object from gray list */
         for (; count--; ++uv) {
             if (*uv && (*uv)->refcnt) {
@@ -253,9 +253,9 @@ static void mark_ntvclos(bvm *vm, bgcobject *obj)
     }
 }
 
-static void mark_class(bvm *vm, bgcobject *obj)
+static void mark_class(bvm_t *vm, bgcobject_t *obj)
 {
-    bclass *c = cast_class(obj);
+    bclass_t *c = cast_class(obj);
     gc_try (c != NULL) {
         vm->gc.gray = c->gray; /* remove object from gray list */
         mark_gray(vm, gc_object(be_class_name(c)));
@@ -264,11 +264,11 @@ static void mark_class(bvm *vm, bgcobject *obj)
     }
 }
 
-static void mark_instance(bvm *vm, bgcobject *obj)
+static void mark_instance(bvm_t *vm, bgcobject_t *obj)
 {
-    binstance *o = cast_instance(obj);
+    binstance_t *o = cast_instance(obj);
     gc_try (o != NULL) {
-        bvalue *var = be_instance_members(o);
+        bvalue_t *var = be_instance_members(o);
         int nvar = be_instance_member_count(o);
         vm->gc.gray = o->gray; /* remove object from gray list */
         mark_gray(vm, gc_object(be_instance_class(o)));
@@ -279,9 +279,9 @@ static void mark_instance(bvm *vm, bgcobject *obj)
     }
 }
 
-static void mark_module(bvm *vm, bgcobject *obj)
+static void mark_module(bvm_t *vm, bgcobject_t *obj)
 {
-    bmodule *o = cast_module(obj);
+    bmodule_t *o = cast_module(obj);
     gc_try (o != NULL) {
         vm->gc.gray = o->gray; /* remove object from gray list */
         mark_gray(vm, gc_object(o->table));
@@ -291,68 +291,68 @@ static void mark_module(bvm *vm, bgcobject *obj)
     }
 }
 
-static void free_proto(bvm *vm, bgcobject *obj)
+static void free_proto(bvm_t *vm, bgcobject_t *obj)
 {
-    bproto *proto = cast_proto(obj);
+    bproto_t *proto = cast_proto(obj);
     gc_try (proto != NULL) {
-        be_free(vm, proto->upvals, proto->nupvals * sizeof(bupvaldesc));
-        be_free(vm, proto->ktab, proto->nconst * sizeof(bvalue));
-        be_free(vm, proto->ptab, proto->nproto * sizeof(bproto*));
-        be_free(vm, proto->code, proto->codesize * sizeof(binstruction));
+        be_free(vm, proto->upvals, proto->nupvals * sizeof(bupvaldesc_t));
+        be_free(vm, proto->ktab, proto->nconst * sizeof(bvalue_t));
+        be_free(vm, proto->ptab, proto->nproto * sizeof(bproto_t*));
+        be_free(vm, proto->code, proto->codesize * sizeof(binstruction_t));
 #if BE_DEBUG_RUNTIME_INFO
-        be_free(vm, proto->lineinfo, proto->nlineinfo * sizeof(blineinfo));
+        be_free(vm, proto->lineinfo, proto->nlineinfo * sizeof(blineinfo_t));
 #endif
 #if BE_DEBUG_VAR_INFO
-        be_free(vm, proto->varinfo, proto->nvarinfo * sizeof(bvarinfo));
+        be_free(vm, proto->varinfo, proto->nvarinfo * sizeof(bvarinfo_t));
 #endif
-        be_free(vm, proto, sizeof(bproto));
+        be_free(vm, proto, sizeof(bproto_t));
     }
 }
 
-static void free_closure(bvm *vm, bgcobject *obj)
+static void free_closure(bvm_t *vm, bgcobject_t *obj)
 {
-    bclosure *cl = cast_closure(obj);
+    bclosure_t *cl = cast_closure(obj);
     gc_try (cl != NULL) {
         int count = cl->nupvals;
         be_release_upvalues(vm, cl);
-        be_free(vm, cl, sizeof(bclosure)
-            + sizeof(bupval*) * ((size_t)count - 1));
+        be_free(vm, cl, sizeof(bclosure_t)
+            + sizeof(bupval_t*) * ((size_t)count - 1));
     }
 }
 
-static void free_ntvclos(bvm *vm, bgcobject *obj)
+static void free_ntvclos(bvm_t *vm, bgcobject_t *obj)
 {
-    bntvclos *f = cast_ntvclos(obj);
+    bntvclos_t *f = cast_ntvclos(obj);
     gc_try (f != NULL)  {
         int count = f->nupvals;
-        bupval **uv = &be_ntvclos_upval(f, 0);
+        bupval_t **uv = &be_ntvclos_upval(f, 0);
         while (count--) {
-            be_free(vm, *uv++, sizeof(bupval));
+            be_free(vm, *uv++, sizeof(bupval_t));
         }
-        be_free(vm, f, sizeof(bntvclos) + sizeof(bupval*) * f->nupvals);
+        be_free(vm, f, sizeof(bntvclos_t) + sizeof(bupval_t*) * f->nupvals);
     }
 }
 
-static void free_lstring(bvm *vm, bgcobject *obj)
+static void free_lstring(bvm_t *vm, bgcobject_t *obj)
 {
-    blstring *ls = gc_cast(obj, BE_STRING, blstring);
+    blstring_t *ls = gc_cast(obj, BE_STRING, blstring_t);
     gc_try (ls != NULL)  {
-        be_free(vm, ls, sizeof(blstring) + ls->llen + 1);
+        be_free(vm, ls, sizeof(blstring_t) + ls->llen + 1);
     }
 }
 
-static void free_instance(bvm *vm, bgcobject *obj)
+static void free_instance(bvm_t *vm, bgcobject_t *obj)
 {
-    binstance *o = cast_instance(obj);
+    binstance_t *o = cast_instance(obj);
     int nvar = be_instance_member_count(o);
-    be_free(vm, obj, sizeof(binstance) + sizeof(bvalue) * (nvar - 1));
+    be_free(vm, obj, sizeof(binstance_t) + sizeof(bvalue_t) * (nvar - 1));
 }
 
-static void free_object(bvm *vm, bgcobject *obj)
+static void free_object(bvm_t *vm, bgcobject_t *obj)
 {
     switch (var_primetype(obj)) {
     case BE_STRING: free_lstring(vm, obj); break; /* long string */
-    case BE_CLASS: be_free(vm, obj, sizeof(bclass)); break;
+    case BE_CLASS: be_free(vm, obj, sizeof(bclass_t)); break;
     case BE_INSTANCE: free_instance(vm, obj); break;
     case BE_MAP: be_map_delete(vm, cast_map(obj)); break;
     case BE_LIST: be_list_delete(vm, cast_list(obj)); break;
@@ -365,7 +365,7 @@ static void free_object(bvm *vm, bgcobject *obj)
     }
 }
 
-static void premark_internal(bvm *vm)
+static void premark_internal(bvm_t *vm)
 {
     mark_gray(vm, gc_object(vm->module.loaded));
     mark_gray(vm, gc_object(vm->module.path));
@@ -377,10 +377,10 @@ static void premark_internal(bvm *vm)
 #endif
 }
 
-static void premark_global(bvm *vm)
+static void premark_global(bvm_t *vm)
 {
-    bvalue *v = vm->gbldesc.global.vlist.data;
-    bvalue *end = v + be_global_count(vm);
+    bvalue_t *v = vm->gbldesc.global.vlist.data;
+    bvalue_t *end = v + be_global_count(vm);
     while (v < end) {
         if (be_isgcobj(v)) {
             mark_gray(vm, var_togc(v));
@@ -394,9 +394,9 @@ static void premark_global(bvm *vm)
     }
 }
 
-static void premark_stack(bvm *vm)
+static void premark_stack(bvm_t *vm)
 {
-    bvalue *v = vm->stack, *end = vm->top;
+    bvalue_t *v = vm->stack, *end = vm->top;
     /* mark live objects */
     for (; v < end; ++v) {
         mark_gray_var(vm, v);
@@ -408,18 +408,18 @@ static void premark_stack(bvm *vm)
     }
 }
 
-static void premark_tracestack(bvm *vm)
+static void premark_tracestack(bvm_t *vm)
 {
-    bcallsnapshot *cf = be_vector_data(&vm->tracestack);
-    bcallsnapshot *end = be_vector_end(&vm->tracestack);
+    bcallsnapshot_t *cf = be_vector_data(&vm->tracestack);
+    bcallsnapshot_t *end = be_vector_end(&vm->tracestack);
     for (; cf <= end; ++cf) {
         mark_gray_var(vm, &cf->func);
     }
 }
 
-static void premark_fixed(bvm *vm)
+static void premark_fixed(bvm_t *vm)
 {
-    bgcobject *node = vm->gc.list;
+    bgcobject_t *node = vm->gc.list;
     for (; node; node = node->next) {
         if (gc_isfixed(node) && gc_iswhite(node)) {
             mark_gray(vm, node);
@@ -427,10 +427,10 @@ static void premark_fixed(bvm *vm)
     }
 }
 
-static void mark_unscanned(bvm *vm)
+static void mark_unscanned(bvm_t *vm)
 {
     while (vm->gc.gray) {
-        bgcobject *obj = vm->gc.gray;
+        bgcobject_t *obj = vm->gc.gray;
         if (obj && !gc_isdark(obj) && !gc_isconst(obj)) {
             gc_setdark(obj);
             be_assert(!var_isstatic(obj));
@@ -451,14 +451,14 @@ static void mark_unscanned(bvm *vm)
     }
 }
 
-static void destruct_object(bvm *vm, bgcobject *obj)
+static void destruct_object(bvm_t *vm, bgcobject_t *obj)
 {
     if (vm->gc.status & GC_ALLOC) {
         return; /* no destructor is called during the allocation. */
     }
     if (obj->type == BE_INSTANCE) {
         int type;
-        binstance *ins = cast_instance(obj);
+        binstance_t *ins = cast_instance(obj);
         /* does not GC when creating the string "deinit". */
         type = be_instance_member_simple(vm, ins, str_literal(vm, "deinit"), vm->top);
         be_incrtop(vm);
@@ -472,9 +472,9 @@ static void destruct_object(bvm *vm, bgcobject *obj)
     }
 }
 
-static void destruct_white(bvm *vm)
+static void destruct_white(bvm_t *vm)
 {
-    bgcobject *node = vm->gc.list;
+    bgcobject_t *node = vm->gc.list;
     /* since the destructor may allocate objects, we must first suspend the GC */
     vm->gc.status |= GC_HALT; /* mark GC is halt */
     while (node) {
@@ -486,9 +486,9 @@ static void destruct_white(bvm *vm)
     vm->gc.status &= ~GC_HALT; /* reset GC halt flag */
 }
 
-static void delete_white(bvm *vm)
+static void delete_white(bvm_t *vm)
 {
-    bgcobject *node, *prev, *next;
+    bgcobject_t *node, *prev, *next;
     for (node = vm->gc.list, prev = node; node; node = next) {
         next = node->next;
         if (gc_iswhite(node)) {
@@ -509,9 +509,9 @@ static void delete_white(bvm *vm)
     }
 }
 
-static void reset_fixedlist(bvm *vm)
+static void reset_fixedlist(bvm_t *vm)
 {
-    bgcobject *node;
+    bgcobject_t *node;
     for (node = vm->gc.fixed; node; node = node->next) {
         if (gc_isdark(node)) {
             gc_setwhite(node);
@@ -519,7 +519,7 @@ static void reset_fixedlist(bvm *vm)
     }
 }
 
-void be_gc_auto(bvm *vm)
+void be_gc_auto(bvm_t *vm)
 {
 #if BE_USE_DEBUG_GC
     if (vm->gc.status & GC_PAUSE) { /* force gc each time it's possible */
@@ -532,12 +532,12 @@ void be_gc_auto(bvm *vm)
 #endif
 }
 
-size_t be_gc_memcount(bvm *vm)
+size_t be_gc_memcount(bvm_t *vm)
 {
     return vm->gc.usage;
 }
 
-void be_gc_collect(bvm *vm)
+void be_gc_collect(bvm_t *vm)
 {
     if (vm->gc.status & GC_HALT) {
         return; /* the GC cannot run for some reason */

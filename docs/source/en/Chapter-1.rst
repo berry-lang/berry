@@ -67,7 +67,7 @@ Start the interpreter directly (enter ``berry`` in the terminal or
 command window without parameters, or double-click berry.exe in Windows)
 to enter the REPL mode, and you will see the following interface:
 
-.. code:: berry
+.. code::
 
    Berry 1.0.0 (build in Feb 1 2022, 13:14:04)
    [GCC 8.1.0] on Windows (default)

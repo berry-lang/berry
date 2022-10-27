@@ -33,7 +33,7 @@ typedef char* (*breadline)(const char *prompt);
 typedef void (*bfreeline)(char *ptr);
 
 /**
- * @fn int be_repl(bvm*, breadline, bfreeline)
+ * @fn int be_repl(bvm_t*, breadline, bfreeline)
  * @brief (???)
  *
  * @param vm (???)
@@ -41,7 +41,7 @@ typedef void (*bfreeline)(char *ptr);
  * @param freeline (???)
  * @return (???)
  */
-BERRY_API int be_repl(bvm *vm, breadline getline, bfreeline freeline);
+BERRY_API int be_repl(bvm_t *vm, breadline getline, bfreeline freeline);
 
 #ifdef __cplusplus
 }

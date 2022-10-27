@@ -13,7 +13,7 @@
 
 #define READLINE_STEP           100
 
-static int i_write(bvm *vm)
+static int i_write(bvm_t *vm)
 {
     be_getmember(vm, 1, ".p");
     if(be_iscomptr(vm, -1) && (be_isstring(vm, 2) || be_isbytes(vm, 2))) {
@@ -31,7 +31,7 @@ static int i_write(bvm *vm)
     be_return_nil(vm);
 }
 
-static size_t readsize(bvm *vm, int argc, void *fh)
+static size_t readsize(bvm_t *vm, int argc, void *fh)
 {
     if (argc >=2 && be_isint(vm, 2)) {
         return be_toindex(vm, 2);
@@ -39,7 +39,7 @@ static size_t readsize(bvm *vm, int argc, void *fh)
     return be_fsize(fh) - be_ftell(fh);
 }
 
-static int i_read(bvm *vm)
+static int i_read(bvm_t *vm)
 {
     int argc = be_top(vm);
     be_getmember(vm, 1, ".p");
@@ -59,7 +59,7 @@ static int i_read(bvm *vm)
     be_return_nil(vm);
 }
 
-static int i_readbytes(bvm *vm)
+static int i_readbytes(bvm_t *vm)
 {
     int argc = be_top(vm);
     be_getmember(vm, 1, ".p");
@@ -96,7 +96,7 @@ static int i_readbytes(bvm *vm)
     be_return_nil(vm);
 }
 
-static int i_readline(bvm *vm)
+static int i_readline(bvm_t *vm)
 {
     be_getmember(vm, 1, ".p");
     if (be_iscomptr(vm, -1)) {
@@ -120,7 +120,7 @@ static int i_readline(bvm *vm)
     be_return_nil(vm);
 }
 
-static int i_seek(bvm *vm)
+static int i_seek(bvm_t *vm)
 {
     be_getmember(vm, 1, ".p");
     if (be_iscomptr(vm, -1) && be_isint(vm, 2)) {
@@ -130,31 +130,31 @@ static int i_seek(bvm *vm)
     be_return_nil(vm);
 }
 
-static int i_tell(bvm *vm)
+static int i_tell(bvm_t *vm)
 {
     be_getmember(vm, 1, ".p");
     if (be_iscomptr(vm, -1)) {
         void *fh = be_tocomptr(vm, -1);
         size_t pos = be_ftell(fh);
-        be_pushint(vm, cast(bint, pos));
+        be_pushint(vm, cast(bint_t, pos));
         be_return(vm);
     }
     be_return_nil(vm);
 }
 
-static int i_size(bvm *vm)
+static int i_size(bvm_t *vm)
 {
     be_getmember(vm, 1, ".p");
     if (be_iscomptr(vm, -1)) {
         void *fh = be_tocomptr(vm, -1);
         size_t pos = be_fsize(fh);
-        be_pushint(vm, cast(bint, pos));
+        be_pushint(vm, cast(bint_t, pos));
         be_return(vm);
     }
     be_return_nil(vm);
 }
 
-static int i_flush(bvm *vm)
+static int i_flush(bvm_t *vm)
 {
     be_getmember(vm, 1, ".p");
     if (be_iscomptr(vm, -1)) {
@@ -164,7 +164,7 @@ static int i_flush(bvm *vm)
     be_return_nil(vm);
 }
 
-static int i_close(bvm *vm)
+static int i_close(bvm_t *vm)
 {
     be_getmember(vm, 1, ".p");
     if (be_iscomptr(vm, -1)) {
@@ -177,14 +177,14 @@ static int i_close(bvm *vm)
 }
 
 #if !BE_USE_PRECOMPILED_OBJECT
-static int m_open(bvm *vm)
+static int m_open(bvm_t *vm)
 #else
-int be_nfunc_open(bvm *vm)
+int be_nfunc_open(bvm_t *vm)
 #endif
 {
     int argc = be_top(vm);
     const char *fname, *mode;
-    static const bnfuncinfo members[] = {
+    static const bnfuncinfo_t members[] = {
         { ".p", NULL },
         { "write", i_write },
         { "read", i_read },
@@ -217,7 +217,7 @@ int be_nfunc_open(bvm *vm)
 }
 
 #if !BE_USE_PRECOMPILED_OBJECT
-void be_load_filelib(bvm *vm)
+void be_load_filelib(bvm_t *vm)
 {
     be_regfunc(vm, "open", m_open);
 }

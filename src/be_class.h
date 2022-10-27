@@ -36,11 +36,11 @@ struct bclass {
     bcommon_header;                                   /**< bcommon_header */
     uint16_t nvar;                                    /**< members variable data field count */
     struct bclass *super;                             /**< super */
-    bmap *members;                                    /**< members */
-    bstring *name;                                    /**< name */
-    bgcobject *gray;                                  /**< for gc gray list */
+    bmap_t *members;                                  /**< members */
+    bstring_t *name;                                  /**< name */
+    bgcobject_t *gray;                                /**< for gc gray list */
 #ifdef __cplusplus
-    BE_CONSTEXPR bclass(uint16_t nv, bclass *sup, bmap *mem, bstring *s) :
+    BE_CONSTEXPR bclass_t(uint16_t nv, bclass_t *sup, bmap_t *mem, bstring_t *s) :
         next(0), type(BE_CLASS), marked(GC_CONST), nvar(nv),
         super(sup), members(mem), name(s), gray(0) {} /**< bclass */
 #endif
@@ -55,13 +55,13 @@ struct binstance {
     bcommon_header;          /**< bcommon_header */
     struct binstance *super; /**< super */
     struct binstance *sub;   /**< sub */
-    bclass *_class;          /**< _class */
-    bgcobject *gray;         /**< for gc gray list */
-    bvalue members[1];       /**< members variable data field */
+    bclass_t *_class;        /**< _class */
+    bgcobject_t *gray;       /**< for gc gray list */
+    bvalue_t members[1];     /**< members variable data field */
 };
 
 /**
- * @fn bclass be_newclass*(bvm*, bstring*, bclass*)
+ * @fn bclass_t be_newclass*(bvm_t*, bstring_t*, bclass_t*)
  * @brief (???)
  *
  * @param vm (???)
@@ -69,19 +69,19 @@ struct binstance {
  * @param super (???)
  * @return (???)
  */
-bclass* be_newclass(bvm *vm, bstring *name, bclass *super);
+bclass_t* be_newclass(bvm_t *vm, bstring_t *name, bclass_t *super);
 
 /**
- * @fn void be_class_compress(bvm*, bclass*)
+ * @fn void be_class_compress(bvm_t*, bclass_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param c (???)
  */
-void be_class_compress(bvm *vm, bclass *c);
+void be_class_compress(bvm_t *vm, bclass_t *c);
 
 /**
- * @fn int be_class_attribute(bvm*, bclass*, bstring*)
+ * @fn int be_class_attribute(bvm_t*, bclass_t*, bstring_t*)
  * @brief (???)
  *
  * @param vm (???)
@@ -89,10 +89,10 @@ void be_class_compress(bvm *vm, bclass *c);
  * @param attr (???)
  * @return (???)
  */
-int be_class_attribute(bvm *vm, bclass *c, bstring *attr);
+int be_class_attribute(bvm_t *vm, bclass_t *c, bstring_t *attr);
 
 /**
- * @fn void be_class_member_bind(bvm*, bclass*, bstring*, bool)
+ * @fn void be_class_member_bind(bvm_t*, bclass_t*, bstring_t*, bbool)
  * @brief (???)
  *
  * @param vm (???)
@@ -100,10 +100,10 @@ int be_class_attribute(bvm *vm, bclass *c, bstring *attr);
  * @param name (???)
  * @param var (???)
  */
-void be_class_member_bind(bvm *vm, bclass *c, bstring *name, bbool var);
+void be_class_member_bind(bvm_t *vm, bclass_t *c, bstring_t *name, bbool var);
 
 /**
- * @fn void be_class_method_bind(bvm*, bclass*, bstring*, bproto*, bool)
+ * @fn void be_class_method_bind(bvm_t*, bclass_t*, bstring_t*, bproto_t*, bbool)
  * @brief (???)
  *
  * @param vm (???)
@@ -112,10 +112,10 @@ void be_class_member_bind(bvm *vm, bclass *c, bstring *name, bbool var);
  * @param p (???)
  * @param is_static (???)
  */
-void be_class_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p, bbool is_static);
+void be_class_method_bind(bvm_t *vm, bclass_t *c, bstring_t *name, bproto_t *p, bbool is_static);
 
 /**
- * @fn void be_class_native_method_bind(bvm*, bclass*, bstring*, bntvfunc)
+ * @fn void be_class_native_method_bind(bvm_t*, bclass_t*, bstring_t*, bntvfunc)
  * @brief (???)
  *
  * @param vm (???)
@@ -123,10 +123,10 @@ void be_class_method_bind(bvm *vm, bclass *c, bstring *name, bproto *p, bbool is
  * @param name (???)
  * @param f (???)
  */
-void be_class_native_method_bind(bvm *vm, bclass *c, bstring *name, bntvfunc f);
+void be_class_native_method_bind(bvm_t *vm, bclass_t *c, bstring_t *name, bntvfunc f);
 
 /**
- * @fn void be_class_closure_method_bind(bvm*, bclass*, bstring*, bclosure*)
+ * @fn void be_class_closure_method_bind(bvm_t*, bclass_t*, bstring_t*, bclosure_t*)
  * @brief (???)
  *
  * @param vm (???)
@@ -134,10 +134,10 @@ void be_class_native_method_bind(bvm *vm, bclass *c, bstring *name, bntvfunc f);
  * @param name (???)
  * @param cl (???)
  */
-void be_class_closure_method_bind(bvm *vm, bclass *c, bstring *name, bclosure *cl);
+void be_class_closure_method_bind(bvm_t *vm, bclass_t *c, bstring_t *name, bclosure_t *cl);
 
 /**
- * @fn int be_class_member(bvm*, bclass*, bstring*, bvalue*)
+ * @fn int be_class_member(bvm_t*, bclass_t*, bstring_t*, bvalue_t*)
  * @brief (???)
  *
  * @param vm (???)
@@ -146,10 +146,10 @@ void be_class_closure_method_bind(bvm *vm, bclass *c, bstring *name, bclosure *c
  * @param dst (???)
  * @return (???)
  */
-int be_class_member(bvm *vm, bclass *obj, bstring *name, bvalue *dst);
+int be_class_member(bvm_t *vm, bclass_t *obj, bstring_t *name, bvalue_t *dst);
 
 /**
- * @fn bool be_class_setmember(bvm*, bclass*, bstring*, bvalue*)
+ * @fn bbool be_class_setmember(bvm_t*, bclass_t*, bstring_t*, bvalue_t*)
  * @brief (???)
  *
  * @param vm (???)
@@ -158,28 +158,28 @@ int be_class_member(bvm *vm, bclass *obj, bstring *name, bvalue *dst);
  * @param src (???)
  * @return (???)
  */
-bbool be_class_setmember(bvm *vm, bclass *obj, bstring *name, bvalue *src);
+bbool be_class_setmember(bvm_t *vm, bclass_t *obj, bstring_t *name, bvalue_t *src);
 
 /**
- * @fn int be_class_closure_count(bclass*)
+ * @fn int be_class_closure_count(bclass_t*)
  * @brief (???)
  *
  * @param c (???)
  * @return (???)
  */
-int be_class_closure_count(bclass *c);
+int be_class_closure_count(bclass_t *c);
 
 /**
- * @fn void be_class_upvalue_init(bvm*, bclass*)
+ * @fn void be_class_upvalue_init(bvm_t*, bclass_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param c (???)
  */
-void be_class_upvalue_init(bvm *vm, bclass *c);
+void be_class_upvalue_init(bvm_t *vm, bclass_t *c);
 
 /**
- * @fn bool be_class_newobj(bvm*, bclass*, int, int, int)
+ * @fn bbool be_class_newobj(bvm_t*, bclass_t*, int, int, int)
  * @brief (???)
  *
  * @param vm (???)
@@ -189,10 +189,10 @@ void be_class_upvalue_init(bvm *vm, bclass *c);
  * @param mode (???)
  * @return (???)
  */
-bbool be_class_newobj(bvm *vm, bclass *c, int pos, int argc, int mode);
+bbool be_class_newobj(bvm_t *vm, bclass_t *c, int pos, int argc, int mode);
 
 /**
- * @fn int be_instance_member_simple(bvm*, binstance*, bstring*, bvalue*)
+ * @fn int be_instance_member_simple(bvm_t*, binstance_t*, bstring_t*, bvalue_t*)
  * @brief (???)
  *
  * @param vm (???)
@@ -201,10 +201,10 @@ bbool be_class_newobj(bvm *vm, bclass *c, int pos, int argc, int mode);
  * @param dst (???)
  * @return (???)
  */
-int be_instance_member_simple(bvm *vm, binstance *obj, bstring *name, bvalue *dst);
+int be_instance_member_simple(bvm_t *vm, binstance_t *obj, bstring_t *name, bvalue_t *dst);
 
 /**
- * @fn int be_instance_member(bvm*, binstance*, bstring*, bvalue*)
+ * @fn int be_instance_member(bvm_t*, binstance_t*, bstring_t*, bvalue_t*)
  * @brief (???)
  *
  * @param vm (???)
@@ -213,10 +213,10 @@ int be_instance_member_simple(bvm *vm, binstance *obj, bstring *name, bvalue *ds
  * @param dst (???)
  * @return (???)
  */
-int be_instance_member(bvm *vm, binstance *obj, bstring *name, bvalue *dst);
+int be_instance_member(bvm_t *vm, binstance_t *obj, bstring_t *name, bvalue_t *dst);
 
 /**
- * @fn bool be_instance_setmember(bvm*, binstance*, bstring*, bvalue*)
+ * @fn bbool be_instance_setmember(bvm_t*, binstance_t*, bstring_t*, bvalue_t*)
  * @brief (???)
  *
  * @param vm (???)
@@ -225,6 +225,6 @@ int be_instance_member(bvm *vm, binstance *obj, bstring *name, bvalue *dst);
  * @param src (???)
  * @return (???)
  */
-bbool be_instance_setmember(bvm *vm, binstance *obj, bstring *name, bvalue *src);
+bbool be_instance_setmember(bvm_t *vm, binstance_t *obj, bstring_t *name, bvalue_t *src);
 
 #endif

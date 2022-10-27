@@ -17,13 +17,13 @@
 
 #if BE_USE_DEBUG_MODULE
 
-static void dump_map(bmap *map)
+static void dump_map(bmap_t *map)
 {
-    bmapnode *node;
-    bmapiter iter = be_map_iter();
+    bmapnode_t *node;
+    bmapiter_t iter = be_map_iter();
     while ((node = be_map_next(map, &iter)) != NULL) {
         if (var_isstr(&node->key)) {
-            bstring *s = var_tostr(&node->key);
+            bstring_t *s = var_tostr(&node->key);
             be_writestring("\t");
             be_writebuffer(str(s), str_len(s));
             be_writestring(": <");
@@ -33,34 +33,34 @@ static void dump_map(bmap *map)
     }
 }
 
-static void dump_module(bmodule *module)
+static void dump_module(bmodule_t *module)
 {
     dump_map(module->table);
 }
 
-static void dump_class(bclass *class)
+static void dump_class(bclass_t *class)
 {
     if (class->members) {
         dump_map(class->members);
     }
 }
 
-static void dump_instanse(binstance *ins)
+static void dump_instanse(binstance_t *ins)
 {
     dump_class(ins->_class);
 }
 
-static void dump_value(bvalue *value)
+static void dump_value(bvalue_t *value)
 {
     be_writestring("value type <");
     be_writestring(be_vtype2str(value));
     be_writestring(">, attributes:\n");
 }
 
-static int m_attrdump(bvm *vm)
+static int m_attrdump(bvm_t *vm)
 {
     if (be_top(vm) >= 1) {
-        bvalue *v = be_indexof(vm, 1);
+        bvalue_t *v = be_indexof(vm, 1);
         void *obj = var_toobj(v);
         dump_value(v);
         switch (var_type(v)) {
@@ -73,10 +73,10 @@ static int m_attrdump(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_codedump(bvm *vm)
+static int m_codedump(bvm_t *vm)
 {
     if (be_top(vm) >= 1) {
-        bvalue *v = be_indexof(vm, 1);
+        bvalue_t *v = be_indexof(vm, 1);
         if (var_isclosure(v)) {
             be_dumpclosure(var_toobj(v));
         }
@@ -84,14 +84,14 @@ static int m_codedump(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_traceback(bvm *vm)
+static int m_traceback(bvm_t *vm)
 {
     be_tracestack(vm);
     be_return_nil(vm);
 }
 
 #if BE_USE_DEBUG_HOOK
-static int m_sethook(bvm *vm)
+static int m_sethook(bvm_t *vm)
 {
     if (be_top(vm) >= 2) {
         be_pushvalue(vm, 1);
@@ -103,22 +103,22 @@ static int m_sethook(bvm *vm)
 }
 #endif
 
-static int m_top(bvm *vm)
+static int m_top(bvm_t *vm)
 {
-    bint top = vm->top - vm->stack + 1;
+    bint_t top = vm->top - vm->stack + 1;
     be_pushint(vm, top);
     be_return(vm);
 }
 
-static int m_calldepth(bvm *vm)
+static int m_calldepth(bvm_t *vm)
 {
-    bint depth = be_stack_count(&vm->callstack);
+    bint_t depth = be_stack_count(&vm->callstack);
     be_pushint(vm, depth);
     be_return(vm);
 }
 
 #if BE_DEBUG_VAR_INFO
-static int v_getname(bvm *vm, bbool(*getter)(bvm *vm, int, int))
+static int v_getname(bvm_t *vm, bbool(*getter)(bvm_t *vm, int, int))
 {
     int index, level = 1;
     if (be_top(vm) < 1)
@@ -138,12 +138,12 @@ static int v_getname(bvm *vm, bbool(*getter)(bvm *vm, int, int))
     be_return_nil(vm);
 }
 
-static int m_varname(bvm *vm)
+static int m_varname(bvm_t *vm)
 {
     return v_getname(vm, be_debug_varname);
 }
 
-static int m_upvname(bvm *vm)
+static int m_upvname(bvm_t *vm)
 {
     return v_getname(vm, be_debug_upvname);
 }
@@ -151,7 +151,7 @@ static int m_upvname(bvm *vm)
 
 
 #if BE_USE_PERF_COUNTERS
-static void map_insert(bvm *vm, const char *key, int value)
+static void map_insert(bvm_t *vm, const char *key, int value)
 {
     be_pushstring(vm, key);
     be_pushint(vm, value);
@@ -159,7 +159,7 @@ static void map_insert(bvm *vm, const char *key, int value)
     be_pop(vm, 2);
 }
 
-static int m_counters(bvm *vm)
+static int m_counters(bvm_t *vm)
 {
     be_newobject(vm, "map");
     map_insert(vm, "instruction", vm->counter_ins);

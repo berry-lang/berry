@@ -33,8 +33,8 @@
 #define RKB()  ((isKB(ins) ? ktab : reg) + KR2idx(IGET_RKB(ins)))  /* Get value of register or constant B */
 #define RKC()  ((isKC(ins) ? ktab : reg) + KR2idx(IGET_RKC(ins)))  /* Get value of register or constant C */
 
-#define var2cl(_v)          cast(bclosure*, var_toobj(_v))  /* cast var to closure */
-#define var2real(_v)        (var_isreal(_v) ? (_v)->v.r : (breal)(_v)->v.i)  /* get var as real or convert to real if integer */
+#define var2cl(_v)          cast(bclosure_t*, var_toobj(_v))  /* cast var to closure */
+#define var2real(_v)        (var_isreal(_v) ? (_v)->v.r : (breal_t)(_v)->v.i)  /* get var as real or convert to real if integer */
 #define val2bool(v)         ((v) ? btrue : bfalse)  /* get var as bool (trur if non zero) */
 #define ibinop(op, a, b)    ((a)->v.i op (b)->v.i)  /* apply binary operator to both arguments as integers */
 
@@ -116,10 +116,10 @@
     } else if (var_isnumber(a) && var_isnumber(b)) { \
         res = var2real(a) op var2real(b); \
     } else if (var_isstr(a) && var_isstr(b)) { \
-        bstring *s1 = var_tostr(a), *s2 = var_tostr(b); \
+        bstring_t *s1 = var_tostr(a), *s2 = var_tostr(b); \
         res = be_strcmp(s1, s2) op 0; \
     } else if (var_isinstance(a)) { \
-        binstance *obj = var_toobj(a); \
+        binstance_t *obj = var_toobj(a); \
         object_binop(vm, #op, *a, *b); \
         check_bool(vm, obj, #op); \
         res = var_tobool(vm->top); \
@@ -130,7 +130,7 @@
     return res
 
 #define bitwise_block(op) \
-    bvalue *dst = RA(), *a = RKB(), *b = RKC(); \
+    bvalue_t *dst = RA(), *a = RKB(), *b = RKC(); \
     if (var_isint(a) && var_isint(b)) { \
         var_setint(dst, ibinop(op, a, b)); \
     } else if (var_isinstance(a)) { \
@@ -144,30 +144,30 @@
     _vm->cf->status = PRIM_FUNC; \
 }
 
-static void prep_closure(bvm *vm, int pos, int argc, int mode);
+static void prep_closure(bvm_t *vm, int pos, int argc, int mode);
 
-static void attribute_error(bvm *vm, const char *t, bvalue *b, bvalue *c)
+static void attribute_error(bvm_t *vm, const char *t, bvalue_t *b, bvalue_t *c)
 {
     const char *attr = var_isstr(c) ? str(var_tostr(c)) : be_vtype2str(c);
     vm_error(vm, "attribute_error",
         "'%s' value has no %s '%s'", be_vtype2str(b), t, attr);
 }
 
-static void binop_error(bvm *vm, const char *op, bvalue *a, bvalue *b)
+static void binop_error(bvm_t *vm, const char *op, bvalue_t *a, bvalue_t *b)
 {
     vm_error(vm, "type_error",
         "unsupported operand type(s) for %s: '%s' and '%s'",
         op, be_vtype2str(a), be_vtype2str(b));
 }
 
-static void unop_error(bvm *vm, const char *op, bvalue *a)
+static void unop_error(bvm_t *vm, const char *op, bvalue_t *a)
 {
     vm_error(vm, "type_error",
         "unsupported operand type(s) for %s: '%s'",
         op, be_vtype2str(a));
 }
 
-static void call_error(bvm *vm, bvalue *v)
+static void call_error(bvm_t *vm, bvalue_t *v)
 {
     vm_error(vm, "type_error",
         "'%s' value is not callable", be_vtype2str(v));
@@ -175,7 +175,7 @@ static void call_error(bvm *vm, bvalue *v)
 
 /* Check that the return value is bool or raise an exception */
 /* `obj` and `method` are only passed for error reporting */
-static void check_bool(bvm *vm, binstance *obj, const char *method)
+static void check_bool(bvm_t *vm, binstance_t *obj, const char *method)
 {
     if (!var_isbool(vm->top)) {
         const char *name = str(be_instance_name(obj));
@@ -186,18 +186,18 @@ static void check_bool(bvm *vm, binstance *obj, const char *method)
 }
 
 #if BE_USE_DEBUG_HOOK
-static void do_linehook(bvm *vm)
+static void do_linehook(bvm_t *vm)
 {
-    bcallframe *cf = vm->cf;
-    bclosure *cl = var_toobj(cf->func);
+    bcallframe_t *cf = vm->cf;
+    bclosure_t *cl = var_toobj(cf->func);
     int pc = cast_int(vm->ip - cl->proto->code);
     if (!pc || pc > cf->lineinfo->endpc) {
         while (pc > cf->lineinfo->endpc)
             cf->lineinfo++;
         be_callhook(vm, BE_HOOK_LINE);
     } else {
-        blineinfo *linfo = cf->lineinfo;
-        blineinfo *base = cl->proto->lineinfo;
+        blineinfo_t *linfo = cf->lineinfo;
+        blineinfo_t *base = cl->proto->lineinfo;
         while (linfo > base && pc <= linfo[-1].endpc)
             linfo--;
         if (cf->lineinfo != linfo) {
@@ -211,9 +211,9 @@ static void do_linehook(bvm *vm)
 /* Prepare the stack for the function/method call */
 /* `func` is a pointer to the function/method on the stack, it contains the closure before call and the result after the call */
 /* `nstackˋ is the stack depth used by the function (determined by compiler), we add BE_STACK_FREE_MIN as a safety margin */
-static void precall(bvm *vm, bvalue *func, int nstack, int mode)
+static void precall(bvm_t *vm, bvalue_t *func, int nstack, int mode)
 {
-    bcallframe *cf;
+    bcallframe_t *cf;
     int expan = nstack + BE_STACK_FREE_MIN; /* `expan` is the minimum required space on the stack */
     if (vm->stacktop < func + expan) {  /* do we have too little space left on the stack? */
         size_t fpos = func - vm->stack;  /* compute offset of `func` from base stack, in case stack is reallocated and base address changes */
@@ -231,9 +231,9 @@ static void precall(bvm *vm, bvalue *func, int nstack, int mode)
 }
 
 /* Prepare call of closure, setting the instruction pointer (ip) */
-static void push_closure(bvm *vm, bvalue *func, int nstack, int mode)
+static void push_closure(bvm_t *vm, bvalue_t *func, int nstack, int mode)
 {
-    bclosure *cl = var_toobj(func);
+    bclosure_t *cl = var_toobj(func);
     precall(vm, func, nstack, mode);
     vm->cf->ip = vm->ip;
     vm->cf->status = NONE_FLAG;
@@ -244,19 +244,19 @@ static void push_closure(bvm *vm, bvalue *func, int nstack, int mode)
 #endif
 }
 
-static void ret_native(bvm *vm)
+static void ret_native(bvm_t *vm)
 {
-    bcallframe *_cf = vm->cf;
+    bcallframe_t *_cf = vm->cf;
     vm->reg = _cf->reg;
     vm->top = _cf->top;
     be_stack_pop(&vm->callstack);
     vm->cf = be_stack_top(&vm->callstack);
 }
 
-static bbool obj2bool(bvm *vm, bvalue *var)
+static bbool obj2bool(bvm_t *vm, bvalue_t *var)
 {
-    binstance *obj = var_toobj(var);
-    bstring *tobool = str_literal(vm, "tobool");
+    binstance_t *obj = var_toobj(var);
+    bstring_t *tobool = str_literal(vm, "tobool");
     /* get operator method */
     int type = be_instance_member(vm, obj, tobool, vm->top);
     if (type != BE_NONE && type != BE_NIL) {
@@ -269,7 +269,7 @@ static bbool obj2bool(bvm *vm, bvalue *var)
     return btrue;
 }
 
-bbool be_value2bool(bvm *vm, bvalue *v)
+bbool be_value2bool(bvm_t *vm, bvalue_t *v)
 {
     switch (var_basetype(v)) {
     case BE_NIL:
@@ -285,7 +285,7 @@ bbool be_value2bool(bvm *vm, bvalue *v)
     case BE_COMPTR:
         return var_toobj(v) != NULL;
     case BE_COMOBJ:
-        return ((bcommomobj*)var_toobj(v))->data != NULL;
+        return ((bcommomobj_t*)var_toobj(v))->data != NULL;
     case BE_INSTANCE:
         return obj2bool(vm, v);
     default:
@@ -293,9 +293,9 @@ bbool be_value2bool(bvm *vm, bvalue *v)
     }
 }
 
-static void obj_method(bvm *vm, bvalue *o, bstring *attr, bvalue *dst)
+static void obj_method(bvm_t *vm, bvalue_t *o, bstring_t *attr, bvalue_t *dst)
 {
-    binstance *obj = var_toobj(o);
+    binstance_t *obj = var_toobj(o);
     int type = be_instance_member_simple(vm, obj, attr, dst);
     if (basetype(type) != BE_FUNCTION) {
         vm_error(vm, "attribute_error",
@@ -304,9 +304,9 @@ static void obj_method(bvm *vm, bvalue *o, bstring *attr, bvalue *dst)
     }
 }
 
-static int obj_attribute(bvm *vm, bvalue *o, bstring *attr, bvalue *dst)
+static int obj_attribute(bvm_t *vm, bvalue_t *o, bstring_t *attr, bvalue_t *dst)
 {
-    binstance *obj = var_toobj(o);
+    binstance_t *obj = var_toobj(o);
     int type = be_instance_member(vm, obj, attr, dst);
     if (type == BE_NONE) {
         vm_error(vm, "attribute_error",
@@ -316,10 +316,10 @@ static int obj_attribute(bvm *vm, bvalue *o, bstring *attr, bvalue *dst)
     return type;
 }
 
-static int class_attribute(bvm *vm, bvalue *o, bvalue *c, bvalue *dst)
+static int class_attribute(bvm_t *vm, bvalue_t *o, bvalue_t *c, bvalue_t *dst)
 {
-    bstring *attr = var_tostr(c);
-    bclass *obj = var_toobj(o);
+    bstring_t *attr = var_tostr(c);
+    bclass_t *obj = var_toobj(o);
     int type = be_class_member(vm, obj, attr, dst);
     if (type == BE_NONE || type == BE_INDEX) {
         vm_error(vm, "attribute_error",
@@ -329,10 +329,10 @@ static int class_attribute(bvm *vm, bvalue *o, bvalue *c, bvalue *dst)
     return type;
 }
 
-static int module_attribute(bvm *vm, bvalue *o, bvalue *c, bvalue *dst)
+static int module_attribute(bvm_t *vm, bvalue_t *o, bvalue_t *c, bvalue_t *dst)
 {
-    bstring *attr = var_tostr(c);
-    bmodule *module = var_toobj(o);
+    bstring_t *attr = var_tostr(c);
+    bmodule_t *module = var_toobj(o);
     int type = be_module_attr(vm, module, attr, dst);
     if (type == BE_NONE) {
         vm_error(vm, "attribute_error",
@@ -342,16 +342,16 @@ static int module_attribute(bvm *vm, bvalue *o, bvalue *c, bvalue *dst)
     return type;
 }
 
-static bbool object_eqop(bvm *vm,
-    const char *op, bbool iseq, bvalue *a, bvalue *b)
+static bbool object_eqop(bvm_t *vm,
+    const char *op, bbool iseq, bvalue_t *a, bvalue_t *b)
 {
-    binstance *o = var_toobj(a);
-    bvalue self = *a, other = *b;
+    binstance_t *o = var_toobj(a);
+    bvalue_t self = *a, other = *b;
     bbool isself = var_isinstance(b) && o == var_toobj(b);
     /* first, try to call the overloaded operator of the object */
     int type = be_instance_member(vm, o, be_newstr(vm, op), vm->top);
     if (basetype(type) == BE_FUNCTION) { /* call method */
-        bvalue *top = vm->top;
+        bvalue_t *top = vm->top;
         top[1] = self;  /* move self to argv[0] */
         top[2] = other; /* move other to argv[1] */
         be_incrtop(vm); /* prevent collection results */
@@ -364,9 +364,9 @@ static bbool object_eqop(bvm *vm,
     return iseq == isself; /* check object self */
 }
 
-static void object_binop(bvm *vm, const char *op, bvalue self, bvalue other)
+static void object_binop(bvm_t *vm, const char *op, bvalue_t self, bvalue_t other)
 {
-    bvalue *top = vm->top;
+    bvalue_t *top = vm->top;
     /* get operator method (possible GC) */
     obj_method(vm, &self, be_newstr(vm, op), vm->top);
     top[1] = self; /* move self to argv[0] */
@@ -382,50 +382,50 @@ static void object_binop(bvm *vm, const char *op, bvalue self, bvalue other)
     *RA() = *vm->top; /* copy result to dst */ \
 }
 
-static void ins_unop(bvm *vm, const char *op, bvalue self)
+static void ins_unop(bvm_t *vm, const char *op, bvalue_t self)
 {
-    bvalue *top = vm->top;
+    bvalue_t *top = vm->top;
     /* get operator method (possible GC) */
     obj_method(vm, &self, be_newstr(vm, op), vm->top);
     top[1] = self; /* move self to argv[0] */
     be_dofunc(vm, top, 1); /* call method 'item' */
 }
 
-bbool be_vm_iseq(bvm *vm, bvalue *a, bvalue *b)
+bbool be_vm_iseq(bvm_t *vm, bvalue_t *a, bvalue_t *b)
 {
     equal_rule(==, btrue);
 }
 
-bbool be_vm_isneq(bvm *vm, bvalue *a, bvalue *b)
+bbool be_vm_isneq(bvm_t *vm, bvalue_t *a, bvalue_t *b)
 {
     equal_rule(!=, bfalse);
 }
 
-bbool be_vm_islt(bvm *vm, bvalue *a, bvalue *b)
+bbool be_vm_islt(bvm_t *vm, bvalue_t *a, bvalue_t *b)
 {
     relop_rule(<);
 }
 
-bbool be_vm_isle(bvm *vm, bvalue *a, bvalue *b)
+bbool be_vm_isle(bvm_t *vm, bvalue_t *a, bvalue_t *b)
 {
     relop_rule(<=);
 }
 
-bbool be_vm_isgt(bvm *vm, bvalue *a, bvalue *b)
+bbool be_vm_isgt(bvm_t *vm, bvalue_t *a, bvalue_t *b)
 {
     relop_rule(>);
 }
 
-bbool be_vm_isge(bvm *vm, bvalue *a, bvalue *b)
+bbool be_vm_isge(bvm_t *vm, bvalue_t *a, bvalue_t *b)
 {
     relop_rule(>=);
 }
 
-static void make_range(bvm *vm, bvalue lower, bvalue upper)
+static void make_range(bvm_t *vm, bvalue_t lower, bvalue_t upper)
 {
     /* get method 'item' (possible GC) */
     int idx = be_builtin_find(vm, str_literal(vm, "range"));
-    bvalue *top = vm->top;
+    bvalue_t *top = vm->top;
     top[0] = *be_global_var(vm, idx);
     top[1] = lower; /* move lower to argv[0] */
     top[2] = upper; /* move upper to argv[1] */
@@ -434,9 +434,9 @@ static void make_range(bvm *vm, bvalue lower, bvalue upper)
     vm->top -= 3;
 }
 
-static void connect_str(bvm *vm, bstring *a, bvalue *b)
+static void connect_str(bvm_t *vm, bstring_t *a, bvalue_t *b)
 {
-    bstring *s;
+    bstring_t *s;
     if (var_isstr(b)) {
         s = be_strcat(vm, a, var_tostr(b));
         var_setstr(vm->top, s);
@@ -450,18 +450,18 @@ static void connect_str(bvm *vm, bstring *a, bvalue *b)
     }
 }
 
-BERRY_API bvm* be_vm_new(void)
+BERRY_API bvm_t* be_vm_new(void)
 {
-    bvm *vm = be_os_malloc(sizeof(bvm));
+    bvm_t *vm = be_os_malloc(sizeof(bvm_t));
     be_assert(vm != NULL);
-    memset(vm, 0, sizeof(bvm)); /* clear all members */
+    memset(vm, 0, sizeof(bvm_t)); /* clear all members */
     be_gc_init(vm);
     be_string_init(vm);
-    be_stack_init(vm, &vm->callstack, sizeof(bcallframe));
-    be_stack_init(vm, &vm->refstack, sizeof(binstance*));
+    be_stack_init(vm, &vm->callstack, sizeof(bcallframe_t));
+    be_stack_init(vm, &vm->refstack, sizeof(binstance_t*));
     be_stack_init(vm, &vm->exceptstack, sizeof(struct bexecptframe));
-    be_stack_init(vm, &vm->tracestack, sizeof(bcallsnapshot));
-    vm->stack = be_malloc(vm, sizeof(bvalue) * BE_STACK_START);
+    be_stack_init(vm, &vm->tracestack, sizeof(bcallsnapshot_t));
+    vm->stack = be_malloc(vm, sizeof(bvalue_t) * BE_STACK_START);
     vm->stacktop = vm->stack + BE_STACK_START;
     vm->reg = vm->stack;
     vm->top = vm->reg;
@@ -486,7 +486,7 @@ BERRY_API bvm* be_vm_new(void)
     return vm;
 }
 
-BERRY_API void be_vm_delete(bvm *vm)
+BERRY_API void be_vm_delete(bvm_t *vm)
 {
     be_gc_deleteall(vm);
     be_string_deleteall(vm);
@@ -494,7 +494,7 @@ BERRY_API void be_vm_delete(bvm *vm)
     be_stack_delete(vm, &vm->refstack);
     be_stack_delete(vm, &vm->exceptstack);
     be_stack_delete(vm, &vm->tracestack);
-    be_free(vm, vm->stack, (vm->stacktop - vm->stack) * sizeof(bvalue));
+    be_free(vm, vm->stack, (vm->stacktop - vm->stack) * sizeof(bvalue_t));
     be_globalvar_deinit(vm);
     be_gc_free_memory_pools(vm);
 #if BE_USE_DEBUG_HOOK
@@ -506,11 +506,11 @@ BERRY_API void be_vm_delete(bvm *vm)
     be_os_free(vm);
 }
 
-static void vm_exec(bvm *vm)
+static void vm_exec(bvm_t *vm)
 {
-    bclosure *clos;
-    bvalue *ktab, *reg;
-    binstruction ins;
+    bclosure_t *clos;
+    bvalue_t *ktab, *reg;
+    binstruction_t ins;
     vm->cf->status |= BASE_FRAME;
 newframe: /* a new call frame */
     be_assert(var_isclosure(vm->cf->func));
@@ -526,7 +526,7 @@ newframe: /* a new call frame */
             dispatch();
         }
         opcase(LDBOOL): {
-            bvalue *v = RA();
+            bvalue_t *v = RA();
             var_setbool(v, IGET_RKB(ins));
             if (IGET_RKC(ins)) { /* skip next instruction */
                 vm->ip += 1;
@@ -534,26 +534,26 @@ newframe: /* a new call frame */
             dispatch();
         }
         opcase(LDINT): {
-            bvalue *v = RA();
+            bvalue_t *v = RA();
             var_setint(v, IGET_sBx(ins));
             dispatch();
         }
         opcase(LDCONST): {
-            bvalue *dst = RA();
+            bvalue_t *dst = RA();
             *dst = ktab[IGET_Bx(ins)];
             dispatch();
         }
         opcase(GETGBL): {
-            bvalue *v = RA();
+            bvalue_t *v = RA();
             int idx = IGET_Bx(ins);
             *v = *be_global_var(vm, idx);
             dispatch();
         }
         opcase(GETNGBL): {  /* get Global by name */
-            bvalue *v = RA();
-            bvalue *b = RKB();
+            bvalue_t *v = RA();
+            bvalue_t *b = RKB();
             if (var_isstr(b)) {
-                bstring *name = var_tostr(b);
+                bstring_t *name = var_tostr(b);
                 int idx = be_global_find(vm, name);
                 if (idx > -1) {
                     *v = *be_global_var(vm, idx);
@@ -566,10 +566,10 @@ newframe: /* a new call frame */
             dispatch();
         }
         opcase(SETNGBL): {  /* set Global by name */
-            bvalue *v = RA();
-            bvalue *b = RKB();
+            bvalue_t *v = RA();
+            bvalue_t *b = RKB();
             if (var_isstr(b)) {
-                bstring *name = var_tostr(b);
+                bstring_t *name = var_tostr(b);
                 int idx = be_global_new(vm, name);
                 *be_global_var(vm, idx) = *v;
             } else {
@@ -578,39 +578,39 @@ newframe: /* a new call frame */
             dispatch();
         }
         opcase(SETGBL): {
-            bvalue *v = RA();
+            bvalue_t *v = RA();
             int idx = IGET_Bx(ins);
             *be_global_var(vm, idx) = *v;
             dispatch();
         }
         opcase(GETUPV): {
-            bvalue *v = RA();
+            bvalue_t *v = RA();
             int idx = IGET_Bx(ins);
             be_assert(*clos->upvals != NULL);
             *v = *clos->upvals[idx]->value;
             dispatch();
         }
         opcase(SETUPV): {
-            bvalue *v = RA();
+            bvalue_t *v = RA();
             int idx = IGET_Bx(ins);
             be_assert(*clos->upvals != NULL);
             *clos->upvals[idx]->value = *v;
             dispatch();
         }
         opcase(MOVE): {
-            bvalue *dst = RA();
+            bvalue_t *dst = RA();
             *dst = *RKB();
             dispatch();
         }
         opcase(ADD): {
-            bvalue *dst = RA(), *a = RKB(), *b = RKC();
+            bvalue_t *dst = RA(), *a = RKB(), *b = RKC();
             if (var_isint(a) && var_isint(b)) {
                 var_setint(dst, ibinop(+, a, b));
             } else if (var_isnumber(a) && var_isnumber(b)) {
-                breal x = var2real(a), y = var2real(b);
+                breal_t x = var2real(a), y = var2real(b);
                 var_setreal(dst, x + y);
             } else if (var_isstr(a) && var_isstr(b)) { /* strcat */
-                bstring *s = be_strcat(vm, var_tostr(a), var_tostr(b));
+                bstring_t *s = be_strcat(vm, var_tostr(a), var_tostr(b));
                 reg = vm->reg;
                 dst = RA();
                 var_setstr(dst, s);
@@ -622,11 +622,11 @@ newframe: /* a new call frame */
             dispatch();
         }
         opcase(SUB): {
-            bvalue *dst = RA(), *a = RKB(), *b = RKC();
+            bvalue_t *dst = RA(), *a = RKB(), *b = RKC();
             if (var_isint(a) && var_isint(b)) {
                 var_setint(dst, ibinop(-, a, b));
             } else if (var_isnumber(a) && var_isnumber(b)) {
-                breal x = var2real(a), y = var2real(b);
+                breal_t x = var2real(a), y = var2real(b);
                 var_setreal(dst, x - y);
             } else if (var_isinstance(a)) {
                 ins_binop(vm, "-", ins);
@@ -636,11 +636,11 @@ newframe: /* a new call frame */
             dispatch();
         }
         opcase(MUL): {
-            bvalue *dst = RA(), *a = RKB(), *b = RKC();
+            bvalue_t *dst = RA(), *a = RKB(), *b = RKC();
             if (var_isint(a) && var_isint(b)) {
                 var_setint(dst, ibinop(*, a, b));
             } else if (var_isnumber(a) && var_isnumber(b)) {
-                breal x = var2real(a), y = var2real(b);
+                breal_t x = var2real(a), y = var2real(b);
                 var_setreal(dst, x * y);
             } else if (var_isinstance(a)) {
                 ins_binop(vm, "*", ins);
@@ -650,17 +650,17 @@ newframe: /* a new call frame */
             dispatch();
         }
         opcase(DIV): {
-            bvalue *dst = RA(), *a = RKB(), *b = RKC();
+            bvalue_t *dst = RA(), *a = RKB(), *b = RKC();
             if (var_isint(a) && var_isint(b)) {
-                bint x = var_toint(a), y = var_toint(b);
+                bint_t x = var_toint(a), y = var_toint(b);
                 if (y == 0) {
                     vm_error(vm, "divzero_error", "division by zero");
                 } else {
                     var_setint(dst, x / y);
                 }
             } else if (var_isnumber(a) && var_isnumber(b)) {
-                breal x = var2real(a), y = var2real(b);
-                if (y == cast(breal, 0)) {
+                breal_t x = var2real(a), y = var2real(b);
+                if (y == cast(breal_t, 0)) {
                     vm_error(vm, "divzero_error", "division by zero");
                 }
                 var_setreal(dst, x / y);
@@ -672,7 +672,7 @@ newframe: /* a new call frame */
             dispatch();
         }
         opcase(MOD): {
-            bvalue *dst = RA(), *a = RKB(), *b = RKC();
+            bvalue_t *dst = RA(), *a = RKB(), *b = RKC();
             if (var_isint(a) && var_isint(b)) {
                 var_setint(dst, ibinop(%, a, b));
             } else if (var_isnumber(a) && var_isnumber(b)) {
@@ -686,7 +686,7 @@ newframe: /* a new call frame */
         }
         opcase(LT): {
             bbool res = be_vm_islt(vm, RKB(), RKC());
-            bvalue *dst;
+            bvalue_t *dst;
             reg = vm->reg;
             dst = RA();
             var_setbool(dst, res);
@@ -694,7 +694,7 @@ newframe: /* a new call frame */
         }
         opcase(LE): {
             bbool res = be_vm_isle(vm, RKB(), RKC());
-            bvalue *dst;
+            bvalue_t *dst;
             reg = vm->reg;
             dst = RA();
             var_setbool(dst, res);
@@ -702,7 +702,7 @@ newframe: /* a new call frame */
         }
         opcase(EQ): {
             bbool res = be_vm_iseq(vm, RKB(), RKC());
-            bvalue *dst;
+            bvalue_t *dst;
             reg = vm->reg;
             dst = RA();
             var_setbool(dst, res);
@@ -710,7 +710,7 @@ newframe: /* a new call frame */
         }
         opcase(NE): {
             bbool res = be_vm_isneq(vm, RKB(), RKC());
-            bvalue *dst;
+            bvalue_t *dst;
             reg = vm->reg;
             dst = RA();
             var_setbool(dst, res);
@@ -718,7 +718,7 @@ newframe: /* a new call frame */
         }
         opcase(GT): {
             bbool res = be_vm_isgt(vm, RKB(), RKC());
-            bvalue *dst;
+            bvalue_t *dst;
             reg = vm->reg;
             dst = RA();
             var_setbool(dst, res);
@@ -726,14 +726,14 @@ newframe: /* a new call frame */
         }
         opcase(GE): {
             bbool res = be_vm_isge(vm, RKB(), RKC());
-            bvalue *dst;
+            bvalue_t *dst;
             reg = vm->reg;
             dst = RA();
             var_setbool(dst, res);
             dispatch();
         }
         opcase(CONNECT): {
-            bvalue *a = RKB(), *b = RKC();
+            bvalue_t *a = RKB(), *b = RKC();
             if (var_isint(a) && var_isint(b)) {
                 make_range(vm, *RKB(), *RKC());
             } else if (var_isstr(a)) {
@@ -768,7 +768,7 @@ newframe: /* a new call frame */
             dispatch();
         }
         opcase(NEG): {
-            bvalue *dst = RA(), *a = RKB();
+            bvalue_t *dst = RA(), *a = RKB();
             if (var_isint(a)) {
                 var_setint(dst, -a->v.i);
             } else if (var_isreal(a)) {
@@ -783,7 +783,7 @@ newframe: /* a new call frame */
             dispatch();
         }
         opcase(FLIP): {
-            bvalue *dst = RA(), *a = RKB();
+            bvalue_t *dst = RA(), *a = RKB();
             if (var_isint(a)) {
                 var_setint(dst, ~a->v.i);
             } else if (var_isinstance(a)) {
@@ -812,9 +812,9 @@ newframe: /* a new call frame */
             dispatch();
         }
         opcase(CLOSURE): {
-            bvalue *dst;
-            bproto *p = clos->proto->ptab[IGET_Bx(ins)];
-            bclosure *cl = be_newclosure(vm, p->nupvals);
+            bvalue_t *dst;
+            bproto_t *p = clos->proto->ptab[IGET_Bx(ins)];
+            bclosure_t *cl = be_newclosure(vm, p->nupvals);
             cl->proto = p;
             reg = vm->reg;
             dst = RA();
@@ -823,7 +823,7 @@ newframe: /* a new call frame */
             dispatch();
         }
         opcase(CLASS): {
-            bclass *c = var_toobj(ktab + IGET_Bx(ins));
+            bclass_t *c = var_toobj(ktab + IGET_Bx(ins));
             be_class_upvalue_init(vm, c);
             dispatch();
         }
@@ -831,8 +831,8 @@ newframe: /* a new call frame */
 #if BE_USE_PERF_COUNTERS
             vm->counter_get++;
 #endif
-            bvalue result;  /* copy result to a temp variable because the stack may be relocated in virtual member calls */
-            bvalue *b = RKB(), *c = RKC();
+            bvalue_t result;  /* copy result to a temp variable because the stack may be relocated in virtual member calls */
+            bvalue_t *b = RKB(), *c = RKC();
             if (var_isinstance(b) && var_isstr(c)) {
                 obj_attribute(vm, b, var_tostr(c), &result);
                 reg = vm->reg;
@@ -846,7 +846,7 @@ newframe: /* a new call frame */
                 attribute_error(vm, "attribute", b, c);
                 result = *RA();     /* avoid gcc warning for uninitialized variable result, this code is never reached */
             }
-            bvalue *a = RA();
+            bvalue_t *a = RA();
             *a = result;    /* assign the resul to the specified register on the updated stack */
             dispatch();
         }
@@ -854,13 +854,13 @@ newframe: /* a new call frame */
 #if BE_USE_PERF_COUNTERS
             vm->counter_get++;
 #endif
-            bvalue result;  /* copy result to a temp variable because the stack may be relocated in virtual member calls */
-            bvalue *b = RKB(), *c = RKC();
+            bvalue_t result;  /* copy result to a temp variable because the stack may be relocated in virtual member calls */
+            bvalue_t *b = RKB(), *c = RKC();
             if (var_isinstance(b) && var_isstr(c)) {
-                binstance *obj = var_toobj(b);
+                binstance_t *obj = var_toobj(b);
                 int type = obj_attribute(vm, b, var_tostr(c), &result);
                 reg = vm->reg;
-                bvalue *a = RA();
+                bvalue_t *a = RA();
                 *a = result;
                 if (var_basetype(a) == BE_FUNCTION) {
                     if ((type & BE_STATIC) || (type == BE_INDEX)) {    /* if instance variable then we consider it's non-method */
@@ -888,13 +888,13 @@ newframe: /* a new call frame */
             } else if (var_isclass(b) && var_isstr(c)) {
                 class_attribute(vm, b, c, &result);
                 reg = vm->reg;
-                bvalue *a = RA();
+                bvalue_t *a = RA();
                 a[1] = result;
                 var_settype(a, NOT_METHOD);
             } else if (var_ismodule(b) && var_isstr(c)) {
                 module_attribute(vm, b, c, &result);
                 reg = vm->reg;
-                bvalue *a = RA();
+                bvalue_t *a = RA();
                 a[1] = result;
                 var_settype(a, NOT_METHOD);
             } else {
@@ -906,11 +906,11 @@ newframe: /* a new call frame */
 #if BE_USE_PERF_COUNTERS
             vm->counter_set++;
 #endif
-            bvalue *a = RA(), *b = RKB(), *c = RKC();
+            bvalue_t *a = RA(), *b = RKB(), *c = RKC();
             if (var_isinstance(a) && var_isstr(b)) {
-                binstance *obj = var_toobj(a);
-                bstring *attr = var_tostr(b);
-                bvalue result = *c;
+                binstance_t *obj = var_toobj(a);
+                bstring_t *attr = var_tostr(b);
+                bvalue_t result = *c;
                 if (var_isfunction(&result)) {
                     var_markstatic(&result);
                 }
@@ -925,9 +925,9 @@ newframe: /* a new call frame */
             }
             if (var_isclass(a) && var_isstr(b)) {
                 /* if value is a function, we mark it as a static to distinguish from methods */
-                bclass *obj = var_toobj(a);
-                bstring *attr = var_tostr(b);
-                bvalue result = *c;
+                bclass_t *obj = var_toobj(a);
+                bstring_t *attr = var_tostr(b);
+                bvalue_t result = *c;
                 if (var_isfunction(&result)) {
                     var_markstatic(&result);
                 }
@@ -941,8 +941,8 @@ newframe: /* a new call frame */
                 dispatch();
             }
             if (var_ismodule(a) && var_isstr(b)) {
-                bmodule *obj = var_toobj(a);
-                bstring *attr = var_tostr(b);
+                bmodule_t *obj = var_toobj(a);
+                bstring_t *attr = var_tostr(b);
                 if (be_module_setmember(vm, obj, attr, c)) {
                     reg = vm->reg;
                     dispatch();
@@ -955,9 +955,9 @@ newframe: /* a new call frame */
             dispatch();
         }
         opcase(GETIDX): {
-            bvalue *b = RKB(), *c = RKC();
+            bvalue_t *b = RKB(), *c = RKC();
             if (var_isinstance(b)) {
-                bvalue *top = vm->top;
+                bvalue_t *top = vm->top;
                 /* get method 'item' */
                 obj_method(vm, b, str_literal(vm, "item"), vm->top);
                 top[1] = *b; /* move object to argv[0] */
@@ -968,7 +968,7 @@ newframe: /* a new call frame */
                 reg = vm->reg;
                 *RA() = *vm->top;   /* copy result to R(A) */
             } else if (var_isstr(b)) {
-                bstring *s = be_strindex(vm, var_tostr(b), c);
+                bstring_t *s = be_strindex(vm, var_tostr(b), c);
                 reg = vm->reg;
                 var_setstr(RA(), s);
             } else {
@@ -979,9 +979,9 @@ newframe: /* a new call frame */
             dispatch();
         }
         opcase(SETIDX): {
-            bvalue *a = RA(), *b = RKB(), *c = RKC();
+            bvalue_t *a = RA(), *b = RKB(), *c = RKC();
             if (var_isinstance(a)) {
-                bvalue *top = vm->top;
+                bvalue_t *top = vm->top;
                 /* get method 'setitem' */
                 obj_method(vm, a, str_literal(vm, "setitem"), vm->top);
                 top[1] = *a; /* move object to argv[0] */
@@ -999,9 +999,9 @@ newframe: /* a new call frame */
             dispatch();
         }
         opcase(SETSUPER): {
-            bvalue *a = RA(), *b = RKB();
+            bvalue_t *a = RA(), *b = RKB();
             if (var_isclass(a) && var_isclass(b)) {
-                bclass *obj = var_toobj(a);
+                bclass_t *obj = var_toobj(a);
                 if (!gc_isconst(obj))  {
                    be_class_setsuper(obj, var_toobj(b));
                 } else {
@@ -1020,9 +1020,9 @@ newframe: /* a new call frame */
             dispatch();
         }
         opcase(IMPORT): {
-            bvalue *b = RKB();
+            bvalue_t *b = RKB();
             if (var_isstr(b)) {
-                bstring *name = var_tostr(b);
+                bstring_t *name = var_tostr(b);
                 int res = be_module_load(vm, name);
                 reg = vm->reg;
                 switch (res) {
@@ -1045,7 +1045,7 @@ newframe: /* a new call frame */
             dispatch();
         }
         opcase(CATCH): {
-            bvalue *base = RA(), *top = vm->top;
+            bvalue_t *base = RA(), *top = vm->top;
             int i = 0, ecnt = IGET_RKB(ins), vcnt = IGET_RKC(ins);
             while (i < ecnt && !be_vm_iseq(vm, top, base + i)) {
                 ++i;
@@ -1061,7 +1061,7 @@ newframe: /* a new call frame */
         }
         opcase(RAISE): {
             if (IGET_RA(ins) < 2) {  /* A==2 means no arguments are passed to RAISE, i.e. rethrow with current exception */
-                bvalue *top = vm->top;
+                bvalue_t *top = vm->top;
                 top[0] = *RKB(); /* push the exception value to top */
                 if (IGET_RA(ins)) { /* has exception argument? */
                     top[1] = *RKC(); /* push the exception argument to top + 1 */
@@ -1080,9 +1080,9 @@ newframe: /* a new call frame */
             if (!IGET_RA(ins)) {
                 be_except_block_setup(vm);
                 if (be_setjmp(vm->errjmp->b)) {
-                    bvalue *top = vm->top;
-                    bvalue e1 = top[0];
-                    bvalue e2 = top[1];
+                    bvalue_t *top = vm->top;
+                    bvalue_t e1 = top[0];
+                    bvalue_t e2 = top[1];
                     be_except_block_resume(vm);
                     top = vm->top;
                     top[0] = e1;
@@ -1099,7 +1099,7 @@ newframe: /* a new call frame */
 #if BE_USE_PERF_COUNTERS
             vm->counter_call++;
 #endif
-            bvalue *var = RA();  /* `var` is the register for the call followed by arguments */
+            bvalue_t *var = RA();  /* `var` is the register for the call followed by arguments */
             int mode = 0, argc = IGET_RKB(ins);  /* B contains number of arguments pushed on stack */
         recall: /* goto: instantiation class and call constructor */
             switch (var_type(var)) {
@@ -1117,7 +1117,7 @@ newframe: /* a new call frame */
                 }
                 break;
             case BE_INSTANCE: {
-                bvalue *v = var + argc++, temp;
+                bvalue_t *v = var + argc++, temp;
                 /* load the '()' method to `temp' */
                 obj_method(vm, var, str_literal(vm, "()"), &temp);
                 for (; v >= var; --v) v[1] = v[0];
@@ -1130,7 +1130,7 @@ newframe: /* a new call frame */
                 goto newframe;  /* continue execution of the closure */
             }
             case BE_NTVCLOS: {
-                bntvclos *f = var_toobj(var);
+                bntvclos_t *f = var_toobj(var);
                 push_native(vm, var, argc, mode);
                 f->f(vm); /* call C primitive function */
                 ret_native(vm);
@@ -1155,7 +1155,7 @@ newframe: /* a new call frame */
                 break;
             }
             case BE_MODULE: {
-                bvalue attr;
+                bvalue_t attr;
                 var_setstr(&attr, str_literal(vm, "()"));
                 module_attribute(vm, var, &attr, var);  /* exception if not found */
                 goto recall; /* call '()' method */
@@ -1168,8 +1168,8 @@ newframe: /* a new call frame */
             dispatch();
         }
         opcase(RET): {
-            bcallframe *cf;
-            bvalue *ret;
+            bcallframe_t *cf;
+            bvalue_t *ret;
 #if BE_USE_DEBUG_HOOK
             be_callhook(vm, BE_HOOK_RET);
 #endif
@@ -1186,7 +1186,7 @@ newframe: /* a new call frame */
             vm->ip = cf->ip;
             be_stack_pop(&vm->callstack); /* pop don't delete */
             if (cf->status & BASE_FRAME) { /* entrance function */
-                bstack *cs = &vm->callstack;
+                bstack_t *cs = &vm->callstack;
                 if (!be_stack_isempty(cs)) {
                     vm->cf = be_stack_top(cs);
                 }
@@ -1198,10 +1198,10 @@ newframe: /* a new call frame */
     }
 }
 
-static void prep_closure(bvm *vm, int pos, int argc, int mode)
+static void prep_closure(bvm_t *vm, int pos, int argc, int mode)
 {
-    bvalue *v, *end;
-    bproto *proto = var2cl(vm->reg + pos)->proto;
+    bvalue_t *v, *end;
+    bproto_t *proto = var2cl(vm->reg + pos)->proto;
     push_closure(vm, vm->reg + pos, proto->nstack, mode);
     end = vm->reg + proto->argc;
     for (v = vm->reg + argc; v <= end; ++v) {
@@ -1214,7 +1214,7 @@ static void prep_closure(bvm *vm, int pos, int argc, int mode)
         int top_save_offset = vm->top - vm->stack;  /* save original stack, we need fresh slots to create the 'list' instance */
         vm->top = vm->stack + v_offset;  /* move top of stack right after last argument */
         be_newobject(vm, "list");  /* this creates 2 objects on stack: list instance, BE_LIST object */
-        blist *list = var_toobj(vm->top-1);  /* get low-level BE_LIST structure */
+        blist_t *list = var_toobj(vm->top-1);  /* get low-level BE_LIST structure */
         v = vm->reg + proto->argc - 1;  /* last argument */
         for (; v < vm->reg + argc; v++) {
             be_list_push(vm, list, v); /* push all varargs into list */       
@@ -1224,7 +1224,7 @@ static void prep_closure(bvm *vm, int pos, int argc, int mode)
     }
 }
 
-static void do_closure(bvm *vm, int pos, int argc)
+static void do_closure(bvm_t *vm, int pos, int argc)
 {
     // bvalue *v, *end;
     // bproto *proto = var2cl(reg)->proto;
@@ -1238,15 +1238,15 @@ static void do_closure(bvm *vm, int pos, int argc)
     vm_exec(vm);
 }
 
-static void do_ntvclos(bvm *vm, int pos, int argc)
+static void do_ntvclos(bvm_t *vm, int pos, int argc)
 {
-    bntvclos *f = var_toobj(vm->reg + pos);
+    bntvclos_t *f = var_toobj(vm->reg + pos);
     push_native(vm, vm->reg + pos, argc, 0);
     f->f(vm); /* call C primitive function */
     ret_native(vm);
 }
 
-static void do_ntvfunc(bvm *vm, int pos, int argc)
+static void do_ntvfunc(bvm_t *vm, int pos, int argc)
 {
     bntvfunc f = var_tontvfunc(vm->reg + pos);
     push_native(vm, vm->reg + pos, argc, 0);
@@ -1254,7 +1254,7 @@ static void do_ntvfunc(bvm *vm, int pos, int argc)
     ret_native(vm);
 }
 
-static void do_cfunc(bvm *vm, int pos, int argc)
+static void do_cfunc(bvm_t *vm, int pos, int argc)
 {
     if (vm->ctypefunc) {
         const void* args = var_toobj(vm->reg + pos);
@@ -1266,7 +1266,7 @@ static void do_cfunc(bvm *vm, int pos, int argc)
     }
 }
 
-static void do_class(bvm *vm, int pos, int argc)
+static void do_class(bvm_t *vm, int pos, int argc)
 {
     if (be_class_newobj(vm, var_toobj(vm->reg + pos), pos, ++argc, 0)) {
         be_incrtop(vm);
@@ -1275,7 +1275,7 @@ static void do_class(bvm *vm, int pos, int argc)
     }
 }
 
-void be_dofunc(bvm *vm, bvalue *v, int argc)
+void be_dofunc(bvm_t *vm, bvalue_t *v, int argc)
 {
     be_assert(vm->reg <= v && v < vm->stacktop);
     be_assert(vm->stack <= vm->reg && vm->reg < vm->stacktop);
@@ -1292,7 +1292,7 @@ void be_dofunc(bvm *vm, bvalue *v, int argc)
 }
 
 /* Default empty constructor */
-int be_default_init_native_function(bvm *vm)
+int be_default_init_native_function(bvm_t *vm)
 {
     int argc = be_top(vm);
     if (argc >= 1) {
@@ -1303,7 +1303,7 @@ int be_default_init_native_function(bvm *vm)
     be_return(vm);
 }
 
-BERRY_API void be_set_obs_hook(bvm *vm, bobshook hook)
+BERRY_API void be_set_obs_hook(bvm_t *vm, bobshook hook)
 {
     (void)vm;       /* avoid comiler warning */
     (void)hook;     /* avoid comiler warning */
@@ -1311,12 +1311,12 @@ BERRY_API void be_set_obs_hook(bvm *vm, bobshook hook)
     vm->obshook = hook;
 }
 
-BERRY_API void be_set_ctype_func_hanlder(bvm *vm, bctypefunc handler)
+BERRY_API void be_set_ctype_func_hanlder(bvm_t *vm, bctypefunc handler)
 {
     vm->ctypefunc = handler;
 }
 
-BERRY_API bctypefunc be_get_ctype_func_hanlder(bvm *vm)
+BERRY_API bctypefunc be_get_ctype_func_hanlder(bvm_t *vm)
 {
     return vm->ctypefunc;
 }

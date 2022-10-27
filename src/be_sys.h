@@ -11,11 +11,16 @@
 
 #include <stddef.h>
 
+/**
+ * @typedef bdirinfo_t
+ * @brief directory information for directory traversal
+ *
+ */
 typedef struct {
     void *dir;        /**< dir */
     void *file;       /**< file */
     const char *name; /**< name */
-} bdirinfo;           /**< directory information for directory traversal */
+} bdirinfo_t;
 
 #ifdef __cplusplus
 extern "C" {
@@ -174,23 +179,23 @@ int be_mkdir(const char *path);
 int be_unlink(const char *filename);
 
 /**
- * @fn int be_dirfirst(bdirinfo*, const char*)
+ * @fn int be_dirfirst(bdirinfo_t*, const char*)
  * @brief (???)
  *
  * @param info (???)
  * @param path (???)
  * @return (???)
  */
-int be_dirfirst(bdirinfo *info, const char *path);
+int be_dirfirst(bdirinfo_t *info, const char *path);
 
 /**
- * @fn int be_dirnext(bdirinfo*)
+ * @fn int be_dirnext(bdirinfo_t*)
  * @brief (???)
  *
  * @param info (???)
  * @return (???)
  */
-int be_dirnext(bdirinfo *info);
+int be_dirnext(bdirinfo_t *info);
 
 /**
  * @fn int be_dirclose(bdirinfo*)
@@ -199,7 +204,7 @@ int be_dirnext(bdirinfo *info);
  * @param info (???)
  * @return (???)
  */
-int be_dirclose(bdirinfo *info);
+int be_dirclose(bdirinfo_t *info);
 
 #ifdef __cplusplus
 }

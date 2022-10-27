@@ -19,10 +19,10 @@
  * @param vm
  * @param data
  */
-typedef void (*bpfunc)(bvm *vm, void *data);
+typedef void (*bpfunc)(bvm_t *vm, void *data);
 
 #if BE_DEBUG
-bvalue* be_incrtop(bvm *vm);                              /**< be_incrtop */
+bvalue_t* be_incrtop(bvm_t *vm);                          /**< be_incrtop */
 #else
 /* increase top register */
 #define be_incrtop(vm)          ((vm)->top++)             /**< be_incrtop */
@@ -40,7 +40,7 @@ bvalue* be_incrtop(bvm *vm);                              /**< be_incrtop */
   #define be_longjmp(env, v)    longjmp(env, v)           /**< be_longjmp */
 #endif
 
-typedef jmp_buf bjmpbuf; /**< bjmpbuf */
+typedef jmp_buf bjmpbuf_t; /**< bjmpbuf_t */
 
 /**
  * @struct blongjmp
@@ -48,7 +48,7 @@ typedef jmp_buf bjmpbuf; /**< bjmpbuf */
  *
  */
 struct blongjmp {
-    bjmpbuf b;             /**< b */
+    bjmpbuf_t b;           /**< b */
     struct blongjmp *prev; /**< prev */
     volatile int status;   /**< error code */
 };
@@ -61,21 +61,21 @@ struct blongjmp {
 struct bexecptframe {
     struct blongjmp errjmp; /**< long jump information */
     int depth;              /**< function call stack depth */
-    binstruction *ip;       /**< instruction pointer */
+    binstruction_t *ip;     /**< instruction pointer */
     int refcount;           /**< save object reference stack */
 };
 
 /**
- * @fn void be_throw(bvm*, int)
+ * @fn void be_throw(bvm_t*, int)
  * @brief (???)
  *
  * @param vm (???)
  * @param errorcode (???)
  */
-void be_throw(bvm *vm, int errorcode);
+void be_throw(bvm_t *vm, int errorcode);
 
 /**
- * @fn int be_execprotected(bvm*, bpfunc, void*)
+ * @fn int be_execprotected(bvm_t*, bpfunc, void*)
  * @brief (???)
  *
  * @param vm (???)
@@ -83,10 +83,10 @@ void be_throw(bvm *vm, int errorcode);
  * @param data (???)
  * @return (???)
  */
-int be_execprotected(bvm *vm, bpfunc f, void *data);
+int be_execprotected(bvm_t *vm, bpfunc f, void *data);
 
 /**
- * @fn int be_protectedparser(bvm*, const char*, breader, void*, bool)
+ * @fn int be_protectedparser(bvm_t*, const char*, breader, void*, bool)
  * @brief (???)
  *
  * @param vm (???)
@@ -96,10 +96,10 @@ int be_execprotected(bvm *vm, bpfunc f, void *data);
  * @param islocal (???)
  * @return (???)
  */
-int be_protectedparser(bvm *vm, const char *fname, breader reader, void *data, bbool islocal);
+int be_protectedparser(bvm_t *vm, const char *fname, breader reader, void *data, bbool islocal);
 
 /**
- * @fn int be_protectedcall(bvm*, bvalue*, int)
+ * @fn int be_protectedcall(bvm_t*, bvalue_t*, int)
  * @brief (???)
  *
  * @param vm (???)
@@ -107,56 +107,56 @@ int be_protectedparser(bvm *vm, const char *fname, breader reader, void *data, b
  * @param argc (???)
  * @return (???)
  */
-int be_protectedcall(bvm *vm, bvalue *v, int argc);
+int be_protectedcall(bvm_t *vm, bvalue_t *v, int argc);
 
 /**
- * @fn void be_stackpush(bvm*)
+ * @fn void be_stackpush(bvm_t*)
  * @brief (???)
  *
  * @param vm (???)
  */
-void be_stackpush(bvm *vm);
+void be_stackpush(bvm_t *vm);
 
 /**
- * @fn void be_stack_expansion(bvm*, int)
+ * @fn void be_stack_expansion(bvm_t*, int)
  * @brief (???)
  *
  * @param vm (???)
  * @param n (???)
  */
-void be_stack_expansion(bvm *vm, int n);
+void be_stack_expansion(bvm_t *vm, int n);
 
 /**
- * @fn void be_except_block_setup(bvm*)
+ * @fn void be_except_block_setup(bvm_t*)
  * @brief (???)
  *
  * @param vm (???)
  */
-void be_except_block_setup(bvm *vm);
+void be_except_block_setup(bvm_t *vm);
 
 /**
- * @fn void be_except_block_resume(bvm*)
+ * @fn void be_except_block_resume(bvm_t*)
  * @brief (???)
  *
  * @param vm (???)
  */
-void be_except_block_resume(bvm *vm);
+void be_except_block_resume(bvm_t *vm);
 
 /**
- * @fn void be_except_block_close(bvm*, int)
+ * @fn void be_except_block_close(bvm_t*, int)
  * @brief (???)
  *
  * @param vm (???)
  * @param count (???)
  */
-void be_except_block_close(bvm *vm, int count);
+void be_except_block_close(bvm_t *vm, int count);
 
 /**
- * @fn void be_save_stacktrace(bvm*)
+ * @fn void be_save_stacktrace(bvm_t*)
  * @brief (???)
  *
  * @param vm (???)
  */
-void be_save_stacktrace(bvm *vm);
+void be_save_stacktrace(bvm_t *vm);
 
 #endif

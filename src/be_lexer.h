@@ -12,8 +12,8 @@
 #include "be_object.h"
 
 /**
- * @typedef btokentype
- * @brief btokentype
+ * @typedef btokentype_t
+ * @brief btokentype_t
  *
  */
 typedef enum {
@@ -96,7 +96,7 @@ typedef enum {
     KeyExcept,      /**< keyword except */
     KeyRaise,       /**< keyword raise */
     KeyStatic       /**< keyword static */
-} btokentype;
+} btokentype_t;
 
 /**
  * @struct blexerreader
@@ -122,38 +122,38 @@ struct blexerbuf {
 
 /**
  * @struct btoken
- * @brief
+ * @brief btoken
  *
  */
 typedef struct btoken {
-    btokentype type; /**< type */
+    btokentype_t type; /**< type */
     union {
-        bstring *s;  /**< s */
-        bint i;      /**< i */
-        breal r;     /**< r */
-    } u;             /**< u */
-} btoken;
+        bstring_t *s;  /**< s */
+        bint_t i;      /**< i */
+        breal_t r;     /**< r */
+    } u;               /**< u */
+} btoken_t;            /**< btoken_t */
 
 /**
  * @struct blexer
- * @brief
+ * @brief blexer
  *
  */
 typedef struct blexer {
     const char *fname;          /**< fname */
-    btoken token;               /**< token */
+    btoken_t token;             /**< token */
     int linenumber;             /**< linenumber */
     int lastline;               /**< lastline */
-    btokentype cacheType;       /**< cacheType */
+    btokentype_t cacheType;     /**< cacheType */
     struct blexerbuf buf;       /**< buf */
     struct blexerreader reader; /**< reader */
-    bmap *strtab;               /**< strtab */
-    bvm *vm;                    /**< vm */
+    bmap_t *strtab;             /**< strtab */
+    bvm_t *vm;                  /**< vm */
     int cursor;                 /**< cursor */
-} blexer;                       /**< blexer */
+} blexer_t;                     /**< blexer_t */
 
 /**
- * @fn void be_lexer_init(blexer*, bvm*, const char*, breader, void*)
+ * @fn void be_lexer_init(blexer_t*, bvm_t*, const char*, breader, void*)
  * @brief (???)
  *
  * @param lexer (???)
@@ -162,61 +162,61 @@ typedef struct blexer {
  * @param reader (???)
  * @param data (???)
  */
-void be_lexer_init(blexer *lexer, bvm *vm, const char *fname, breader reader, void *data);
+void be_lexer_init(blexer_t *lexer, bvm_t *vm, const char *fname, breader reader, void *data);
 
 /**
- * @fn void be_lexer_deinit(blexer*)
+ * @fn void be_lexer_deinit(blexer_t*)
  * @brief (???)
  *
  * @param lexer (???)
  */
-void be_lexer_deinit(blexer *lexer);
+void be_lexer_deinit(blexer_t *lexer);
 
 /**
- * @fn void be_lexerror(blexer*, const char*)
+ * @fn void be_lexerror(blexer_t*, const char*)
  * @brief (???)
  *
  * @param lexer (???)
  * @param msg (???)
  */
-void be_lexerror(blexer *lexer, const char *msg);
+void be_lexerror(blexer_t *lexer, const char *msg);
 
 /**
- * @fn int be_lexer_scan_next(blexer*)
+ * @fn int be_lexer_scan_next(blexer_t*)
  * @brief (???)
  *
  * @param lexer (???)
  * @return (???)
  */
-int be_lexer_scan_next(blexer *lexer);
+int be_lexer_scan_next(blexer_t *lexer);
 
 /**
- * @fn bstring be_lexer_newstr*(blexer*, const char*)
+ * @fn bstring_t be_lexer_newstr*(blexer_t*, const char*)
  * @brief (???)
  *
  * @param lexer (???)
  * @param str (???)
  * @return (???)
  */
-bstring* be_lexer_newstr(blexer *lexer, const char *str);
+bstring_t* be_lexer_newstr(blexer_t *lexer, const char *str);
 
 /**
- * @fn const char be_token2str*(bvm*, btoken*)
+ * @fn const char be_token2str*(bvm_t*, btoken_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param token (???)
  * @return (???)
  */
-const char* be_token2str(bvm *vm, btoken *token);
+const char* be_token2str(bvm_t *vm, btoken_t *token);
 
 /**
- * @fn const char be_tokentype2str*(btokentype)
+ * @fn const char be_tokentype2str*(btokentype_t)
  * @brief (???)
  *
  * @param type (???)
  * @return (???)
  */
-const char* be_tokentype2str(btokentype type);
+const char* be_tokentype2str(btokentype_t type);
 
 #endif

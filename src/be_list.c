@@ -13,12 +13,12 @@
 #include "be_exec.h"
 #include <string.h>
 
-#define datasize(size)          ((size) * sizeof(bvalue))
+#define datasize(size)          ((size) * sizeof(bvalue_t))
 
-blist* be_list_new(bvm *vm)
+blist_t* be_list_new(bvm_t *vm)
 {
-    bgcobject *gco = be_gcnew(vm, BE_LIST, blist);
-    blist *list = cast_list(gco);
+    bgcobject_t *gco = be_gcnew(vm, BE_LIST, blist_t);
+    blist_t *list = cast_list(gco);
     if (list) {
         list->count = 0;
         list->capacity = 2;
@@ -30,16 +30,16 @@ blist* be_list_new(bvm *vm)
     return list;
 }
 
-void be_list_delete(bvm *vm, blist *list)
+void be_list_delete(bvm_t *vm, blist_t *list)
 {
     be_free(vm, list->data, datasize(list->capacity));
-    be_free(vm, list, sizeof(blist));
+    be_free(vm, list, sizeof(blist_t));
 }
 
-blist* be_list_copy(bvm *vm, blist *original)
+blist_t* be_list_copy(bvm_t *vm, blist_t *original)
 {
-    bgcobject *gco = be_gcnew(vm, BE_LIST, blist);
-    blist *list = cast_list(gco);
+    bgcobject_t *gco = be_gcnew(vm, BE_LIST, blist_t);
+    blist_t *list = cast_list(gco);
     if (list) {
         size_t size = datasize(original->capacity);
         list->count = original->count;
@@ -53,7 +53,7 @@ blist* be_list_copy(bvm *vm, blist *original)
     return list;
 }
 
-bvalue* be_list_index(blist *list, int index)
+bvalue_t* be_list_index(blist_t *list, int index)
 {
     if (index < 0) {
         index = list->count + index;
@@ -64,9 +64,9 @@ bvalue* be_list_index(blist *list, int index)
     return be_list_at(list, index);
 }
 
-bvalue* be_list_push(bvm *vm, blist *list, bvalue *value)
+bvalue_t* be_list_push(bvm_t *vm, blist_t *list, bvalue_t *value)
 {
-    bvalue *slot;
+    bvalue_t *slot;
     if (list->count >= list->capacity) {
         int newcap = be_nextsize(list->capacity);
         list->data = be_realloc(vm, list->data,
@@ -80,10 +80,10 @@ bvalue* be_list_push(bvm *vm, blist *list, bvalue *value)
     return slot;
 }
 
-bvalue* be_list_insert(bvm *vm, blist *list, int index, bvalue *value)
+bvalue_t* be_list_insert(bvm_t *vm, blist_t *list, int index, bvalue_t *value)
 {
     int i;
-    bvalue *data;
+    bvalue_t *data;
     if (index < 0) {
         index = list->count + index;
     }
@@ -107,10 +107,10 @@ bvalue* be_list_insert(bvm *vm, blist *list, int index, bvalue *value)
     return data;
 }
 
-int be_list_remove(bvm *vm, blist *list, int index)
+int be_list_remove(bvm_t *vm, blist_t *list, int index)
 {
     int i;
-    bvalue *data;
+    bvalue_t *data;
     (void)vm;
     if (index < 0) {
         index = list->count + index;
@@ -126,12 +126,12 @@ int be_list_remove(bvm *vm, blist *list, int index)
     return btrue;
 }
 
-void be_list_resize(bvm *vm, blist *list, int count)
+void be_list_resize(bvm_t *vm, blist_t *list, int count)
 {
     if (count != list->count) {
         int newcap = be_nextsize(count);
         if (newcap > list->capacity) {
-            bvalue *v, *end;
+            bvalue_t *v, *end;
             list->data = be_realloc(vm, list->data,
                 datasize(list->capacity), datasize(newcap));
             list->capacity = newcap;
@@ -145,7 +145,7 @@ void be_list_resize(bvm *vm, blist *list, int count)
     }
 }
 
-void be_list_merge(bvm *vm, blist *list, const blist *other)
+void be_list_merge(bvm_t *vm, blist_t *list, const blist_t *other)
 {
     int dst_len = list->count;
     int src_len = other->count;
@@ -157,33 +157,33 @@ void be_list_merge(bvm *vm, blist *list, const blist *other)
                 datasize(list->capacity), datasize(newcap));
             list->capacity = newcap;
         }
-        memcpy(list->data + dst_len, other->data, src_len * sizeof(bvalue));
+        memcpy(list->data + dst_len, other->data, src_len * sizeof(bvalue_t));
         list->count = length;
     }
 }
 
-void be_list_reverse(blist *list)
+void be_list_reverse(blist_t *list)
 {
-    bvalue *left = list->data;
-    bvalue *right = left + list->count - 1;
+    bvalue_t *left = list->data;
+    bvalue_t *right = left + list->count - 1;
     for (; left < right; ++left, --right) {
-        bvalue temp = *left;
+        bvalue_t temp = *left;
         *left = *right;
         *right = temp;
     }
 }
 
-void be_list_pool_init(bvm *vm, blist *list)
+void be_list_pool_init(bvm_t *vm, blist_t *list)
 {
-    bvalue *head;
+    bvalue_t *head;
     be_list_resize(vm, list, 0);
     head = be_list_push(vm, list, NULL);
     var_setint(head, 0);
 }
 
-int be_list_pool_alloc(bvm *vm, blist *list, bvalue *src)
+int be_list_pool_alloc(bvm_t *vm, blist_t *list, bvalue_t *src)
 {
-    bvalue *head = be_list_data(list), *node;
+    bvalue_t *head = be_list_data(list), *node;
     int id = var_toidx(head); /* get the first free node */
     if (id) {
         node = head + id;
@@ -196,10 +196,10 @@ int be_list_pool_alloc(bvm *vm, blist *list, bvalue *src)
     return id;
 }
 
-void be_list_pool_free(blist *list, int id)
+void be_list_pool_free(blist_t *list, int id)
 {
-    bvalue *head = be_list_data(list);
-    bvalue *node = head + id;
+    bvalue_t *head = be_list_data(list);
+    bvalue_t *node = head + id;
     be_assert(id > 0 && id < list->count);
     /* insert a new free node to head */
     *node = *head;

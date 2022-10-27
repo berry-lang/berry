@@ -35,7 +35,7 @@ expression may affect the value of the expression. The precedence and
 associativity of operators guarantee the uniqueness of the expression
 evaluation order. For example, a combined expression:
 
-.. code:: python
+.. code:: berry
 
    1 + 10/2 * 3
 

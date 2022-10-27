@@ -34,87 +34,87 @@
 /** @} */
 
 /**
- * @fn void be_vector_init(bvm*, bvector*, int)
+ * @fn void be_vector_init(bvm_t*, bvector_t*, int)
  * @brief (???)
  *
  * @param vm (???)
  * @param vector (???)
  * @param size (???)
  */
-void be_vector_init(bvm *vm, bvector *vector, int size);
+void be_vector_init(bvm_t *vm, bvector_t *vector, int size);
 
 /**
- * @fn void be_vector_delete(bvm*, bvector*)
+ * @fn void be_vector_delete(bvm_t*, bvector_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param vector (???)
  */
-void be_vector_delete(bvm *vm, bvector *vector);
+void be_vector_delete(bvm_t *vm, bvector_t *vector);
 
 /**
- * @fn void be_vector_at*(bvector*, int)
+ * @fn void be_vector_at*(bvector_t*, int)
  * @brief (???)
  *
  * @param vector (???)
  * @param index (???)
  */
-void* be_vector_at(bvector *vector, int index);
+void* be_vector_at(bvector_t *vector, int index);
 
 /**
- * @fn void be_vector_push(bvm*, bvector*, void*)
+ * @fn void be_vector_push(bvm_t*, bvector_t*, void*)
  * @brief (???)
  *
  * @param vm (???)
  * @param vector (???)
  * @param data (???)
  */
-void be_vector_push(bvm *vm, bvector *vector, void *data);
+void be_vector_push(bvm_t *vm, bvector_t *vector, void *data);
 
 /**
- * @fn void be_vector_push_c(bvm*, bvector*, void*)
+ * @fn void be_vector_push_c(bvm_t*, bvector_t*, void*)
  * @brief (???)
  *
  * @param vm (???)
  * @param vector (???)
  * @param data (???)
  */
-void be_vector_push_c(bvm *vm, bvector *vector, void *data);
+void be_vector_push_c(bvm_t *vm, bvector_t *vector, void *data);
 
 /**
- * @fn void be_vector_remove_end(bvector*)
+ * @fn void be_vector_remove_end(bvector_t*)
  * @brief (???)
  *
  * @param vector (???)
  */
-void be_vector_remove_end(bvector *vector);
+void be_vector_remove_end(bvector_t *vector);
 
 /**
- * @fn void be_vector_resize(bvm*, bvector*, int)
+ * @fn void be_vector_resize(bvm_t*, bvector_t*, int)
  * @brief (???)
  *
  * @param vm (???)
  * @param vector (???)
  * @param count (???)
  */
-void be_vector_resize(bvm *vm, bvector *vector, int count);
+void be_vector_resize(bvm_t *vm, bvector_t *vector, int count);
 
 /**
- * @fn void be_vector_clear(bvector*)
+ * @fn void be_vector_clear(bvector_t*)
  * @brief (???)
  *
  * @param vector (???)
  */
-void be_vector_clear(bvector *vector);
+void be_vector_clear(bvector_t *vector);
 
 /**
- * @fn void be_vector_release*(bvm*, bvector*)
+ * @fn void be_vector_release*(bvm_t*, bvector_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param vector (???)
  */
-void* be_vector_release(bvm *vm, bvector *vector);
+void* be_vector_release(bvm_t *vm, bvector_t *vector);
 
 /**
  * @fn int be_nextsize(int)

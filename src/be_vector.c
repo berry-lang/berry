@@ -12,7 +12,7 @@
 /* initialize a vector, the vector structure itself is usually allocated
  * on the stack, and the data is allocated from the heap.
  **/
-void be_vector_init(bvm *vm, bvector *vector, int size)
+void be_vector_init(bvm_t *vm, bvector_t *vector, int size)
 {
     vector->capacity = 2; /* the default capacity */
     vector->size = size;
@@ -22,17 +22,17 @@ void be_vector_init(bvm *vm, bvector *vector, int size)
     memset(vector->data, 0, (size_t)vector->capacity * size);
 }
 
-void be_vector_delete(bvm *vm, bvector *vector)
+void be_vector_delete(bvm_t *vm, bvector_t *vector)
 {
     be_free(vm, vector->data, (size_t)vector->capacity * vector->size);
 }
 
-void* be_vector_at(bvector *vector, int index)
+void* be_vector_at(bvector_t *vector, int index)
 {
     return (char*)vector->data + (size_t)index * vector->size;
 }
 
-void be_vector_push(bvm *vm, bvector *vector, void *data)
+void be_vector_push(bvm_t *vm, bvector_t *vector, void *data)
 {
     size_t size = vector->size;
     size_t capacity = vector->capacity;
@@ -52,7 +52,7 @@ void be_vector_push(bvm *vm, bvector *vector, void *data)
 }
 
 /* clear the expanded portion if the memory expands */
-void be_vector_push_c(bvm *vm, bvector *vector, void *data)
+void be_vector_push_c(bvm_t *vm, bvector_t *vector, void *data)
 {
     int capacity = vector->capacity + 1;
     be_vector_push(vm, vector, data);
@@ -62,14 +62,14 @@ void be_vector_push_c(bvm *vm, bvector *vector, void *data)
     }
 }
 
-void be_vector_remove_end(bvector *vector)
+void be_vector_remove_end(bvector_t *vector)
 {
     be_assert(vector->count > 0);
     vector->count--;
     vector->end = (char*)vector->end - vector->size;
 }
 
-void be_vector_resize(bvm *vm, bvector *vector, int count)
+void be_vector_resize(bvm_t *vm, bvector_t *vector, int count)
 {
     size_t size = vector->size;
     be_assert(count >= 0);
@@ -89,14 +89,14 @@ void be_vector_resize(bvm *vm, bvector *vector, int count)
     }
 }
 
-void be_vector_clear(bvector *vector)
+void be_vector_clear(bvector_t *vector)
 {
     vector->count = 0;
     vector->end = (char*)vector->data - vector->size;
 }
 
 /* free not used */
-void* be_vector_release(bvm *vm, bvector *vector)
+void* be_vector_release(bvm_t *vm, bvector_t *vector)
 {
     size_t size = vector->size;
     int count = be_vector_count(vector);

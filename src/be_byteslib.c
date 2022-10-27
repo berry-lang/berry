@@ -436,7 +436,7 @@ static void buf_add_hex(buf_impl* attr, const char *hex, size_t len)
 ********************************************************************/
 
 /* if the bufptr is null, don't try to dereference and raise an exception instead */
-static void check_ptr(bvm *vm, buf_impl* attr) {
+static void check_ptr(bvm_t *vm, buf_impl* attr) {
     if (!attr->bufptr) {
         be_raise(vm, "value_error", "operation not allowed on <null> pointer");
     }
@@ -444,7 +444,7 @@ static void check_ptr(bvm *vm, buf_impl* attr) {
 
 /* load instance attribute into a single structure, and store 'previous' values in order to later update only the changed ones */
 /* stack item 1 must contain the instance */
-buf_impl m_read_attributes(bvm *vm, int idx)
+buf_impl m_read_attributes(bvm_t *vm, int idx)
 {
     buf_impl attr;
     be_getmember(vm, idx, ".p");
@@ -473,7 +473,7 @@ buf_impl m_read_attributes(bvm *vm, int idx)
 
 /* Write back attributes to the bytes instance, only if values changed after loading */
 /* stack item 1 must contain the instance */
-void m_write_attributes(bvm *vm, int rel_idx, const buf_impl * attr)
+void m_write_attributes(bvm_t *vm, int rel_idx, const buf_impl * attr)
 {
     int idx = be_absindex(vm, rel_idx);
     if (attr->bufptr != attr->prev_bufptr) {
@@ -502,7 +502,7 @@ void m_write_attributes(bvm *vm, int rel_idx, const buf_impl * attr)
 }
 
 // buf_impl * bytes_realloc(bvm *vm, buf_impl *oldbuf, int32_t size)
-void bytes_realloc(bvm *vm, buf_impl * attr, int32_t size)
+void bytes_realloc(bvm_t *vm, buf_impl * attr, int32_t size)
 {
     if (!attr->fixed && size < 4) { size = 4; }
     if (size > vm->bytesmaxsize) { size = vm->bytesmaxsize; }
@@ -515,7 +515,7 @@ void bytes_realloc(bvm *vm, buf_impl * attr, int32_t size)
 }
 
 /* allocate a new `bytes` object with pre-allocated size */
-static void bytes_new_object(bvm *vm, size_t size)
+static void bytes_new_object(bvm_t *vm, size_t size)
 {
     be_getbuiltin(vm, "bytes");
     be_pushint(vm, size);
@@ -542,7 +542,7 @@ static void bytes_new_object(bvm *vm, size_t size)
  *    Arg2: int - buffer size. Always fixed (negative or positive)
  *
  * */
-static int m_init(bvm *vm)
+static int m_init(bvm_t *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = { 0, 0, NULL, 0, -1, NULL, bfalse, bfalse }; /* initialize prev_values to invalid to force a write at the end */
@@ -618,7 +618,7 @@ static int m_init(bvm *vm)
 }
 
 /* deallocate buffer */
-static int m_deinit(bvm *vm)
+static int m_deinit(bvm_t *vm)
 {
     buf_impl attr = m_read_attributes(vm, 1);
     if (attr.bufptr != NULL && !attr.mapped) {
@@ -633,7 +633,7 @@ static int m_deinit(bvm *vm)
 
 /* grow or shrink to the exact value */
 /* stack item 1 must contain the instance */
-void _bytes_resize(bvm *vm, buf_impl * attr, size_t new_size) {
+void _bytes_resize(bvm_t *vm, buf_impl * attr, size_t new_size) {
     bytes_realloc(vm, attr, new_size);
     if (!attr->bufptr) {
         be_throw(vm, BE_MALLOC_FAIL);
@@ -643,7 +643,7 @@ void _bytes_resize(bvm *vm, buf_impl * attr, size_t new_size) {
 /* grow if needed but don't shrink */
 /* if grow, then add some headroom */
 /* stack item 1 must contain the instance */
-void bytes_resize(bvm *vm, buf_impl * attr, size_t new_size) {
+void bytes_resize(bvm_t *vm, buf_impl * attr, size_t new_size) {
     if (attr->mapped) { return; }   /* if mapped, don't bother with allocation */
     /* when resized to smaller, we introduce a new heurstic */
     /* If the buffer is 64 bytes or smaller, don't shrink */
@@ -655,7 +655,7 @@ void bytes_resize(bvm *vm, buf_impl * attr, size_t new_size) {
     _bytes_resize(vm, attr, new_size);
 }
 
-buf_impl bytes_check_data(bvm *vm, size_t add_size) {
+buf_impl bytes_check_data(bvm_t *vm, size_t add_size) {
     buf_impl attr = m_read_attributes(vm, 1);
     /* check if the `size` is big enough */
     if (attr.len + (int32_t)add_size > attr.size) {
@@ -681,7 +681,7 @@ static size_t tohex(char * out, size_t outsz, const uint8_t * in, size_t insz) {
   return pout - out;
 }
 
-static int m_tostring(bvm *vm)
+static int m_tostring(bvm_t *vm)
 {
     int argc = be_top(vm);
     int32_t max_len = 32;  /* limit to 32 bytes by default */
@@ -714,7 +714,7 @@ static int m_tostring(bvm *vm)
     be_return(vm);
 }
 
-static int m_tohex(bvm *vm)
+static int m_tohex(bvm_t *vm)
 {
     buf_impl attr = m_read_attributes(vm, 1);
     if (attr.bufptr) {              /* pointer looks valid */
@@ -735,7 +735,7 @@ static int m_tohex(bvm *vm)
 /*
  * Copy the buffer into a string without any changes
  */
-static int m_asstring(bvm *vm)
+static int m_asstring(bvm_t *vm)
 {
     buf_impl attr = bytes_check_data(vm, 0);
     check_ptr(vm, &attr);
@@ -743,7 +743,7 @@ static int m_asstring(bvm *vm)
     be_return(vm);
 }
 
-static int m_fromstring(bvm *vm)
+static int m_fromstring(bvm_t *vm)
 {
     int argc = be_top(vm);
     if (argc >= 2 && be_isstring(vm, 2)) {
@@ -774,7 +774,7 @@ static int m_fromstring(bvm *vm)
  *       obvisouly -1 is idntical to 1
  *       size==0 does nothing
  */
-static int m_add(bvm *vm)
+static int m_add(bvm_t *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = bytes_check_data(vm, 4); /* we reserve 4 bytes anyways */
@@ -811,7 +811,7 @@ static int m_add(bvm *vm)
  *       obvisouly -1 is identical to 1
  *       0 returns nil
  */
-static int m_get(bvm *vm, bbool sign)
+static int m_get(bvm_t *vm, bbool sign)
 {
     int argc = be_top(vm);
     buf_impl attr = bytes_check_data(vm, 0); /* we reserve 4 bytes anyways */
@@ -854,7 +854,7 @@ static int m_get(bvm *vm, bbool sign)
  * Get a float (32 bits)
  * `getfloat(index:int [, big_endian:bool]) -> real`
  */
-static int m_getfloat(bvm *vm)
+static int m_getfloat(bvm_t *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = bytes_check_data(vm, 0); /* we reserve 4 bytes anyways */
@@ -875,13 +875,13 @@ static int m_getfloat(bvm *vm)
 }
 
 /* signed int */
-static int m_geti(bvm *vm)
+static int m_geti(bvm_t *vm)
 {
     return m_get(vm, 1);
 }
 
 /* unsigned int */
-static int m_getu(bvm *vm)
+static int m_getu(bvm_t *vm)
 {
     return m_get(vm, 0);
 }
@@ -894,7 +894,7 @@ static int m_getu(bvm *vm)
  *       obvisouly -1 is identical to 1
  *       0 returns nil
  */
-static int m_set(bvm *vm)
+static int m_set(bvm_t *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = bytes_check_data(vm, 0); /* we reserve 4 bytes anyways */
@@ -928,7 +928,7 @@ static int m_set(bvm *vm)
  * `setfloat(index:int, value:real or int [, big_endian:bool]) -> nil`
  * 
  */
-static int m_setfloat(bvm *vm)
+static int m_setfloat(bvm_t *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = bytes_check_data(vm, 0); /* we reserve 4 bytes anyways */
@@ -949,7 +949,7 @@ static int m_setfloat(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_setitem(bvm *vm)
+static int m_setitem(bvm_t *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = bytes_check_data(vm, 0); /* we reserve 4 bytes anyways */
@@ -967,7 +967,7 @@ static int m_setitem(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_item(bvm *vm)
+static int m_item(bvm_t *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = bytes_check_data(vm, 0); /* we reserve 4 bytes anyways */
@@ -985,8 +985,8 @@ static int m_item(bvm *vm)
     if (argc >= 2 && be_isinstance(vm, 2)) {
         const char *cname = be_classname(vm, 2);
         if (!strcmp(cname, "range")) {
-            bint lower, upper;
-            bint size = attr.len;
+            bint_t lower, upper;
+            bint_t size = attr.len;
             /* get index range */
             be_getmember(vm, 2, "__lower__");
             lower = be_toint(vm, -1);
@@ -1015,14 +1015,14 @@ static int m_item(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_size(bvm *vm)
+static int m_size(bvm_t *vm)
 {
     buf_impl attr = m_read_attributes(vm, 1);
     be_pushint(vm, attr.len);
     be_return(vm);
 }
 
-static int m_resize(bvm *vm)
+static int m_resize(bvm_t *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = m_read_attributes(vm, 1);
@@ -1045,7 +1045,7 @@ static int m_resize(bvm *vm)
     be_return(vm);
 }
 
-static int m_clear(bvm *vm)
+static int m_clear(bvm_t *vm)
 {
     buf_impl attr = m_read_attributes(vm, 1);
     if (attr.fixed) { be_raise(vm, BYTES_RESIZE_ERROR, BYTES_RESIZE_MESSAGE); }
@@ -1054,7 +1054,7 @@ static int m_clear(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_merge(bvm *vm)
+static int m_merge(bvm_t *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = m_read_attributes(vm, 1); /* no resize yet */
@@ -1078,7 +1078,7 @@ static int m_merge(bvm *vm)
     be_return_nil(vm); /* return self */
 }
 
-static int m_copy(bvm *vm)
+static int m_copy(bvm_t *vm)
 {
     buf_impl attr = m_read_attributes(vm, 1);
     check_ptr(vm, &attr);
@@ -1091,7 +1091,7 @@ static int m_copy(bvm *vm)
 }
 
 /* accept bytes or int as operand */
-static int m_connect(bvm *vm)
+static int m_connect(bvm_t *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = m_read_attributes(vm, 1);
@@ -1118,7 +1118,7 @@ static int m_connect(bvm *vm)
     be_return_nil(vm); /* return self */
 }
 
-static int bytes_equal(bvm *vm, bbool iseq)
+static int bytes_equal(bvm_t *vm, bbool iseq)
 {
     bbool ret;
     buf_impl attr1 = m_read_attributes(vm, 1);
@@ -1137,12 +1137,12 @@ static int bytes_equal(bvm *vm, bbool iseq)
     be_return(vm);
 }
 
-static int m_equal(bvm *vm)
+static int m_equal(bvm_t *vm)
 {
     return bytes_equal(vm, btrue);
 }
 
-static int m_nequal(bvm *vm)
+static int m_nequal(bvm_t *vm)
 {
     return bytes_equal(vm, bfalse);
 }
@@ -1154,7 +1154,7 @@ static int m_nequal(bvm *vm)
  * 
  * `b.tob64() -> string`
  */
-static int m_tob64(bvm *vm)
+static int m_tob64(bvm_t *vm)
 {
     buf_impl attr = m_read_attributes(vm, 1);
     check_ptr(vm, &attr);
@@ -1174,7 +1174,7 @@ static int m_tob64(bvm *vm)
  * 
  * `bytes().fromb64() -> bytes()`
  */
-static int m_fromb64(bvm *vm)
+static int m_fromb64(bvm_t *vm)
 {
     int argc = be_top(vm);
     if (argc >= 2 && be_isstring(vm, 2)) {
@@ -1206,7 +1206,7 @@ static int m_fromb64(bvm *vm)
  * 
  * `bytes().fromhexx() -> bytes()`
  */
-static int m_fromhex(bvm *vm)
+static int m_fromhex(bvm_t *vm)
 {
     int argc = be_top(vm);
     if (argc >= 2 && be_isstring(vm, 2)) {
@@ -1254,7 +1254,7 @@ static int m_fromhex(bvm *vm)
  * 
  * `_buffer() -> comptr`
  */
-static int m_buffer(bvm *vm)
+static int m_buffer(bvm_t *vm)
 {
     buf_impl attr = m_read_attributes(vm, 1);
     be_pushcomptr(vm, attr.bufptr);
@@ -1267,7 +1267,7 @@ static int m_buffer(bvm *vm)
  * 
  * `ismapped() -> bool`
  */
-static int m_is_mapped(bvm *vm)
+static int m_is_mapped(bvm_t *vm)
 {
     buf_impl attr = m_read_attributes(vm, 1);
     bbool mapped = (attr.mapped || (attr.bufptr == NULL));
@@ -1284,7 +1284,7 @@ static int m_is_mapped(bvm *vm)
  * 
  * `_change_buffer(comptr) -> comptr`
  */
-static int m_change_buffer(bvm *vm)
+static int m_change_buffer(bvm_t *vm)
 {
     int argc = be_top(vm);
     if (argc >= 2 && be_iscomptr(vm, 2)) {
@@ -1304,7 +1304,7 @@ static int m_change_buffer(bvm *vm)
 /*
  * External API
  */
-BERRY_API void * be_pushbytes(bvm *vm, const void * bytes, size_t len)
+BERRY_API void * be_pushbytes(bvm_t *vm, const void * bytes, size_t len)
 {
     bytes_new_object(vm, len);
     buf_impl attr = m_read_attributes(vm, -1);
@@ -1321,7 +1321,7 @@ BERRY_API void * be_pushbytes(bvm *vm, const void * bytes, size_t len)
     return (void*)attr.bufptr;
 }
 
-BERRY_API const void *be_tobytes(bvm *vm, int rel_index, size_t *len)
+BERRY_API const void *be_tobytes(bvm_t *vm, int rel_index, size_t *len)
 {
     int index = be_absindex(vm, rel_index);
     if (be_isbytes(vm, index)) {
@@ -1334,7 +1334,7 @@ BERRY_API const void *be_tobytes(bvm *vm, int rel_index, size_t *len)
     return NULL;
 }
 
-BERRY_API bbool be_isbytes(bvm *vm, int rel_index)
+BERRY_API bbool be_isbytes(bvm_t *vm, int rel_index)
 {
     bbool ret = bfalse;
     int index = be_absindex(vm, rel_index);
@@ -1439,7 +1439,7 @@ be_local_closure(getbits,   /* name */
     0,                          /* has sup protos */
     NULL,                       /* no sub protos */
     1,                          /* has constants */
-    ( &(const bvalue[ 5]) {     /* constants */
+    ( &(const bvalue_t[ 5]) {     /* constants */
     /* K0   */  be_const_int(0),
     /* K1   */  be_nested_str(value_error),
     /* K2   */  be_nested_str(length_X20in_X20bits_X20must_X20be_X20between_X200_X20and_X2032),
@@ -1448,7 +1448,7 @@ be_local_closure(getbits,   /* name */
     }),
     &be_const_str_getbits,
     &be_const_str_solidified,
-    ( &(const binstruction[32]) {  /* code */
+    ( &(const binstruction_t[32]) {  /* code */
       0x180C0500,  //  0000  LE R3 R2 K0
       0x740E0002,  //  0001  JMPT R3 #0005
       0x540E001F,  //  0002  LDINT R3 32
@@ -1499,7 +1499,7 @@ be_local_closure(setbits,   /* name */
     0,                          /* has sup protos */
     NULL,                       /* no sub protos */
     1,                          /* has constants */
-    ( &(const bvalue[ 5]) {     /* constants */
+    ( &(const bvalue_t[ 5]) {     /* constants */
     /* K0   */  be_const_int(0),
     /* K1   */  be_nested_str(value_error),
     /* K2   */  be_nested_str(length_X20in_X20bits_X20must_X20be_X20between_X200_X20and_X2032),
@@ -1508,7 +1508,7 @@ be_local_closure(setbits,   /* name */
     }),
     &be_const_str_setbits,
     &be_const_str_solidified,
-    ( &(const binstruction[37]) {  /* code */
+    ( &(const binstruction_t[37]) {  /* code */
       0x14100500,  //  0000  LT R4 R2 K0
       0x74120002,  //  0001  JMPT R4 #0005
       0x5412001F,  //  0002  LDINT R4 32
@@ -1552,7 +1552,7 @@ be_local_closure(setbits,   /* name */
 /*******************************************************************/
 
 #if !BE_USE_PRECOMPILED_OBJECT
-void be_load_byteslib(bvm *vm)
+void be_load_byteslib(bvm_t *vm)
 {
     static const bnfuncinfo members[] = {
         { ".p", NULL },

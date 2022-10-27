@@ -10,18 +10,18 @@
 
 #if BE_USE_GC_MODULE
 
-static int m_allocated(bvm *vm)
+static int m_allocated(bvm_t *vm)
 {
     size_t count = be_gc_memcount(vm);
     if (count < 0x80000000) {
-        be_pushint(vm, (bint)count);
+        be_pushint(vm, (bint_t)count);
     } else {
-        be_pushreal(vm, (breal)count);
+        be_pushreal(vm, (breal_t)count);
     }
     be_return(vm);
 }
 
-static int m_collect(bvm *vm)
+static int m_collect(bvm_t *vm)
 {
     be_gc_collect(vm);
     be_return_nil(vm);

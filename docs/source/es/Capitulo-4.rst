@@ -660,40 +660,37 @@ generalmente usamos cadenas cortas. Berry también puede lanzar algunas
 excepciones internamente. Llamamos a estas excepciones **Excepción
 estándar**. Todos los valores de excepción estándar son de tipo cadena.
 
-+------------+-------------------------------+-------------------------+
-| **Valores  | **Descripción**               | **Descripción del       |
-| atípicos** |                               | parámetro**             |
-+============+===============================+=========================+
-| ``asser    | Afirmación fallida            | Información sobre       |
-| t_failed`` |                               | excepciones específicas |
-+------------+-------------------------------+-------------------------+
-| ``ind      | (generalmente fuera de los    | Información sobre       |
-| ex_error`` | límites)                      | excepciones específicas |
-+------------+-------------------------------+-------------------------+
-| ``         | Mal funcionamiento de E/S     | Información sobre       |
-| io_error`` |                               | excepciones específicas |
-+------------+-------------------------------+-------------------------+
-| ``k        | Error clave                   | Información sobre       |
-| ey_error`` |                               | excepciones específicas |
-+------------+-------------------------------+-------------------------+
-| ``runti    | Excepción de tiempo de        | Información sobre       |
-| me_error`` | ejecución de máquina virtual  | excepciones específicas |
-+------------+-------------------------------+-------------------------+
-| ``stop_i   | Fin del iterador              | no                      |
-| teration`` |                               |                         |
-+------------+-------------------------------+-------------------------+
-| ``synt     | Error de sintaxis             |                         |
-| ax_error`` |                               |                         |
-+------------+-------------------------------+-------------------------+
-| por el     |                               |                         |
-| compilador |                               |                         |
-+------------+-------------------------------+-------------------------+
-| ``unrealiz | Función no realizada          | Información sobre       |
-| ed_error`` |                               | excepciones específicas |
-+------------+-------------------------------+-------------------------+
-| ``ti       | Error de tipo                 | Información sobre       |
-| pe_error`` |                               | excepciones específicas |
-+------------+-------------------------------+-------------------------+
++---------------------+-------------------------------+-------------------------+
+| **Valores atípicos**| **Descripción**               | **Descripción del       |
+|                     |                               | parámetro**             |
++=====================+===============================+=========================+
+| ``assert_failed``   | Afirmación fallida            | Información sobre       |
+|                     |                               | excepciones específicas |
++---------------------+-------------------------------+-------------------------+
+| ``index_error``     | (generalmente fuera de los    | Información sobre       |
+|                     | límites)                      | excepciones específicas |
++---------------------+-------------------------------+-------------------------+
+| ``io_error``        | Mal funcionamiento de E/S     | Información sobre       |
+|                     |                               | excepciones específicas |
++---------------------+-------------------------------+-------------------------+
+| ``key_error``       | Error clave                   | Información sobre       |
+|                     |                               | excepciones específicas |
++---------------------+-------------------------------+-------------------------+
+| ``runtime_error``   | Excepción de tiempo de        | Información sobre       |
+|                     | ejecución de máquina virtual  | excepciones específicas |
++---------------------+-------------------------------+-------------------------+
+| ``stop_iteration``  | Fin del iterador              | no                      |
++---------------------+-------------------------------+-------------------------+
+| ``syntax_error``    | Error de sintaxis             |                         |
++---------------------+-------------------------------+-------------------------+
+| por el compilador   |                               |                         |
++---------------------+-------------------------------+-------------------------+
+| ``unrealized_error``| Función no realizada          | Información sobre       |
+|                     |                               | excepciones específicas |
++---------------------+-------------------------------+-------------------------+
+| ``tipe_error``      | Error de tipo                 | Información sobre       |
+|                     |                               | excepciones específicas |
++---------------------+-------------------------------+-------------------------+
 
 *Tabla 8: Lista de excepciones estándar*
 
@@ -707,7 +704,7 @@ forma básica de la oración ``try-except`` es
 
 | ``try`` **bloque**
 | ``except`` **…**   **bloque**   ``end``
-
+|
 
 La rama ``except`` puede tener las siguientes formas
 
@@ -716,7 +713,7 @@ La rama ``except`` puede tener las siguientes formas
 | ``except`` **excepciones**\ ``as`` **variable** ``,`` **mensaje**
 | ``except .. as`` **variable**
 | ``except .. as`` **variable** ``,`` **mensaje**
-
+|
 
 La instrucción ``except`` más básica no usa parámetros, esta rama
 ``except`` capturará todas las excepciones; **Lista de excepciones de

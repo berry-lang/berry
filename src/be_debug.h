@@ -22,32 +22,32 @@ struct bhookblock {
 };
 
 /**
- * @fn void be_dumpclosure(bclosure*)
+ * @fn void be_dumpclosure(bclosure_t*)
  * @brief
  *
  * @param cl
  */
-void be_dumpclosure(bclosure *cl);
+void be_dumpclosure(bclosure_t *cl);
 
 /**
- * @fn void be_tracestack(bvm*)
+ * @fn void be_tracestack(bvm_t*)
  * @brief (???)
  *
  * @param vm (???)
  */
-void be_tracestack(bvm *vm);
+void be_tracestack(bvm_t *vm);
 
 /**
- * @fn void be_callhook(bvm*, int)
+ * @fn void be_callhook(bvm_t*, int)
  * @brief (???)
  *
  * @param vm (???)
  * @param mask (???)
  */
-void be_callhook(bvm *vm, int mask);
+void be_callhook(bvm_t *vm, int mask);
 
 /**
- * @fn bool be_debug_varname(bvm*, int, int)
+ * @fn bbool be_debug_varname(bvm_t*, int, int)
  * @brief (???)
  *
  * @param vm (???)
@@ -55,10 +55,10 @@ void be_callhook(bvm *vm, int mask);
  * @param index (???)
  * @return (???)
  */
-bbool be_debug_varname(bvm *vm, int level, int index);
+bbool be_debug_varname(bvm_t *vm, int level, int index);
 
 /**
- * @fn bool be_debug_upvname(bvm*, int, int)
+ * @fn bbool be_debug_upvname(bvm_t*, int, int)
  * @brief (???)
  *
  * @param vm (???)
@@ -66,19 +66,19 @@ bbool be_debug_varname(bvm *vm, int level, int index);
  * @param index (???)
  * @return (???)
  */
-bbool be_debug_upvname(bvm *vm, int level, int index);
+bbool be_debug_upvname(bvm_t *vm, int level, int index);
 
 #if BE_USE_DEBUG_MODULE
 
 /**
- * @fn void be_print_inst(binstruction, int, void*)
+ * @fn void be_print_inst(binstruction_t, int, void*)
  * @brief (???)
  *
  * @param ins (???)
  * @param pc (???)
  * @param fout (???)
  */
-void be_print_inst(binstruction ins, int pc, void* fout);
+void be_print_inst(binstruction_t ins, int pc, void* fout);
 #endif
 
 #endif

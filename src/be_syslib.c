@@ -9,7 +9,7 @@
 
 #if BE_USE_SYS_MODULE
 
-static int m_path(bvm *vm)
+static int m_path(bvm_t *vm)
 {
     be_getbuiltin(vm, "list");
     be_module_path(vm);

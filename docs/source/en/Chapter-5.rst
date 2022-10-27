@@ -397,9 +397,7 @@ function body. At this time, the interpreter will generate a default
 ``return`` statement to ensure that the function returns. ``return``
 There are two ways to write sentences:
 
-.. container:: algorithm
-
-   ::
+.. code:: berry
 
       ´return’
       ´return’ expression

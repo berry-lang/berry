@@ -26,8 +26,8 @@
   #define realloc               BE_EXPLICIT_REALLOC
 #endif
 
-static void* malloc_from_pool(bvm *vm, size_t size);
-static void free_from_pool(bvm *vm, void* ptr, size_t old_size);
+static void* malloc_from_pool(bvm_t *vm, size_t size);
+static void free_from_pool(bvm_t *vm, void* ptr, size_t old_size);
 
 #define POOL16_SIZE     16
 #define POOL32_SIZE     32
@@ -47,7 +47,7 @@ BERRY_API void* be_os_realloc(void *ptr, size_t size)
     return realloc(ptr, size);
 }
 
-BERRY_API void* be_realloc(bvm *vm, void *ptr, size_t old_size, size_t new_size)
+BERRY_API void* be_realloc(bvm_t *vm, void *ptr, size_t old_size, size_t new_size)
 {
     void *block = NULL;
     // serial_debug("be_realloc ptr=%p old_size=%i new_size=%i\n", ptr, old_size, new_size);
@@ -120,7 +120,7 @@ BERRY_API void* be_realloc(bvm *vm, void *ptr, size_t old_size, size_t new_size)
     return block;
 }
 
-BERRY_API void* be_move_to_aligned(bvm *vm, void *ptr, size_t size) {
+BERRY_API void* be_move_to_aligned(bvm_t *vm, void *ptr, size_t size) {
     (void)vm;
     (void)size;
 #if BE_USE_MEM_ALIGNED
@@ -157,7 +157,7 @@ typedef struct gc32_t {
     mem32    lines[POOL32_SLOTS];
 } gc32_t;
 
-static void* malloc_from_pool(bvm *vm, size_t size) {
+static void* malloc_from_pool(bvm_t *vm, size_t size) {
     if (size == 0) return NULL;
     if (size <= POOL16_SIZE) {
         /* allocate in pool 16 */
@@ -226,7 +226,7 @@ static void* malloc_from_pool(bvm *vm, size_t size) {
     return malloc(size);    /* default to system malloc */
 }
 
-static void free_from_pool(bvm *vm, void* ptr, size_t old_size) {
+static void free_from_pool(bvm_t *vm, void* ptr, size_t old_size) {
     if (old_size <= POOL16_SIZE) {
         gc16_t* pool16 = vm->gc.pool16;
         while (pool16) {
@@ -263,7 +263,7 @@ static void free_from_pool(bvm *vm, void* ptr, size_t old_size) {
     }
 }
 
-BERRY_API void be_gc_memory_pools(bvm *vm) {
+BERRY_API void be_gc_memory_pools(bvm_t *vm) {
     gc16_t** prev16 = &vm->gc.pool16;
     gc16_t* pool16 = vm->gc.pool16;
     while (pool16) {
@@ -294,12 +294,12 @@ BERRY_API void be_gc_memory_pools(bvm *vm) {
     }
 }
 
-BERRY_API void be_gc_init_memory_pools(bvm *vm) {
+BERRY_API void be_gc_init_memory_pools(bvm_t *vm) {
     vm->gc.pool16 = NULL;
     vm->gc.pool32 = NULL;
 }
 
-BERRY_API void be_gc_free_memory_pools(bvm *vm) {
+BERRY_API void be_gc_free_memory_pools(bvm_t *vm) {
     gc16_t* pool16 = vm->gc.pool16;
     while (pool16) {
         gc16_t* pool_to_freed = pool16;
@@ -335,7 +335,7 @@ static int pop0(uint32_t n) {
 #endif
 
 
-BERRY_API void be_gc_memory_pools_info(bvm *vm, size_t* slots_used, size_t* slots_allocated) {
+BERRY_API void be_gc_memory_pools_info(bvm_t *vm, size_t* slots_used, size_t* slots_allocated) {
     size_t used = 0;
     size_t allocated = 0;
 

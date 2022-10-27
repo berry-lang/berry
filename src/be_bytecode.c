@@ -33,21 +33,21 @@
 #endif
 
 #if BE_USE_BYTECODE_SAVER || BE_USE_BYTECODE_LOADER
-static void bytecode_error(bvm *vm, const char *msg)
+static void bytecode_error(bvm_t *vm, const char *msg)
 {
     be_raise(vm, "io_error", msg);
 }
 
 static uint8_t vm_sizeinfo(void)
 {
-    uint8_t res = sizeof(bint) == 8;
-    res |= (sizeof(breal) == 8) << 1;
+    uint8_t res = sizeof(bint_t) == 8;
+    res |= (sizeof(breal_t) == 8) << 1;
     return res;
 }
 #endif
 
 #if BE_USE_BYTECODE_SAVER
-static void save_proto(bvm *vm, void *fp, bproto *proto);
+static void save_proto(bvm_t *vm, void *fp, bproto_t *proto);
 
 static void save_byte(void *fp, uint8_t value)
 {
@@ -83,7 +83,7 @@ static void save_header(void *fp)
     be_fwrite(fp, buffer, sizeof(buffer));
 }
 
-static void save_int(void *fp, bint i)
+static void save_int(void *fp, bint_t i)
 {
 #if USE_64BIT_INT
     save_long(fp, i & 0xffffffff);
@@ -93,21 +93,21 @@ static void save_int(void *fp, bint i)
 #endif
 }
 
-static void save_real(void *fp, breal r)
+static void save_real(void *fp, breal_t r)
 {
 #if BE_USE_SINGLE_FLOAT
-    union { breal r; uint32_t i; } u;
+    union { breal_t r; uint32_t i; } u;
     u.r = r;
     save_long(fp, u.i);
 #else
-    union { breal r; uint64_t i; } u;
+    union { breal_t r; uint64_t i; } u;
     u.r = r;
     save_long(fp, u.i & 0xffffffff);
     save_long(fp, (u.i >> 32) & 0xffffffff);
 #endif
 }
 
-static void save_string(void *fp, bstring *s)
+static void save_string(void *fp, bstring_t *s)
 {
     if (s) {
         uint16_t length = (uint16_t)str_len(s);
@@ -117,15 +117,15 @@ static void save_string(void *fp, bstring *s)
     }
 }
 
-static bstring** save_members(bvm *vm, void *fp, bclass *c, int nvar)
+static bstring_t** save_members(bvm_t *vm, void *fp, bclass_t *c, int nvar)
 {
-    bmapnode *node;
-    bstring **vars = NULL;
-    bmap *members = c->members;
-    bmapiter iter = be_map_iter();
+    bmapnode_t *node;
+    bstring_t **vars = NULL;
+    bmap_t *members = c->members;
+    bmapiter_t iter = be_map_iter();
     if (nvar) {
         /* allocate the member-variable name cache */
-        vars = be_malloc(vm, sizeof(bstring *) * nvar);
+        vars = be_malloc(vm, sizeof(bstring_t *) * nvar);
     }
     while ((node = be_map_next(members, &iter)) != NULL) {
         be_assert(var_isstr(&node->key));
@@ -135,15 +135,15 @@ static bstring** save_members(bvm *vm, void *fp, bclass *c, int nvar)
             }
             vars[var_toidx(&node->value)] = var_tostr(&node->key);
         } else { /* save method's name and function */
-            bproto *proto;
-            bvalue *value = &node->value;
+            bproto_t *proto;
+            bvalue_t *value = &node->value;
             be_assert(var_isclosure(value) || var_isproto(value) || var_isnil(value));
             save_string(fp, var_tostr(&node->key)); /* save method name */
             if (var_isproto(value)) { /* the method is a prototype */
                 proto = var_toobj(value);
                 save_proto(vm, fp, proto); /* only save prototype */
             } else if (var_isclosure(value)) { /* the method is a closure */
-                proto = cast(bclosure *, var_toobj(value))->proto;            
+                proto = cast(bclosure_t *, var_toobj(value))->proto;            
                 save_proto(vm, fp, proto); /* only save prototype */
             } else if (var_isnil(value)) {
                 /* this is a static member (nil default) */
@@ -157,9 +157,9 @@ static bstring** save_members(bvm *vm, void *fp, bclass *c, int nvar)
     return vars;
 }
 
-static void save_class(bvm *vm, void *fp, bclass *c)
+static void save_class(bvm_t *vm, void *fp, bclass_t *c)
 {
-    bstring **vars;
+    bstring_t **vars;
     int i, count = be_map_count(c->members);
     int nvar = c->nvar - be_class_closure_count(c);
     save_string(fp, c->name);
@@ -170,11 +170,11 @@ static void save_class(bvm *vm, void *fp, bclass *c)
         for (i = 0; i < nvar; ++i) {
             save_string(fp, vars[i]);
         }
-        be_free(vm, vars, sizeof(bstring *) * nvar);
+        be_free(vm, vars, sizeof(bstring_t *) * nvar);
     }
 }
 
-static void save_value(bvm *vm, void *fp, bvalue *v)
+static void save_value(bvm_t *vm, void *fp, bvalue_t *v)
 {
     save_byte(fp, (uint8_t)var_primetype(v)); /* type */
     switch (var_primetype(v)) {
@@ -186,10 +186,10 @@ static void save_value(bvm *vm, void *fp, bvalue *v)
     }
 }
 
-static void save_bytecode(bvm *vm, void *fp, bproto *proto)
+static void save_bytecode(bvm_t *vm, void *fp, bproto_t *proto)
 {
     int forbid_gbl = comp_is_named_gbl(vm);
-    binstruction *code = proto->code, *end;
+    binstruction_t *code = proto->code, *end;
     save_long(fp, (uint32_t)proto->codesize);
     for (end = code + proto->codesize; code < end; ++code) {
         save_long(fp, (uint32_t)*code);
@@ -201,18 +201,18 @@ static void save_bytecode(bvm *vm, void *fp, bproto *proto)
     }
 }
 
-static void save_constants(bvm *vm, void *fp, bproto *proto)
+static void save_constants(bvm_t *vm, void *fp, bproto_t *proto)
 {
-    bvalue *v = proto->ktab, *end;
+    bvalue_t *v = proto->ktab, *end;
     save_long(fp, proto->nconst); /* constants count */
     for (end = v + proto->nconst; v < end; ++v) {
         save_value(vm, fp, v);
     }
 }
 
-static void save_proto_table(bvm *vm, void *fp, bproto *proto)
+static void save_proto_table(bvm_t *vm, void *fp, bproto_t *proto)
 {
-    bproto **p = proto->ptab, **end;
+    bproto_t **p = proto->ptab, **end;
     save_long(fp, proto->nproto); /* proto count */
     if (p) {
         for (end = p + proto->nproto; p < end; ++p) {
@@ -221,9 +221,9 @@ static void save_proto_table(bvm *vm, void *fp, bproto *proto)
     }
 }
 
-static void save_upvals(void *fp, bproto *proto)
+static void save_upvals(void *fp, bproto_t *proto)
 {
-    bupvaldesc *uv = proto->upvals, *end;
+    bupvaldesc_t *uv = proto->upvals, *end;
     save_byte(fp, proto->nupvals); /* upvals count */
     if (uv) {
         for (end = uv + proto->nupvals; uv < end; ++uv) {
@@ -233,7 +233,7 @@ static void save_upvals(void *fp, bproto *proto)
     }
 }
 
-static void save_proto(bvm *vm, void *fp, bproto *proto)
+static void save_proto(bvm_t *vm, void *fp, bproto_t *proto)
 {
     if (proto) {
         save_string(fp, proto->name); /* name */
@@ -249,13 +249,13 @@ static void save_proto(bvm *vm, void *fp, bproto *proto)
     }
 }
 
-static void save_globals(bvm *vm, void *fp)
+static void save_globals(bvm_t *vm, void *fp)
 {
-    bmapnode *node;
-    bmapiter iter = be_map_iter();
-    bmap *map = vm->gbldesc.global.vtab;
+    bmapnode_t *node;
+    bmapiter_t iter = be_map_iter();
+    bmap_t *map = vm->gbldesc.global.vtab;
     int i, count = be_global_count(vm);
-    bstring **list = be_malloc(vm, sizeof(bstring*) * count);
+    bstring_t **list = be_malloc(vm, sizeof(bstring_t*) * count);
     while ((node = be_map_next(map, &iter)) != NULL) {
         if (var_isstr(&node->key)) {
             int idx = var_toidx(&node->value);
@@ -266,10 +266,10 @@ static void save_globals(bvm *vm, void *fp)
     for (i = 0; i < count; ++i) {
         save_string(fp, list[i]);
     }
-    be_free(vm, list, sizeof(bstring*) * count);
+    be_free(vm, list, sizeof(bstring_t*) * count);
 }
 
-static void save_global_info(bvm *vm, void *fp)
+static void save_global_info(bvm_t *vm, void *fp)
 {
     save_long(fp, be_builtin_count(vm));
     if (comp_is_named_gbl(vm)) {
@@ -281,7 +281,7 @@ static void save_global_info(bvm *vm, void *fp)
     }
 }
 
-void be_bytecode_save(bvm *vm, const char *filename, bproto *proto)
+void be_bytecode_save(bvm_t *vm, const char *filename, bproto_t *proto)
 {
     void *fp = be_fopen(filename, "wb");
     if (fp == NULL) {
@@ -297,7 +297,7 @@ void be_bytecode_save(bvm *vm, const char *filename, bproto *proto)
 #endif /* BE_USE_BYTECODE_SAVER */
 
 #if BE_USE_BYTECODE_LOADER
-static bbool load_proto(bvm *vm, void *fp, bproto **proto, int info, int version);
+static bbool load_proto(bvm_t *vm, void *fp, bproto_t **proto, int info, int version);
 
 static uint8_t load_byte(void *fp)
 {
@@ -361,27 +361,27 @@ bbool be_bytecode_check(const char *path)
     return bfalse;
 }
 
-static bint load_int(void *fp)
+static bint_t load_int(void *fp)
 {
 #if USE_64BIT_INT
-    bint i;
+    bint_t i;
     i = load_long(fp);
-    i |= (bint)load_long(fp) << 32;
+    i |= (bint_t)load_long(fp) << 32;
     return i;
 #else
     return load_long(fp);
 #endif
 }
 
-static breal load_real(void *fp)
+static breal_t load_real(void *fp)
 {
 #if BE_USE_SINGLE_FLOAT
-    union { breal r; uint32_t i; } u;
+    union { breal_t r; uint32_t i; } u;
     u.i = load_long(fp);
     return u.r;
 #else
     union {
-        breal r;
+        breal_t r;
         uint64_t i;
     } u;
     u.i = load_long(fp);
@@ -390,11 +390,11 @@ static breal load_real(void *fp)
 #endif
 }
 
-static bstring* load_string(bvm *vm, void *fp)
+static bstring_t* load_string(bvm_t *vm, void *fp)
 {
     uint16_t len = load_word(fp);
     if (len > 0) {
-        bstring *str;
+        bstring_t *str;
         char *buf = be_malloc(vm, len);
         be_fread(fp, buf, len);
         str = be_newstrn(vm, buf, len);
@@ -404,31 +404,31 @@ static bstring* load_string(bvm *vm, void *fp)
     return str_literal(vm, "");
 }
 
-static bstring* cache_string(bvm *vm, void *fp)
+static bstring_t* cache_string(bvm_t *vm, void *fp)
 {
-    bstring *str = load_string(vm, fp);
+    bstring_t *str = load_string(vm, fp);
     var_setstr(vm->top, str);
     be_incrtop(vm);
     return str;
 }
 
-static void load_class(bvm *vm, void *fp, bvalue *v, int version)
+static void load_class(bvm_t *vm, void *fp, bvalue_t *v, int version)
 {
     int nvar, count;
-    bclass *c = be_newclass(vm, NULL, NULL);
+    bclass_t *c = be_newclass(vm, NULL, NULL);
     var_setclass(v, c);
     c->name = load_string(vm, fp);
     nvar = load_long(fp);
     count = load_long(fp);
     while (count--) { /* load method table */
-        bvalue *value;
-        bstring *name = cache_string(vm, fp);
+        bvalue_t *value;
+        bstring_t *name = cache_string(vm, fp);
         value = vm->top;
         var_setproto(value, NULL);
         be_incrtop(vm);
-        if (load_proto(vm, fp, (bproto**)&var_toobj(value), -3, version)) {
+        if (load_proto(vm, fp, (bproto_t**)&var_toobj(value), -3, version)) {
             /* actual method */
-            bbool is_method = ((bproto*)var_toobj(value))->varg & BE_VA_METHOD;
+            bbool is_method = ((bproto_t*)var_toobj(value))->varg & BE_VA_METHOD;
             be_class_method_bind(vm, c, name, var_toobj(value), !is_method);
         } else {
             /* no proto, static member set to nil */
@@ -437,13 +437,13 @@ static void load_class(bvm *vm, void *fp, bvalue *v, int version)
         be_stackpop(vm, 2); /* pop the cached string and proto */
     }
     for (count = 0; count < nvar; ++count) { /* load member-variable table */
-        bstring *name = cache_string(vm, fp);
+        bstring_t *name = cache_string(vm, fp);
         be_class_member_bind(vm, c, name, btrue);
         be_stackpop(vm, 1); /* pop the cached string */
     }
 }
 
-static void load_value(bvm *vm, void *fp, bvalue *v, int version)
+static void load_value(bvm_t *vm, void *fp, bvalue_t *v, int version)
 {
     switch (load_byte(fp)) {
     case BE_INT: var_setint(v, load_int(fp)); break;
@@ -454,25 +454,25 @@ static void load_value(bvm *vm, void *fp, bvalue *v, int version)
     }
 }
 
-static void load_bytecode(bvm *vm, void *fp, bproto *proto, int info)
+static void load_bytecode(bvm_t *vm, void *fp, bproto_t *proto, int info)
 {
     int size = (int)load_long(fp);
     if (size) {
-        binstruction *code, *end;
+        binstruction_t *code, *end;
         int bcnt = be_builtin_count(vm);
-        blist *list = var_toobj(be_indexof(vm, info));
+        blist_t *list = var_toobj(be_indexof(vm, info));
         be_assert(be_islist(vm, info));
-        proto->code = be_malloc(vm, sizeof(binstruction) * size);
+        proto->code = be_malloc(vm, sizeof(binstruction_t) * size);
         proto->codesize = size;
         code = proto->code;
         for (end = code + size; code < end; ++code) {
-            binstruction ins = (binstruction)load_long(fp);
-            binstruction op = IGET_OP(ins);
+            binstruction_t ins = (binstruction_t)load_long(fp);
+            binstruction_t op = IGET_OP(ins);
             /* fix global variable index */
             if (op == OP_GETGBL || op == OP_SETGBL) {
                 int idx = IGET_Bx(ins);
                 if (idx >= bcnt) { /* does not fix builtin index */
-                    bvalue *name = be_list_at(list, idx - bcnt);
+                    bvalue_t *name = be_list_at(list, idx - bcnt);
                     idx = be_global_find(vm, var_tostr(name));
                     ins = (ins & ~IBx_MASK) | ISET_Bx(idx);
                 }
@@ -482,12 +482,12 @@ static void load_bytecode(bvm *vm, void *fp, bproto *proto, int info)
     }
 }
 
-static void load_constant(bvm *vm, void *fp, bproto *proto, int version)
+static void load_constant(bvm_t *vm, void *fp, bproto_t *proto, int version)
 {
     int size = (int)load_long(fp); /* nconst */
     if (size) {
-        bvalue *end, *v = be_malloc(vm, sizeof(bvalue) * size);
-        memset(v, 0, sizeof(bvalue) * size);
+        bvalue_t *end, *v = be_malloc(vm, sizeof(bvalue_t) * size);
+        memset(v, 0, sizeof(bvalue_t) * size);
         proto->ktab = v;
         proto->nconst = size;
         for (end = v + size; v < end; ++v) {
@@ -496,12 +496,12 @@ static void load_constant(bvm *vm, void *fp, bproto *proto, int version)
     }
 }
 
-static void load_proto_table(bvm *vm, void *fp, bproto *proto, int info, int version)
+static void load_proto_table(bvm_t *vm, void *fp, bproto_t *proto, int info, int version)
 {
     int size = (int)load_long(fp); /* proto count */
     if (size) {
-        bproto **p = be_malloc(vm, sizeof(bproto *) * size);
-        memset(p, 0, sizeof(bproto *) * size);
+        bproto_t **p = be_malloc(vm, sizeof(bproto_t *) * size);
+        memset(p, 0, sizeof(bproto_t *) * size);
         proto->ptab = p;
         proto->nproto = size;
         while (size--) {
@@ -510,13 +510,13 @@ static void load_proto_table(bvm *vm, void *fp, bproto *proto, int info, int ver
     }
 }
 
-static void load_upvals(bvm *vm, void *fp, bproto *proto)
+static void load_upvals(bvm_t *vm, void *fp, bproto_t *proto)
 {
     int size = (int)load_byte(fp);
     if (size) {
-        bupvaldesc *uv, *end;
-        proto->upvals = be_malloc(vm, sizeof(bupvaldesc) * size);
-        proto->nupvals = (bbyte)size;
+        bupvaldesc_t *uv, *end;
+        proto->upvals = be_malloc(vm, sizeof(bupvaldesc_t) * size);
+        proto->nupvals = (bbyte_t)size;
         uv = proto->upvals;
         for (end = uv + size; uv < end; ++uv) {
             uv->instack = load_byte(fp);
@@ -525,11 +525,11 @@ static void load_upvals(bvm *vm, void *fp, bproto *proto)
     }
 }
 
-static bbool load_proto(bvm *vm, void *fp, bproto **proto, int info, int version)
+static bbool load_proto(bvm_t *vm, void *fp, bproto_t **proto, int info, int version)
 {
     /* first load the name */
     /* if empty, it's a static member so don't allocate an actual proto */
-    bstring *name = load_string(vm, fp);
+    bstring_t *name = load_string(vm, fp);
     if (str_len(name)) {
         *proto = be_newproto(vm);
         (*proto)->name = name;
@@ -549,7 +549,7 @@ static bbool load_proto(bvm *vm, void *fp, bproto **proto, int info, int version
     return bfalse;  /* no proto read */
 }
 
-void load_global_info(bvm *vm, void *fp)
+void load_global_info(bvm_t *vm, void *fp)
 {
     int i;
     int bcnt = (int)load_long(fp); /* builtin count */
@@ -560,7 +560,7 @@ void load_global_info(bvm *vm, void *fp)
     }
     be_newlist(vm);
     for (i = 0; i < gcnt; ++i) {
-        bstring *name = cache_string(vm, fp);
+        bstring_t *name = cache_string(vm, fp);
         be_global_new(vm, name);
         be_data_push(vm, -2); /* push the variable name to list */
         be_stackpop(vm, 1); /* pop the cached string */
@@ -568,7 +568,7 @@ void load_global_info(bvm *vm, void *fp)
     be_global_release_space(vm);
 }
 
-bclosure* be_bytecode_load(bvm *vm, const char *filename)
+bclosure_t* be_bytecode_load(bvm_t *vm, const char *filename)
 {
     void *fp = be_fopen(filename, "rb");
     if (fp == NULL) {
@@ -577,7 +577,7 @@ bclosure* be_bytecode_load(bvm *vm, const char *filename)
     } else {
         int version = load_head(fp);
         if (version == BYTECODE_VERSION) {
-            bclosure *cl = be_newclosure(vm, 0);
+            bclosure_t *cl = be_newclosure(vm, 0);
             var_setclosure(vm->top, cl);
             be_stackpush(vm);
             load_global_info(vm, fp);

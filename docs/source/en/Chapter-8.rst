@@ -47,10 +47,12 @@ No overriding of builtins
 Berry allows to override a builtin. This is however generally not
 desirable and a source of hard to find bugs.
 
-::
+.. code:: berry
 
    map = 1
-   syntax_error: stdin:1: strict: redefinition of builtin 'map'
+   
+|syntax_error: stdin:1: strict: redefinition of builtin 'map'
+|
 
 Multiple ``var`` with same name not allowed in same scope
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -58,13 +60,15 @@ Multiple ``var`` with same name not allowed in same scope
 Berry tolerated multiple declaration of a local variable with the same
 name. This is now considered as an error (even without strict mode).
 
-::
+.. code:: berry
 
    def f()
      var a
      var a   # redefinition of a
    end
-   syntax_error: stdin:3: redefinition of 'a'
+
+|syntax_error: stdin:3: redefinition of 'a'
+|
 
 No hiding of local variable from outer scope
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -77,7 +81,7 @@ The only exception is that variables starting with dot ‘.’ can mask from
 outer scope. This is the case with hidden local variable ``.it`` when
 multiple ``for`` are embedded.
 
-::
+.. code:: berry
 
    def f()
      var a    # variable in outer scope
@@ -85,7 +89,9 @@ multiple ``for`` are embedded.
        var a  # redefinition of a in inner scope
      end
    end
-   syntax_error: stdin:4: strict: redefinition of 'a' from outer scope
+   
+|syntax_error: stdin:4: strict: redefinition of 'a' from outer scope
+|
 
 8.2 Virtual members
 -------------------
@@ -661,7 +667,7 @@ is also added to create the class and add it to the global scope.
 
 .. code:: berry
 
-   >  class demo
+   class demo
          var i
          static foo = "bar"
 
@@ -672,12 +678,12 @@ is also added to create the class and add it to the global scope.
          def say_hello()
              print("Hello Berry!")
          end
-     end
-   > import solidify
-   > solidify.dump(demo)
+   end
+     
+   import solidify
+   solidify.dump(demo)
 
 .. code:: c
-
 
    /********************************************************************
    ** Solidified function: init
@@ -705,7 +711,6 @@ is also added to create the class and add it to the global scope.
      )
    );
    /*******************************************************************/
-
 
    /********************************************************************
    ** Solidified function: say_hello
@@ -735,7 +740,6 @@ is also added to create the class and add it to the global scope.
    );
    /*******************************************************************/
 
-
    /********************************************************************
    ** Solidified class: demo
    ********************************************************************/
@@ -763,7 +767,7 @@ Sub-classes are also supported.
 
 .. code:: berry
 
-   > class demo_sub : demo
+   class demo_sub : demo
          var j
 
          def init()
@@ -771,10 +775,9 @@ Sub-classes are also supported.
              self.j = 1
          end
      end
-   > solidify.dump(demo_sub)
+   solidify.dump(demo_sub)
 
 .. code:: c
-
 
    /********************************************************************
    ** Solidified function: init
@@ -809,7 +812,6 @@ Sub-classes are also supported.
    );
    /*******************************************************************/
 
-
    /********************************************************************
    ** Solidified class: demo_sub
    ********************************************************************/
@@ -840,15 +842,15 @@ works with embedded lists or maps.
 
 .. code:: berry
 
-   > def say_hello() print("Hello Berry!") end
-   > m = module("demo_module")
-   > m.i = 0
-   > m.s = "foo"
-   > m.f = say_hello
-   > m.l = [0,1,"a"]
-   > m.m = {"a":"b", "2":3}
-   > import solidify
-   > solidify.dump(m)
+   def say_hello() print("Hello Berry!") end
+   m = module("demo_module")
+   m.i = 0
+   m.s = "foo"
+   m.f = say_hello
+   m.l = [0,1,"a"]
+   m.m = {"a":"b", "2":3}
+   import solidify
+   solidify.dump(m)
 
 .. code:: c
 
@@ -879,7 +881,6 @@ works with embedded lists or maps.
      )
    );
    /*******************************************************************/
-
 
    /********************************************************************
    ** Solidified module: demo_module

@@ -184,7 +184,7 @@ static void free_line(char *ptr)
 #endif
 }
 
-static int handle_result(bvm *vm, int res)
+static int handle_result(bvm_t *vm, int res)
 {
     switch (res) {
     case BE_OK: /* everything is OK */
@@ -208,7 +208,7 @@ static int handle_result(bvm *vm, int res)
 }
 
 /* execute a script source or file and output a result or error */
-static int doscript(bvm *vm, const char *name, int args)
+static int doscript(bvm_t *vm, const char *name, int args)
 {
     /* load string, bytecode file or compile script file */
     int res = args & arg_e ? /* check script source string */
@@ -222,7 +222,7 @@ static int doscript(bvm *vm, const char *name, int args)
 /* load a Berry script string or file and execute
  * args: the enabled options mask
  * */
-static int load_script(bvm *vm, int argc, char *argv[], int args)
+static int load_script(bvm_t *vm, int argc, char *argv[], int args)
 {
     int res = 0;
     int repl_mode = args & arg_i || (args == 0 && argc == 0);
@@ -242,7 +242,7 @@ static int load_script(bvm *vm, int argc, char *argv[], int args)
 }
 
 /* compile the source code to a bytecode file */
-static int build_file(bvm *vm, const char *dst, const char *src, int args)
+static int build_file(bvm_t *vm, const char *dst, const char *src, int args)
 {
     int res = be_loadmode(vm, src, args & arg_l); /* compile script file */
     if (res == BE_OK) {
@@ -285,7 +285,7 @@ static int parse_arg(struct arg_opts *opt, int argc, char *argv[])
     return args;
 }
 
-static void push_args(bvm *vm, int argc, char *argv[])
+static void push_args(bvm_t *vm, int argc, char *argv[])
 {
     be_newobject(vm, "list");
     while (argc--) {
@@ -310,7 +310,7 @@ static const char *module_paths[] = {
 };
 #endif
 
-static void berry_paths(bvm * vm)
+static void berry_paths(bvm_t * vm)
 {
     size_t i;
     for (i = 0; i < array_count(module_paths); ++i) {
@@ -318,7 +318,7 @@ static void berry_paths(bvm * vm)
     }
 }
 
-static void berry_custom_paths(bvm * vm, const char *modulepath)
+static void berry_custom_paths(bvm_t * vm, const char *modulepath)
 {
     const char delim[] = PATH_SEPARATOR;
     char copy[strlen(modulepath)+1];
@@ -348,7 +348,7 @@ static void berry_custom_paths(bvm * vm, const char *modulepath)
  *   -c: compile script file to bytecode file
  *   -o: set the output file name
  * */
-static int analysis_args(bvm *vm, int argc, char *argv[])
+static int analysis_args(bvm_t *vm, int argc, char *argv[])
 {
     int args = 0;
     struct arg_opts opt = { 0 };
@@ -400,7 +400,7 @@ static int analysis_args(bvm *vm, int argc, char *argv[])
 int main(int argc, char *argv[])
 {
     int res;
-    bvm *vm = be_vm_new(); /* create a virtual machine instance */
+    bvm_t *vm = be_vm_new(); /* create a virtual machine instance */
     res = analysis_args(vm, argc, argv);
     be_vm_delete(vm); /* free all objects and vm */
     return res;

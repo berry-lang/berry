@@ -218,7 +218,7 @@ int be_unlink(const char *filename)
     return f_unlink(filename);
 }
 
-int be_dirfirst(bdirinfo *info, const char *path)
+int be_dirfirst(bdirinfo_t *info, const char *path)
 {
     info->dir = be_os_malloc(sizeof(DIR));
     info->file = be_os_malloc(sizeof(FILINFO));
@@ -233,14 +233,14 @@ int be_dirfirst(bdirinfo *info, const char *path)
     return 1;
 }
 
-int be_dirnext(bdirinfo *info)
+int be_dirnext(bdirinfo_t *info)
 {
     FRESULT fr = f_readdir(info->dir, info->file);
     info->name = ((FILINFO *)info->file)->fname;
     return fr != FR_OK || *info->name == '\0';
 }
 
-int be_dirclose(bdirinfo *info)
+int be_dirclose(bdirinfo_t *info)
 {
     if (info->dir) {
         int res = f_closedir(info->dir) != FR_OK;
@@ -296,7 +296,7 @@ int be_unlink(const char *filename)
     return remove(filename);
 }
 
-int be_dirfirst(bdirinfo *info, const char *path)
+int be_dirfirst(bdirinfo_t *info, const char *path)
 {
     char *buf = be_os_malloc(strlen(path) + 3);
     info->file = be_os_malloc(sizeof(struct _finddata_t));
@@ -313,7 +313,7 @@ int be_dirfirst(bdirinfo *info, const char *path)
     return 1;
 }
 
-int be_dirnext(bdirinfo *info)
+int be_dirnext(bdirinfo_t *info)
 {
     struct _finddata_t *cfile = info->file;
     int res = _findnext((intptr_t)info->dir, cfile) != 0;
@@ -321,7 +321,7 @@ int be_dirnext(bdirinfo *info)
     return res;
 }
 
-int be_dirclose(bdirinfo *info)
+int be_dirclose(bdirinfo_t *info)
 {
     be_os_free(info->file);
     return _findclose((intptr_t)info->dir) != 0;
@@ -377,7 +377,7 @@ int be_unlink(const char *filename)
     return remove(filename);
 }
 
-int be_dirfirst(bdirinfo *info, const char *path)
+int be_dirfirst(bdirinfo_t *info, const char *path)
 {
     info->dir = opendir(path);
     if (info->dir) {
@@ -386,7 +386,7 @@ int be_dirfirst(bdirinfo *info, const char *path)
     return 1;
 }
 
-int be_dirnext(bdirinfo *info)
+int be_dirnext(bdirinfo_t *info)
 {
     struct dirent *file;
     info->file = file = readdir(info->dir);
@@ -397,7 +397,7 @@ int be_dirnext(bdirinfo *info)
     return 1;
 }
 
-int be_dirclose(bdirinfo *info)
+int be_dirclose(bdirinfo_t *info)
 {
     return closedir(info->dir) != 0;
 }

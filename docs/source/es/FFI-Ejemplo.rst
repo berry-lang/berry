@@ -1,7 +1,3 @@
-.. raw:: html
-
-   <!-- Spanish Translation: Emiliano Gonzalez (egonzalez . hiperion @ gmail . com) -->
-
 Hacer una función nativa
 ========================
 
@@ -10,7 +6,7 @@ virtual para interactuar con la máquina virtual. Si necesitamos hacer
 una función ``add`` para sumar dos números y usarla en Berry de esta
 manera:
 
-.. code:: ruby
+.. code:: berry
 
    result = add(1, 2)
 
@@ -25,49 +21,49 @@ conjunto de FFI:
 
 .. code:: c
 
-   int be_toint(bvm *vm, int index);
-   breal be_toreal(bvm *vm, int index);
-   int be_tobool(bvm *vm, int index);
-   const char* be_tostring(bvm *vm, int index);
-   void* be_tocomptr(bvm *vm, int index);
+   int be_toint(bvm_t *vm, int index);
+   breal_t be_toreal(bvm_t *vm, int index);
+   int be_tobool(bvm_t *vm, int index);
+   const char* be_tostring(bvm_t *vm, int index);
+   void* be_tocomptr(bvm_t *vm, int index);
 
 Si desea probar si un valor en la pila es de un tipo específico, use el
 siguiente conjunto de FFI:
 
 .. code:: c
 
-   int be_isnil(bvm *vm, int index);
-   int be_isbool(bvm *vm, int index);
-   int be_isint(bvm *vm, int index);
-   int be_isreal(bvm *vm, int index);
-   int be_isnumber(bvm *vm, int index);
-   int be_isstring(bvm *vm, int index);
-   int be_isclosure(bvm *vm, int index);
-   int be_isntvclos(bvm *vm, int index);
-   int be_isfunction(bvm *vm, int index);
-   int be_isproto(bvm *vm, int index);
-   int be_isclass(bvm *vm, int index);
-   int be_isinstance(bvm *vm, int index);
-   int be_islist(bvm *vm, int index);
-   int be_ismap(bvm *vm, int index);
-   int be_iscomptr(bvm *vm, int index);
+   int be_isnil(bvm_t *vm, int index);
+   int be_isbool(bvm_t *vm, int index);
+   int be_isint(bvm_t *vm, int index);
+   int be_isreal(bvm_t *vm, int index);
+   int be_isnumber(bvm_t *vm, int index);
+   int be_isstring(bvm_t *vm, int index);
+   int be_isclosure(bvm_t *vm, int index);
+   int be_isntvclos(bvm_t *vm, int index);
+   int be_isfunction(bvm_t *vm, int index);
+   int be_isproto(bvm_t *vm, int index);
+   int be_isclass(bvm_t *vm, int index);
+   int be_isinstance(bvm_t *vm, int index);
+   int be_islist(bvm_t *vm, int index);
+   int be_ismap(bvm_t *vm, int index);
+   int be_iscomptr(bvm_t *vm, int index);
 
 Si necesita enviar valores a la pila, use estos FFI:
 
 .. code:: c
 
-   void be_pushnil(bvm *vm);
-   void be_pushbool(bvm *vm, int b);
-   void be_pushint(bvm *vm, bint i);
-   void be_pushreal(bvm *vm, breal r);
-   void be_pushstring(bvm *vm, const char *str);
-   void be_pushnstring(bvm *vm, const char *str, size_t n);
-   const char* be_pushfstring(bvm *vm, const char *format, ...);
-   void be_pushvalue(bvm *vm, int index);
-   void be_pushntvclosure(bvm *vm, bntvfunc f, int nupvals);
-   void be_pushntvfunction(bvm *vm, bntvfunc f);
-   void be_pushclass(bvm *vm, const char *name, const bnfuncinfo *lib);
-   void be_pushcomptr(bvm *vm, void *ptr);
+   void be_pushnil(bvm_t *vm);
+   void be_pushbool(bvm_t *vm, int b);
+   void be_pushint(bvm_t *vm, bint i);
+   void be_pushreal(bvm_t *vm, breal r);
+   void be_pushstring(bvm_t *vm, const char *str);
+   void be_pushnstring(bvm_t *vm, const char *str, size_t n);
+   const char* be_pushfstring(bvm_t *vm, const char *format, ...);
+   void be_pushvalue(bvm_t *vm, int index);
+   void be_pushntvclosure(bvm_t *vm, bntvfunc f, int nupvals);
+   void be_pushntvfunction(bvm_t *vm, bntvfunc f);
+   void be_pushclass(bvm_t *vm, const char *name, const bnfuncinfo *lib);
+   void be_pushcomptr(bvm_t *vm, void *ptr);
 
 ``index`` es la posición del elemento en la pila, un valor positivo es
 el desplazamiento desde la parte inferior de la pila hasta la parte
@@ -90,7 +86,7 @@ Ahora implementemos la función ``add``:
 
 .. code:: c
 
-   int my_add_func(bvm *vm)
+   int my_add_func(bvm_t *vm)
    {
        /* comprobar que los argumentos son todos enteros */
        if (be_isint(vm, 1) && be_isint(vm, 2)) {
@@ -158,7 +154,7 @@ El código completo es el siguiente:
 
 .. code:: c
 
-   int m_listtest(bvm *vm)
+   int m_listtest(bvm_t *vm)
    {
        be_getglobal(vm, "list");
        be_newlist(vm);

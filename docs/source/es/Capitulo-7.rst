@@ -1,7 +1,3 @@
-.. raw:: html
-
-   <!-- Spanish Translation: Emiliano Gonzalez (egonzalez . hiperion @ gmail . com) -->
-
 7. Bibliotecas y Módulos
 ========================
 
@@ -25,7 +21,7 @@ Función ``print``
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    print(...)
 
@@ -39,7 +35,7 @@ método ``tostring()``, y si lo hay, imprimirá el valor de retorno de la
 instancia llamando al método ``tostring()``, de lo contrario, imprimirá
 la dirección de la instancia.
 
-.. code:: python
+.. code:: berry
 
    print('Hola mundo!') # Hola mundo!
    print([1, 2, '3']) # [1, 2, '3']
@@ -50,7 +46,7 @@ Función ``input``
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    input()
    input(prompt)
@@ -64,7 +60,7 @@ parámetro ``prompt`` debe ser de tipo cadena. Después de llamar a la
 función ``input``, los caracteres se leerán desde el búfer del teclado
 hasta que se encuentre un carácter de nueva línea.
 
-.. code:: python
+.. code:: berry
 
    input('por favor ingrese una cadena:') # por favor ingrese una cadena:
 
@@ -76,7 +72,7 @@ Función ``type``
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    type(valor)
 
@@ -101,7 +97,7 @@ String            ``’string’``   Instance          ``’instance’``
 puntero nativo    ``’ptr’``                        
 ================= ============== ================= ==============
 
-.. code:: python
+.. code:: berry
 
    type(0) # 'int'
    type(0.5) # 'real'
@@ -113,7 +109,7 @@ Función ``classname``
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    classname(objeto)
 
@@ -123,7 +119,7 @@ Esta función devuelve el nombre de clase (cadena) del parámetro. Por lo
 tanto, el parámetro debe ser una clase o instancia, y otros tipos de
 parámetros devolverán ``nil``.
 
-.. code:: python
+.. code:: berry
 
    classname(list) # 'list'
    classname(list()) # 'list'
@@ -135,7 +131,7 @@ Función ``classof``
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    classof(objeto)
 
@@ -146,7 +142,7 @@ debe ser una instancia. Si la función se llama con éxito, devolverá la
 clase a la que pertenece la instancia; de lo contrario, devolverá
 ``nil``.
 
-.. code:: python
+.. code:: berry
 
    classof(list) # nil
    classof(list()) # <class: list>
@@ -158,7 +154,7 @@ Función ``str``
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    str(valor)
 
@@ -171,7 +167,7 @@ si la instancia tiene un método ``tostring()``, si lo hay, se usará el
 valor de retorno del método; de lo contrario, la dirección de la
 instancia se convertirá en una cadena.
 
-.. code:: python
+.. code:: berry
 
    str(0) # '0'
    str(nil) # 'nil'
@@ -181,7 +177,7 @@ instancia se convertirá en una cadena.
 Función ``number``
 ''''''''''''''''''
 
-.. code:: python
+.. code:: berry
 
    number(valor)
 
@@ -196,7 +192,7 @@ conversión. Otros tipos devuelven ``nil``.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    number(5) # 5
    number('45.6') # 45.6
@@ -206,7 +202,7 @@ conversión. Otros tipos devuelven ``nil``.
 Función ``int``
 '''''''''''''''
 
-.. code:: python
+.. code:: berry
 
    int(valor)
 
@@ -222,7 +218,7 @@ si lo hay, se utilizará el valor de retorno del método.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    int(5) # 5
    int(45.6) # 45
@@ -233,7 +229,7 @@ si lo hay, se utilizará el valor de retorno del método.
 Función ``real``
 ''''''''''''''''
 
-.. code:: python
+.. code:: berry
 
    real(valor)
 
@@ -247,7 +243,7 @@ real en decimal. Otros tipos devuelven ``nil``.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    real(5) # 5, type(real(5)) →'real'
    real(45.6) # 45.6
@@ -257,7 +253,7 @@ real en decimal. Otros tipos devuelven ``nil``.
 Función ``bool``
 ''''''''''''''''
 
-.. code:: python
+.. code:: berry
 
    bool(valor)
 
@@ -284,7 +280,7 @@ La conversión sigue las siguientes reglas:
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    bool() # false
    bool(nil) # false
@@ -298,6 +294,7 @@ La conversión sigue las siguientes reglas:
    bool(list) # true
    bool([]) # true
    bool({}) # true
+   
    # avanzado
    import introspect
    bool(introspect.toptr(0)) # false
@@ -306,7 +303,7 @@ La conversión sigue las siguientes reglas:
 Función ``size``
 ''''''''''''''''
 
-.. code:: python
+.. code:: berry
 
    size(valor)
 
@@ -319,7 +316,7 @@ calcula en bytes. Esta función también funciona para instancias de
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    size(10) # 0
    size('s') # 1
@@ -330,7 +327,7 @@ calcula en bytes. Esta función también funciona para instancias de
 Función ``super``
 '''''''''''''''''
 
-.. code:: python
+.. code:: berry
 
    super(objeto)
 
@@ -346,7 +343,7 @@ Consulte el capítulo 6 sobre el comportamiento mágico de
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    class mi_lista: lista end
    l = mi_lista() # classname(l) -->'mi_lista'
@@ -355,7 +352,7 @@ Consulte el capítulo 6 sobre el comportamiento mágico de
 Función ``assert``
 ''''''''''''''''''
 
-.. code:: python
+.. code:: berry
 
    assert(expresión)
    assert(expresión, mensaje)
@@ -375,7 +372,7 @@ mostrará el mensaje predeterminado “``Assert Fail``”.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    assert(false) # aserción fallida!
    assert(nil) # aserción fallida!
@@ -387,7 +384,7 @@ mostrará el mensaje predeterminado “``Assert Fail``”.
 Función ``compile``
 '''''''''''''''''''
 
-.. code:: python
+.. code:: berry
 
    compile(cadena)
    compile(cadena, 'string')
@@ -408,7 +405,7 @@ correspondiente al primer parámetro. Si la compilación es exitosa,
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    compile('print(\'Hola mundo!\')')() # Hola mundo!
    compile('test.be','file')
@@ -441,11 +438,11 @@ Método ``tostring``
 
 Serializa la instancia de ``list`` en una cadena y la devuelve. Por
 ejemplo, el resultado de ejecutar ``[1, [], 1.5].tostring()`` es
-``'[1, [], 1.5]''. Si el contenedor``\ list\` se refiere a sí mismo, la
+``'[1, [], 1.5]``. Si el contenedor``\ list\`` se refiere a sí mismo, la
 posición correspondiente utilizará puntos suspensivos en lugar del valor
 específico:
 
-.. code:: python
+.. code:: berry
 
    l = [1, 2]
    l[0] = l
@@ -457,7 +454,7 @@ Método ``concat``
 Convierte cada elemento de la lista en cadenas y la concatena usando la
 cadena proporcionada.
 
-.. code:: python
+.. code:: berry
 
    l = [1, 2, 3]
    l.concat()  # '123'
@@ -564,7 +561,7 @@ del contenedor, el nuevo elemento se inicializará en ``nil``. El uso de
 ``resize`` para reducir la longitud del contenedor descartará algunos
 elementos al final del contenedor. P.ej:
 
-.. code:: python
+.. code:: berry
 
    l = [1, 2, 3]
    l.resize(5) # Expansion, l == [1, 2, 3, nil, nil]
@@ -619,7 +616,7 @@ similar a la escritura literal. Por ejemplo, el resultado de ejecutar
 refiere a sí mismo, la posición correspondiente utilizará puntos
 suspensivos en lugar del valor específico:
 
-.. code:: python
+.. code:: berry
 
    m = {'map': nil,'texto':'hola'}
    m['map'] = m
@@ -706,7 +703,7 @@ Si no especifica el rango alto, se establece en ``MAXINT``. Ejemplo:
 
 Por lo general, hay dos formas de recorrer una lista:
 
-.. code:: python
+.. code:: berry
 
    l = [1,2,3,4]
    for e:l print(e) end # 1/2/3/4
@@ -721,7 +718,7 @@ construye el búfer en memoria.
 
 Ejemplo:
 
-.. code:: python
+.. code:: berry
 
    b = bytes()
    print(b)   # bytes('')
@@ -750,7 +747,7 @@ el tamaño necesario.
 De manera similar, el búfer se reduce automáticamente si se usa menos
 del tamaño necesario.
 
-.. code:: python
+.. code:: berry
 
    b = bytes(4096)   # 4096 bytes preasignados
 
@@ -760,7 +757,7 @@ Si el primer argumento es una “cadena”, se analiza como una lista de
 valores hexadecimales. Puede agregar un segundo argumento opcional para
 preasignar un búfer más grande.
 
-.. code:: python
+.. code:: berry
 
    b = bytes("BEEF0000")
    print(b)   # bytes('beef0000')
@@ -772,7 +769,7 @@ preasignar un búfer más grande.
 Si el tamaño proporcionado es negativo, el tamaño de la matriz es fijo y
 no se puede reducir ni aumentar.
 
-.. code:: python
+.. code:: berry
 
    b = bytes(-8)
    print(b)   # bytes('0000000000000000')
@@ -801,7 +798,7 @@ no, y si los subelementos deben desasignarse explícitamente.
 
 Ejemplo:
 
-.. code:: python
+.. code:: berry
 
    import introspect
    def f() return 0 end
@@ -820,7 +817,7 @@ Método ``size``
 
 Devuelve el número de bytes en la matriz de bytes
 
-.. code:: python
+.. code:: berry
 
    b = bytes("1122334455")
    b.size()   # 5
@@ -840,7 +837,7 @@ imprime un objeto. ``print(b)`` es equivalente a
 matriz de bytes en el objeto de cadena de bajo nivel equivalente sin
 ninguna codificación.
 
-.. code:: python
+.. code:: berry
 
    b = bytes("1122334455")
    b.tostring()   # 'bytes(\'1122334455\')'
@@ -856,7 +853,7 @@ Método ``tohex``
 Convierte la matriz de bytes en una cadena hexadecimal, similar a la
 devuelta por ``tostring()`` pero sin decoradores.
 
-.. code:: python
+.. code:: berry
 
    b = bytes("1122334455")
    b.tohex()   # '1122334455'
@@ -868,7 +865,7 @@ Actualiza el contenido de la matriz de bytes a partir de una nueva
 cadena hexadecimal. Esto permite cargar una nueva cadena hexadecimal sin
 asignar un nuevo objeto de bytes.
 
-.. code:: python
+.. code:: berry
 
    b = bytes("1122334455")
    b.fromhex("AABBCC")  # bytes('AABBCC')
@@ -878,7 +875,7 @@ Método ``clear``
 
 Vuelve a poner la matriz de bytes en vacío
 
-.. code:: python
+.. code:: berry
 
    b = bytes("1122")
    b.clear()
@@ -893,7 +890,7 @@ Reduce o expande la matriz de bytes para que coincida con el tamaño
 especificado. Si se expande, se agregan bytes NULL (0x00) al final del
 búfer.
 
-.. code:: python
+.. code:: berry
 
    b = bytes("11223344")
    b.resize(6)
@@ -908,7 +905,7 @@ Puede usar ``+`` para concatenar dos listas de ``bytes``, creando un
 nuevo objeto ``bytes``. ``..`` cambia la lista en su lugar y se puede
 usar para agregar un objeto ``int`` (1 byte) o ``bytes``
 
-::
+.. code:: berry
 
    b = bytes("1122")
    c = bytes("3344")
@@ -929,7 +926,7 @@ Puede acceder a bytes individuales como enteros, para leer y escribir.
 Los valores que no están en el rango de 0 a 255 se cortan
 silenciosamente.
 
-.. code:: python
+.. code:: berry
 
    b = bytes("010203")
    print(b[0])         # 1
@@ -956,7 +953,7 @@ matriz.
 Esta construcción no se puede usar como un *lvalue*, es decir, no se
 puede empalmar como ``b[1..2] = bytes("0011") # no permitido``.
 
-.. code:: python
+.. code:: berry
 
    b = bytes("001122334455")
    print(b[1..2])      # bytes('1122')
@@ -982,7 +979,7 @@ Método ``copy``
 Crea una nueva copia nueva del objeto ``bytes``. Se asigna un nuevo
 búfer de memoria y se duplican los datos.
 
-.. code:: python
+.. code:: berry
 
    b = bytes("1122")
    print(b)          # bytes('1122')
@@ -1002,7 +999,7 @@ bytes. El modo estándar es little endian, si se especifica un tamaño
 negativo habilita big endian. ``get`` devuelve valores sin signo,
 mientras que ``geti`` devuelve valores con signo.
 
-::
+.. code::
 
    b.get(<offset>, <size>) ->  objeto de bytes
 
@@ -1011,7 +1008,7 @@ genera ninguna excepción).
 
 Ejemplo:
 
-.. code:: python
+.. code:: berry
 
    b = bytes("010203040506")
    print(b.get(2,2))         # 1027 - 0x0403 read 2 bytes little endian
@@ -1034,7 +1031,7 @@ en cualquier desplazamiento. ``seti`` usa números enteros con signo,
 Si el desplazamiento está fuera de rango, no se realiza ningún cambio
 (no se genera ninguna excepción).
 
-::
+.. code::
 
    bytes.set(<offset>, <valor>, <tamaño>)
 
@@ -1045,13 +1042,13 @@ Este método agrega valor de 1/2/4 bytes (little endian o big endian) al
 final del búfer. Si el tamaño es negativo, el valor se trata como big
 endian.
 
-::
+.. code::
 
    b.add(<valor>, <tamaño>)
 
 Ejemplo:
 
-.. code:: python
+.. code:: berry
 
    b = bytes("0011")
    b.add(0x22, 1)
@@ -1075,7 +1072,7 @@ Convierte un búfer de bytes en una cadena. El búfer se convierte tal
 cual sin ninguna consideración de codificación. Si el búfer contiene
 caracteres NULL, la cadena se truncará.
 
-.. code:: python
+.. code:: berry
 
    b=bytes("3344")
    print(b.asstring())   # '3D'
@@ -1087,7 +1084,7 @@ Convierte un búfer de bytes en una cadena. El búfer se convierte tal
 cual sin ninguna consideración de codificación. Si el búfer contiene
 caracteres NULL, la cadena se truncará.
 
-.. code:: python
+.. code:: berry
 
    b=bytes().fromstring("Hola")
    print(b)              # bytes('48656C6C6F')
@@ -1099,7 +1096,7 @@ Puede leer y escribir a nivel de subbytes, especificando de qué bit a
 qué bit. El desplazamiento está en bits, no en bytes. Agregue el número
 de bytes \* 8.
 
-::
+.. code::
 
    b.setbits(<offset_bits>, <len_bits>, <value>)
    b.getbits(<offset_bits>, <len_bits>)
@@ -1109,7 +1106,7 @@ Codificación en base64, método ``tob64``
 
 Convierte una matriz de bytes en una cadena base64.
 
-.. code:: python
+.. code:: berry
 
    b = bytes('deadbeef0011')
    s = b.tob64()
@@ -1120,7 +1117,7 @@ Decodificación en base64, método ``fromb64``
 
 Convierte una cadena base64 en una matriz de bytes.
 
-.. code:: python
+.. code:: berry
 
    s = '3q2+7wAR'
    b = bytes().fromb64(s)
@@ -1132,7 +1129,7 @@ Métodos ``getfloat`` y ``setfloat``
 Similar a ``get/set``, permite leer o escribir un valor en coma flotante
 de 32 bits.
 
-::
+.. code::
 
    b.getfloat(<offset>)
    b.getfloat(<offset>, <number>)
@@ -1204,7 +1201,7 @@ serializar un objeto Berry en texto JSON.
 Función ``load``
 ^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    load(text)
 
@@ -1229,7 +1226,7 @@ Berry y devolverlo. Las reglas de conversión se muestran en la Tabla 1.1
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    import json
    json.load('0') # 0
@@ -1238,7 +1235,7 @@ Berry y devolverlo. Las reglas de conversión se muestran en la Tabla 1.1
 Función ``dump``
 ^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    dump(objectp, ['formato'])
 
@@ -1263,7 +1260,7 @@ otro              ``cadena``
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    import json
    json.dump('string') #'"string"'
@@ -1299,14 +1296,14 @@ El valor de Pi *π* es un tipo de número real, aproximadamente igual a
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    math.pi # 3.14159
 
 Función ``abs``
 ^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    abs(valor)
 
@@ -1319,7 +1316,7 @@ parámetro. El tipo de retorno de la función ``abs`` es un número real.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    math.abs(-1) # 1
    math.abs(1.5) # 1.5
@@ -1327,7 +1324,7 @@ parámetro. El tipo de retorno de la función ``abs`` es un número real.
 Función ``ceil``
 ^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    ceil(valor)
 
@@ -1341,7 +1338,7 @@ procesa el primero. El tipo de retorno de la función es un número real.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    math.ceil(-1.2) # -1
    math.ceil(1.5) # 2
@@ -1349,7 +1346,7 @@ procesa el primero. El tipo de retorno de la función es un número real.
 Función ``floor``
 ^^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    floor(valor)
 
@@ -1363,7 +1360,7 @@ tipo de retorno de la función es un número real.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    math.floor(-1.2) # -2
    math.floor(1.5) # 1
@@ -1371,7 +1368,7 @@ tipo de retorno de la función es un número real.
 Función ``sin``
 ^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    sin(valor)
 
@@ -1385,7 +1382,7 @@ retorno de la función es un número real.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    math.sin(1) # 0.841471
    math.sin(math.pi * 0.5) # 1
@@ -1393,7 +1390,7 @@ retorno de la función es un número real.
 Función ``cos``
 ^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    cos(valor)
 
@@ -1407,7 +1404,7 @@ número real.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    math.cos(1) # 0.540302
    math.cos(math.pi) # -1
@@ -1415,7 +1412,7 @@ número real.
 Función ``tan``
 ^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    tan(valor)
 
@@ -1429,7 +1426,7 @@ número real.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    math.tan(1) # 1.55741
    math.tan(math.pi / 4) # 1
@@ -1437,7 +1434,7 @@ número real.
 Función ``asin``
 ^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    asin(valor)
 
@@ -1451,7 +1448,7 @@ la función es un número real y la unidad es radianes.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    math.asin(1) # 1.5708
    math.asin(0.5) * 180 / math.pi # 30
@@ -1459,7 +1456,7 @@ la función es un número real y la unidad es radianes.
 Función ``acos``
 ^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    acos(valor)
 
@@ -1473,7 +1470,7 @@ retorno de la función es un número real y la unidad es radianes.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    math.acos(1) # 0
    math.acos(0) # 1.5708
@@ -1481,7 +1478,7 @@ retorno de la función es un número real y la unidad es radianes.
 Función ``atán``
 ^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    atan(valor)
 
@@ -1495,14 +1492,14 @@ retorno de la función es un número real y la unidad es radianes.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    math.atan(1) * 180 / math.pi # 45
 
 Función ``sinh``
 ^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    sinh(valor)
 
@@ -1515,14 +1512,14 @@ retorno de la función es un número real.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    math.sinh(1) # 1.1752
 
 Función ``cosh``
 ^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    cosh(valor)
 
@@ -1535,14 +1532,14 @@ función es un número real.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    math.cosh(1) # 1.54308
 
 Función ``tanh``
 ^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    tanh(valor)
 
@@ -1555,14 +1552,14 @@ función es un número real.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    math.tanh(1) # 0.761594
 
 Función ``sqrt``
 ^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    sqrt(valor)
 
@@ -1575,14 +1572,14 @@ tipo de retorno de la función es un número real.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    math.sqrt(2) # 1.41421
 
 Función ``exp``
 ^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    exp(valor)
 
@@ -1595,14 +1592,14 @@ tipo de retorno de la función es un número real.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    math.exp(1) # 2.71828
 
 Función ``log``
 ^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    log(valor)
 
@@ -1615,14 +1612,14 @@ retorno de la función es un número real.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    log(valor)
 
 Función ``log10``
 ^^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    log10(valor)
 
@@ -1635,14 +1632,14 @@ tipo de retorno de la función es un número real.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    math.log10(10) # 1
 
 Función ``deg``
 ^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    deg(valor)
 
@@ -1655,14 +1652,14 @@ retorno de la función es un número real y la unidad es un ángulo.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    math.deg(math.pi) # 180
 
 Función ``rad``
 ^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    rad(valor)
 
@@ -1675,14 +1672,14 @@ de la función es un número real y la unidad es radianes.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    math.rad(180) # 3.14159
 
 Función ``pow``
 ^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    pow(x, y)
 
@@ -1696,14 +1693,14 @@ retorno de la función es un número real.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    math.pow(2, 3) # 8
 
 Función ``srand``
 ^^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    srand(valor)
 
@@ -1714,14 +1711,14 @@ números aleatorios. El tipo del parámetro debe ser un número entero.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    math.srand(2)
 
 Función ``rand``
 ^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    rand()
 
@@ -1731,7 +1728,7 @@ Esta función se utiliza para obtener un número entero aleatorio.
 
 **Ejemplo**
 
-.. code:: python
+.. code:: berry
 
    math.rand()
 
@@ -1744,7 +1741,7 @@ tiempo.
 Función ``time``
 ^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    time()
 
@@ -1759,7 +1756,7 @@ segundos.
 Función ``dump``
 ^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    dump(ts)
 
@@ -1769,19 +1766,19 @@ La marca de tiempo de entrada ``ts`` se convierte en un ``map`` de
 tiempo, y la correspondencia clave-valor se muestra en la siguiente
 tabla:
 
-+----------+----------+----------+----------+----------+----------+
-|**clave** | **valor**| **clave**| **valor**| **clave**| **valor**|
-+==========+==========+==========+==========+==========+==========+
-| ``       | Año      | ``'      | Mes      | `        | Día      |
-| 'year'`` | (desde   | month'`` | (1-12)   | `'day'`` | (1-31)   |
-|          | 1900)    |          |          |          |          |
-+----------+----------+----------+----------+----------+----------+
-| ``       | Hora     | `        | Puntos   | `        | Segundos |
-| 'hour'`` | (0-23)   | `'min'`` | (0-59)   | `'sec'`` | (0-59)   |
-+----------+----------+----------+----------+----------+----------+
-| ``'we    | Semana   |          |          |          |          |
-| ekday'`` | (1-7)    |          |          |          |          |
-+----------+----------+----------+----------+----------+----------+
++-------------+----------+-----------+----------+----------+----------+
+|**clave**    | **valor**| **clave** | **valor**| **clave**| **valor**|
++=============+==========+===========+==========+==========+==========+
+|``'year'``   | Año      |``'month'``| Mes      |``'day'`` | Día      |
+|             | (desde   |           | (1-12)   |          | (1-31)   |
+|             | 1900)    |           |          |          |          |
++-------------+----------+-----------+----------+----------+----------+
+|``'hour'``   | Hora     |``'min'``  | Puntos   |``'sec'`` | Segundos |
+|             | (0-23)   |           | (0-59)   |          | (0-59)   |
++-------------+----------+-----------+----------+----------+----------+
+|``'weekday'``| Semana   |           |          |          |          |
+|             | (1-7)    |           |          |          |          |
++-------------+----------+-----------+----------+----------+----------+
 
 *Tabla 11: La relación clave-valor del valor de retorno de la función
 ``time.dump``*
@@ -1789,7 +1786,7 @@ tabla:
 Función ``clock``
 ^^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: berry
 
    clock()
 
@@ -1812,7 +1809,7 @@ módulo se ha importado correctamente.
 Función ``count``
 ^^^^^^^^^^^^^^^^^
 
-::
+.. code::
 
    string.count(s, sub[, inicio[, fin]])
 
@@ -1823,14 +1820,14 @@ predeterminado es 0 y tamaño(s)).
 Función ``split``
 ^^^^^^^^^^^^^^^^^
 
-::
+.. code:
 
    string.split(s, pos)
 
 Divide la cadena s en dos subcadenas en la posición ``pos`` y devuelve
 la lista de esas cadenas.
 
-::
+::.. code:
 
    string.split(s, sep[, num])
 
@@ -1841,7 +1838,7 @@ valor predeterminado es string.count(s, sep)).
 Función ``find``
 ^^^^^^^^^^^^^^^^
 
-::
+.. code:
 
    string.find(s, sub[, inicio[, fin]])
 
@@ -1879,7 +1876,7 @@ Convierte el número usado como código en un carácter.
 Función ``format``
 ^^^^^^^^^^^^^^^^^^
 
-::
+.. code:
 
    string.format(fmt[, args])
 
@@ -1983,44 +1980,74 @@ Ejemplo:
 
 .. code:: berry
 
-   > import global
-   > a = 1
-   > global.a
-   1
-   >
-   > b
+   import global
+   a = 1
+   global.a
+   
+|1
+|
+
+.. code:: berry
+ 
+|b
+|
+  
    syntax_error: stdin:1: 'b' no declarado (primer uso en esta función)
-   > global.b = 2
-   > b
-   2
-   > global.b
-   2
-   > var nombre = "b"
-   > global.(nombre)
-   2
+
+.. code:: berry
+   
+   global.b = 2
+   b
+   
+|2
+|
+
+.. code:: berry
+   
+   global.b
+   
+|2
+|
+
+.. code:: berry
+
+   var nombre = "b"
+   global.(nombre)
+   
+|2
+|
 
 Llamar a ``global()`` devuelve la lista de todos los nombres globales
 actualmente definidos (los componentes integrados no están incluidos).
 
 .. code:: berry
 
-   > import global
-   > a = 1
-   > global.b = 2
-   > global()
-   ['_argv', 'b', 'global', 'a']
+   import global
+   a = 1
+   global.b = 2
+   global()
+   
+|['_argv', 'b', 'global', 'a']
+|
 
 ``global.contains(<nombre)> -> bool`` proporciona una manera fácil de
 saber si un nombre global ya está definido.
 
 .. code:: berry
 
-   > import global
-   > global.contains("g")
-   false
-   > g = 1
-   > global.contains("g")
-   true
+   import global
+   global.contains("g")
+   
+|false
+|
+  
+.. code:: berry
+
+   g = 1
+   global.contains("g")
+   
+|true
+|
 
 Módulo ``introspect``
 ~~~~~~~~~~~~~~~~~~~~~

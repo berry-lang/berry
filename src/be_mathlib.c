@@ -34,10 +34,10 @@
   #define mathfunc(func)        func
 #endif
 
-static int m_isnan(bvm *vm)
+static int m_isnan(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isreal(vm, 1)) {
-        breal x = be_toreal(vm, 1);
+        breal_t x = be_toreal(vm, 1);
         be_pushbool(vm, isnan(x));
     } else {
         be_pushbool(vm, bfalse);
@@ -45,229 +45,229 @@ static int m_isnan(bvm *vm)
     be_return(vm);
 }
 
-static int m_abs(bvm *vm)
+static int m_abs(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
-        breal x = be_toreal(vm, 1);
+        breal_t x = be_toreal(vm, 1);
         be_pushreal(vm, mathfunc(fabs)(x));
     } else {
-        be_pushreal(vm, (breal)0.0);
+        be_pushreal(vm, (breal_t)0.0);
     }
     be_return(vm);
 }
 
-static int m_ceil(bvm *vm)
+static int m_ceil(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
-        breal x = be_toreal(vm, 1);
+        breal_t x = be_toreal(vm, 1);
         be_pushreal(vm, mathfunc(ceil)(x));
     } else {
-        be_pushreal(vm, (breal)0.0);
+        be_pushreal(vm, (breal_t)0.0);
     }
     be_return(vm);
 }
 
-static int m_floor(bvm *vm)
+static int m_floor(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
-        breal x = be_toreal(vm, 1);
+        breal_t x = be_toreal(vm, 1);
         be_pushreal(vm, mathfunc(floor)(x));
     } else {
-        be_pushreal(vm, (breal)0.0);
+        be_pushreal(vm, (breal_t)0.0);
     }
     be_return(vm);
 }
 
-static int m_sin(bvm *vm)
+static int m_sin(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
-        breal x = be_toreal(vm, 1);
+        breal_t x = be_toreal(vm, 1);
         be_pushreal(vm, mathfunc(sin)(x));
     } else {
-        be_pushreal(vm, (breal)0.0);
+        be_pushreal(vm, (breal_t)0.0);
     }
     be_return(vm);
 }
 
-static int m_cos(bvm *vm)
+static int m_cos(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
-        breal x = be_toreal(vm, 1);
+        breal_t x = be_toreal(vm, 1);
         be_pushreal(vm, mathfunc(cos)(x));
     } else {
-        be_pushreal(vm, (breal)0.0);
+        be_pushreal(vm, (breal_t)0.0);
     }
     be_return(vm);
 }
 
-static int m_tan(bvm *vm)
+static int m_tan(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
-        breal x = be_toreal(vm, 1);
+        breal_t x = be_toreal(vm, 1);
         be_pushreal(vm, mathfunc(tan)(x));
     } else {
-        be_pushreal(vm, (breal)0.0);
+        be_pushreal(vm, (breal_t)0.0);
     }
     be_return(vm);
 }
 
-static int m_asin(bvm *vm)
+static int m_asin(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
-        breal x = be_toreal(vm, 1);
+        breal_t x = be_toreal(vm, 1);
         be_pushreal(vm, mathfunc(asin)(x));
     } else {
-        be_pushreal(vm, (breal)0.0);
+        be_pushreal(vm, (breal_t)0.0);
     }
     be_return(vm);
 }
 
-static int m_acos(bvm *vm)
+static int m_acos(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
-        breal x = be_toreal(vm, 1);
+        breal_t x = be_toreal(vm, 1);
         be_pushreal(vm, mathfunc(acos)(x));
     } else {
-        be_pushreal(vm, (breal)0.0);
+        be_pushreal(vm, (breal_t)0.0);
     }
     be_return(vm);
 }
 
-static int m_atan(bvm *vm)
+static int m_atan(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
-        breal x = be_toreal(vm, 1);
+        breal_t x = be_toreal(vm, 1);
         be_pushreal(vm, mathfunc(atan)(x));
     } else {
-        be_pushreal(vm, (breal)0.0);
+        be_pushreal(vm, (breal_t)0.0);
     }
     be_return(vm);
 }
 
-static int m_atan2(bvm *vm)
+static int m_atan2(bvm_t *vm)
 {
     if (be_top(vm) >= 2 && be_isnumber(vm, 1) && be_isnumber(vm, 2)) {
-        breal y = be_toreal(vm, 1);
-        breal x = be_toreal(vm, 2);
+        breal_t y = be_toreal(vm, 1);
+        breal_t x = be_toreal(vm, 2);
         be_pushreal(vm, mathfunc(atan2)(y, x));
     } else {
-        be_pushreal(vm, (breal)0.0);
+        be_pushreal(vm, (breal_t)0.0);
     }
     be_return(vm);
 }
 
-static int m_sinh(bvm *vm)
+static int m_sinh(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
-        breal x = be_toreal(vm, 1);
+        breal_t x = be_toreal(vm, 1);
         be_pushreal(vm, mathfunc(sinh)(x));
     } else {
-        be_pushreal(vm, (breal)0.0);
+        be_pushreal(vm, (breal_t)0.0);
     }
     be_return(vm);
 }
 
-static int m_cosh(bvm *vm)
+static int m_cosh(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
-        breal x = be_toreal(vm, 1);
+        breal_t x = be_toreal(vm, 1);
         be_pushreal(vm, mathfunc(cosh)(x));
     } else {
-        be_pushreal(vm, (breal)0.0);
+        be_pushreal(vm, (breal_t)0.0);
     }
     be_return(vm);
 }
 
-static int m_tanh(bvm *vm)
+static int m_tanh(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
-        breal x = be_toreal(vm, 1);
+        breal_t x = be_toreal(vm, 1);
         be_pushreal(vm, mathfunc(tanh)(x));
     } else {
-        be_pushreal(vm, (breal)0.0);
+        be_pushreal(vm, (breal_t)0.0);
     }
     be_return(vm);
 }
 
-static int m_sqrt(bvm *vm)
+static int m_sqrt(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
-        breal x = be_toreal(vm, 1);
+        breal_t x = be_toreal(vm, 1);
         be_pushreal(vm, mathfunc(sqrt)(x));
     } else {
-        be_pushreal(vm, (breal)0.0);
+        be_pushreal(vm, (breal_t)0.0);
     }
     be_return(vm);
 }
 
-static int m_exp(bvm *vm)
+static int m_exp(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
-        breal x = be_toreal(vm, 1);
+        breal_t x = be_toreal(vm, 1);
         be_pushreal(vm, mathfunc(exp)(x));
     } else {
-        be_pushreal(vm, (breal)0.0);
+        be_pushreal(vm, (breal_t)0.0);
     }
     be_return(vm);
 }
 
-static int m_log(bvm *vm)
+static int m_log(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
-        breal x = be_toreal(vm, 1);
+        breal_t x = be_toreal(vm, 1);
         be_pushreal(vm, mathfunc(log)(x));
     } else {
-        be_pushreal(vm, (breal)0.0);
+        be_pushreal(vm, (breal_t)0.0);
     }
     be_return(vm);
 }
 
-static int m_log10(bvm *vm)
+static int m_log10(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
-        breal x = be_toreal(vm, 1);
+        breal_t x = be_toreal(vm, 1);
         be_pushreal(vm, mathfunc(log10)(x));
     } else {
-        be_pushreal(vm, (breal)0.0);
+        be_pushreal(vm, (breal_t)0.0);
     }
     be_return(vm);
 }
 
-static int m_deg(bvm *vm)
+static int m_deg(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
-        breal x = be_toreal(vm, 1);
-        be_pushreal(vm, x * (breal)(180.0 / M_PI));
+        breal_t x = be_toreal(vm, 1);
+        be_pushreal(vm, x * (breal_t)(180.0 / M_PI));
     } else {
-        be_pushreal(vm, (breal)0.0);
+        be_pushreal(vm, (breal_t)0.0);
     }
     be_return(vm);
 }
 
-static int m_rad(bvm *vm)
+static int m_rad(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
-        breal x = be_toreal(vm, 1);
-        be_pushreal(vm, x * (breal)(M_PI / 180.0));
+        breal_t x = be_toreal(vm, 1);
+        be_pushreal(vm, x * (breal_t)(M_PI / 180.0));
     } else {
-        be_pushreal(vm, (breal)0.0);
+        be_pushreal(vm, (breal_t)0.0);
     }
     be_return(vm);
 }
 
-static int m_pow(bvm *vm)
+static int m_pow(bvm_t *vm)
 {
     if (be_top(vm) >= 2 && be_isnumber(vm, 1) && be_isnumber(vm, 2)) {
-        breal x = be_toreal(vm, 1);
-        breal y = be_toreal(vm, 2);
+        breal_t x = be_toreal(vm, 1);
+        breal_t y = be_toreal(vm, 2);
         be_pushreal(vm, mathfunc(pow)(x, y));
     } else {
-        be_pushreal(vm, (breal)0.0);
+        be_pushreal(vm, (breal_t)0.0);
     }
     be_return(vm);
 }
 
-static int m_srand(bvm *vm)
+static int m_srand(bvm_t *vm)
 {
     if (be_top(vm) >= 1 && be_isint(vm, 1)) {
         srand((unsigned int)be_toint(vm, 1));
@@ -275,7 +275,7 @@ static int m_srand(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_rand(bvm *vm)
+static int m_rand(bvm_t *vm)
 {
     be_pushint(vm, rand());
     be_return(vm);

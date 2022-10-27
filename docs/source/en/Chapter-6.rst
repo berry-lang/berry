@@ -424,12 +424,19 @@ Full example:
 
    ####### Example of usage
 
-   > b1 = B(1)
-   > b1
+   b1 = B(1)
+
+| b1
+|
+
+.. code:: berry
+
    val=1
-   > b42 = B(42)
-   > b42
-   magic!
+   b42 = B(42)
+
+|b42
+|magic!
+|
 
 **Advanced features** When calling ``super(self).<method>(<args>)`` some
 magic happens. When the super-method is called, the ``self`` arguments
@@ -442,28 +449,31 @@ Example:
 
 .. code:: berry
 
-   > class A
+   class A
          def init()
              print("In A::init, self is of type", classname(self))
          end
-     end
-   > class B:A
+   end
+   
+   class B:A
          def init()
              print("In B::init, self is of type", classname(self))
              super(self).init()
          end
-     end
-   > class C:B
+   end
+   
+   class C:B
          def init()
              print("In C::init, self is of type", classname(self))
              super(self).init()
          end
-     end
-   > c = C()
-   In C::init, self is of type C
-   In B::init, self is of type C
-   In A::init, self is of type C
-   > 
+   end
+   c = C()
+   
+| In C::init, self is of type C
+| In B::init, self is of type C
+| In A::init, self is of type C
+|
 
 Explanation:
 

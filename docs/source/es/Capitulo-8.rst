@@ -1,7 +1,3 @@
-.. raw:: html
-
-   <!-- Spanish Translation: Emiliano Gonzalez (egonzalez . hiperion @ gmail . com) -->
-
 8. Características avanzadas
 ============================
 
@@ -52,10 +48,12 @@ Berry permite anular una función incorporada. Sin embargo, esto
 generalmente no es deseable y es una fuente de errores difíciles de
 encontrar.
 
-::
+.. code:: berry
 
    map = 1
-   syntax_error: stdin:1: estricto: redefinición de 'map' incorporado
+   
+|syntax_error: stdin:1: estricto: redefinición de 'map' incorporado
+|
 
 Múltiples ``var`` con el mismo nombre no permitidos en el mismo ámbito
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -64,13 +62,15 @@ Berry toleraba la declaración múltiple de una variable local con el
 mismo nombre. Esto ahora se considera como un error (incluso sin modo
 estricto).
 
-::
+.. code:: berry
 
    def f()
      var a
      var a   # redefinición de a
    end
-   syntax_error: stdin:3: redefinición de 'a'
+   
+|syntax_error: stdin:3: redefinición de 'a'
+|
 
 No ocultar la variable local del alcance externo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -83,7 +83,7 @@ La única excepción son las variables que comienzan con el punto ‘.’ que
 se pueden enmascarar desde el alcance externo. Este es el caso de la
 variable local oculta ``.it`` cuando se incrustan múltiples ``for``.
 
-::
+.. code:: berry
 
    def f()
      var a    # variable en el ámbito externo
@@ -91,7 +91,9 @@ variable local oculta ``.it`` cuando se incrustan múltiples ``for``.
        var a  # redefinición de a en ámbito interno
      end
    end
-   syntax_error: stdin:4: estricto:  redefinición de 'a' desde el ámbito externo
+   
+|syntax_error: stdin:4: estricto:  redefinición de 'a' desde el ámbito externo
+|
 
 8.2 Miembros virtuales
 ----------------------
@@ -109,23 +111,15 @@ espacio de código.
 
 Esta característica permite crear dos métodos:
 
-+-----+----------------------------------------------------------------+
-| Mét | Descripción                                                    |
-| odo |                                                                |
-| Be  |                                                                |
-| rry |                                                                |
-+=====+================================================================+
-| `   | ``(nombre:cadena) -> any``\  Debería devolver el valor del     |
-| `me | ``nombre``                                                     |
-| mbe |                                                                |
-| r`` |                                                                |
-+-----+----------------------------------------------------------------+
-| `   | ``(nombre:cadena, valor:any) especificado -> nil``\  Debería   |
-| `se | almacenar el ‘valor’ en el miembro virtual con el ‘nombre’     |
-| tme | especificado                                                   |
-| mbe |                                                                |
-| r`` |                                                                |
-+-----+----------------------------------------------------------------+
++--------------+----------------------------------------------------------------+
+| Método Berry | Descripción                                                    |
++==============+================================================================+
+| ``member``   | ``(nombre:cadena) -> any``\  Debería devolver el valor del     |
+|              | ``nombre``                                                     |
++--------------+----------------------------------------------------------------+
+| ``setmember``| ``(nombre:cadena, valor:any) especificado -> nil``\  Debería   |
+|              | almacenar el ‘valor’ en el miembro virtual con el ‘nombre’     |
++--------------+----------------------------------------------------------------+
 
 Módulo ``undefined``
 ~~~~~~~~~~~~~~~~~~~~
@@ -170,14 +164,20 @@ Ejemplo de uso:
    a = dyn()
    a.a
 
-attribute_error: el objeto 'dyn' no tiene el atributo 'a'
-stack traceback:
-stdin:1: en función `main`
+|attribute_error: el objeto 'dyn' no tiene el atributo 'a'
+|stack traceback:
+|stdin:1: en función `main`
+|
+
+.. code:: berry
 
    a.a = 1
    a.a
    
-1
+|1
+|
+
+.. code:: berry
 
    a.a = nil
    a.a
@@ -269,7 +269,7 @@ objeto separado como un global.
 Ejemplo
 ~~~~~~~
 
-.. code:: python
+.. code:: berry
 
    class T
        var a
@@ -293,25 +293,29 @@ Ahora intentémoslo:
 
    t.a
 
-'a'
+|'a'
+|
 
 .. code:: berry
 
    t.b
 
-'miembro b'
+|'miembro b'
+|
 
 .. code:: berry
 
    t.foo
 
-'miembro foo'
+|'miembro foo'
+|
 
 .. code:: berry
 
    t.bar = 2
 
-Almacenar 'bar': 2
+|Almacenar 'bar': 2
+|
 
 Esto también funciona para los módulos:
 
@@ -332,20 +336,23 @@ Intentemoslo:
 
    m.a
 
-1
+|1
+|
 
 .. code:: berry
 
    m.b
 
-'miembro b'
+|'miembro b'
+|
 
 .. code:: berry
 
    m.c = 3   # la asignación es válida por lo que no se llama a `setmember()
    m.c
 
-3
+|3
+|
 
 Ejemplo más avanzado:
 
@@ -380,13 +387,15 @@ Ejemplo más avanzado:
    a.ii = 42    # llama implícitamente `a.setmember("ii", 42)`
    a.ii         # llama implícitamente `a.member("ii")` and returns `42`
    
-42
+|42
+|
 
 .. code:: berry
 
    a.i          #  la variable concreta también fue cambiada
    
-42
+|42
+|
 
 8.3 Cómo empaquetar un módulo
 -----------------------------
@@ -466,20 +475,23 @@ Ejemplo de uso:
 
    demo_module.decir_hola()
    
-Hola Berry!
+|Hola Berry!
+|
 
 .. code:: berry
 
    demo_modulo.foo
    
-'bar'
+|'bar'
+|
 
 .. code:: berry
 
    demo_modulo.foo = "baz"   # el módulo se puede escribir, aunque esto es muy desaconsejado
    demo_modulo.foo
    
-'baz'
+|'baz'
+|
 
 Empaquetar un singleton (mónada)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -543,22 +555,25 @@ Ejemplo:
 
    demo_monad.say_hello()
    
-Hola Berry!
+|Hola Berry!
+|
 
 .. code:: berry
 
    demo_monad.i = 42        #  puedes usarlo como cualquier instancia
    demo_monad.i
    
-42
+|42
+|
 
 .. code:: berry
 
    demo_monad.j = 0         # hay una fuerte verificación de miembros en comparación con los módulos 
    
-Attribute_error: la clase 'my_monad' no puede asignarse al atributo 'j'
-stack traceback:
-stdin:1: en función `main`
+|Attribute_error: la clase 'my_monad' no puede asignarse al atributo 'j'
+|stack traceback:
+|stdin:1: en función `main`
+|
 
 8.4 Solidificación
 ------------------
@@ -599,9 +614,9 @@ Ejemplo:
 
 .. code:: berry
 
-   > def f() return "hello" end
-   > import solidify
-   > solidify.dump(f)
+   def f() return "hello" end
+   import solidify
+   solidify.dump(f)
 
 .. code:: c
 
@@ -670,7 +685,7 @@ agrega un código auxiliar ``C`` para crear la clase y agregarla al
 
 .. code:: berry
 
-   >  class demo
+   class demo
          var i
          static foo = "bar"
 
@@ -681,12 +696,11 @@ agrega un código auxiliar ``C`` para crear la clase y agregarla al
          def say_hello()
              print("Hello Berry!")
          end
-     end
-   > import solidify
-   > solidify.dump(demo)
+   end
+   import solidify
+   solidify.dump(demo)
 
 .. code:: c
-
 
    /********************************************************************
    ** Solidified function: init
@@ -770,18 +784,17 @@ Las subclases también son compatibles.
 
 .. code:: berry
 
-   > class demo_sub : demo
+   class demo_sub : demo
          var j
 
          def init()
              super(self).init()
              self.j = 1
          end
-     end
-   > solidify.dump(demo_sub)
+   end
+   solidify.dump(demo_sub)
 
 .. code:: c
-
 
    /********************************************************************
    ** Solidified function: init
@@ -846,15 +859,15 @@ funciona con listas o mapas incrustados.
 
 .. code:: berry
 
-   > def say_hello() print("Hello Berry!") end
-   > m = module("demo_module")
-   > m.i = 0
-   > m.s = "foo"
-   > m.f = say_hello
-   > m.l = [0,1,"a"]
-   > m.m = {"a":"b", "2":3}
-   > import solidify
-   > solidify.dump(m)
+   def say_hello() print("Hello Berry!") end
+   m = module("demo_module")
+   m.i = 0
+   m.s = "foo"
+   m.f = say_hello
+   m.l = [0,1,"a"]
+   m.m = {"a":"b", "2":3}
+   import solidify
+   solidify.dump(m)
 
 .. code:: c
 

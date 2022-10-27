@@ -1,8 +1,3 @@
-.. raw:: html
-
-   <!-- Spanish Translation: Emiliano Gonzalez (egonzalez . hiperion @ gmail . com) -->
-
-Definición de gramática
 =======================
 
 Este capítulo dará algunas definiciones gramaticales relacionadas con

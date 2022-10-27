@@ -9,7 +9,7 @@
 #include "be_func.h"
 #include "be_vm.h"
 
-static int m_init(bvm *vm)
+static int m_init(bvm_t *vm)
 {
     be_pushvalue(vm, 2);
     be_setmember(vm, 1, "__lower__");
@@ -19,7 +19,7 @@ static int m_init(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_tostring(bvm *vm)
+static int m_tostring(bvm_t *vm)
 {
     be_pushstring(vm, "(");
     be_getmember(vm, 1, "__lower__");
@@ -39,19 +39,19 @@ static int m_tostring(bvm *vm)
     be_return(vm);
 }
 
-static int m_upper(bvm *vm)
+static int m_upper(bvm_t *vm)
 {
     be_getmember(vm, 1, "__upper__");
     be_return(vm);
 }
 
-static int m_lower(bvm *vm)
+static int m_lower(bvm_t *vm)
 {
     be_getmember(vm, 1, "__lower__");
     be_return(vm);
 }
 
-static int m_setrange(bvm *vm)
+static int m_setrange(bvm_t *vm)
 {
     be_pushvalue(vm, 2);
     be_setmember(vm, 1, "__lower__");
@@ -61,15 +61,15 @@ static int m_setrange(bvm *vm)
     be_return_nil(vm);
 }
 
-static int iter_closure(bvm *vm)
+static int iter_closure(bvm_t *vm)
 {
     /* for better performance, we operate the upvalues
      * directly without using by the stack. */
-    bntvclos *func = var_toobj(vm->cf->func);
-    bvalue *uv0 = be_ntvclos_upval(func, 0)->value;
-    bvalue *uv1 = be_ntvclos_upval(func, 1)->value;
-    bint lower = var_toint(uv0); /* upvalue[0] => lower */
-    bint upper = var_toint(uv1); /* upvalue[1] => upper */
+    bntvclos_t *func = var_toobj(vm->cf->func);
+    bvalue_t *uv0 = be_ntvclos_upval(func, 0)->value;
+    bvalue_t *uv1 = be_ntvclos_upval(func, 1)->value;
+    bint_t lower = var_toint(uv0); /* upvalue[0] => lower */
+    bint_t upper = var_toint(uv1); /* upvalue[1] => upper */
     if (lower > upper) {
         be_stop_iteration(vm);
     }
@@ -78,7 +78,7 @@ static int iter_closure(bvm *vm)
     be_return(vm);
 }
 
-static int m_iter(bvm *vm)
+static int m_iter(bvm_t *vm)
 {
     be_pushntvclosure(vm, iter_closure, 2);
     be_getmember(vm, 1, "__lower__");
@@ -91,7 +91,7 @@ static int m_iter(bvm *vm)
 }
 
 #if !BE_USE_PRECOMPILED_OBJECT
-void be_load_rangelib(bvm *vm)
+void be_load_rangelib(bvm_t *vm)
 {
     static const bnfuncinfo members[] = {
         { "__lower__", NULL },

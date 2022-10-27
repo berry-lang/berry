@@ -7,15 +7,15 @@
 ********************************************************************/
 #include "be_libs.h"
 
-extern void be_load_baselib(bvm *vm);
-extern void be_load_baselib_next(bvm *vm);
-extern void be_load_listlib(bvm *vm);
-extern void be_load_maplib(bvm *vm);
-extern void be_load_rangelib(bvm *vm);
-extern void be_load_filelib(bvm *vm);
-extern void be_load_byteslib(bvm *vm);
+extern void be_load_baselib(bvm_t *vm);
+extern void be_load_baselib_next(bvm_t *vm);
+extern void be_load_listlib(bvm_t *vm);
+extern void be_load_maplib(bvm_t *vm);
+extern void be_load_rangelib(bvm_t *vm);
+extern void be_load_filelib(bvm_t *vm);
+extern void be_load_byteslib(bvm_t *vm);
 
-void be_loadlibs(bvm *vm)
+void be_loadlibs(bvm_t *vm)
 {
     be_load_baselib(vm);
 #if !BE_USE_PRECOMPILED_OBJECT

@@ -15,8 +15,8 @@
 #define INDENT_WIDTH    2
 #define INDENT_CHAR     ' '
 
-static const char* parser_value(bvm *vm, const char *json);
-static void value_dump(bvm *vm, int *indent, int idx, int fmt);
+static const char* parser_value(bvm_t *vm, const char *json);
+static void value_dump(bvm_t *vm, int *indent, int idx, int fmt);
 
 static const char* skip_space(const char *s)
 {
@@ -42,7 +42,7 @@ static const char* match_char(const char *json, int ch)
     return NULL;
 }
 
-static int is_object(bvm *vm, const char *class, int idx)
+static int is_object(bvm_t *vm, const char *class, int idx)
 {
     if (be_isinstance(vm, idx)) {
         be_pushvalue(vm, idx);
@@ -79,7 +79,7 @@ static int json_strlen(const char *json)
     return ch ? cast_int(s - json - 1) : -1;
 }
 
-static void json2berry(bvm *vm, const char *class)
+static void json2berry(bvm_t *vm, const char *class)
 {
     be_getbuiltin(vm, class);
     be_pushvalue(vm, -2);
@@ -88,7 +88,7 @@ static void json2berry(bvm *vm, const char *class)
     be_pop(vm, 2);
 }
 
-static const char* parser_true(bvm *vm, const char *json)
+static const char* parser_true(bvm_t *vm, const char *json)
 {
     if (!strncmp(json, "true", 4)) {
         be_pushbool(vm, btrue);
@@ -97,7 +97,7 @@ static const char* parser_true(bvm *vm, const char *json)
     return NULL;
 }
 
-static const char* parser_false(bvm *vm, const char *json)
+static const char* parser_false(bvm_t *vm, const char *json)
 {
     if (!strncmp(json, "false", 5)) {
         be_pushbool(vm, bfalse);
@@ -106,7 +106,7 @@ static const char* parser_false(bvm *vm, const char *json)
     return NULL;
 }
 
-static const char* parser_null(bvm *vm, const char *json)
+static const char* parser_null(bvm_t *vm, const char *json)
 {
     if (!strncmp(json, "null", 4)) {
         be_pushnil(vm);
@@ -147,7 +147,7 @@ static char* load_unicode(char *dst, const char *json)
     return dst;
 }
 
-static const char* parser_string(bvm *vm, const char *json)
+static const char* parser_string(bvm_t *vm, const char *json)
 {
     if (*json == '"') {
         int len = json_strlen(json++);
@@ -191,7 +191,7 @@ static const char* parser_string(bvm *vm, const char *json)
     return NULL;
 }
 
-static const char* parser_field(bvm *vm, const char *json)
+static const char* parser_field(bvm_t *vm, const char *json)
 {
     if (json && *json == '"') {
         json = parser_string(vm, json);
@@ -211,7 +211,7 @@ static const char* parser_field(bvm *vm, const char *json)
     return NULL;
 }
 
-static const char* parser_object(bvm *vm, const char *json)
+static const char* parser_object(bvm_t *vm, const char *json)
 {
     json = match_char(json, '{');
     be_newmap(vm);
@@ -238,7 +238,7 @@ static const char* parser_object(bvm *vm, const char *json)
     return json;
 }
 
-static const char* parser_array(bvm *vm, const char *json)
+static const char* parser_array(bvm_t *vm, const char *json)
 {
     json = match_char(json, '[');
     be_newlist(vm);
@@ -270,7 +270,7 @@ static const char* parser_array(bvm *vm, const char *json)
 }
 
 /* parser json value */
-static const char* parser_value(bvm *vm, const char *json)
+static const char* parser_value(bvm_t *vm, const char *json)
 {
     json = skip_space(json);
     switch (*json) {
@@ -298,7 +298,7 @@ static const char* parser_value(bvm *vm, const char *json)
     return NULL;
 }
 
-static int m_json_load(bvm *vm)
+static int m_json_load(bvm_t *vm)
 {
     if (be_isstring(vm, 1)) {
         const char *json = be_tostring(vm, 1);
@@ -310,7 +310,7 @@ static int m_json_load(bvm *vm)
     be_return_nil(vm);
 }
 
-static void make_indent(bvm *vm, int stridx, int indent)
+static void make_indent(bvm_t *vm, int stridx, int indent)
 {
     if (indent) {
         char buf[MAX_INDENT * INDENT_WIDTH + 1];
@@ -324,14 +324,14 @@ static void make_indent(bvm *vm, int stridx, int indent)
     }
 }
 
-void string_dump(bvm *vm, int index)
+void string_dump(bvm_t *vm, int index)
 {
     be_tostring(vm, index); /* convert value to string */
     be_toescape(vm, index, 'u');
     be_pushvalue(vm, index);
 }
 
-static void object_dump(bvm *vm, int *indent, int idx, int fmt)
+static void object_dump(bvm_t *vm, int *indent, int idx, int fmt)
 {
     be_getmember(vm, idx, ".p");
     be_pushstring(vm, fmt ? "{\n" : "{");
@@ -370,7 +370,7 @@ static void object_dump(bvm *vm, int *indent, int idx, int fmt)
     be_pop(vm, 2);
 }
 
-static void array_dump(bvm *vm, int *indent, int idx, int fmt)
+static void array_dump(bvm_t *vm, int *indent, int idx, int fmt)
 {
     be_getmember(vm, idx, ".p");
     be_pushstring(vm, fmt ? "[\n" : "[");
@@ -401,7 +401,7 @@ static void array_dump(bvm *vm, int *indent, int idx, int fmt)
     be_pop(vm, 2);
 }
 
-static void value_dump(bvm *vm, int *indent, int idx, int fmt)
+static void value_dump(bvm_t *vm, int *indent, int idx, int fmt)
 {
     if (is_object(vm, "map", idx)) { /* convert to json object */
         object_dump(vm, indent, idx, fmt);
@@ -417,7 +417,7 @@ static void value_dump(bvm *vm, int *indent, int idx, int fmt)
     }
 }
 
-static int m_json_dump(bvm *vm)
+static int m_json_dump(bvm_t *vm)
 {
     int indent = 0, argc = be_top(vm);
     int fmt = 0;

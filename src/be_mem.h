@@ -21,15 +21,15 @@ extern "C" {
 BERRY_API void* be_os_malloc(size_t size);
 BERRY_API void be_os_free(void *ptr);
 BERRY_API void* be_os_realloc(void *ptr, size_t size);
-BERRY_API void* be_realloc(bvm *vm, void *ptr, size_t old_size, size_t new_size);
-BERRY_API void be_gc_memory_pools(bvm *vm);
-BERRY_API void be_gc_free_memory_pools(bvm *vm);
-BERRY_API void be_gc_init_memory_pools(bvm *vm);
-BERRY_API void be_gc_memory_pools_info(bvm *vm, size_t* slots_used, size_t* slots_allocated);
+BERRY_API void* be_realloc(bvm_t *vm, void *ptr, size_t old_size, size_t new_size);
+BERRY_API void be_gc_memory_pools(bvm_t *vm);
+BERRY_API void be_gc_free_memory_pools(bvm_t *vm);
+BERRY_API void be_gc_init_memory_pools(bvm_t *vm);
+BERRY_API void be_gc_memory_pools_info(bvm_t *vm, size_t* slots_used, size_t* slots_allocated);
 
 /* The following moves a portion of memory to constraint regions with 32-bits read/write acess */
 /* Effective only if `BE_USE_MEM_ALIGNED` is set to `1`*/
-BERRY_API void* be_move_to_aligned(bvm *vm, void *ptr, size_t size);
+BERRY_API void* be_move_to_aligned(bvm_t *vm, void *ptr, size_t size);
 
 #ifdef __cplusplus
 }

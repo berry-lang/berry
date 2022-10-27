@@ -108,14 +108,14 @@ class str_build:
             ostr += "0u, 0, " + str(len(k)) + ", NULL);\n"
 
         ostr += "\n"
-        ostr += "static const bstring* const m_string_table[] = {\n"
+        ostr += "static const bstring_t* const m_string_table[] = {\n"
 
 
         size = len(self.buckets)
         for i in range(size):
             bucket = self.buckets[i]
             if len(bucket) > 0:
-                ostr += "    (const bstring *)&be_const_str_" + escape_operator(bucket[0].str)
+                ostr += "    (const bstring_t *)&be_const_str_" + escape_operator(bucket[0].str)
             else:
                 ostr += "    NULL"
             if i < size - 1: ostr += ","
@@ -136,10 +136,10 @@ class str_build:
             for info in bucket:
                 all.add(escape_operator(info.str))
         for s in sorted(all):
-            ostr += "extern const bcstring be_const_str_" + s + ";\n"
+            ostr += "extern const bcstring_t be_const_str_" + s + ";\n"
             # ostr += "#define BE_CONST_STR_" + s + "\n"
         # weak strings
         ostr += "\n/* weak strings */\n"
         for s in self.str_weak:
-            ostr += "extern const bcstring be_const_str_" + escape_operator(s) + ";\n"
+            ostr += "extern const bcstring_t be_const_str_" + escape_operator(s) + ";\n"
         return ostr

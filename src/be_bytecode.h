@@ -12,27 +12,27 @@
 #include "be_object.h"
 
 /**
- * @fn void be_bytecode_save(bvm*, const char*, bproto*)
+ * @fn void be_bytecode_save(bvm_t*, const char*, bproto_t*)
  * @brief (???)
  *
  * @param vm (???)
  * @param filename (???)
  * @param proto (???)
  */
-void be_bytecode_save(bvm *vm, const char *filename, bproto *proto);
+void be_bytecode_save(bvm_t *vm, const char *filename, bproto_t *proto);
 
 /**
- * @fn bclosure be_bytecode_load*(bvm*, const char*)
+ * @fn bclosure_t be_bytecode_load*(bvm_t*, const char*)
  * @brief (???)
  *
  * @param vm (???)
  * @param filename (???)
  * @return (???)
  */
-bclosure* be_bytecode_load(bvm *vm, const char *filename);
+bclosure_t* be_bytecode_load(bvm_t *vm, const char *filename);
 
 /**
- * @fn bool be_bytecode_check(const char*)
+ * @fn bbool be_bytecode_check(const char*)
  * @brief (???)
  *
  * @param path (???)

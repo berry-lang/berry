@@ -30,34 +30,32 @@ extern "C" {
 #endif
 
 #if BE_INTGER_TYPE == 0
-  #define BE_INTEGER            int        /**< BE_INTEGER */
-  #define BE_INT_FMTLEN         ""         /**< BE_INT_FMTLEN */
+  #define BE_INTEGER            int                   /**< BE_INTEGER */
+  #define BE_INT_FMTLEN         ""                    /**< BE_INT_FMTLEN */
 #elif BE_INTGER_TYPE == 1
-  #define BE_INTEGER            long       /**< BE_INTEGER */
-  #define BE_INT_FMTLEN         "l"        /**< BE_INT_FMTLEN */
+  #define BE_INTEGER            long                  /**< BE_INTEGER */
+  #define BE_INT_FMTLEN         "l"                   /**< BE_INT_FMTLEN */
 #elif BE_INTGER_TYPE == 2
 #ifdef _WIN32
-    #define BE_INTEGER          __int64    /**< BE_INTEGER */
-    #define BE_INT_FMTLEN       "I64"      /**< BE_INT_FMTLEN */
+    #define BE_INTEGER          __int64               /**< BE_INTEGER */
+    #define BE_INT_FMTLEN       "I64"                 /**< BE_INT_FMTLEN */
   #else
-#define BE_INTEGER              long long  /**< BE_INTEGER */
-#define BE_INT_FMTLEN           "ll"       /**< BE_INT_FMTLEN*/
+#define BE_INTEGER              long long             /**< BE_INTEGER */
+#define BE_INT_FMTLEN           "ll"                  /**< BE_INT_FMTLEN*/
 #endif
 #else
   #error "Unsupported integer type for `bint`."
 #endif
 #define BE_INT_FORMAT           "%" BE_INT_FMTLEN "d" /**< BE_INT_FORMAT */
 
-typedef uint8_t bbyte;   /**< bbyte */
-typedef BE_INTEGER bint; /**< bint */
+typedef uint8_t bbyte_t;   /**< bbyte_t */
+typedef BE_INTEGER bint_t; /**< bint _t*/
 
 #if BE_USE_SINGLE_FLOAT != 0
-  typedef float                 breal; /**< breal */
+  typedef float                 breal_t; /**< breal_t */
 #else
-typedef double breal;                  /**< breal */
+typedef double breal_t;                  /**< breal_t */
 #endif
-
-
 
 #ifndef __cplusplus
 #define bbool                   _Bool /**< bbool */
@@ -153,9 +151,9 @@ enum berrorcode {
 /**
  * @brief virtual machine structure
  */
-typedef struct bvm bvm;
+typedef struct bvm bvm_t;
 
-typedef int (*bntvfunc)(bvm*); /**< native function pointer */
+typedef int (*bntvfunc)(bvm_t*); /**< native function pointer */
 
 /**
  * @struct bclass
@@ -171,7 +169,7 @@ struct bclass;
 typedef struct {
     const char *name;  /**< name */
     bntvfunc function; /**< function */
-} bnfuncinfo;
+} bnfuncinfo_t;        /**< bnfuncinfo_t */
 
 /**
  * @struct bntvmodobj
@@ -183,15 +181,15 @@ typedef struct bntvmodobj {
     int type;                                       /**< type */
     union value                                     /**< value */
     {
-        bint i;                                     /**< i */
-        breal r;                                    /**< r */
+        bint_t i;                                   /**< i */
+        breal_t r;                                  /**< r */
         bbool b;                                    /**< b */
         bntvfunc f;                                 /**< f */
         const char *s;                              /**< s */
         const void *o;                              /**< o */
 #ifdef __cplusplus
-        BE_CONSTEXPR value(bint v) : i(v) {}        /**< i */
-        BE_CONSTEXPR value(breal v) : r(v) {}       /**< r */
+        BE_CONSTEXPR value(bint_t v) : i(v) {}      /**< i */
+        BE_CONSTEXPR value(breal_t v) : r(v) {}     /**< r */
         BE_CONSTEXPR value(bbool v) : b(v) {}       /**< b */
         BE_CONSTEXPR value(bntvfunc v) : f(v) {}    /**< f */
         BE_CONSTEXPR value(const char *v) : s(v) {} /**< s */
@@ -200,10 +198,10 @@ typedef struct bntvmodobj {
     } u;                                            /**< u */
 #ifdef __cplusplus
     BE_CONSTEXPR bntvmodobj_t(const char *name) :
-        name(name), type(BE_CNIL), u(bint(0)) {}    /**< bntvmodobj */
-    BE_CONSTEXPR bntvmodobj_t(const char *name, bint v) :
+        name(name), type(BE_CNIL), u(bint_t(0)) {}  /**< bntvmodobj */
+    BE_CONSTEXPR bntvmodobj_t(const char *name, bint_t v) :
         name(name), type(BE_CINT), u(v) {}          /**< bntvmodobj */
-    BE_CONSTEXPR bntvmodobj_t(const char *name, breal v) :
+    BE_CONSTEXPR bntvmodobj_t(const char *name, breal_t v) :
         name(name), type(BE_CREAL), u(v) {}         /**< bntvmodobj */
     BE_CONSTEXPR bntvmodobj_t(const char *name, bbool v) :
         name(name), type(BE_CBOOL), u(v) {}         /**< bntvmodobj */
@@ -237,12 +235,12 @@ struct bclass;
 /**
  * @brief we need only the pointer to `bclass` here
  */
-typedef const struct bclass *bclass_ptr;
+typedef const struct bclass *bclass_ptr_t;
 
 /**
  * @brief array of bclass* pointers, NULL terminated
  */
-typedef bclass_ptr bclass_array[];
+typedef bclass_ptr_t bclass_array_t[];
 
 /**
  * @def be_native_module_nil
@@ -308,7 +306,7 @@ typedef bclass_ptr bclass_array[];
  *
  */
 #define be_native_module_nil(_name)                     \
-    bntvmodobj(_name)
+    bntvmodobj_t(_name)
 
 /**
  * @def be_native_module_attr_table
@@ -316,7 +314,7 @@ typedef bclass_ptr bclass_array[];
  *
  */
 #define be_native_module_int(_name, _v)                 \
-    bntvmodobj(_name, bint(_v))
+    bntvmodobj_t(_name, bint(_v))
 
 /**
  * @def be_native_module_attr_table
@@ -324,7 +322,7 @@ typedef bclass_ptr bclass_array[];
  *
  */
 #define be_native_module_real(_name, _v)                \
-    bntvmodobj(_name, breal(_v))
+    bntvmodobj_t(_name, breal(_v))
 
 /**
  * @def be_native_module_attr_table
@@ -332,7 +330,7 @@ typedef bclass_ptr bclass_array[];
  *
  */
 #define be_native_module_bool(_name, _b)                \
-    bntvmodobj(_name, bbool(_b))
+    bntvmodobj_t(_name, bbool(_b))
 
 /**
  * @def be_native_module_attr_table
@@ -340,7 +338,7 @@ typedef bclass_ptr bclass_array[];
  *
  */
 #define be_native_module_function(_name, _f)            \
-    bntvmodobj(_name, _f)
+    bntvmodobj_t(_name, _f)
 
 /**
  * @def be_native_module_attr_table
@@ -348,7 +346,7 @@ typedef bclass_ptr bclass_array[];
  *
  */
 #define be_native_module_str(_name, _s)                 \
-    bntvmodobj(_name, _s)
+    bntvmodobj_t(_name, _s)
 
 /**
  * @def be_native_module_attr_table
@@ -356,7 +354,7 @@ typedef bclass_ptr bclass_array[];
  *
  */
 #define be_native_module_module(_name, _m)              \
-    bntvmodobj(_name, BE_CMODULE, &(_m))
+    bntvmodobj_t(_name, BE_CMODULE, &(_m))
 #endif
 
 /**
@@ -365,7 +363,7 @@ typedef bclass_ptr bclass_array[];
  *
  */
 #define be_native_module_attr_table(name)               \
-    static const bntvmodobj name##_attrs[] =
+    static const bntvmodobj_t name##_attrs[] =
 
 /**
  * @def be_native_module
@@ -404,7 +402,7 @@ typedef bclass_ptr bclass_array[];
  */
 #ifndef __cplusplus
 #define be_define_native_module(_name, _init)           \
-    const bntvmodule be_native_module(_name) = {        \
+    const bntvmodule_t be_native_module(_name) = {      \
         .name = #_name,                                 \
         .attrs = _name##_attrs,                         \
         .size = sizeof(_name##_attrs)                   \
@@ -414,7 +412,7 @@ typedef bclass_ptr bclass_array[];
     }
 #else
 #define be_define_native_module(_name, _init)           \
-    const bntvmodule be_native_module(_name) = {        \
+    const bntvmodule_t be_native_module(_name) = {      \
         #_name, _name##_attrs,                          \
         sizeof(_name##_attrs)                           \
             / sizeof(_name##_attrs[0]),                 \
@@ -428,15 +426,15 @@ typedef bclass_ptr bclass_array[];
  *        native const strings outside of global string hash
  *
  */
-#define be_define_local_const_str(_name, _s, _hash, _len) \
-    static const bcstring be_local_const_str_##_name = {  \
-        .next = (bgcobject *)NULL,                        \
-        .type = BE_STRING,                                \
-        .marked = GC_CONST,                               \
-        .extra = 0,                                       \
-        .slen = _len,                                     \
-        .hash = 0,                                        \
-        .s = _s                                           \
+#define be_define_local_const_str(_name, _s, _hash, _len)   \
+    static const bcstring_t be_local_const_str_##_name = {  \
+        .next = (bgcobject_t *)NULL,                        \
+        .type = BE_STRING,                                  \
+        .marked = GC_CONST,                                 \
+        .extra = 0,                                         \
+        .slen = _len,                                       \
+        .hash = 0,                                          \
+        .s = _s                                             \
     }
 
 /**
@@ -445,8 +443,8 @@ typedef bclass_ptr bclass_array[];
  *
  */
 #define be_nested_const_str(_s, _hash, _len)  \
-    (bstring*) &(const bcstring) {            \
-        .next = (bgcobject *)NULL,            \
+    (bstring_t*) &(const bcstring_t) {        \
+        .next = (bgcobject_t *)NULL,          \
         .type = BE_STRING,                    \
         .marked = GC_CONST,                   \
         .extra = 0,                           \
@@ -460,7 +458,7 @@ typedef bclass_ptr bclass_array[];
  * @brief be_local_const_str
  *
  */
-#define be_local_const_str(_name) (bstring*) &be_local_const_str_##_name
+#define be_local_const_str(_name) (bstring_t*) &be_local_const_str_##_name
 
 #define BE_IIF(cond) BE_IIF_ ## cond /**< conditional macro see  https://stackoverflow.com/questions/11632219/c-preprocessor-macro-specialisation-based-on-an-argument */
 #define BE_IIF_0(t, f) f             /**< conditional macro see  https://stackoverflow.com/questions/11632219/c-preprocessor-macro-specialisation-based-on-an-argument */
@@ -508,27 +506,27 @@ typedef bclass_ptr bclass_array[];
  * @brief define bproto
  *
  */
-#define be_define_local_proto(_name, _nstack, _argc, _is_const, _is_subproto, _is_upval)           \
-  static const bproto _name##_proto = {                                           \
-    NULL,                                                             /**< bgcobject *next */      \
-    BE_PROTO,                                                         /**< type BE_PROTO */        \
-    0x08,                                                             /**< marked outside of GC */ \
-    (_nstack),                                                        /**< nstack */               \
-    BE_IIF(_is_upval)(sizeof(_name##_upvals)/sizeof(bupvaldesc),0),   /**< nupvals */              \
-    (_argc),                                                          /**< argc */                 \
-    0,                                                                /**< varg */                 \
-    NULL,                                                             /**< bgcobject *gray */      \
-    BE_IIF(_is_upval)((bupvaldesc*)&_name##_upvals,NULL),             /**< bupvaldesc *upvals */   \
-    BE_IIF(_is_const)((bvalue*)&_name##_ktab,NULL),                   /**< ktab */                 \
-    BE_IIF(_is_subproto)((struct bproto**)&_name##_subproto,NULL),    /**< bproto **ptab */        \
-    (binstruction*) &_name##_code,                                    /**< code */                 \
-    be_local_const_str(_name##_str_name),                             /**< name */                 \
-    sizeof(_name##_code)/sizeof(uint32_t),                            /**< codesize */             \
-    BE_IIF(_is_const)(sizeof(_name##_ktab)/sizeof(bvalue),0),         /**< nconst */               \
-    BE_IIF(_is_subproto)(sizeof(_name##_subproto)/sizeof(bproto*),0), /**< proto */                \
-    be_local_const_str(_name##_str_source),                           /**< source */               \
-    PROTO_RUNTIME_BLOCK                                               /**< */                      \
-    PROTO_VAR_INFO_BLOCK                                              /**< */                      \
+#define be_define_local_proto(_name, _nstack, _argc, _is_const, _is_subproto, _is_upval)             \
+  static const bproto _name##_proto = {                                                              \
+    NULL,                                                               /**< bgcobject *next */      \
+    BE_PROTO,                                                           /**< type BE_PROTO */        \
+    0x08,                                                               /**< marked outside of GC */ \
+    (_nstack),                                                          /**< nstack */               \
+    BE_IIF(_is_upval)(sizeof(_name##_upvals)/sizeof(bupvaldesc),0),     /**< nupvals */              \
+    (_argc),                                                            /**< argc */                 \
+    0,                                                                  /**< varg */                 \
+    NULL,                                                               /**< bgcobject *gray */      \
+    BE_IIF(_is_upval)((bupvaldesc_t*)&_name##_upvals,NULL),             /**< bupvaldesc *upvals */   \
+    BE_IIF(_is_const)((bvalue_t*)&_name##_ktab,NULL),                   /**< ktab */                 \
+    BE_IIF(_is_subproto)((struct bproto_t**)&_name##_subproto,NULL),    /**< bproto **ptab */        \
+    (binstruction*) &_name##_code,                                      /**< code */                 \
+    be_local_const_str(_name##_str_name),                               /**< name */                 \
+    sizeof(_name##_code)/sizeof(uint32_t),                              /**< codesize */             \
+    BE_IIF(_is_const)(sizeof(_name##_ktab)/sizeof(bvalue_t),0),         /**< nconst */               \
+    BE_IIF(_is_subproto)(sizeof(_name##_subproto)/sizeof(bproto_t*),0), /**< proto */                \
+    be_local_const_str(_name##_str_source),                             /**< source */               \
+    PROTO_RUNTIME_BLOCK                                                 /**< */                      \
+    PROTO_VAR_INFO_BLOCK                                                /**< */                      \
   }
 
 /**
@@ -537,26 +535,26 @@ typedef bclass_ptr bclass_array[];
  *
  */
 #define be_nested_proto(_nstack, _argc, _varg, _has_upval, _upvals, _has_subproto, _protos, _has_const, _ktab, _fname, _source, _code)     \
-  & (const bproto) {                                                              \
-    NULL,                                                       /**< bgcobject *next */      \
-    BE_PROTO,                                                   /**< type BE_PROTO */        \
-    0x08,                                                       /**< marked outside of GC */ \
-    (_nstack),                                                  /**< nstack */               \
-    BE_IIF(_has_upval)(sizeof(*_upvals)/sizeof(bupvaldesc),0),  /**< nupvals */              \
-    (_argc),                                                    /**< argc */                 \
-    (_varg),                                                    /**< varg */                 \
-    NULL,                                                       /**< bgcobject *gray */      \
-    (bupvaldesc*) _upvals,                                      /**< bupvaldesc *upvals */   \
-    (bvalue*) _ktab,                                            /**< ktab */                 \
-    (struct bproto**) _protos,                                  /**< bproto **ptab */        \
-    (binstruction*) _code,                                      /**< code */                 \
-    ((bstring*) _fname),                                        /**< name */                 \
-    sizeof(*_code)/sizeof(binstruction),                        /**< codesize */             \
-    BE_IIF(_has_const)(sizeof(*_ktab)/sizeof(bvalue),0),        /**< nconst */               \
-    BE_IIF(_has_subproto)(sizeof(*_protos)/sizeof(bproto*),0),  /**< proto */                \
-    ((bstring*) _source),                                       /**< source */               \
-    PROTO_RUNTIME_BLOCK                                         /**< */                      \
-    PROTO_VAR_INFO_BLOCK                                        /**< */                      \
+  & (const bproto_t) {                                                                         \
+    NULL,                                                         /**< bgcobject *next */      \
+    BE_PROTO,                                                     /**< type BE_PROTO */        \
+    0x08,                                                         /**< marked outside of GC */ \
+    (_nstack),                                                    /**< nstack */               \
+    BE_IIF(_has_upval)(sizeof(*_upvals)/sizeof(bupvaldesc_t),0),  /**< nupvals */              \
+    (_argc),                                                      /**< argc */                 \
+    (_varg),                                                      /**< varg */                 \
+    NULL,                                                         /**< bgcobject *gray */      \
+    (bupvaldesc_t*) _upvals,                                      /**< bupvaldesc *upvals */   \
+    (bvalue_t*) _ktab,                                            /**< ktab */                 \
+    (struct bproto **) _protos,                                   /**< bproto **ptab */        \
+    (binstruction_t*) _code,                                      /**< code */                 \
+    ((bstring_t*) _fname),                                        /**< name */                 \
+    sizeof(*_code)/sizeof(binstruction_t),                        /**< codesize */             \
+    BE_IIF(_has_const)(sizeof(*_ktab)/sizeof(bvalue_t),0),        /**< nconst */               \
+    BE_IIF(_has_subproto)(sizeof(*_protos)/sizeof(bproto_t*),0),  /**< proto */                \
+    ((bstring_t*) _source),                                       /**< source */               \
+    PROTO_RUNTIME_BLOCK                                           /**< */                      \
+    PROTO_VAR_INFO_BLOCK                                          /**< */                      \
   }
 
 /**
@@ -565,7 +563,7 @@ typedef bclass_ptr bclass_array[];
  *
  */
 #define be_define_local_closure(_name)                \
-  const bclosure _name##_closure = {                  \
+  const bclosure_t _name##_closure = {                \
     NULL,                     /**< bgcobject *next */ \
     BE_CLOSURE,               /**< type BE_CLOSURE */ \
     GC_CONST,                 /**< marked GC_CONST */ \
@@ -580,15 +578,15 @@ typedef bclass_ptr bclass_array[];
  * @brief new version for more compact literals
  *
  */
-#define be_local_closure(_name, _proto)       \
-  static const bclosure _name##_closure = {   \
-    NULL,             /**< bgcobject *next */ \
-    BE_CLOSURE,       /**< type BE_CLOSURE */ \
-    GC_CONST,         /**< marked GC_CONST */ \
-    0,                /**< nupvals */         \
-    NULL,             /**< bgcobject *gray */ \
-    (bproto*) _proto, /**< proto */           \
-    { NULL }          /**< upvals */          \
+#define be_local_closure(_name, _proto)         \
+  static const bclosure_t _name##_closure = {   \
+    NULL,               /**< bgcobject *next */ \
+    BE_CLOSURE,         /**< type BE_CLOSURE */ \
+    GC_CONST,           /**< marked GC_CONST */ \
+    0,                  /**< nupvals */         \
+    NULL,               /**< bgcobject *gray */ \
+    (bproto_t*) _proto, /**< proto */           \
+    { NULL }            /**< upvals */          \
   }
 
 /**
@@ -626,7 +624,7 @@ typedef struct bhookinfo {
  * @param vm virtual machine instance
  * @param info
  */
-typedef void (*bntvhook)(bvm *vm, bhookinfo_t *info);
+typedef void (*bntvhook)(bvm_t *vm, bhookinfo_t *info);
 
 /**
  * @def be_assert
@@ -647,7 +645,7 @@ typedef void (*bntvhook)(bvm *vm, bhookinfo_t *info);
  * @param vm virtual machine instance
  * @param event
  */
-typedef void (*bobshook)(bvm *vm, int event, ...);
+typedef void (*bobshook)(bvm_t *vm, int event, ...);
 
 /**
  * @enum beobshookevents
@@ -662,7 +660,7 @@ enum beobshookevents {
     BE_OBS_STACK_RESIZE_START,  /**< Berry stack resized */
 };
 
-typedef int (*bctypefunc)(bvm*, const void*); /**< bctypefunc */
+typedef int (*bctypefunc)(bvm_t*, const void*); /**< bctypefunc */
 
 /**
  * @def be_writestring
@@ -752,7 +750,7 @@ typedef int (*bctypefunc)(bvm*, const void*); /**< bctypefunc */
  * @param endstr (???)
  * @return (???)
  */
-BERRY_API bint be_str2int(const char *str, const char **endstr);
+BERRY_API bint_t be_str2int(const char *str, const char **endstr);
 
 /**
  * @fn breal be_str2real(const char*, const char**)
@@ -763,7 +761,7 @@ BERRY_API bint be_str2int(const char *str, const char **endstr);
  * @param endstr (???)
  * @return (???)
  */
-BERRY_API breal be_str2real(const char *str, const char **endstr);
+BERRY_API breal_t be_str2real(const char *str, const char **endstr);
 
 /**
  * @fn const char* be_str2num(bvm *vm, const char *str)
@@ -774,10 +772,10 @@ BERRY_API breal be_str2real(const char *str, const char **endstr);
  * @param str (???)
  * @return (???)
  */
-BERRY_API const char* be_str2num(bvm *vm, const char *str);
+BERRY_API const char* be_str2num(bvm_t *vm, const char *str);
 
 /**
- * @fn int be_top(bvm*)
+ * @fn int be_top(bvm_t*)
  * @note FFI function
  * @brief returns the absolute index value of the top element in the virtual stack
  *
@@ -788,10 +786,10 @@ BERRY_API const char* be_str2num(bvm *vm, const char *str);
  * @param vm virtual machine instance virtual machine instance
  * @return (???)
  */
-BERRY_API int be_top(bvm *vm);
+BERRY_API int be_top(bvm_t *vm);
 
 /**
- * @fn const char* be_typename(bvm *vm, int index)
+ * @fn const char* be_typename(bvm_t *vm, int index)
  * @note FFI function
  * @brief converts the type of the Berry object into a string and returns it
  *
@@ -802,10 +800,10 @@ BERRY_API int be_top(bvm *vm);
  * @param index index of the object to be operated
  * @return string corresponding to the parameter type (see: baselib_type)
  */
-BERRY_API const char* be_typename(bvm *vm, int index);
+BERRY_API const char* be_typename(bvm_t *vm, int index);
 
 /**
- * @fn const char* be_classname(bvm *vm, int index)
+ * @fn const char* be_classname(bvm_t *vm, int index)
  * @note FFI function
  * @brief converts the type of the Berry object into a string and returns it.
  *
@@ -816,10 +814,10 @@ BERRY_API const char* be_typename(bvm *vm, int index);
  * @param index index of the object to be operated
  * @return string corresponding to the parameter type (see: baselib_type)
  */
-BERRY_API const char* be_classname(bvm *vm, int index);
+BERRY_API const char* be_classname(bvm_t *vm, int index);
 
 /**
- * @fn bool be_classof(bvm*, int)
+ * @fn bool be_classof(bvm_t*, int)
  * @note FFI function
  * @brief (???)
  *
@@ -827,10 +825,10 @@ BERRY_API const char* be_classname(bvm *vm, int index);
  * @param index (???)
  * @return (???)
  */
-BERRY_API bbool be_classof(bvm *vm, int index);
+BERRY_API bbool be_classof(bvm_t *vm, int index);
 
 /**
- * @fn int be_strlen(bvm*, int)
+ * @fn int be_strlen(bvm_t*, int)
  * @note FFI function
  * @brief length of the specified Berry string
  *
@@ -845,10 +843,10 @@ BERRY_API bbool be_classof(bvm *vm, int index);
  * @param index index of the object to be operated
  * @return length
  */
-BERRY_API int be_strlen(bvm *vm, int index);
+BERRY_API int be_strlen(bvm_t *vm, int index);
 
 /**
- * @fn void be_strconcat(bvm*, int)
+ * @fn void be_strconcat(bvm_t*, int)
  * @note FFI function
  * @brief splice two Berry strings
  *
@@ -858,10 +856,10 @@ BERRY_API int be_strlen(bvm *vm, int index);
  * @param vm virtual machine instance virtual machine instance
  * @param index (???)
  */
-BERRY_API void be_strconcat(bvm *vm, int index);
+BERRY_API void be_strconcat(bvm_t *vm, int index);
 
 /**
- * @fn void be_pop(bvm*, int)
+ * @fn void be_pop(bvm_t*, int)
  * @note FFI function
  * @brief pops the value at the top of the stack
  *
@@ -870,10 +868,10 @@ BERRY_API void be_strconcat(bvm *vm, int index);
  * @param vm virtual machine instance virtual machine instance
  * @param n number of values to be popped
  */
-BERRY_API void be_pop(bvm *vm, int n);
+BERRY_API void be_pop(bvm_t *vm, int n);
 
 /**
- * @fn void be_remove(bvm*, int)
+ * @fn void be_remove(bvm_t*, int)
  * @note FFI function
  * @brief remove a value from the stack
  *
@@ -884,10 +882,10 @@ BERRY_API void be_pop(bvm *vm, int n);
  * @param vm virtual machine instance virtual machine instance
  * @param index the object to be removed
  */
-BERRY_API void be_remove(bvm *vm, int index);
+BERRY_API void be_remove(bvm_t *vm, int index);
 
 /**
- * @fn int be_absindex(bvm*, int)
+ * @fn int be_absindex(bvm_t*, int)
  * @note FFI function
  * @brief absolute index value of a given index value
  *
@@ -899,10 +897,10 @@ BERRY_API void be_remove(bvm *vm, int index);
  * @param index index value
  * @return absolute index
  */
-BERRY_API int be_absindex(bvm *vm, int index);
+BERRY_API int be_absindex(bvm_t *vm, int index);
 
 /**
- * @fn bool be_isnil(bvm*, int)
+ * @fn bool be_isnil(bvm_t*, int)
  * @note FFI function
  * @brief value in virtual stack is nil
  *
@@ -913,10 +911,10 @@ BERRY_API int be_absindex(bvm *vm, int index);
  * @param index value index
  * @return true/false
  */
-BERRY_API bbool be_isnil(bvm *vm, int index);
+BERRY_API bbool be_isnil(bvm_t *vm, int index);
 
 /**
- * @fn bool be_isbool(bvm*, int)
+ * @fn bool be_isbool(bvm_t*, int)
  * @note FFI function
  * @brief value in virtual stack is bool
  *
@@ -927,10 +925,10 @@ BERRY_API bbool be_isnil(bvm *vm, int index);
  * @param index value index
  * @return true/false
  */
-BERRY_API bbool be_isbool(bvm *vm, int index);
+BERRY_API bbool be_isbool(bvm_t *vm, int index);
 
 /**
- * @fn bool be_isint(bvm*, int)
+ * @fn bool be_isint(bvm_t*, int)
  * @note FFI function
  * @brief value in virtual stack is int
  *
@@ -941,10 +939,10 @@ BERRY_API bbool be_isbool(bvm *vm, int index);
  * @param index value index
  * @return true/false
  */
-BERRY_API bbool be_isint(bvm *vm, int index);
+BERRY_API bbool be_isint(bvm_t *vm, int index);
 
 /**
- * @fn bool be_isreal(bvm*, int)
+ * @fn bool be_isreal(bvm_t*, int)
  * @note FFI function
  * @brief value in virtual stack is real
  *
@@ -955,10 +953,10 @@ BERRY_API bbool be_isint(bvm *vm, int index);
  * @param index value index
  * @return true/false
  */
-BERRY_API bbool be_isreal(bvm *vm, int index);
+BERRY_API bbool be_isreal(bvm_t *vm, int index);
 
 /**
- * @fn bool be_isnumber(bvm*, int)
+ * @fn bool be_isnumber(bvm_t*, int)
  * @note FFI function
  * @brief value in virtual stack is number
  *
@@ -969,10 +967,10 @@ BERRY_API bbool be_isreal(bvm *vm, int index);
  * @param index value index
  * @return true/false
  */
-BERRY_API bbool be_isnumber(bvm *vm, int index);
+BERRY_API bbool be_isnumber(bvm_t *vm, int index);
 
 /**
- * @fn bool be_isstring(bvm*, int)
+ * @fn bool be_isstring(bvm_t*, int)
  * @note FFI function
  * @brief value in virtual stack is string
  *
@@ -983,10 +981,10 @@ BERRY_API bbool be_isnumber(bvm *vm, int index);
  * @param index value index
  * @return true/false
  */
-BERRY_API bbool be_isstring(bvm *vm, int index);
+BERRY_API bbool be_isstring(bvm_t *vm, int index);
 
 /**
- * @fn bool be_isclosure(bvm*, int)
+ * @fn bool be_isclosure(bvm_t*, int)
  * @note FFI function
  * @brief value in virtual stack is closure
  *
@@ -997,10 +995,10 @@ BERRY_API bbool be_isstring(bvm *vm, int index);
  * @param index value index
  * @return true/false
  */
-BERRY_API bbool be_isclosure(bvm *vm, int index);
+BERRY_API bbool be_isclosure(bvm_t *vm, int index);
 
 /**
- * @fn bool be_isntvclos(bvm*, int)
+ * @fn bool be_isntvclos(bvm_t*, int)
  * @note FFI function
  * @brief value in virtual stack is primitive closure type
  *
@@ -1011,10 +1009,10 @@ BERRY_API bbool be_isclosure(bvm *vm, int index);
  * @param index value index
  * @return true/false
  */
-BERRY_API bbool be_isntvclos(bvm *vm, int index);
+BERRY_API bbool be_isntvclos(bvm_t *vm, int index);
 
 /**
- * @fn bool be_isfunction(bvm*, int)
+ * @fn bool be_isfunction(bvm_t*, int)
  * @note FFI function
  * @brief value in virtual stack is function
  *
@@ -1025,10 +1023,10 @@ BERRY_API bbool be_isntvclos(bvm *vm, int index);
  * @param index value index
  * @return true/false
  */
-BERRY_API bbool be_isfunction(bvm *vm, int index);
+BERRY_API bbool be_isfunction(bvm_t *vm, int index);
 
 /**
- * @fn bool be_isproto(bvm*, int)
+ * @fn bool be_isproto(bvm_t*, int)
  * @note FFI function
  * @brief value in virtual stack is proto
  *
@@ -1039,10 +1037,10 @@ BERRY_API bbool be_isfunction(bvm *vm, int index);
  * @param index value index
  * @return true/false
  */
-BERRY_API bbool be_isproto(bvm *vm, int index);
+BERRY_API bbool be_isproto(bvm_t *vm, int index);
 
 /**
- * @fn bool be_isclass(bvm*, int)
+ * @fn bool be_isclass(bvm_t*, int)
  * @note FFI function
  * @brief value in virtual stack is class
  *
@@ -1053,10 +1051,10 @@ BERRY_API bbool be_isproto(bvm *vm, int index);
  * @param index value index
  * @return true/false
  */
-BERRY_API bbool be_isclass(bvm *vm, int index);
+BERRY_API bbool be_isclass(bvm_t *vm, int index);
 
 /**
- * @fn bool be_isinstance(bvm*, int)
+ * @fn bool be_isinstance(bvm_t*, int)
  * @note FFI function
  * @brief value in virtual stack is instance
  *
@@ -1067,10 +1065,10 @@ BERRY_API bbool be_isclass(bvm *vm, int index);
  * @param index value index
  * @return true/false
  */
-BERRY_API bbool be_isinstance(bvm *vm, int index);
+BERRY_API bbool be_isinstance(bvm_t *vm, int index);
 
 /**
- * @fn bool be_ismodule(bvm*, int)
+ * @fn bool be_ismodule(bvm_t*, int)
  * @note FFI function
  * @brief value in virtual stack is module
  *
@@ -1081,10 +1079,10 @@ BERRY_API bbool be_isinstance(bvm *vm, int index);
  * @param index value index
  * @return true/false
  */
-BERRY_API bbool be_ismodule(bvm *vm, int index);
+BERRY_API bbool be_ismodule(bvm_t *vm, int index);
 
 /**
- * @fn bool be_islist(bvm*, int)
+ * @fn bool be_islist(bvm_t*, int)
  * @note FFI function
  * @brief value in virtual stack is list
  *
@@ -1095,10 +1093,10 @@ BERRY_API bbool be_ismodule(bvm *vm, int index);
  * @param index value index
  * @return true/false
  */
-BERRY_API bbool be_islist(bvm *vm, int index);
+BERRY_API bbool be_islist(bvm_t *vm, int index);
 
 /**
- * @fn bool be_ismap(bvm*, int)
+ * @fn bool be_ismap(bvm_t*, int)
  * @note FFI function
  * @brief value in virtual stack is map
  *
@@ -1109,10 +1107,10 @@ BERRY_API bbool be_islist(bvm *vm, int index);
  * @param index value index
  * @return true/false
  */
-BERRY_API bbool be_ismap(bvm *vm, int index);
+BERRY_API bbool be_ismap(bvm_t *vm, int index);
 
 /**
- * @fn bool be_iscomptr(bvm*, int)
+ * @fn bool be_iscomptr(bvm_t*, int)
  * @note FFI function
  * @brief value in virtual stack is universal pointer type
  *
@@ -1123,10 +1121,10 @@ BERRY_API bbool be_ismap(bvm *vm, int index);
  * @param index value index
  * @return true/false
  */
-BERRY_API bbool be_iscomptr(bvm *vm, int index);
+BERRY_API bbool be_iscomptr(bvm_t *vm, int index);
 
 /**
- * @fn bool be_iscomobj(bvm*, int)
+ * @fn bool be_iscomobj(bvm_t*, int)
  * @note FFI function
  * @brief (???)
  *
@@ -1134,10 +1132,10 @@ BERRY_API bbool be_iscomptr(bvm *vm, int index);
  * @param index value index
  * @return true/false
  */
-BERRY_API bbool be_iscomobj(bvm *vm, int index);
+BERRY_API bbool be_iscomobj(bvm_t *vm, int index);
 
 /**
- * @fn bool be_isderived(bvm*, int)
+ * @fn bool be_isderived(bvm_t*, int)
  * @note FFI function
  * @brief (???)
  *
@@ -1145,10 +1143,10 @@ BERRY_API bbool be_iscomobj(bvm *vm, int index);
  * @param index value index
  * @return true/false
  */
-BERRY_API bbool be_isderived(bvm *vm, int index);
+BERRY_API bbool be_isderived(bvm_t *vm, int index);
 
 /**
- * @fn bool be_isbytes(bvm*, int)
+ * @fn bool be_isbytes(bvm_t*, int)
  * @note FFI function
  * @brief value in virtual stack is instance or sub-instance of class bytes
  *
@@ -1159,10 +1157,10 @@ BERRY_API bbool be_isderived(bvm *vm, int index);
  * @param index value index
  * @return true/false
  */
-BERRY_API bbool be_isbytes(bvm *vm, int index);
+BERRY_API bbool be_isbytes(bvm_t *vm, int index);
 
 /**
- * @fn bint be_toint(bvm*, int)
+ * @fn bint be_toint(bvm_t*, int)
  * @note FFI function
  * @brief virtual stack to integer type
  *
@@ -1174,10 +1172,10 @@ BERRY_API bbool be_isbytes(bvm *vm, int index);
  * @param index value index
  * @return (???)
  */
-BERRY_API bint be_toint(bvm *vm, int index);
+BERRY_API bint_t be_toint(bvm_t *vm, int index);
 
 /**
- * @fn breal be_toreal(bvm*, int)
+ * @fn breal be_toreal(bvm_t*, int)
  * @note FFI function
  * @brief virtual stack to floating-point number type
  *
@@ -1188,10 +1186,10 @@ BERRY_API bint be_toint(bvm *vm, int index);
  * @param index
  * @return (???)
  */
-BERRY_API breal be_toreal(bvm *vm, int index);
+BERRY_API breal_t be_toreal(bvm_t *vm, int index);
 
 /**
- * @fn int be_toindex(bvm*, int)
+ * @fn int be_toindex(bvm_t*, int)
  * @note FFI function
  * @brief virtual stack to integer type
  *
@@ -1203,10 +1201,10 @@ BERRY_API breal be_toreal(bvm *vm, int index);
  * @param index
  * @return (???)
  */
-BERRY_API int be_toindex(bvm *vm, int index);
+BERRY_API int be_toindex(bvm_t *vm, int index);
 
 /**
- * @fn bool be_tobool(bvm*, int)
+ * @fn bool be_tobool(bvm_t*, int)
  * @note FFI function
  * @brief virtual stack to Boolean type
  *
@@ -1219,10 +1217,10 @@ BERRY_API int be_toindex(bvm *vm, int index);
  * @param index
  * @return (???)
  */
-BERRY_API bbool be_tobool(bvm *vm, int index);
+BERRY_API bbool be_tobool(bvm_t *vm, int index);
 
 /**
- * @fn const char* be_tostring(bvm *vm, int index)
+ * @fn const char* be_tostring(bvm_t *vm, int index)
  * @note FFI function
  * @brief virtual stack to string
  *
@@ -1236,10 +1234,10 @@ BERRY_API bbool be_tobool(bvm *vm, int index);
  * @param index
  * @return (???)
  */
-BERRY_API const char* be_tostring(bvm *vm, int index);
+BERRY_API const char* be_tostring(bvm_t *vm, int index);
 
 /**
- * @fn const char* be_toescape(bvm *vm, int index, int mode)
+ * @fn const char* be_toescape(bvm_t *vm, int index, int mode)
  * @note FFI function
  * @brief (???)
  *
@@ -1248,10 +1246,10 @@ BERRY_API const char* be_tostring(bvm *vm, int index);
  * @param mode
  * @return (???)
  */
-BERRY_API const char* be_toescape(bvm *vm, int index, int mode);
+BERRY_API const char* be_toescape(bvm_t *vm, int index, int mode);
 
 /**
- * @fn void* be_tocomptr(bvm *vm, int index)
+ * @fn void* be_tocomptr(bvm_t *vm, int index)
  * @note FFI function
  * @brief virtual stack to general pointer
  *
@@ -1261,10 +1259,10 @@ BERRY_API const char* be_toescape(bvm *vm, int index, int mode);
  * @param vm virtual machine instance virtual machine instance
  * @param index
  */
-BERRY_API void* be_tocomptr(bvm *vm, int index);
+BERRY_API void* be_tocomptr(bvm_t *vm, int index);
 
 /**
- * @fn void be_moveto(bvm*, int, int)
+ * @fn void be_moveto(bvm_t*, int, int)
  * @note FFI function
  * @brief (???)
  *
@@ -1272,20 +1270,20 @@ BERRY_API void* be_tocomptr(bvm *vm, int index);
  * @param from
  * @param to
  */
-BERRY_API void be_moveto(bvm *vm, int from, int to);
+BERRY_API void be_moveto(bvm_t *vm, int from, int to);
 
 /**
- * @fn void be_pushnil(bvm*)
+ * @fn void be_pushnil(bvm_t*)
  * @note FFI function
  * @brief Push a nil value onto the virtual stack.
  *
  * @param vm virtual machine instance
  *
  */
-BERRY_API void be_pushnil(bvm *vm);
+BERRY_API void be_pushnil(bvm_t *vm);
 
 /**
- * @fn void be_pushbool(bvm*, int)
+ * @fn void be_pushbool(bvm_t*, int)
  * @note FFI function
  * @brief Push a Boolean value onto the virtual stack
  *
@@ -1296,30 +1294,30 @@ BERRY_API void be_pushnil(bvm *vm);
  * @param vm virtual machine instance
  * @param b
  */
-BERRY_API void be_pushbool(bvm *vm, int b);
+BERRY_API void be_pushbool(bvm_t *vm, int b);
 
 /**
- * @fn void be_pushint(bvm*, bint)
+ * @fn void be_pushint(bvm_t*, bint)
  * @note FFI function
  * @brief Push an integer value i onto the virtual stack.
  *
  * @param vm virtual machine instance
  * @param i
  */
-BERRY_API void be_pushint(bvm *vm, bint i);
+BERRY_API void be_pushint(bvm_t *vm, bint_t i);
 
 /**
- * @fn void be_pushreal(bvm*, breal)
+ * @fn void be_pushreal(bvm_t*, breal)
  * @note FFI function
  * @brief Push a floating point value r onto the virtual stack.
  *
  * @param vm virtual machine instance
  * @param r
  */
-BERRY_API void be_pushreal(bvm *vm, breal r);
+BERRY_API void be_pushreal(bvm_t *vm, breal_t r);
 
 /**
- * @fn void be_pushstring(bvm*, const char*)
+ * @fn void be_pushstring(bvm_t*, const char*)
  * @note FFI function
  * @brief Push the string str onto the virtual stack.
  *
@@ -1330,10 +1328,10 @@ BERRY_API void be_pushreal(bvm *vm, breal r);
  * @param vm virtual machine instance
  * @param str
  */
-BERRY_API void be_pushstring(bvm *vm, const char *str);
+BERRY_API void be_pushstring(bvm_t *vm, const char *str);
 
 /**
- * @fn void be_pushnstring(bvm*, const char*, size_t)
+ * @fn void be_pushnstring(bvm_t*, const char*, size_t)
  * @note FFI function
  * @brief Push the string str of length n onto the virtual stack.
  *
@@ -1345,10 +1343,10 @@ BERRY_API void be_pushstring(bvm *vm, const char *str);
  * @param str
  * @param n
  */
-BERRY_API void be_pushnstring(bvm *vm, const char *str, size_t n);
+BERRY_API void be_pushnstring(bvm_t *vm, const char *str, size_t n);
 
 /**
- * @fn const char* be_pushfstring(bvm *vm, const char *format, ...)
+ * @fn const char* be_pushfstring(bvm_t *vm, const char *format, ...)
  * @note FFI function
  * @brief Push the formatted string into the virtual stack.
  *
@@ -1363,40 +1361,40 @@ BERRY_API void be_pushnstring(bvm *vm, const char *str, size_t n);
  * @param format
  * @return (???)
  */
-BERRY_API const char* be_pushfstring(bvm *vm, const char *format, ...);
+BERRY_API const char* be_pushfstring(bvm_t *vm, const char *format, ...);
 
 /**
- * @fn void* be_pushbuffer(bvm *vm, size_t size)
+ * @fn void* be_pushbuffer(bvm_t *vm, size_t size)
  * @note FFI function
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @param size
  */
-BERRY_API void* be_pushbuffer(bvm *vm, size_t size);
+BERRY_API void* be_pushbuffer(bvm_t *vm, size_t size);
 
 /**
- * @fn void be_pushvalue(bvm*, int)
+ * @fn void be_pushvalue(bvm_t*, int)
  * @note FFI function
  * @brief Push the value with index index onto the top of the virtual stack.
  *
  * @param vm virtual machine instance
  * @param index
  */
-BERRY_API void be_pushvalue(bvm *vm, int index);
+BERRY_API void be_pushvalue(bvm_t *vm, int index);
 
 /**
- * @fn void be_pushclosure(bvm*, void*)
+ * @fn void be_pushclosure(bvm_t*, void*)
  * @note FFI function
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @param cl
  */
-BERRY_API void be_pushclosure(bvm *vm, void *cl);
+BERRY_API void be_pushclosure(bvm_t *vm, void *cl);
 
 /**
- * @fn void be_pushntvclosure(bvm*, bntvfunc, int)
+ * @fn void be_pushntvclosure(bvm_t*, bntvfunc, int)
  * @note FFI function
  * @brief Push a native closure onto the top of the virtual stack.
  *
@@ -1408,20 +1406,20 @@ BERRY_API void be_pushclosure(bvm *vm, void *cl);
  * @param f
  * @param nupvals
  */
-BERRY_API void be_pushntvclosure(bvm *vm, bntvfunc f, int nupvals);
+BERRY_API void be_pushntvclosure(bvm_t *vm, bntvfunc f, int nupvals);
 
 /**
- * @fn void be_pushntvfunction(bvm*, bntvfunc)
+ * @fn void be_pushntvfunction(bvm_t*, bntvfunc)
  * @note FFI function
  * @brief Push a native function onto the top of the virtual stack, and the parameter f is the native function pointer.
  *
  * @param vm virtual machine instance
  * @param f
  */
-BERRY_API void be_pushntvfunction(bvm *vm, bntvfunc f);
+BERRY_API void be_pushntvfunction(bvm_t *vm, bntvfunc f);
 
 /**
- * @fn void be_pushclass(bvm*, const char*, const bnfuncinfo*)
+ * @fn void be_pushclass(bvm_t*, const char*, const bnfuncinfo*)
  * @note FFI function
  * @brief Push a native class onto the top of the virtual stack
  *
@@ -1432,20 +1430,20 @@ BERRY_API void be_pushntvfunction(bvm *vm, bntvfunc f);
  * @param name
  * @param lib
  */
-BERRY_API void be_pushclass(bvm *vm, const char *name, const bnfuncinfo *lib);
+BERRY_API void be_pushclass(bvm_t *vm, const char *name, const bnfuncinfo_t *lib);
 
 /**
- * @fn void be_pushntvclass(bvm*, const struct bclass*)
+ * @fn void be_pushntvclass(bvm_t*, const struct bclass*)
  * @note FFI function
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @param c
  */
-BERRY_API void be_pushntvclass(bvm *vm, const struct bclass *c);
+BERRY_API void be_pushntvclass(bvm_t *vm, const struct bclass *c);
 
 /**
- * @fn void be_pushcomptr(bvm*, void*)
+ * @fn void be_pushcomptr(bvm_t*, void*)
  * @note FFI function
  * @brief Push a general pointer onto the top of the virtual stack
  *
@@ -1457,10 +1455,10 @@ BERRY_API void be_pushntvclass(bvm *vm, const struct bclass *c);
  * @param vm virtual machine instance
  * @param ptr
  */
-BERRY_API void be_pushcomptr(bvm *vm, void *ptr);
+BERRY_API void be_pushcomptr(bvm_t *vm, void *ptr);
 
 /**
- * @fn bool be_pushiter(bvm*, int)
+ * @fn bool be_pushiter(bvm_t*, int)
  * @note FFI function
  * @brief Push an iterator onto the top of the virtual stack.
  *
@@ -1468,10 +1466,10 @@ BERRY_API void be_pushcomptr(bvm *vm, void *ptr);
  * @param index
  * @return (???)
  */
-BERRY_API bbool be_pushiter(bvm *vm, int index);
+BERRY_API bbool be_pushiter(bvm_t *vm, int index);
 
 /**
- * @fn void be_newlist(bvm*)
+ * @fn void be_newlist(bvm_t*)
  * @note FFI function
  * @brief creates a new list value
  *
@@ -1480,10 +1478,10 @@ BERRY_API bbool be_pushiter(bvm *vm, int index);
  *
  * @param vm virtual machine instance
  */
-BERRY_API void be_newlist(bvm *vm);
+BERRY_API void be_newlist(bvm_t *vm);
 
 /**
- * @fn void be_newmap(bvm*)
+ * @fn void be_newmap(bvm_t*)
  * @note FFI function
  * @brief creates a new map value
  *
@@ -1492,19 +1490,19 @@ BERRY_API void be_newlist(bvm *vm);
  *
  * @param vm virtual machine instance
  */
-BERRY_API void be_newmap(bvm *vm);
+BERRY_API void be_newmap(bvm_t *vm);
 
 /**
- * @fn void be_newmodule(bvm*)
+ * @fn void be_newmodule(bvm_t*)
  * @note FFI function
  * @brief (???)
  *
  * @param vm virtual machine instance
  */
-BERRY_API void be_newmodule(bvm *vm);
+BERRY_API void be_newmodule(bvm_t *vm);
 
 /**
- * @fn void be_newcomobj(bvm*, void*, bntvfunc)
+ * @fn void be_newcomobj(bvm_t*, void*, bntvfunc)
  * @note FFI function
  * @brief (???)
  *
@@ -1512,20 +1510,20 @@ BERRY_API void be_newmodule(bvm *vm);
  * @param data
  * @param destroy
  */
-BERRY_API void be_newcomobj(bvm *vm, void *data, bntvfunc destroy);
+BERRY_API void be_newcomobj(bvm_t *vm, void *data, bntvfunc destroy);
 
 /**
- * @fn void be_newobject(bvm*, const char*)
+ * @fn void be_newobject(bvm_t*, const char*)
  * @note FFI function
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @param name
  */
-BERRY_API void be_newobject(bvm *vm, const char *name);
+BERRY_API void be_newobject(bvm_t *vm, const char *name);
 
 /**
- * @fn bool be_copy(bvm*, int)
+ * @fn bool be_copy(bvm_t*, int)
  * @note FFI function
  * @brief (???)
  *
@@ -1533,10 +1531,10 @@ BERRY_API void be_newobject(bvm *vm, const char *name);
  * @param index
  * @return
  */
-BERRY_API bbool be_copy(bvm *vm, int index);
+BERRY_API bbool be_copy(bvm_t *vm, int index);
 
 /**
- * @fn bool be_setname(bvm*, int, const char*)
+ * @fn bool be_setname(bvm_t*, int, const char*)
  * @note FFI function
  * @brief (???)
  *
@@ -1545,10 +1543,10 @@ BERRY_API bbool be_copy(bvm *vm, int index);
  * @param name
  * @return (???)
  */
-BERRY_API bbool be_setname(bvm *vm, int index, const char *name);
+BERRY_API bbool be_setname(bvm_t *vm, int index, const char *name);
 
 /**
- * @fn bool be_getglobal(bvm*, const char*)
+ * @fn bool be_getglobal(bvm_t*, const char*)
  * @note FFI function
  * @brief pushes the global variable with the specified name onto the stack
  *
@@ -1558,20 +1556,20 @@ BERRY_API bbool be_setname(bvm *vm, int index, const char *name);
  * @param name
  * @return (???)
  */
-BERRY_API bbool be_getglobal(bvm *vm, const char *name);
+BERRY_API bbool be_getglobal(bvm_t *vm, const char *name);
 
 /**
- * @fn void be_setglobal(bvm*, const char*)
+ * @fn void be_setglobal(bvm_t*, const char*)
  * @note FFI function
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @param name
  */
-BERRY_API void be_setglobal(bvm *vm, const char *name);
+BERRY_API void be_setglobal(bvm_t *vm, const char *name);
 
 /**
- * @fn bool be_getbuiltin(bvm*, const char*)
+ * @fn bool be_getbuiltin(bvm_t*, const char*)
  * @note FFI function
  * @brief (???)
  *
@@ -1579,10 +1577,10 @@ BERRY_API void be_setglobal(bvm *vm, const char *name);
  * @param name
  * @return (???)
  */
-BERRY_API bbool be_getbuiltin(bvm *vm, const char *name);
+BERRY_API bbool be_getbuiltin(bvm_t *vm, const char *name);
 
 /**
- * @fn bool be_setmember(bvm*, int, const char*)
+ * @fn bool be_setmember(bvm_t*, int, const char*)
  * @note FFI function
  * @brief set the value of the member variable of the instance object class
  *
@@ -1594,10 +1592,10 @@ BERRY_API bbool be_getbuiltin(bvm *vm, const char *name);
  * @param k name of the member
  * @return (???)
  */
-BERRY_API bbool be_setmember(bvm *vm, int index, const char *k);
+BERRY_API bbool be_setmember(bvm_t *vm, int index, const char *k);
 
 /**
- * @fn bool be_getmember(bvm*, int, const char*)
+ * @fn bool be_getmember(bvm_t*, int, const char*)
  * @note FFI function
  * @brief get the value of the member variable of the instance object class
  *
@@ -1608,10 +1606,10 @@ BERRY_API bbool be_setmember(bvm *vm, int index, const char *k);
  * @param k name of the member
  * @return (???)
  */
-BERRY_API bbool be_getmember(bvm *vm, int index, const char *k);
+BERRY_API bbool be_getmember(bvm_t *vm, int index, const char *k);
 
 /**
- * @fn bool be_getmethod(bvm*, int, const char*)
+ * @fn bool be_getmethod(bvm_t*, int, const char*)
  * @note FFI function
  * @brief (???)
  *
@@ -1620,10 +1618,10 @@ BERRY_API bbool be_getmember(bvm *vm, int index, const char *k);
  * @param k
  * @return (???)
  */
-BERRY_API bbool be_getmethod(bvm *vm, int index, const char *k);
+BERRY_API bbool be_getmethod(bvm_t *vm, int index, const char *k);
 
 /**
- * @fn bool be_getindex(bvm*, int)
+ * @fn bool be_getindex(bvm_t*, int)
  * @note FFI function
  * @brief get the value of list or map
  *
@@ -1636,10 +1634,10 @@ BERRY_API bbool be_getmethod(bvm *vm, int index, const char *k);
  * @param index index of the object to be operated
  * @return (???)
  */
-BERRY_API bbool be_getindex(bvm *vm, int index);
+BERRY_API bbool be_getindex(bvm_t *vm, int index);
 
 /**
- * @fn bool be_setindex(bvm*, int)
+ * @fn bool be_setindex(bvm_t*, int)
  * @note FFI function
  * @brief set a value in list or map
  *
@@ -1652,10 +1650,10 @@ BERRY_API bbool be_getindex(bvm *vm, int index);
  * @param index index of the object to be operated
  * @return (???)
  */
-BERRY_API bbool be_setindex(bvm *vm, int index);
+BERRY_API bbool be_setindex(bvm_t *vm, int index);
 
 /**
- * @fn void be_getupval(bvm*, int, int)
+ * @fn void be_getupval(bvm_t*, int, int)
  * @note FFI function
  * @brief read an Up Value of the native closure
  *
@@ -1665,10 +1663,10 @@ BERRY_API bbool be_setindex(bvm *vm, int index);
  * @param index the native closure index value of the Up Value to be read
  * @param pos position of the Up Value in the native closure Up Value table (numbering starts from 0)
  */
-BERRY_API void be_getupval(bvm *vm, int index, int pos);
+BERRY_API void be_getupval(bvm_t *vm, int index, int pos);
 
 /**
- * @fn bool be_setupval(bvm*, int, int)
+ * @fn bool be_setupval(bvm_t*, int, int)
  * @note FFI function
  * @brief set an Up Value of the native closure.
  *
@@ -1680,10 +1678,10 @@ BERRY_API void be_getupval(bvm *vm, int index, int pos);
  * @param pos position of the Up Value in the native closure Up Value table (numbering starts from 0)
  * @return (???)
  */
-BERRY_API bbool be_setupval(bvm *vm, int index, int pos);
+BERRY_API bbool be_setupval(bvm_t *vm, int index, int pos);
 
 /**
- * @fn bool be_setsuper(bvm*, int)
+ * @fn bool be_setsuper(bvm_t*, int)
  * @note FFI function
  * @brief (???)
  *
@@ -1691,10 +1689,10 @@ BERRY_API bbool be_setupval(bvm *vm, int index, int pos);
  * @param index
  * @return (???)
  */
-BERRY_API bbool be_setsuper(bvm *vm, int index);
+BERRY_API bbool be_setsuper(bvm_t *vm, int index);
 
 /**
- * @fn void be_getsuper(bvm*, int)
+ * @fn void be_getsuper(bvm_t*, int)
  * @note FFI function
  * @brief get the parent object of the base class or instance of the class.
  *
@@ -1706,10 +1704,10 @@ BERRY_API bbool be_setsuper(bvm *vm, int index);
  * @param vm virtual machine instance
  * @param index the class or object to be operated
  */
-BERRY_API void be_getsuper(bvm *vm, int index);
+BERRY_API void be_getsuper(bvm_t *vm, int index);
 
 /**
- * @fn int be_data_size(bvm*, int)
+ * @fn int be_data_size(bvm_t*, int)
  * @note FFI function
  * @brief get the number of elements contained in the container
  *
@@ -1720,10 +1718,10 @@ BERRY_API void be_getsuper(bvm *vm, int index);
  * @param index index of the container object to be operated
  * @return (???)
  */
-BERRY_API int be_data_size(bvm *vm, int index);
+BERRY_API int be_data_size(bvm_t *vm, int index);
 
 /**
- * @fn void be_data_push(bvm*, int)
+ * @fn void be_data_push(bvm_t*, int)
  * @note FFI function
  * @brief append a new element to the end of the container.
  *
@@ -1734,10 +1732,10 @@ BERRY_API int be_data_size(bvm *vm, int index);
  * @param vm virtual machine instance
  * @param index index of the container object to be operate
  */
-BERRY_API void be_data_push(bvm *vm, int index);
+BERRY_API void be_data_push(bvm_t *vm, int index);
 
 /**
- * @fn bool be_data_insert(bvm*, int)
+ * @fn bool be_data_insert(bvm_t*, int)
  * @note FFI function
  * @brief insert a pair of elements into the container
  *
@@ -1752,10 +1750,10 @@ BERRY_API void be_data_push(bvm *vm, int index);
  * @param index container object to be operated
  * @return (???)
  */
-BERRY_API bbool be_data_insert(bvm *vm, int index);
+BERRY_API bbool be_data_insert(bvm_t *vm, int index);
 
 /**
- * @fn bool be_data_remove(bvm*, int)
+ * @fn bool be_data_remove(bvm_t*, int)
  * @note FFI function
  * @brief remove an element in the container
  *
@@ -1770,10 +1768,10 @@ BERRY_API bbool be_data_insert(bvm *vm, int index);
  * @param index container object to be operated.
  * @return (???)
  */
-BERRY_API bbool be_data_remove(bvm *vm, int index);
+BERRY_API bbool be_data_remove(bvm_t *vm, int index);
 
 /**
- * @fn bool be_data_merge(bvm*, int)
+ * @fn bool be_data_merge(bvm_t*, int)
  * @note FFI function
  * @brief (???)
  *
@@ -1781,10 +1779,10 @@ BERRY_API bbool be_data_remove(bvm *vm, int index);
  * @param index
  * @return (???)
  */
-BERRY_API bbool be_data_merge(bvm *vm, int index);
+BERRY_API bbool be_data_merge(bvm_t *vm, int index);
 
 /**
- * @fn void be_data_resize(bvm*, int)
+ * @fn void be_data_resize(bvm_t*, int)
  * @note FFI function
  * @brief reset the capacity of the container
  *
@@ -1793,20 +1791,20 @@ BERRY_API bbool be_data_merge(bvm *vm, int index);
  * @param vm virtual machine instance
  * @param index container object to be operated
  */
-BERRY_API void be_data_resize(bvm *vm, int index);
+BERRY_API void be_data_resize(bvm_t *vm, int index);
 
 /**
- * @fn void be_data_reverse(bvm*, int)
+ * @fn void be_data_reverse(bvm_t*, int)
  * @note FFI function
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @param index
  */
-BERRY_API void be_data_reverse(bvm *vm, int index);
+BERRY_API void be_data_reverse(bvm_t *vm, int index);
 
 /**
- * @fn int be_iter_next(bvm*, int)
+ * @fn int be_iter_next(bvm_t*, int)
  * @note FFI function
  * @brief get the next element of the iterator
  *
@@ -1821,10 +1819,10 @@ BERRY_API void be_data_reverse(bvm *vm, int index);
  * @param index iterator to be operated
  * @return (???)
  */
-BERRY_API int be_iter_next(bvm *vm, int index);
+BERRY_API int be_iter_next(bvm_t *vm, int index);
 
 /**
- * @fn bool be_iter_hasnext(bvm*, int)
+ * @fn bool be_iter_hasnext(bvm_t*, int)
  * @note FFI function
  * @brief test whether there is another element in the iterator
  *
@@ -1835,10 +1833,10 @@ BERRY_API int be_iter_next(bvm *vm, int index);
  * @param index iterator to be operated
  * @return (???)
  */
-BERRY_API bbool be_iter_hasnext(bvm *vm, int index);
+BERRY_API bbool be_iter_hasnext(bvm_t *vm, int index);
 
 /**
- * @fn bool be_refcontains(bvm*, int)
+ * @fn bool be_refcontains(bvm_t*, int)
  * @note FFI function
  * @brief test whether there is a reference to the specified object in the reference stack
  *
@@ -1852,10 +1850,10 @@ BERRY_API bbool be_iter_hasnext(bvm *vm, int index);
  * @param index object to be operated
  * @return (???)
  */
-BERRY_API bbool be_refcontains(bvm *vm, int index);
+BERRY_API bbool be_refcontains(bvm_t *vm, int index);
 
 /**
- * @fn void be_refpush(bvm*, int)
+ * @fn void be_refpush(bvm_t*, int)
  * @note FFI function
  * @brief Push the reference of the specified object onto the reference stack.
  *
@@ -1864,10 +1862,10 @@ BERRY_API bbool be_refcontains(bvm *vm, int index);
  * @param vm virtual machine instance
  * @param index object to be operated
  */
-BERRY_API void be_refpush(bvm *vm, int index);
+BERRY_API void be_refpush(bvm_t *vm, int index);
 
 /**
- * @fn void be_refpop(bvm*)
+ * @fn void be_refpop(bvm_t*)
  * @note FFI function
  * @brief Pop the object at the top of the reference stack
  *
@@ -1875,10 +1873,10 @@ BERRY_API void be_refpush(bvm *vm, int index);
  *
  * @param vm virtual machine instance
  */
-BERRY_API void be_refpop(bvm *vm);
+BERRY_API void be_refpop(bvm_t *vm);
 
 /**
- * @fn void be_stack_require(bvm*, int)
+ * @fn void be_stack_require(bvm_t*, int)
  * @note FFI function
  * @brief tests the amount of free space on the stack and expands the stack space if it is insufficient
  *
@@ -1888,10 +1886,10 @@ BERRY_API void be_refpop(bvm *vm);
  * @param vm virtual machine instance
  * @param count required free stack capacity.
  */
-BERRY_API void be_stack_require(bvm *vm, int count);
+BERRY_API void be_stack_require(bvm_t *vm, int count);
 
 /**
- * @fn bool be_getmodule(bvm*, const char*)
+ * @fn bool be_getmodule(bvm_t*, const char*)
  * @note FFI function
  * @brief (???)
  *
@@ -1899,121 +1897,121 @@ BERRY_API void be_stack_require(bvm *vm, int count);
  * @param k
  * @return (???)
  */
-BERRY_API bbool be_getmodule(bvm *vm, const char *k);
+BERRY_API bbool be_getmodule(bvm_t *vm, const char *k);
 
 /**
- * @fn bool be_iseq(bvm*)
+ * @fn bool be_iseq(bvm_t*)
  * @note relop operation API
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @return (???)
  */
-BERRY_API bbool be_iseq(bvm *vm);
+BERRY_API bbool be_iseq(bvm_t *vm);
 
 /**
- * @fn bool be_isneq(bvm*)
+ * @fn bool be_isneq(bvm_t*)
  * @note relop operation API
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @return (???)
  */
-BERRY_API bbool be_isneq(bvm *vm);
+BERRY_API bbool be_isneq(bvm_t *vm);
 
 /**
- * @fn bool be_islt(bvm*)
+ * @fn bool be_islt(bvm_t*)
  * @note relop operation API
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @return (???)
  */
-BERRY_API bbool be_islt(bvm *vm);
+BERRY_API bbool be_islt(bvm_t *vm);
 
 /**
- * @fn bool be_isle(bvm*)
+ * @fn bool be_isle(bvm_t*)
  * @note relop operation API
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @return (???)
  */
-BERRY_API bbool be_isle(bvm *vm);
+BERRY_API bbool be_isle(bvm_t *vm);
 
 /**
- * @fn bool be_isgt(bvm*)
+ * @fn bool be_isgt(bvm_t*)
  * @note relop operation API
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @return (???)
  */
-BERRY_API bbool be_isgt(bvm *vm);
+BERRY_API bbool be_isgt(bvm_t *vm);
 
 /**
- * @fn bool be_isge(bvm*)
+ * @fn bool be_isge(bvm_t*)
  * @note relop operation API
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @return (???)
  */
-BERRY_API bbool be_isge(bvm *vm);
+BERRY_API bbool be_isge(bvm_t *vm);
 
 /**
- * @fn int be_returnvalue(bvm*)
+ * @fn int be_returnvalue(bvm_t*)
  * @note Function call/return API
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @return (???)
  */
-BERRY_API int be_returnvalue(bvm *vm);
+BERRY_API int be_returnvalue(bvm_t *vm);
 
 /**
- * @fn int be_returnnilvalue(bvm*)
+ * @fn int be_returnnilvalue(bvm_t*)
  * @note Function call/return API
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @return (???)
  */
-BERRY_API int be_returnnilvalue(bvm *vm);
+BERRY_API int be_returnnilvalue(bvm_t *vm);
 
 /**
- * @fn void be_call(bvm*, int)
- * @note Function call/return API
- * @brief (???)
- *
- * @param vm virtual machine instance
- * @param argc
- */
-BERRY_API void be_call(bvm *vm, int argc);
-
-/**
- * @fn int be_pcall(bvm*, int)
+ * @fn void be_call(bvm_t*, int)
  * @note Function call/return API
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @param argc
- * @return (???)
  */
-BERRY_API int be_pcall(bvm *vm, int argc);
+BERRY_API void be_call(bvm_t *vm, int argc);
 
 /**
- * @fn void be_exit(bvm*, int)
+ * @fn int be_pcall(bvm_t*, int)
+ * @note Function call/return API
+ * @brief (???)
+ *
+ * @param vm virtual machine instance
+ * @param argc
+ * @return (???)
+ */
+BERRY_API int be_pcall(bvm_t *vm, int argc);
+
+/**
+ * @fn void be_exit(bvm_t*, int)
  * @note Function call/return API
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @param status
  */
-BERRY_API void be_exit(bvm *vm, int status);
+BERRY_API void be_exit(bvm_t *vm, int status);
 
 /**
- * @fn void be_raise(bvm*, const char*, const char*)
+ * @fn void be_raise(bvm_t*, const char*, const char*)
  * @note exception API
  * @brief (???)
  *
@@ -2021,10 +2019,10 @@ BERRY_API void be_exit(bvm *vm, int status);
  * @param except
  * @param msg
  */
-BERRY_API void be_raise(bvm *vm, const char *except, const char *msg);
+BERRY_API void be_raise(bvm_t *vm, const char *except, const char *msg);
 
 /**
- * @fn int be_getexcept(bvm*, int)
+ * @fn int be_getexcept(bvm_t*, int)
  * @note exception API
  * @brief (???)
  *
@@ -2032,38 +2030,38 @@ BERRY_API void be_raise(bvm *vm, const char *except, const char *msg);
  * @param code
  * @return (???)
  */
-BERRY_API int be_getexcept(bvm *vm, int code);
+BERRY_API int be_getexcept(bvm_t *vm, int code);
 
 /**
- * @fn void be_dumpvalue(bvm*, int)
+ * @fn void be_dumpvalue(bvm_t*, int)
  * @note exception API
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @param index
  */
-BERRY_API void be_dumpvalue(bvm *vm, int index);
+BERRY_API void be_dumpvalue(bvm_t *vm, int index);
 
 /**
- * @fn void be_dumpexcept(bvm*)
+ * @fn void be_dumpexcept(bvm_t*)
  * @note exception API
  * @brief (???)
  *
  * @param vm virtual machine instance
  */
-BERRY_API void be_dumpexcept(bvm *vm);
+BERRY_API void be_dumpexcept(bvm_t *vm);
 
 /**
- * @fn void be_stop_iteration(bvm*)
+ * @fn void be_stop_iteration(bvm_t*)
  * @note exception API
  * @brief (???)
  *
  * @param vm virtual machine instance
  */
-BERRY_API void be_stop_iteration(bvm *vm);
+BERRY_API void be_stop_iteration(bvm_t *vm);
 
 /**
- * @fn void be_regfunc(bvm*, const char*, bntvfunc)
+ * @fn void be_regfunc(bvm_t*, const char*, bntvfunc)
  * @note exception API
  * @brief register a native function
  *
@@ -2076,10 +2074,10 @@ BERRY_API void be_stop_iteration(bvm *vm);
  * @param name name of the native function
  * @param f pointer of the native function
  */
-BERRY_API void be_regfunc(bvm *vm, const char *name, bntvfunc f);
+BERRY_API void be_regfunc(bvm_t *vm, const char *name, bntvfunc f);
 
 /**
- * @fn void be_regclass(bvm*, const char*, const bnfuncinfo*)
+ * @fn void be_regclass(bvm_t*, const char*, const bnfuncinfo_t*)
  * @note exception API
  * @brief (???)
  *
@@ -2087,7 +2085,7 @@ BERRY_API void be_regfunc(bvm *vm, const char *name, bntvfunc f);
  * @param name
  * @param lib
  */
-BERRY_API void be_regclass(bvm *vm, const char *name, const bnfuncinfo *lib);
+BERRY_API void be_regclass(bvm_t *vm, const char *name, const bnfuncinfo_t *lib);
 
 /**
  * @fn bvm* be_vm_new(void)
@@ -2096,26 +2094,26 @@ BERRY_API void be_regclass(bvm *vm, const char *name, const bnfuncinfo *lib);
  *
  * @return (???)
  */
-BERRY_API bvm* be_vm_new(void);
+BERRY_API bvm_t* be_vm_new(void);
 
 /**
- * @fn void be_vm_delete(bvm*)
+ * @fn void be_vm_delete(bvm_t*)
  * @note VM management API
  * @brief Destroy a VM
  *
  * @param vm virtual machine instance
  */
-BERRY_API void be_vm_delete(bvm *vm);
+BERRY_API void be_vm_delete(bvm_t *vm);
 
 /**
- * @fn void be_set_obs_hook(bvm*, bobshook)
+ * @fn void be_set_obs_hook(bvm_t*, bobshook)
  * @note Observability hook
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @param hook
  */
-BERRY_API void be_set_obs_hook(bvm *vm, bobshook hook);
+BERRY_API void be_set_obs_hook(bvm_t *vm, bobshook hook);
 
 /**
  * @fn void be_set_ctype_func_hanlder(bvm*, bctypefunc)
@@ -2125,20 +2123,20 @@ BERRY_API void be_set_obs_hook(bvm *vm, bobshook hook);
  * @param vm virtual machine instance
  * @param handler
  */
-BERRY_API void be_set_ctype_func_hanlder(bvm *vm, bctypefunc handler);
+BERRY_API void be_set_ctype_func_hanlder(bvm_t *vm, bctypefunc handler);
 
 /**
- * @fn bctypefunc be_get_ctype_func_hanlder(bvm*)
+ * @fn bctypefunc be_get_ctype_func_hanlder(bvm_t*)
  * @note Observability hook
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @return (???)
  */
-BERRY_API bctypefunc be_get_ctype_func_hanlder(bvm *vm);
+BERRY_API bctypefunc be_get_ctype_func_hanlder(bvm_t *vm);
 
 /**
- * @fn int be_loadbuffer(bvm*, const char*, const char*, size_t)
+ * @fn int be_loadbuffer(bvm_t*, const char*, const char*, size_t)
  * @note code load API
  * @brief load a piece of source code from the buffer and compile it into bytecode
  *
@@ -2153,10 +2151,10 @@ BERRY_API bctypefunc be_get_ctype_func_hanlder(bvm *vm);
  * @param length length of the buffer
  * @return (???)
  */
-BERRY_API int be_loadbuffer(bvm *vm, const char *name, const char *buffer, size_t length);
+BERRY_API int be_loadbuffer(bvm_t *vm, const char *name, const char *buffer, size_t length);
 
 /**
- * @fn int be_loadmode(bvm *vm, const char *name, bbool islocal)
+ * @fn int be_loadmode(bvm_t *vm, const char *name, bbool islocal)
  * @note code load API
  * @brief (???)
  *
@@ -2165,10 +2163,10 @@ BERRY_API int be_loadbuffer(bvm *vm, const char *name, const char *buffer, size_
  * @param islocal
  * @return (???)
  */
-BERRY_API int be_loadmode(bvm *vm, const char *name, bbool islocal);
+BERRY_API int be_loadmode(bvm_t *vm, const char *name, bbool islocal);
 
 /**
- * @fn int be_loadlib(bvm*, const char*)
+ * @fn int be_loadlib(bvm_t*, const char*)
  * @note code load API
  * @brief (???)
  *
@@ -2176,10 +2174,10 @@ BERRY_API int be_loadmode(bvm *vm, const char *name, bbool islocal);
  * @param path
  * @return (???)
  */
-BERRY_API int be_loadlib(bvm *vm, const char *path);
+BERRY_API int be_loadlib(bvm_t *vm, const char *path);
 
 /**
- * @fn int be_savecode(bvm*, const char*)
+ * @fn int be_savecode(bvm_t*, const char*)
  * @note code load API
  * @brief (???)
  *
@@ -2187,29 +2185,29 @@ BERRY_API int be_loadlib(bvm *vm, const char *path);
  * @param name
  * @return (???)
  */
-BERRY_API int be_savecode(bvm *vm, const char *name);
+BERRY_API int be_savecode(bvm_t *vm, const char *name);
 
 /**
- * @fn void be_module_path(bvm*)
+ * @fn void be_module_path(bvm_t*)
  * @note module path list API
  * @brief (???)
  *
  * @param vm virtual machine instance
  */
-BERRY_API void be_module_path(bvm *vm);
+BERRY_API void be_module_path(bvm_t *vm);
 
 /**
- * @fn void be_module_path_set(bvm*, const char*)
+ * @fn void be_module_path_set(bvm_t*, const char*)
  * @note module path list API
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @param path
  */
-BERRY_API void be_module_path_set(bvm *vm, const char *path);
+BERRY_API void be_module_path_set(bvm_t *vm, const char *path);
 
 /**
- * @fn void* be_pushbytes(bvm *vm, const void *buf, size_t len)
+ * @fn void* be_pushbytes(bvm_t *vm, const void *buf, size_t len)
  * @note bytes operation
  * @brief Push a bytes() buffer
  *
@@ -2217,10 +2215,10 @@ BERRY_API void be_module_path_set(bvm *vm, const char *path);
  * @param buf starting at position
  * @param len size
  */
-BERRY_API void* be_pushbytes(bvm *vm, const void *buf, size_t len);
+BERRY_API void* be_pushbytes(bvm_t *vm, const void *buf, size_t len);
 
 /**
- * @fn const void* be_tobytes(bvm *vm, int index, size_t *len)
+ * @fn const void* be_tobytes(bvm_t *vm, int index, size_t *len)
  * @note bytes operation
  * @brief return virtual stack as a bytes buffer
  *
@@ -2232,20 +2230,20 @@ BERRY_API void* be_pushbytes(bvm *vm, const void *buf, size_t len);
  * @param index index from the virtual stac
  * @param len size
  */
-BERRY_API const void* be_tobytes(bvm *vm, int index, size_t *len);
+BERRY_API const void* be_tobytes(bvm_t *vm, int index, size_t *len);
 
 /**
- * @fn void be_sethook(bvm*, const char*)
+ * @fn void be_sethook(bvm_t*, const char*)
  * @note debug API
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @param mask
  */
-BERRY_API void be_sethook(bvm *vm, const char *mask);
+BERRY_API void be_sethook(bvm_t *vm, const char *mask);
 
 /**
- * @fn void be_setntvhook(bvm*, bntvhook, void*, int)
+ * @fn void be_setntvhook(bvm_t*, bntvhook, void*, int)
  * @note debug API
  * @brief  (???)
  *
@@ -2254,7 +2252,7 @@ BERRY_API void be_sethook(bvm *vm, const char *mask);
  * @param data
  * @param mask
  */
-BERRY_API void be_setntvhook(bvm *vm, bntvhook hook, void *data, int mask);
+BERRY_API void be_setntvhook(bvm_t *vm, bntvhook hook, void *data, int mask);
 
 /**
  * @fn void be_writebuffer(const char*, size_t)

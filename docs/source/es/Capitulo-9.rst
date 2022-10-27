@@ -37,7 +37,7 @@ través de un ejemplo sencillo:
 
    void berry_test(void)
    {
-       bvm *vm = be_vm_new(); // Construir una VM
+       bvm_t *vm = be_vm_new(); // Construir una VM
        be_loadstring(vm, "print('Hola Berry')"); // Compilar código de prueba
        be_pcall(vm, 0); // Función de llamada
        be_vm_delete(vm); // Destruir la VM
@@ -147,7 +147,7 @@ realmente necesita expandir la pila, puede llamar a la función FFI
 
 .. code:: c
 
-   void be_stack_require(bvm *vm, int count);
+   void be_stack_require(bvm_t *vm, int count);
 
 El parámetro ``count`` es la cantidad de espacio necesario. Cuando el
 espacio restante en la pila virtual sea insuficiente, la capacidad de la
@@ -170,11 +170,11 @@ siguientes son FFI de uso común para obtener valores de la pila:
 
 .. code:: c
 
-   bint be_toint(bvm *vm, int index);
-   breal be_toreal(bvm *vm, int index);
-   int be_tobool(bvm *vm, int index);
-   const char* be_tostring(bvm *vm, int index);
-   void* be_tocomptr(bvm *vm, int index);
+   bint_t be_toint(bvm_t *vm, int index);
+   breal_t be_toreal(bvm_t *vm, int index);
+   int be_tobool(bvm_t *vm, int index);
+   const char* be_tostring(bvm_t *vm, int index);
+   void* be_tocomptr(bvm_t *vm, int index);
 
 La forma de parámetro de estas funciones es la misma, pero el valor de
 retorno es diferente. Las primeras cuatro funciones son fáciles de
@@ -215,7 +215,7 @@ específica. La definición de la función nativa es:
 
 .. code:: c
 
-   int a_native_function(bvm *vm)
+   int a_native_function(bvm_t *vm)
    {
        // hacer algo ...
    }
@@ -230,8 +230,8 @@ nativa, y también hacen que la función C devuelva:
 
 .. code:: c
 
-   be_return(bvm *vm);
-   be_return_nil(bvm *vm);
+   be_return(bvm_t *vm);
+   be_return_nil(bvm_t *vm);
 
 Estos FFI son en realidad dos macros, y no es necesario usar la
 instrucción C ``return`` al usarlos. ``be_return`` pondrá la parte
@@ -249,7 +249,7 @@ función nativa registrada es:
 
 .. code:: c
 
-   void be_regfunc(bvm *vm, const char *nombre, bntvfunc f);
+   void be_regfunc(bvm_t *vm, const char *nombre, bntvfunc f);
 
 ``vm`` es la instancia actual de la máquina virtual, ``nombre`` es el
 nombre de la función nativa y ``f`` es el puntero de la función nativa.
@@ -263,7 +263,7 @@ es:
 
 .. code:: c
 
-   typedef int (*bntvfunc)(bvm*);
+   typedef int (*bntvfunc)(bvm_t*);
 
 De hecho, el tipo ``bntvfunc`` es el tipo de puntero de función con el
 parámetro ``bvm`` y el tipo de valor devuelto ``int``. La función
@@ -284,7 +284,7 @@ implementar esta función:
 
 .. code:: c
 
-   static int l_add(bvm *vm)
+   static int l_add(bvm_t *vm)
    {
        int top = be_top(vm); // Obtener el número de argumentos
        /* Verificar el número y tipo de argumentos */
@@ -320,7 +320,7 @@ biblioteca:
 
 .. code:: c
 
-   bvm *vm = be_vm_new(); // Construir una VM
+   bvm_t *vm = be_vm_new(); // Construir una VM
    be_regfunc(vm, "myadd", l_add); // Registrar la función nativa "myadd"
 
 La segunda línea es donde se registra la función nativa y la llamamos
@@ -331,14 +331,31 @@ resultados como este:
 
 .. code:: berry
 
-   > myadd
-   <function: 0x562a210f0f90>
-   > myadd(1.0, 2.5)
-   3.5
-   > myadd(2.5, 2)
-   4.5
-   > myadd(1, 2)
-   3
+   myadd
+   
+|<function: 0x562a210f0f90>
+|
+
+.. code:: berry
+ 
+   myadd(1.0, 2.5)
+
+|3.5
+|
+
+.. code:: berry
+   
+   myadd(2.5, 2)
+
+|4.5
+|
+
+.. code:: berry
+   
+   myadd(1, 2)
+   
+|3
+|
 
 Tipos y Funciones
 -----------------
@@ -359,7 +376,7 @@ encontrar en el archivo *berry.h*:
 
 .. code:: c
 
-   typedef struct bvm bvm;
+   typedef struct bvm bvm_t;
 
 La mayoría de las funciones de FFI usan el tipo ``bvm`` como primer
 parámetro, porque todas operan en la máquina virtual internamente.
@@ -373,7 +390,7 @@ La definición del tipo de función nativa es:
 
 .. code:: c
 
-   typedef int (*bntvfunc)(bvm*);
+   typedef int (*bntvfunc)(bvm_t*);
 
 Este tipo es un puntero de función nativo y algunas FFI que registran o
 agregan funciones nativas a la máquina virtual usan parámetros de este
@@ -406,9 +423,9 @@ el tipo de punto flotante en lenguaje C. ``breal`` se define como:
 .. code:: c
 
    #if BE_SINGLE_FLOAT != 0
-       typedef float breal;
+       typedef float breal_t;
    #else
-       typedef double breal;
+       typedef double breal_t;
    #endif
 
 Puede usar la macro ``BE_SINGLE_FLOAT`` para controlar la implementación
@@ -471,7 +488,7 @@ virtual. El prototipo de función es:
 
 .. code:: c
 
-   bvm* be_vm_new(void);
+   bvm_t* be_vm_new(void);
 
 El valor de retorno de la función es un puntero a la instancia de la
 máquina virtual. ``be_vm_new`` es la primera función llamada cuando se
@@ -485,7 +502,7 @@ máquina virtual. El prototipo de la función es:
 
 .. code:: c
 
-   void be_vm_delete(bvm *vm);
+   void be_vm_delete(bvm_t *vm);
 
 El parámetro ``vm`` es el puntero del objeto de la máquina virtual que
 se va a destruir. La destrucción de la máquina virtual liberará todos
@@ -499,7 +516,7 @@ búfer y compilarlo en un código de bytes. El prototipo de la función es:
 
 .. code:: c
 
-   int be_loadbuffer(bvm *vm, const char *name, const char *buffer, size_t length);
+   int be_loadbuffer(bvm_t *vm, const char *name, const char *buffer, size_t length);
 
 El parámetro ``vm`` es el puntero de la máquina virtual. ``name`` es una
 cadena, que generalmente se usa para marcar la fuente del código fuente.
@@ -559,7 +576,7 @@ prototipo de función es:
 
 .. code:: c
 
-   int be_loadfile(bvm *vm, const char *nombre);
+   int be_loadfile(bvm_t *vm, const char *nombre);
 
 La funcionalidad de esta función es similar a la función
 ``be_loadbuffer``, excepto que la función se compilará leyendo el
@@ -590,7 +607,7 @@ esta función es:
 
 .. code:: c
 
-   int be_top(bvm *vm);
+   int be_top(bvm_t *vm);
 
 Esta función se suele utilizar para obtener el número de parámetros de
 una función nativa. Cuando se usa para este propósito, se recomienda
@@ -599,7 +616,7 @@ nativa. P.ej:
 
 .. code:: c
 
-   static int native_function_example(bvm *vm)
+   static int native_function_example(bvm_t *vm)
    {
        int argc = be_top(vm); // Obtener el número de argumentos
        // ...
@@ -612,7 +629,7 @@ función es:
 
 .. code:: c
 
-   const char* be_typename(bvm *vm, int index);
+   const char* be_typename(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual,
 e ``index`` es el índice del objeto a operar. La función ``type`` en la
@@ -625,7 +642,7 @@ de un objeto o clase. El prototipo de función es:
 
 .. code:: c
 
-   const char* be_classname(bvm *vm, int index);
+   const char* be_classname(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual,
 e ``index`` es el índice del objeto a operar. Si el valor en ``index``
@@ -639,7 +656,7 @@ especificada. El prototipo de función es:
 
 .. code:: c
 
-   int be_strlen(bvm *vm, int index);
+   int be_strlen(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual,
 e ``index`` es el índice del objeto a operar. Esta función devuelve el
@@ -657,7 +674,7 @@ El prototipo de función es:
 
 .. code:: c
 
-   void be_strconcat(bvm *vm, int index);
+   void be_strconcat(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual.
 Esta función concatenará la cadena en la posición del parámetro de
@@ -669,7 +686,7 @@ El prototipo de función es:
 
 .. code:: c
 
-   void be_pop(bvm *vm, int n);
+   void be_pop(bvm_t *vm, int n);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual,
 y el parámetro ``n`` es la cantidad de valores que se extraerán de la
@@ -681,7 +698,7 @@ eliminará un valor de la pila.
 
 .. code:: c
 
-   void be_remove(bvm *vm, int index);
+   void be_remove(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual
 y el parámetro ``index`` es el índice del objeto que se eliminará.
@@ -694,7 +711,7 @@ valor de índice dado, y su prototipo de función es:
 
 .. code:: c
 
-   int be_absindex(bvm *vm, int index);
+   int be_absindex(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual
 y el parámetro ``index`` es el valor del índice de entrada. Si ``index``
@@ -709,7 +726,7 @@ prototipo de función es:
 
 .. code:: c
 
-   void be_newlist(bvm *vm);
+   void be_newlist(bvm_t *vm);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual.
 Después de llamar con éxito a esta función, el nuevo valor de ``list``
@@ -722,7 +739,7 @@ función es:
 
 .. code:: c
 
-   void be_newmap(bvm *vm);
+   void be_newmap(bvm_t *vm);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual.
 Después de llamar con éxito a esta función, el nuevo valor del ``map``
@@ -735,7 +752,7 @@ especificado a la pila. Su prototipo de función es:
 
 .. code:: c
 
-   void be_getglobal(bvm *vm, const char *name);
+   void be_getglobal(bvm_t *vm, const char *name);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual
 y el parámetro ``name`` es el nombre de la variable global. Después de
@@ -748,7 +765,7 @@ función es:
 
 .. code:: c
 
-   void be_setmember(bvm *vm, int index, const char *k);
+   void be_setmember(bvm_t *vm, int index, const char *k);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual,
 el parámetro ``index`` es el índice del objeto de la instancia y el
@@ -763,7 +780,7 @@ función es:
 
 .. code:: c
 
-   void be_getmember(bvm *vm, int index, const char *k);
+   void be_getmember(bvm_t *vm, int index, const char *k);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual,
 el parámetro ``index`` es el índice del objeto de la instancia y el
@@ -776,7 +793,7 @@ o ``map``. El prototipo de función es:
 
 .. code:: c
 
-   void be_getindex(bvm *vm, int index);
+   void be_getindex(bvm_t*vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual,
 y el parámetro ``index`` es el índice del objeto a operar. Esta función
@@ -808,7 +825,7 @@ La función ``be_setindex`` se utiliza para establecer un valor en
 
 .. code:: c
 
-   void be_setindex(bvm *vm, int index);
+   void be_setindex(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual,
 y el parámetro ``index`` es el subíndice del objeto a operar. Esta
@@ -840,7 +857,7 @@ cierre nativo. El prototipo de función es:
 
 .. code:: c
 
-   void be_getupval(bvm *vm, int index, int pos);
+   void be_getupval(bvm_t *vm, int index, int pos);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual;
 ``index`` es el valor de índice de cierre nativo del valor ascendente
@@ -853,7 +870,7 @@ del cierre nativo. El prototipo de función es:
 
 .. code:: c
 
-   void be_setupval(bvm *vm, int index, int pos);
+   void be_setupval(bvm_t *vm, int index, int pos);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual;
 ``index`` es el valor del índice de cierre nativo que se escribirá en
@@ -868,7 +885,7 @@ de la clase base o la instancia de la clase. El prototipo de función es:
 
 .. code:: c
 
-   void be_getsuper(bvm *vm, int index);
+   void be_getsuper(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual;
 ``index`` es la clase u objeto a operar. Si el valor en ``index`` es una
@@ -883,7 +900,7 @@ elementos contenidos en el contenedor. El prototipo de función es:
 
 .. code:: c
 
-   int be_data_size(bvm *vm, int index);
+   int be_data_size(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual;
 ``index`` es el índice del objeto contenedor que se va a operar. Si el
@@ -896,7 +913,7 @@ final del contenedor. El prototipo de función es:
 
 .. code:: c
 
-   void be_data_push(bvm *vm, int index);
+   void be_data_push(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual;
 ``index`` es el índice del objeto contenedor que se va a operar. El
@@ -946,7 +963,7 @@ del contenedor. El prototipo de función es:
 
 .. code:: c
 
-   void be_data_resize(bvm *vm, int index);
+   void be_data_resize(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual;
 ``index`` es el índice del objeto contenedor que se va a operar. Esta
@@ -959,7 +976,7 @@ elemento del iterador. El prototipo de función es:
 
 .. code:: c
 
-   int be_iter_next(bvm *vm, int index);
+   int be_iter_next(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual;
 ``index`` es el índice del iterador a operar. El objeto iterador puede
@@ -993,7 +1010,7 @@ función es:
 
 .. code:: c
 
-   int be_refcontains(bvm *vm, int index);
+   int be_refcontains(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual;
 ``index`` es el índice del objeto a operar. Esta función se utiliza para
@@ -1005,7 +1022,7 @@ en la pila de referencia. El prototipo de función es:
 
 .. code:: c
 
-   int be_refpush(bvm *vm, int index);
+   int be_refpush(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual;
 ``index`` es el índice del objeto a operar. Esta función se utiliza para
@@ -1016,7 +1033,7 @@ pila de referencia. Esta función eliminará un valor de la pila.
 
 .. code:: c
 
-   int be_refpop(bvm *vm);
+   int be_refpop(bvm_t *vm);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual.
 Esta función se usa en pares con ``be_refpush``. El siguiente es el uso
@@ -1025,7 +1042,7 @@ recursivo infinito cuando se hace referencia al objeto mismo:
 
 .. code:: c
 
-   int list_traversal(bvm *vm)
+   int list_traversal(bvm_t *vm)
    {
        // ...
        if (be_refcontains(vm, 1)) {
@@ -1053,7 +1070,7 @@ de función es:
 
 .. code:: c
 
-   void be_stack_require(bvm *vm, int count);
+   void be_stack_require(bvm_t *vm, int count);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual;
 ``count`` es la capacidad de pila libre requerida. Si la capacidad libre
@@ -1066,7 +1083,7 @@ contrario, devuelve ``0``. El prototipo de esta función es:
 
 .. code:: c
 
-   int be_isnil(bvm *vm, int index);
+   int be_isnil(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual,
 e ``index`` es el índice del valor a medir.
@@ -1078,7 +1095,7 @@ función es:
 
 .. code:: c
 
-   int be_isbool(bvm *vm, int index);
+   int be_isbool(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual,
 e ``index`` es el índice del valor a medir.
@@ -1113,7 +1130,7 @@ El prototipo de esta función es:
 
 .. code:: c
 
-   int be_isnumber(bvm *vm, int index);
+   int be_isnumber(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual,
 e ``index`` es el índice del valor a medir.
@@ -1125,7 +1142,7 @@ función es:
 
 .. code:: c
 
-   int be_isstring(bvm *vm, int index);
+   int be_isstring(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual,
 e ``index`` es el índice del valor a medir.
@@ -1137,7 +1154,7 @@ función es:
 
 .. code:: c
 
-   int be_isclosure(bvm *vm, int index);
+   int be_isclosure(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual,
 e ``index`` es el índice del valor a medir.
@@ -1149,7 +1166,7 @@ de esta función es:
 
 .. code:: c
 
-   int be_isntvclos(bvm *vm, int index);
+   int be_isntvclos(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual,
 e ``index`` es el índice del valor a medir.
@@ -1161,7 +1178,7 @@ función es:
 
 .. code:: c
 
-   int be_isfunction(bvm *vm, int index);
+   int be_isfunction(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual,
 e ``index`` es el índice del valor a medir. Hay tres tipos de funciones:
@@ -1173,7 +1190,7 @@ La función ``be_isproto`` devuelve si el valor indexado por el parámetro
 
 .. code:: c
 
-   int be_isproto(bvm *vm, int index);
+   int be_isproto(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual,
 e ``index`` es el índice del valor a medir. El tipo ``proto`` es el
@@ -1185,7 +1202,7 @@ La función ``be_isclass`` devuelve si el valor indexado por el parámetro
 
 .. code:: c
 
-   int be_isclass(bvm *vm, int index);
+   int be_isclass(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual,
 e ``index`` es el índice del valor a medir.
@@ -1228,7 +1245,7 @@ La función ``be_ismap`` devuelve si el valor indexado por el parámetro
 
 .. code:: c
 
-   int be_ismap(bvm *vm, int index);
+   int be_ismap(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual,
 e ``index`` es el índice del valor a medir.
@@ -1240,14 +1257,14 @@ de esta función es:
 
 .. code:: c
 
-   int be_iscomptr(bvm *vm, int index);
+   int be_iscomptr(bvm_t *vm, int index);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual,
 e ``index`` es el índice del valor a medir.
 
 .. code:: c
 
-   bint be_toint(bvm *vm, int index);
+   bint be_toint(bvm_t *vm, int index);
 
 Obtiene el valor de la posición de índice de ``index`` de la pila
 virtual y devuelve como un tipo entero. Esta función no comprueba la
@@ -1256,7 +1273,7 @@ corrección del tipo. Si el valor es una instancia, se llama al método
 
 .. code:: c
 
-   breal be_toreal(bvm *vm, int index);
+   breal_t be_toreal(bvm_t *vm, int index);
 
 Obtiene el valor de la posición de índice de ``index`` de la pila
 virtual y devuelve como un tipo de número de punto flotante. Esta
@@ -1264,7 +1281,7 @@ función no comprueba la exactitud del tipo.
 
 .. code:: c
 
-   bint be_toindex(bvm *vm, int index);
+   bint_t be_toindex(bvm_t *vm, int index);
 
 Obtiene el valor de la posición de índice de ``index`` de la pila
 virtual y devuelve como un tipo entero. Esta función no comprueba la
@@ -1274,7 +1291,7 @@ del primero es ``bint``.
 
 .. code:: c
 
-   bbool be_tobool(bvm *vm, int index);
+   bbool be_tobool(bvm_t *vm, int index);
 
 Obtiene el valor de la posición de índice de ``index`` de la pila
 virtual y devuelve como un tipo booleano. Si el valor indexado no es de
@@ -1285,7 +1302,7 @@ si existe.
 
 .. code:: c
 
-   const char* be_tostring(bvm *vm, int index);
+   const char* be_tostring(bvm_t *vm, int index);
 
 Obtiene el valor de la posición de índice de ``index`` de la pila
 virtual y devuelve como un tipo de cadena. Si el valor indexado no es un
@@ -1297,7 +1314,7 @@ instancia, se llama al método ``tostring()`` si existe.
 
 .. code:: c
 
-   void* be_tocomptr(bvm* vm, int index);
+   void* be_tocomptr(bvm_t *vm, int index);
 
 Obtiene el valor de la posición de índice de ``index`` de la pila
 virtual y devuelve como un tipo de puntero general. Esta función no
@@ -1305,7 +1322,7 @@ comprueba la exactitud del tipo.
 
 .. code:: c
 
-   const void* be_tobytes(bvm *vm, int index, size_t *len);
+   const void* be_tobytes(bvm_t *vm, int index, size_t *len);
 
 Obtiene el valor de la posición de índice de ``index`` de la pila
 virtual y devuelve como un búfer de bytes. Se devuelve el puntero del
@@ -1315,13 +1332,13 @@ o devuelve ``NULL``.
 
 .. code:: c
 
-   void be_pushnil(bvm *vm);
+   void be_pushnil(bvm_t *vm);
 
 Inserta un valor ``nil`` en la pila virtual.
 
 .. code:: c
 
-   void be_pushbool(bvm *vm, int b);
+   void be_pushbool(bvm_t *vm, int b);
 
 Inserta un valor booleano en la pila virtual. El parámetro ``b`` es el
 valor booleano que se insertará en la pila. Cuando el valor es ``0``,
@@ -1329,19 +1346,19 @@ significa falso, de lo contrario es verdadero.
 
 .. code:: c
 
-   void be_pushint(bvm *vm, bint i);
+   void be_pushint(bvm_t *vm, bint i);
 
 Inserta un valor entero ``i`` en la pila virtual.
 
 .. code:: c
 
-   void be_pushreal(bvm *vm, breal r);
+   void be_pushreal(bvm_t *vm, breal r);
 
 Inserta un valor de punto flotante ``r`` en la pila virtual.
 
 .. code:: c
 
-   void be_pushstring(bvm *vm, const char *str)
+   void be_pushstring(bvm_t *vm, const char *str)
 
 Empuja la cadena ``str`` en la pila virtual. El parámetro ``str`` debe
 apuntar a una cadena C que termina con un carácter nulo ``'\0'``, y no
@@ -1349,7 +1366,7 @@ se puede pasar un puntero nulo.
 
 .. code:: c
 
-   void be_pushnstring(bvm *vm, const char *str, size_t n);
+   void be_pushnstring(bvm_t *vm, const char *str, size_t n);
 
 Inserta la cadena ``str`` de longitud ``n`` en la pila virtual. La
 longitud de la cadena está sujeta al parámetro ``n`` y el carácter nulo
@@ -1357,7 +1374,7 @@ no se usa como marca final de la cadena.
 
 .. code:: c
 
-   const char* be_pushfstring(bvm *vm, const char *formato, ...);
+   const char* be_pushfstring(bvm_t *vm, const char *formato, ...);
 
 Empuja la cadena formateada en la pila virtual. El parámetro ``formato``
 es una cadena formateada que contiene el texto que se insertará en la
@@ -1411,14 +1428,14 @@ utilizar cadenas con formato ``sprintf`` para las operaciones.
 
 .. code:: c
 
-   void be_pushvalue(bvm *vm, int index);
+   void be_pushvalue(bvm_t *vm, int index);
 
 Empuja el valor con el índice ``index`` en la parte superior de la pila
 virtual.
 
 .. code:: c
 
-   void be_pushntvclosure(bvm *vm, bntvfunc f, int nupvals);
+   void be_pushntvclosure(bvm_t *vm, bntvfunc f, int nupvals);
 
 Empuja un cierre nativo en la parte superior de la pila virtual. El
 parámetro ``f`` es el puntero de función C del cierre nativo, y
@@ -1433,7 +1450,7 @@ parámetro ``f`` es el puntero de la función nativa.
 
 .. code:: c
 
-   void be_pushclass(bvm *vm, const char *name, const bnfuncinfo *lib);
+   void be_pushclass(bvm_t *vm, const char *name, const bnfuncinfo *lib);
 
 Empuja una clase nativa en la parte superior de la pila virtual. El
 parámetro ``name`` es el nombre de la clase nativa y el parámetro
@@ -1441,7 +1458,7 @@ parámetro ``name`` es el nombre de la clase nativa y el parámetro
 
 .. code:: c
 
-   void be_pushcomptr(bvm *vm, void *ptr);
+   void be_pushcomptr(bvm_t *vm, void *ptr);
 
 Empuja un puntero general en la parte superior de la pila virtual. El
 puntero general ``ptr`` apunta a una determinada área de datos de C.
@@ -1451,7 +1468,7 @@ ciclo de vida de los datos ellos mismos.
 
 .. code:: c
 
-   void* be_pushbytes(bvm *vm, const void *buf, size_t len);
+   void* be_pushbytes(bvm_t *vm, const void *buf, size_t len);
 
 Empuja un búfer ``bytes ()`` que comience en la posición ``buf`` y de
 tamaño ``len``. El búfer se copia en la memoria asignada de Berry, no
@@ -1459,7 +1476,7 @@ necesita mantener el búfer válido después de esta llamada.
 
 .. code:: c
 
-   bbool be_pushiter(bvm *vm, int index);
+   bbool be_pushiter(bvm_t *vm, int index);
 
 Empuja un iterador en la parte superior de la pila virtual.
 
@@ -1470,7 +1487,7 @@ inmediatamente siguiente no se ejecutará. El prototipo de función es:
 
 .. code:: c
 
-   void be_pusherror(bvm *vm, const char *msg);
+   void be_pusherror(bvm_t *vm, const char *msg);
 
 El parámetro ``vm`` es el puntero de la instancia de la máquina virtual;
 ``msg`` es la cadena que contiene la información del error.
