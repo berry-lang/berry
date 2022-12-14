@@ -25,6 +25,8 @@ Berry has the following advantages:
 
 Reference Manual: [Wiki](https://github.com/berry-lang/berry/wiki/Reference)
 
+Reference Manual: [Read the docs](https://berry.readthedocs.io/)
+
 Short Manual (slightly outdated): [berry_short_manual.pdf](https://github.com/Skiars/berry_doc/releases/download/latest/berry_short_manual.pdf).
 
 Berry's EBNF grammar definition: [tools/grammar/berry.ebnf](./tools/grammar/berry.ebnf)
