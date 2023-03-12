@@ -1,39 +1,39 @@
-<p align="center">
-  <h1 align="center">
-    <img src="https://gitee.com/mirrors/Berry/raw/master/berry-logo.png" alt="Berry" width=272 height=128>
-  </h1>
-  <p align="center">The Berry Script Language.</p>
-</p>
+<p align="center"><img src="docs/berry-logo.png" alt="Berry language logo" width=272 height=128></p>
+<p align="center">The Berry Scripting Language</p>
 
 ## Introduction
 
-Berry is a ultra-lightweight dynamically typed embedded scripting language. It is designed for lower-performance embedded devices. The Berry interpreter-core's code size is less than 40KiB and can run on less than 4KiB heap (on ARM Cortex M4 CPU, Thumb ISA and ARMCC compiler).
+Berry is a ultra-lightweight dynamically typed embedded scripting language. It is designed for lower-performance embedded devices. The Berry interpreter-core's code size is less than 40KiB and can run on less than 4KiB heap (as tested on ARM Cortex M4 CPU, Thumb ISA and ARMCC compiler).
 
-The interpreter of Berry include a one-pass compiler and register-based VM, all the code is written in ANSI C99. In Berry not every type is a class object. Some simple value types, such as int, real, boolean and string are not class object, but list, map and range are class object. This is a consideration about performance. 
-Register-based VM is the same meaning as above.
+The interpreter of Berry includes a one-pass compiler and register-based VM. All of it's code is written in ANSI C99 and integrates well with both C and C++. In order to make the VM more performant Berry's primitives consist of both simple types (`int`, `real`, `boolean`, `string`) and class ones (`list`, `map`, `range`).
 
-Berry has the following advantages:
+Berry is:
 
-* Lightweight: A well-optimized interpreter with very little resources. Ideal for use in microprocessors.
-* Fast: optimized one-pass bytecode compiler and register-based virtual machine.
-* Powerful: supports imperative programming, object-oriented programming, functional programming.
-* Flexible: Berry is a dynamic type script, and it's intended for embedding in applications. It can provide good dynamic scalability for the host system.
-* Simple: simple and natural syntax, support garbage collection, and easy to use FFI (foreign function interface).
-* RAM saving: With compile-time object construction, most of the constant objects are stored in read-only code data segments, so the RAM usage of the interpreter is very low when it starts.
+* **Lightweight** - it has a well-optimized interpreter using very little resources. It's ideal for use in microprocessors
+* **Fast** - it has optimized one-pass bytecode compiler and a register-based virtual machine.
+* **Powerful** - supports both imperative programming, object-oriented programming and functional programming paradigms reasonably well.
+* **Flexible** - Berry is a dynamically typed, scripting language, and it's intended for embedding in various applications.
+* **Simple for end user** - Berry's simple and natural syntax and support garbage collection make it very easy to learn for your users.
+* **Easy to integrate** - it's Foreign Function Interface and APIs are exposing well known virtual machine concepts in a straightforward way.
+* **RAM saving** - with it's compile-time object construction, most of the constant objects are stored in read-only code data segments, so the RAM usage of the virtual machine stays as low as possible.
 
-## Documents
+## Documentation
 
-Reference Manual: [Wiki](https://github.com/berry-lang/berry/wiki/Reference)
+[Berry Language user manual](https://berry.readthedocs.io/language_manual/)
 
-Reference Manual: [Read the docs](https://berry.readthedocs.io/)
+[Virtual Machine user manual](https://berry.readthedocs.io/vm_manual/)
 
-Short Manual (slightly outdated): [berry_short_manual.pdf](https://github.com/Skiars/berry_doc/releases/download/latest/berry_short_manual.pdf).
+[Virtual Machine and language developer manual](https://berry.readthedocs.io/developer_manual/)
+
+## Editor plugins
+
+[Visual Studio Code](https://code.visualstudio.com/) plugin is in [./tools/plugins/vscode](./tools/plugins/vscode).
 
 Berry's EBNF grammar definition: [tools/grammar/berry.ebnf](./tools/grammar/berry.ebnf)
 
 ## Features
 
-* Base Type
+* Base Types
   * Nil: `nil`
   * Boolean: `true` and `false`
   * Numerical: Integer (`int`) and Real (`real`)
@@ -44,7 +44,7 @@ Berry's EBNF grammar definition: [tools/grammar/berry.ebnf](./tools/grammar/berr
   * List: Ordered container, like `[1, 2, 3]`
   * Map: Hash Map container, like `{ 'a': 1, 2: 3, 'map': {} }`
   * Range: include a lower and a upper integer value, like `0..5`
-* Operator and Expression
+* Operators and expressions
   * Assign operator: `=`, `+=`, `-=`, `*=`, `/=`, `%=`, `&=`, `|=`, `^=`, `<<=`, `>>=`
   * Relational operator: `<`, `<=`, `==`, `!=`, `>`, `>=`
   * Logic operator: `&&`, `||`, `!`
@@ -55,109 +55,37 @@ Berry's EBNF grammar definition: [tools/grammar/berry.ebnf](./tools/grammar/berr
   * Connect string operator: `+`
   * Conditional operator: `? :`
   * Brackets: `()`
-* Control Structure
+* Control structures
   * Conditional statement: `if-else`
   * Iteration statement: `while` and `for`
   * Jump statement: `break` and `continue`
-* Function
+* Functions
   * Local variable and block scope
   * Return statement
   * Nested functions definition
   * Closure based on Upvalue
   * Anonymous function
   * Lambda expression
-* Class
+* Classes
   * Inheritance (only public single inheritance)
   * Method and Operator Overload
   * Constructor method
   * Destructive method
-* Module Management
+* Module management
   * Built-in module that takes almost no RAM
-  * Extension module support: script module, bytecode file module and shared library (like *.so, *.dll) module
-* GC (Garbage collection)
+  * Extension module support: script module, bytecode file module and shared library (like `*.so`, `*.dll`) module
+* Garbage collecttor
   * Mark-Sweep GC
-* Exceptional Handling
+* Exception handling
   * Throw any exception value using the `raise` statement
   * Multiple catch mode
 * Bytecode file support
   * Export function to bytecode file
   * Load the bytecode file and execute
 
-## Build and Run
-
-1. Install the readline library (Windows does not need):
-
-   ``` bash
-   sudo apt install libreadline-dev # Ubuntu
-   brew install readline            # MacOS
-   ```
-
-2. Build (The default compiler is GCC):
-
-   ```
-   make
-   ```
-
-3. Run:
-
-   ``` bash
-   ./berry # Bash or PowerShell
-   berry   # Windows CMD
-   ```
-
-4. Install (Only Unix-like):
-
-   ``` bash
-   make install
-   ```
-
-## Editor plugins
-
-[Visual Studio Code](https://code.visualstudio.com/) plugin are in this directory: [./tools/plugins/vscode](./tools/plugins/vscode).
-
-## Examples
-
-After compiling successfully, use the `berry` command with no parameters to enter the REPL environment:
-```
-Berry 0.0.1 (build in Dec 24 2018, 18:12:49)
-[GCC 8.2.0] on Linux (default)
->
-```
-
-Now enter this code:
-
-``` lua
-print("Hello world!")
-```
-
-You will see this output:
-
-```
-Hello world!
-```
-
-You can copy this code to the REPL:
-
-``` ruby
-def fib(x)
-    if x <= 1
-        return x
-    end
-    return fib(x - 1) + fib(x - 2)
-end
-fib(10)
-```
-
-This example code will output the result `55` and you can save the above code to a plain text file (eg test.be) and run this command:
-
-``` bash
-./berry test.be
-```
-
-This will also get the correct output.
-
 ## License
 
 Berry is free software distributed under the [MIT license](./LICENSE).
 
-The Berry interpreter partly referred to [Lua](http://www.lua.org/)'s design. View Lua's license here: http://www.lua.org/license.html.
+The Berry interpreter partly referred to [Lua](http://www.lua.org/)'s design.
+View Lua's license here: [http://www.lua.org/license.html](http://www.lua.org/license.html).

@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  docs-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.berry-docs
+    volumes:
+      - ./:/berry
+    tmpfs:
+      - "/berry/docs/source/_doxygen"
+      - "/berry/docs/build"
+    ports:
+      - "8085:8085"
