@@ -30,6 +30,12 @@ assert_load_failed('[1, null')
 # object
 var o = json.load('{"key": 1}')
 assert(o['key'] == 1 && o.size() == 1)
+
+# parsing an empty string used to cause berry to pass a NULL to strncmp
+# make sure we catch this
+o = json.load('{"key": ""}')
+assert(o['key'] == '' && o.size() == 1)
+
 assert_load_failed('{"ke: 1}')
 assert_load_failed('{"key": 1x}')
 assert_load_failed('{"key"}')
