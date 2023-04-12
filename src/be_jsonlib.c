@@ -178,6 +178,11 @@ static const char* parser_string(bvm *vm, const char *json)
                     }
                     default: be_free(vm, buf, len); return NULL; /* error */
                     }
+                } else if(ch >= 0 && ch <= 0x1f) {
+                    /* control characters must be escaped
+                       as per https://www.rfc-editor.org/rfc/rfc7159#section-7 */
+                    be_free(vm, buf, len);
+                    return NULL;
                 } else {
                     *dst++ = (char)ch;
                 }
