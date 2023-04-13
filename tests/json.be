@@ -1,9 +1,14 @@
 import json
-
+import string
 # load tests
 
 def assert_load(text, value)
-    assert(json.load(text) == value)
+    var loaded_val = json.load(text)
+    var ok = loaded_val == value
+    if !ok 
+        print(string.format('for JSON \'%s\' expected %s [%s] but got %s [%s]', text, str(value), type(value), str(loaded_val), type(loaded_val)))
+    end
+    assert(ok)
 end
 
 def assert_load_failed(text)
@@ -15,6 +20,13 @@ assert_load('true', true)
 assert_load('false', false)
 assert_load('123', 123)
 assert_load('12.3', 12.3)
+assert_load('-0.1', -0.1)
+assert_load('1e2', 1e2)
+assert_load('1e+2', 1e+2)
+assert_load('1e-2', 1e-2)
+assert_load('1E2', 1e2)
+assert_load('1E+2', 1e+2)
+assert_load('1.2e7', 1.2e7)
 assert_load('"abc"', 'abc')
 # strings
 assert_load('"\\"\\\\\\/\\b\\f\\n\\r\\t"', '\"\\/\b\f\n\r\t')
