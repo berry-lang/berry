@@ -2,14 +2,13 @@
 
 def assert_syntax_error(code)
     try
-        f = compile(code)
+        var f = compile(code)
         assert(false, 'unexpected execution flow')
     except .. as e, m
         assert(e == 'syntax_error')
     end
 end
 def findinlist(l, e)
-    var i
     for i: 0..size(l)-1
         if l[i] == e return i end
     end
