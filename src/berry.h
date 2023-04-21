@@ -1070,6 +1070,34 @@ BERRY_API bbool be_isclass(bvm *vm, int index);
 BERRY_API bbool be_isinstance(bvm *vm, int index);
 
 /**
+ * @fn bool be_ismapinstance(bvm*, int)
+ * @note FFI function
+ * @brief value in virtual stack is instance
+ *
+ * This function returns whether the value indexed by the parameter index in the virtual stack is
+ * an instance of class map (or derived). If it is, it returns 1, otherwise it returns 0
+ *
+ * @param vm virtual machine instance virtual machine instance
+ * @param index value index
+ * @return true/false
+ */
+BERRY_API bbool be_ismapinstance(bvm *vm, int index);
+
+/**
+ * @fn bool be_ismapinstance(bvm*, int)
+ * @note FFI function
+ * @brief value in virtual stack is instance
+ *
+ * This function returns whether the value indexed by the parameter index in the virtual stack is
+ * an instance of class list (or derived). If it is, it returns 1, otherwise it returns 0
+ *
+ * @param vm virtual machine instance virtual machine instance
+ * @param index value index
+ * @return true/false
+ */
+BERRY_API bbool be_islistinstance(bvm *vm, int index);
+
+/**
  * @fn bool be_ismodule(bvm*, int)
  * @note FFI function
  * @brief value in virtual stack is module
