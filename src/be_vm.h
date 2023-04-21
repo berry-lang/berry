@@ -117,6 +117,17 @@ struct bvm {
     uint32_t counter_exc; /* counter for raised exceptions */
     uint32_t counter_gc_kept; /* counter for objects scanned by last gc */
     uint32_t counter_gc_freed; /* counter for objects freed by last gc */
+
+    uint32_t gc_mark_string;
+    uint32_t gc_mark_class;
+    uint32_t gc_mark_proto;
+    uint32_t gc_mark_instance;
+    uint32_t gc_mark_map;
+    uint32_t gc_mark_list;
+    uint32_t gc_mark_closure;
+    uint32_t gc_mark_ntvclos;
+    uint32_t gc_mark_module;
+    uint32_t gc_mark_comobj;
 #endif
 #if BE_USE_DEBUG_HOOK
     bvalue hook;
