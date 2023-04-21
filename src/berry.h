@@ -54,7 +54,7 @@ typedef BE_INTEGER bint; /**< bint */
 #if BE_USE_SINGLE_FLOAT != 0
   typedef float                 breal; /**< breal */
 #else
-typedef double breal;                  /**< breal */
+typedef double                  breal; /**< breal */
 #endif
 
 
@@ -115,7 +115,7 @@ enum berrorcode {
     #define BERRY_API           __declspec(dllexport)
   #endif
 #else /* other platforms */
-#define BERRY_API             extern
+  #define BERRY_API             extern
 #endif
 
 /**
@@ -472,7 +472,7 @@ typedef bclass_ptr bclass_array[];
  *
  */
 #if BE_DEBUG_VAR_INFO
-#define be_local_const_upval(ins, idx) { "", ins, idx }
+  #define be_local_const_upval(ins, idx) { "", ins, idx }
 #else
   #define be_local_const_upval(ins, idx) { ins, idx }
 #endif
@@ -483,7 +483,7 @@ typedef bclass_ptr bclass_array[];
  *
  */
 #if BE_DEBUG_RUNTIME_INFO
-#define PROTO_RUNTIME_BLOCK   \
+  #define PROTO_RUNTIME_BLOCK   \
     NULL,     /**< varinfo */ \
     0,        /**< nvarinfo */
 #else
@@ -496,7 +496,7 @@ typedef bclass_ptr bclass_array[];
  *
  */
 #if BE_DEBUG_VAR_INFO
-#define PROTO_VAR_INFO_BLOCK   \
+  #define PROTO_VAR_INFO_BLOCK   \
     NULL,     /**< varinfo */  \
     0,        /**< nvarinfo */
 #else
