@@ -297,7 +297,7 @@ static const char* parser_number(bvm *vm, const char *json)
             intv = intv * 10 + c - '0';
             c = *json++;
         }
-        
+
     } else {
         /* 
             Number starts with zero, this is only allowed  
@@ -305,7 +305,7 @@ static const char* parser_number(bvm *vm, const char *json)
             it has a fractional part or exponent.
         */
        c = *json++;
-       
+
     }
     if(c != '.' && c != 'e' && c != 'E') {
         /* 
@@ -319,7 +319,7 @@ static const char* parser_number(bvm *vm, const char *json)
     }
     breal realval = (breal) intv;
     if(c == '.') {
-       
+
         breal deci = 0.0, point = 0.1;
         /* fractional part */
         c = *json++;
@@ -332,7 +332,7 @@ static const char* parser_number(bvm *vm, const char *json)
             point *= (breal)0.1;
             c = *json++;
         }
-       
+
         realval += deci;
     }
     if(c == 'e' || c == 'E') {
@@ -359,7 +359,7 @@ static const char* parser_number(bvm *vm, const char *json)
             realval *= ratio;
         }
    }
-   
+
    be_pushreal(vm, realval * (is_neg ? -1.0 : 1.0));
    json--;
    return json;
