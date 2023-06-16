@@ -18,7 +18,7 @@
 
 #define READLINE_STEP       100
 
-static int be_baselib_assert(bvm *vm)
+int be_baselib_assert(bvm *vm)
 {
     int argc = be_top(vm);
     /* assertion fails when there is no argument
@@ -33,7 +33,7 @@ static int be_baselib_assert(bvm *vm)
     be_return_nil(vm);
 }
 
-static int be_baselib_print(bvm *vm)
+int be_baselib_print(bvm *vm)
 {
     int i, argc = be_top(vm);
     for (i = 1; i <= argc; ++i) {
@@ -68,7 +68,7 @@ static int m_readline(bvm *vm)
     be_return(vm);
 }
 
-static int be_baselib_input(bvm *vm)
+int be_baselib_input(bvm *vm)
 {
     if (be_top(vm) && be_isstring(vm, 1)) { /* echo prompt */
         be_writestring(be_tostring(vm, 1));
@@ -118,7 +118,7 @@ static bbool obj2int(bvm *vm, bvalue *var, bint *val)
     return bfalse;
 }
 
-static int be_baselib_super(bvm *vm)
+int be_baselib_super(bvm *vm)
 {
     int argc = be_top(vm);
 
@@ -197,7 +197,7 @@ static int be_baselib_super(bvm *vm)
     be_return_nil(vm);
 }
 
-static int be_baselib_type(bvm *vm)
+int be_baselib_type(bvm *vm)
 {
     if (be_top(vm)) {
         be_pushstring(vm, be_typename(vm, 1));
@@ -206,7 +206,7 @@ static int be_baselib_type(bvm *vm)
     be_return_nil(vm);
 }
 
-static int be_baselib_classname(bvm *vm)
+int be_baselib_classname(bvm *vm)
 {
     if (be_top(vm)) {
         const char *t = be_classname(vm, 1);
@@ -218,7 +218,7 @@ static int be_baselib_classname(bvm *vm)
     be_return_nil(vm);
 }
 
-static int be_baselib_classof(bvm *vm)
+int be_baselib_classof(bvm *vm)
 {
     if (be_top(vm) && be_classof(vm, 1)) {
         be_return(vm);
@@ -226,7 +226,7 @@ static int be_baselib_classof(bvm *vm)
     be_return_nil(vm);
 }
 
-static int be_baselib_number(bvm *vm)
+int be_baselib_number(bvm *vm)
 {
     if (be_top(vm)) {
         if (be_isstring(vm, 1)) {
@@ -272,7 +272,7 @@ int be_baselib_int(bvm *vm)
     be_return_nil(vm);
 }
 
-static int be_baselib_real(bvm *vm)
+int be_baselib_real(bvm *vm)
 {
     if (be_top(vm)) {
         if (be_isstring(vm, 1)) {
@@ -296,7 +296,7 @@ static int check_method(bvm *vm, const char *attr)
         be_isinstance(vm, 1) && be_getmethod(vm, 1, attr);
 }
 
-static int be_baselib_iterator(bvm *vm)
+int be_baselib_iterator(bvm *vm)
 {
     if (be_top(vm) && be_isfunction(vm, 1)) {
         be_return(vm); /* return the argument[0]::function */
@@ -357,7 +357,7 @@ static int l_call(bvm *vm)
     be_return_nil(vm);
 }
 
-static int be_baselib_str(bvm *vm)
+int be_baselib_str(bvm *vm)
 {
     if (be_top(vm)) {
         be_tostring(vm, 1);
@@ -378,7 +378,7 @@ static int l_bool(bvm *vm)
 }
 
 
-static int be_baselib_size(bvm *vm)
+int be_baselib_size(bvm *vm)
 {
     if (be_top(vm) && be_isstring(vm, 1)) {
         be_pushint(vm, be_strlen(vm, 1));
@@ -393,7 +393,7 @@ static int be_baselib_size(bvm *vm)
     be_return_nil(vm);
 }
 
-static int be_baselib_module(bvm *vm)
+int be_baselib_module(bvm *vm)
 {
     int argc = be_top(vm);
     be_newmodule(vm);
@@ -436,7 +436,7 @@ static int m_compile_file(bvm *vm)
 }
 #endif
 
-static int be_baselib_compile(bvm *vm)
+int be_baselib_compile(bvm *vm)
 {
 #if BE_USE_SCRIPT_COMPILER
     if (be_top(vm) && be_isstring(vm, 1)) {
@@ -467,12 +467,12 @@ static int _issubv(bvm *vm, bbool (*filter)(bvm*, int))
     be_return(vm);
 }
 
-static int be_baselib_issubclass(bvm *vm)
+int be_baselib_issubclass(bvm *vm)
 {
     return _issubv(vm, be_isclass);
 }
 
-static int be_baselib_isinstance(bvm *vm)
+int be_baselib_isinstance(bvm *vm)
 {
     return _issubv(vm, be_isinstance);
 }
