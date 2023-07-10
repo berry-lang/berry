@@ -147,3 +147,6 @@ assert(string.format("%s", nil) == 'nil')
 assert(string.format("%s", true) == 'true')
 assert(string.format("%s", false) == 'false')
 
+# format is now synonym to string.format
+assert(format == string.format)
+assert(format("%.1f", 3) == '3.0')
