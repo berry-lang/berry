@@ -478,14 +478,29 @@ typedef bclass_ptr bclass_array[];
 #endif
 
 /**
+ * @def BE_DEBUG_SOURCE_FILE
+ * @brief conditional block in bproto depending on compilation options
+ *
+ */
+#if BE_DEBUG_SOURCE_FILE
+  #define PROTO_SOURCE_FILE(n)   \
+    ((bstring*) n),                                         /**< source */
+  #define PROTO_SOURCE_FILE_STR(n)  \
+    be_local_const_str(n##_str_source),                     /**< source */
+#else
+  #define PROTO_SOURCE_FILE(n)
+  #define PROTO_SOURCE_FILE_STR(n)
+#endif
+
+/**
  * @def PROTO_RUNTIME_BLOCK
  * @brief conditional block in bproto depending on compilation options
  *
  */
 #if BE_DEBUG_RUNTIME_INFO
   #define PROTO_RUNTIME_BLOCK   \
-    NULL,     /**< varinfo */ \
-    0,        /**< nvarinfo */
+    NULL,     /**< lineinfo */ \
+    0,        /**< nlineinfo */
 #else
   #define PROTO_RUNTIME_BLOCK
 #endif
@@ -526,7 +541,7 @@ typedef bclass_ptr bclass_array[];
     sizeof(_name##_code)/sizeof(uint32_t),                            /**< codesize */             \
     BE_IIF(_is_const)(sizeof(_name##_ktab)/sizeof(bvalue),0),         /**< nconst */               \
     BE_IIF(_is_subproto)(sizeof(_name##_subproto)/sizeof(bproto*),0), /**< proto */                \
-    be_local_const_str(_name##_str_source),                           /**< source */               \
+    PROTO_SOURCE_FILE_STR(_name)                                      /**< source */               \
     PROTO_RUNTIME_BLOCK                                               /**< */                      \
     PROTO_VAR_INFO_BLOCK                                              /**< */                      \
   }
@@ -554,7 +569,7 @@ typedef bclass_ptr bclass_array[];
     sizeof(*_code)/sizeof(binstruction),                        /**< codesize */             \
     BE_IIF(_has_const)(sizeof(*_ktab)/sizeof(bvalue),0),        /**< nconst */               \
     BE_IIF(_has_subproto)(sizeof(*_protos)/sizeof(bproto*),0),  /**< proto */                \
-    ((bstring*) _source),                                       /**< source */               \
+    PROTO_SOURCE_FILE(_source)                                  /**< source */               \
     PROTO_RUNTIME_BLOCK                                         /**< */                      \
     PROTO_VAR_INFO_BLOCK                                        /**< */                      \
   }

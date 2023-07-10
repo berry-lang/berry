@@ -51,6 +51,14 @@
  **/
 #define BE_USE_PRECOMPILED_OBJECT       1
 
+/* Macro: BE_DEBUG_SOURCE_FILE
+ * Indicate if each function remembers its source file name
+ * 0: do not keep the file name (saves 4 bytes per function)
+ * 1: keep the source file name
+ * Default: 1
+ **/
+#define BE_DEBUG_SOURCE_FILE            1
+
 /* Macro: BE_DEBUG_RUNTIME_INFO
  * Set runtime error debugging information.
  * 0: unable to output source file and line number at runtime.
@@ -168,7 +176,7 @@
  * Berry debug hook switch.
  * Default: 0
  **/
-#define BE_USE_DEBUG_HOOK               1
+#define BE_USE_DEBUG_HOOK               0
 
 /* Macro: BE_USE_DEBUG_GC
  * Enable GC debug mode. This causes an actual gc after each
