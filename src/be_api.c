@@ -1038,6 +1038,9 @@ BERRY_API int be_pcall(bvm *vm, int argc)
     return be_protectedcall(vm, f, argc);
 }
 
+#ifdef __GNUC__
+__attribute__((noreturn))
+#endif
 BERRY_API void be_raise(bvm *vm, const char *except, const char *msg)
 {
     be_pushstring(vm, except);
@@ -1049,6 +1052,9 @@ BERRY_API void be_raise(bvm *vm, const char *except, const char *msg)
     be_pop(vm, 2);
     be_save_stacktrace(vm);
     be_throw(vm, BE_EXCEPTION);
+#ifdef __GNUC__
+    __builtin_unreachable();
+#endif
 }
 
 BERRY_API void be_stop_iteration(bvm *vm)

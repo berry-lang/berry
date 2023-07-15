@@ -2064,6 +2064,9 @@ BERRY_API void be_exit(bvm *vm, int status);
  * @param except
  * @param msg
  */
+#ifdef __GNUC__
+__attribute__((noreturn))
+#endif
 BERRY_API void be_raise(bvm *vm, const char *except, const char *msg);
 
 /**
