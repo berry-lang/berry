@@ -80,6 +80,7 @@ typedef struct {
 static void stmtlist(bparser *parser);
 static void block(bparser *parser, int type);
 static void expr(bparser *parser, bexpdesc *e);
+static void walrus_expr(bparser *parser, bexpdesc *e);
 static void sub_expr(bparser *parser, bexpdesc *e, int prio);
 
 static const bbyte binary_op_prio_tab[] = {
@@ -195,6 +196,7 @@ static void begin_block(bfuncinfo *finfo, bblockinfo *binfo, int type)
     finfo->binfo = binfo; /* tell parser this is the current block */
     binfo->type = (bbyte)type;
     binfo->hasupval = 0;
+    binfo->sideeffect = 0;
     binfo->beginpc = finfo->pc; /* set starting pc for this block */
     binfo->nactlocals = (bbyte)be_list_count(finfo->local); /* count number of local variables in previous block */
     if (type & BLOCK_LOOP) {
@@ -361,7 +363,7 @@ static btokentype get_unary_op(bparser *parser)
 static btokentype get_assign_op(bparser *parser)
 {
     btokentype op = next_type(parser);
-    if (op >= OptAssign && op <= OptRsfAssign) {
+    if ((op >= OptAssign && op <= OptRsfAssign) || op == OptWalrus) {
         return op;
     }
     return OP_NOT_ASSIGN;
@@ -788,6 +790,7 @@ static void call_expr(bparser *parser, bexpdesc *e)
     int argc = 0, base;
     int ismember = e->type == ETMEMBER;
 
+    parser->finfo->binfo->sideeffect = 1;   /* has side effect */
     /* func '(' [exprlist] ')' */
     check_var(parser, e);
     /* code function index to next register */
@@ -885,8 +888,7 @@ static void primary_expr(bparser *parser, bexpdesc *e)
     switch (next_type(parser)) {
     case OptLBK: /* '(' expr ')' */
         scan_next_token(parser); /* skip '(' */
-        /* sub_expr() is more efficient because there is no need to initialize e. */
-        sub_expr(parser, e, ASSIGN_OP_PRIO);
+        expr(parser, e);
         check_var(parser, e);
         match_token(parser, OptRBK); /* skip ')' */
         break;
@@ -1023,11 +1025,13 @@ static void assign_expr(bparser *parser)
     bexpdesc e;
     btokentype op;
     int line = parser->lexer.linenumber;
+    parser->finfo->binfo->sideeffect = 0;      /* reinit side effect marker */
     expr(parser, &e); /* left expression */
     check_symbol(parser, &e);
     op = get_assign_op(parser);
     if (op != OP_NOT_ASSIGN) { /* assign operator */
         bexpdesc e1;
+        parser->finfo->binfo->sideeffect = 1;
         scan_next_token(parser);
         compound_assign(parser, op, &e, &e1);
         if (check_newvar(parser, &e)) { /* new variable */
@@ -1103,6 +1107,9 @@ static void sub_expr(bparser *parser, bexpdesc *e, int prio)
         check_var(parser, e);  /* check that left part is valid */
         scan_next_token(parser);  /* move to next token */
         be_code_prebinop(finfo, op, e); /* and or */
+        if (op == OptConnect) {
+            parser->finfo->binfo->sideeffect = 1;
+        }
         init_exp(&e2, ETVOID, 0);
         sub_expr(parser, &e2, binary_op_prio(op));  /* parse right side */
         if ((e2.type == ETVOID) && (op == OptConnect)) {
@@ -1118,13 +1125,36 @@ static void sub_expr(bparser *parser, bexpdesc *e, int prio)
     }
 }
 
+static void walrus_expr(bparser *parser, bexpdesc *e)
+{
+    int line = parser->lexer.linenumber;
+    sub_expr(parser, e, ASSIGN_OP_PRIO);    /* left expression */
+    btokentype op = next_type(parser);
+    if (op == OptWalrus) {
+        check_symbol(parser, e);
+        bexpdesc e1 = *e;           /* copy var to e1, e will get the result of expression */
+        parser->finfo->binfo->sideeffect = 1;   /* has side effect */
+        scan_next_token(parser);    /* skip ':=' */
+        expr(parser, e);
+        check_var(parser, e);
+        if (check_newvar(parser, &e1)) { /* new variable */
+            new_var(parser, e1.v.s, e);
+        }
+        if (be_code_setvar(parser->finfo, &e1, e, btrue /* do not release register */ )) {
+            parser->lexer.linenumber = line;
+            parser_error(parser,
+                "try to assign constant expressions.");
+        }
+    }
+}
+
 /* Parse new expression and return value in `e` (overwritten) */
 /* Initializes an empty expdes  and parse subexpr */
 /* Always allocates a new temp register at top of freereg */
 static void expr(bparser *parser, bexpdesc *e)
 {
     init_exp(e, ETVOID, 0);
-    sub_expr(parser, e, ASSIGN_OP_PRIO);
+    walrus_expr(parser, e);
 }
 
 static void expr_stmt(bparser *parser)
@@ -1747,6 +1777,9 @@ static void throw_stmt(bparser *parser)
 
 static void statement(bparser *parser)
 {
+    /* save value of sideeffect */
+    bbyte sideeffect = parser->finfo->binfo->sideeffect;
+    parser->finfo->binfo->sideeffect = 1;   /* by default declare side effect */
     switch (next_type(parser)) {
     case KeyIf: if_stmt(parser); break;
     case KeyWhile: while_stmt(parser); break;
@@ -1761,8 +1794,16 @@ static void statement(bparser *parser)
     case KeyVar: var_stmt(parser); break;
     case KeyTry: try_stmt(parser); break;
     case KeyRaise: throw_stmt(parser); break;
-    case OptSemic: scan_next_token(parser); break; /* empty statement */
-    default: expr_stmt(parser); break;
+    case OptSemic:
+        parser->finfo->binfo->sideeffect = sideeffect;      /* restore sideeffect */
+        scan_next_token(parser); break; /* empty statement */
+    default:
+        parser->finfo->binfo->sideeffect = sideeffect;      /* restore sideeffect */
+        expr_stmt(parser);
+        if (comp_is_strict(parser->vm) && parser->finfo->binfo->sideeffect == 0) {
+            push_error(parser, "strict: expression without side effect detected");
+        }
+        break;
     }
     be_assert(parser->finfo->freereg >= be_list_count(parser->finfo->local));
 }
