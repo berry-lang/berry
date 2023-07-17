@@ -43,7 +43,7 @@ OBJS     = $(patsubst %.c, %.o, $(SRCS))
 DEPS     = $(patsubst %.c, %.d, $(SRCS))
 INCFLAGS = $(foreach dir, $(INCPATH), -I"$(dir)")
 
-.PHONY : clean
+.PHONY : clean docker-berry docs-dev docs-dev-shell
 
 all: $(TARGET)
 
@@ -94,3 +94,12 @@ clean:
 	$(MSG) [Clean...]
 	$(Q) $(RM) $(OBJS) $(DEPS) $(GENERATE)/* berry.lib
 	$(MSG) done
+
+docker-berry:
+	docker build -t berry-lang/berry -f Dockerfile.berry .
+
+docs-dev:
+	docker compose up --build --remove-orphans
+
+docs-dev-shell:
+	docker compose run docs-dev bash

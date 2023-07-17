@@ -1,0 +1,15 @@
+FROM sphinxdoc/sphinx
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get -y update && apt-get -y install doxygen inotify-tools
+
+WORKDIR /berry/docs
+ADD docs/requirements.txt .
+RUN pip3 install -r requirements.txt
+
+# We need whole project structure for tools like BerryLexer and API analysis
+WORKDIR /berry
+COPY . /berry
+
+WORKDIR /berry
+CMD [ "./docs/watch.sh" ]
