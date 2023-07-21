@@ -639,7 +639,7 @@ derecho no es una cadena):
 
 .. code:: berry
 
-   resultado ='abc' + 123 # el resultado es 'abc123'
+   resultado ='abc' .. 123 # el resultado es 'abc123'
 
 El operador ``..`` se usa a menudo cuando se concatena una cadena y un
 valor que no es una cadena. Si el operando izquierdo es una instancia de
@@ -648,7 +648,7 @@ lista y luego usará esta lista como el valor de la expresión:
 
 .. code:: berry
 
-   resultado ='abc' + 123 # el resultado es 'abc123'
+   resultado = [1, 2] .. 3 # el resultado es [1, 2, 3]
 
 Este proceso modificará directamente el operando izquierdo, que es muy
 similar al método ``push`` de ``list`` (excepto las cadenas que son
