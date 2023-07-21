@@ -619,7 +619,7 @@ string):
 
 .. code:: berry
 
-   result ='abc' + 123 # the result is'abc123'
+   result ='abc' .. 123 # the result is'abc123'
 
 The ``..`` operator is often used when concatenating a string and a
 non-string value.If the left operand is a list instance, the ``..``
