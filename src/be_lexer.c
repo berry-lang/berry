@@ -427,7 +427,7 @@ static btokentype scan_string(blexer *lexer);   /* forward declaration */
 /* scan f-string and transpile it to `format(...)` syntax then feeding the normal lexer and parser */
 static void scan_f_string(blexer *lexer)
 {
-    char ch;
+    char ch = '\0';
     clear_buf(lexer);
     scan_string(lexer);         /* first scan the entire string in lexer->buf */
 
