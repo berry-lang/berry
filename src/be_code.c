@@ -478,11 +478,7 @@ static int exp2reg(bfuncinfo *finfo, bexpdesc *e, int dst)
             reg = e->v.idx;
         } else {
             /* otherwise, we allocate a new register or use the target provided */
-            if (dst < 0) {
-                reg = be_code_allocregs(finfo, 1);
-            } else {
-                reg = dst;
-            }
+            reg = (dst < 0) ? be_code_allocregs(finfo, 1) : dst;
         }
         be_code_conjump(finfo, &e->t, jpt);
         pcf = code_bool(finfo, reg, 0, 1);
