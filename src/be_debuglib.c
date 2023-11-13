@@ -84,6 +84,19 @@ static int m_codedump(bvm *vm)
     be_return_nil(vm);
 }
 
+static int m_gcdebug(bvm *vm) {
+    int argc = be_top(vm);
+    if (argc >= 1 && be_isbool(vm, 1)) {
+        if (be_tobool(vm, 1)) {
+            comp_set_gc_debug(vm);
+        } else {
+            comp_clear_gc_debug(vm);
+        }
+    }
+    be_pushbool(vm, comp_is_gc_debug(vm));
+    be_return(vm);
+}
+
 static int m_traceback(bvm *vm)
 {
     be_tracestack(vm);
@@ -171,10 +184,40 @@ static int m_counters(bvm *vm)
     map_insert(vm, "try", vm->counter_try);
     map_insert(vm, "raise", vm->counter_exc);
     map_insert(vm, "objects", vm->counter_gc_kept);
+    map_insert(vm, "mem_alloc", vm->counter_mem_alloc);
+    map_insert(vm, "mem_free", vm->counter_mem_free);
+    map_insert(vm, "mem_realloc", vm->counter_mem_realloc);
     be_pop(vm, 1);
     be_return(vm);
 }
 #endif
+
+static int m_allocs(bvm *vm) {
+#if BE_USE_PERF_COUNTERS
+    be_pushint(vm, vm->counter_mem_alloc);
+    be_return(vm);
+#else
+    be_return_nil(vm);
+#endif
+}
+
+static int m_frees(bvm *vm) {
+#if BE_USE_PERF_COUNTERS
+    be_pushint(vm, vm->counter_mem_free);
+    be_return(vm);
+#else
+    be_return_nil(vm);
+#endif
+}
+
+static int m_reallocs(bvm *vm) {
+#if BE_USE_PERF_COUNTERS
+    be_pushint(vm, vm->counter_mem_realloc);
+    be_return(vm);
+#else
+    be_return_nil(vm);
+#endif
+}
 
 #if !BE_USE_PRECOMPILED_OBJECT
 be_native_module_attr_table(debug) {
@@ -193,6 +236,7 @@ be_native_module_attr_table(debug) {
     be_native_module_function("varname", m_varname),
     be_native_module_function("upvname", m_upvname)
 #endif
+    be_native_module_function("gcdebug", m_gcdebug)
 };
 
 be_define_native_module(debug, NULL);
@@ -208,6 +252,12 @@ module debug (scope: global, depend: BE_USE_DEBUG_MODULE) {
     top, func(m_top)
     varname, func(m_varname), BE_DEBUG_VAR_INFO
     upvname, func(m_upvname), BE_DEBUG_VAR_INFO
+    // individual counters
+    allocs, func(m_allocs)
+    frees, func(m_frees)
+    reallocs, func(m_reallocs)
+    // GC debug mode
+    gcdebug, func(m_gcdebug)
 }
 @const_object_info_end */
 #include "../generate/be_fixed_debug.h"
