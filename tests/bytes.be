@@ -257,3 +257,8 @@ assert(!bytes())
 assert(bool(bytes("00")) == true)
 assert(bytes("01").tobool() == true)
 assert(bytes("02"))
+
+# retrieving 3-bytes little/big endian
+a = bytes("01020304")
+assert(a.get(1, 3) == 0x040302)
+assert(a.get(1, -3) == 0x020304)
