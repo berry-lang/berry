@@ -669,6 +669,17 @@ int be_str_format(bvm *vm)
                 }
                 break;
             }
+            case 'q': {
+                const char *s = be_toescape(vm, index, 'q');
+                int len = be_strlen(vm, index);
+                if (len > 100 && strlen(mode) == 2) {
+                    be_pushvalue(vm, index);
+                } else {
+                    snprintf(buf, sizeof(buf), "%s", s);
+                    be_pushstring(vm, buf);
+                }
+                break;
+            }
             default: /* error */
                 be_raise(vm, "runtime_error", be_pushfstring(vm,
                     "invalid option '%%%c' to 'format'", *p));
