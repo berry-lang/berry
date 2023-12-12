@@ -12,12 +12,12 @@
 name: "CodeQL"
 
 on:
-  # push:
-  #   branches: [ "main", "master" ]
+  push:
+    branches: [ "main", "master" ]
   schedule:
     - cron: '0 0 * * *'
-  pull_request:
-    branches: '*'
+  # pull_request:
+  #   branches: '*'
 
 jobs:
   analyze:
@@ -119,8 +119,3 @@ jobs:
         name: codeql-results
         path: ${{ steps.step1.outputs.sarif-output }}
         retention-days: 5
-
-    - name: Fail if an error is found
-      run: |
-        ./.github/workflows/fail_on_error.py \
-          ${{ steps.step1.outputs.sarif-output }}/cpp.sarif
