@@ -112,6 +112,7 @@ The condition detection operation require a Boolean value, and non-boolean type 
     \textsf{nil} & Convert to \texttt{false}. \\
     \textsf{number} & 0 is converted to \texttt{false}. \\
     \textsf{string} & empty string converted to \texttt{false}. \\
+    \textsf{bytes} & empty bytes buffer converted to \texttt{false}. \\
     \textsf{comptr} & 0 (NULL) converted to \texttt{false}. \\
     \textsf{comobj} & 0 (NULL) converted to \texttt{false}. \\
     \textsf{instance} & Try to use the result of the \texttt{tobool()} method, otherwise it will be converted to \texttt{true}. \\
