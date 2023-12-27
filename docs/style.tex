@@ -1,0 +1,127 @@
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{makecell}
+\usepackage{multirow}
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage{fontspec, xunicode, xltxtra}
+\usepackage{titlesec}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage[colorlinks, linkcolor=black, anchorcolor=black, citecolor=black]{hyperref}
+\usepackage[justification=centering]{caption}
+\usepackage{subcaption}
+\usepackage{color}
+\usepackage[super,square]{natbib}
+\usepackage{blindtext}
+\usepackage{bm}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{algorithm2e}
+\usepackage[simplified]{pgf-umlcd}
+\usepackage[lining]{ebgaramond}
+\usepackage{lmodern}
+\usepackage{longtable, booktabs}
+
+% use print-styles when defining "PrintStyle"
+\if @twoside % test onesize or twoside
+  \def \PrintStyle {}
+\fi
+
+% set the margin
+\geometry{left=3.18cm, right=3.18cm, top=2.54cm, bottom=2.54cm}
+
+% title and context interval
+\titlespacing*{\chapter} {0pt}{0pt}{20pt}
+\titlespacing*{\section}{0pt}{3ex}{1ex}
+\titlespacing*{\subsection}{0pt}{2ex}{1ex}
+\titlespacing*{\subsubsection}{0pt}{1ex}{0.5ex}
+\titlespacing{\paragraph}{0pt}{1.5ex minus .1ex}{1pc}
+
+\titleformat{\section}{\Large\bfseries}{\thesection}{0.75em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{0.75em}{}
+\titleformat{\paragraph}[runin]{\normalsize\sffamily}{\theparagraph}{}{}
+
+% list line-spacing
+\setenumerate[1]{itemsep=1.5pt,partopsep=0pt,parsep=\parskip,topsep=5pt}
+\setitemize[1]{itemsep=1.5pt,partopsep=0pt,parsep=\parskip,topsep=5pt}
+\setdescription{itemsep=1.5pt,partopsep=0pt,parsep=\parskip,topsep=5pt}
+
+% set page number font
+\fancyfoot[C]{\mdseries\small\thepage}
+
+\fancypagestyle{plain}{%
+    \fancyhf{} % clear all header and footer fields
+    \fancyfoot[C]{\mdseries\small{\thepage}} % except the center
+    \renewcommand{\headrulewidth}{0pt}
+    \renewcommand{\footrulewidth}{0pt}
+}
+
+\newcommand{\chapterformat}{\centering\huge\bf\thispagestyle{plain}}
+
+% set the tikz
+\usetikzlibrary{chains,fit,shapes}
+
+% set the code style
+\ifx \PrintStyle \undefined
+    \def \highlightcolor {\color[rgb]{0.5,0,0.5}}
+    \lstset{
+        commentstyle=\small\color{green!50!black}\itshape,
+        keywordstyle=\small\color{cyan!50!black}\bfseries,
+        stringstyle=\small\color{purple},
+        numberstyle=\small\ttfamily\color{gray},
+    }
+\else   % print style
+    \def \highlightcolor {}
+    \lstset{
+        commentstyle=\small\itshape,
+        keywordstyle=\small\bfseries,
+        numberstyle=\small\ttfamily,
+    }
+\fi
+
+% generic code style
+\lstset{
+    basicstyle=\small\ttfamily,
+    columns=fullflexible,
+    numbersep=1em,
+    xleftmargin=\parindent,
+    breakatwhitespace=false,
+    numbers=left,
+    captionpos=b,               % sets the caption-position to bottom
+    breaklines=true,            % automatic line breaking only at whitespace
+    keepspaces=true,
+    showstringspaces=false,
+    tabsize=4
+}
+
+% define the language berry
+\lstdefinelanguage{berry} {%
+    keywords={def,var,if,elif,else,while,for,end,
+              break,return,continue,true,false,nil,
+              do,import,class,as,try,except,raise},%
+    morekeywords={print,type,self,super},
+    morecomment=[l]\#,%
+    morecomment=[s]{\#-}{-\#},%
+    morestring=[b]",%
+    morestring=[b]',%
+}
+
+% define the language ebnf
+\lstdefinelanguage{ebnf} {%
+    keywords={ID,INTEGER,REAL,STRING},%
+    morecomment=[s]{(*}{*)},%
+    morestring=[b]",%
+    morestring=[b]',%
+}
+
+\lstdefinestyle{berry} {%
+    morekeywords={bint,breal,bvm,size_t}%
+}
+
+% define the library function title style
+\newcommand{\libtitle}[1]{\subsubsection{\highlightcolor\textsl{#1}}}
+% define the FFI title style
+\newcommand{\ffititle}[1]{\subsubsection{\texttt{\highlightcolor\textsl{#1}}}}

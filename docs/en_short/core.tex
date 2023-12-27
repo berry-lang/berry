@@ -1,0 +1,243 @@
+\section*{Core Language}
+
+\hangpar \href{https://github.com/berry-lang/berry/wiki/Reference}{Full documentation}
+
+\subsection*{Comments}
+\begin{tabular}{@{}ll}
+\texttt{\#} & Comment to end of line. \\
+\texttt{\#-}\dots\texttt{-\#} & Multi-line comment.
+\end{tabular}
+
+\subsection*{Identifier}
+A string start with an underscore or letter, followed by some underscore, letters or numbers (case sensitive). Identifiers are generally used as names of objects or variables.
+
+\subsection*{Reserved Identifiers}
+\begin{lstlisting}[numbers=none]
+if       elif     else     while       for       def
+end      class    break    continue    return    true
+false    nil      var      do          import    as
+try      except   raise    static
+\end{lstlisting}
+
+\subsection*{Operators}
+\begin{lstlisting}[numbers=none]
+(   )   [   ]   .   -   !   ~   *   /   %   +   -   <<  
+>>  &   ^   |   ..  <   <=  >   >=  ==  !=  &&  ||  ?
+:   =   +=  -=  *=  /=  %=  &=  |=  ^=  <<= >>= {   }
+\end{lstlisting}
+
+\subsection*{String}
+\texttt{'}\dots\texttt{'}\quad\texttt{"}\dots\texttt{"}
+
+string delimiters; special characters need to be escaped:\\
+\setlength{\tabcolsep}{2mm}
+\begin{tabular}{@{}llllll}
+    \texttt{\textbackslash a} & bell & \texttt{\textbackslash b} & backspace & \texttt{\textbackslash f} & form feed \\
+    \texttt{\textbackslash n} & newline & \texttt{\textbackslash r} & return & \texttt{\textbackslash t} & tab \\
+    \texttt{\textbackslash v} & vert. tab & \texttt{\textbackslash\textbackslash} & backslash & \texttt{\textbackslash '} & single quote \\
+    \texttt{\textbackslash "} & double quote & \texttt{\textbackslash ?} & question & \texttt{\textbackslash 0} & NULL \\
+    \texttt{\textbackslash ooo} & \multicolumn{5}{l}{character represented octal number.} \\
+    \texttt{\textbackslash xhh} & \multicolumn{5}{l}{character represented hexadecimal number.}
+\end{tabular}
+
+\subsection*{Types}
+\begin{tabular}{@{}ll}
+    \textsf{nil} & Means no value (written as \texttt{nil}). \\
+    \textsf{boolean} & Contains \texttt{true} and \texttt{false}. \\
+    \textsf{integer} & Signed integer \textsf{number}. \\
+    \textsf{real} & Floating point \textsf{number}. \\
+    \textsf{string} & Can include any character (and zero). \\
+    \textsf{function} & First class type, can be assigned as a value. \\
+    \textsf{class} & Instance template, read only. \\
+    \textsf{instance} & Object constructed by class. \\
+    \textsf{module} & Read-write key-value pair table. \\
+    \textsf{list} & Variable-length ordered container class. \\
+    \textsf{map} &  Read-write hash key-value container class. \\
+    \textsf{range} & Integer range class. \\
+\end{tabular}
+
+\subsection*{Variable and Assignment examples}
+\begin{tabular}{@{}ll}
+    \texttt{a = 1} & Simple assignment (or declare variables). \\
+    \texttt{var a} & Declare variables and initialize to \texttt{nil}. \\
+    \texttt{var a, b} & Declare multiple variables. \\
+    \texttt{var a=0,b=1} & Declare multiple variables and initialize. \\
+    \texttt{a = 1 + 3} & Operation and assignment. \\
+\end{tabular}
+
+\subsection*{Expression and Statement}
+\begin{tabular}{@{}lp{0.7\columnwidth}}
+    \textsf{expression} & Consist of operators, operands, and grouping symbols (brackets), etc. All expressions are evaluable. \\
+    \textsf{statement} & The most basic execution unit. Consists of an assignment expression or function call expression. \\
+    \textsf{walrus} & Combines an assignment to a variable which value can be used as an expression.\\
+\end{tabular}
+
+\hangpar Examples:\\
+\begin{tabular}{@{}ll}
+    \texttt{4.5} & A simple expression, just an operand. \\
+    \texttt{!true} & Logical not expression, unary operation. \\
+    \texttt{1+2} & An addition expression, binary operation. \\
+    \texttt{print(12)} & Function call expression. \\
+    \texttt{print(a := 12)} & Walrus assigment and expression. \\
+\end{tabular}
+
+\subsection*{Operators in precedence order}
+\begin{tabular}{@{}ll}
+    \texttt{()}(call) & \parbox{5em}{\texttt{[]}(index)}\parbox{5em}{\texttt{.}(field)} \\
+    \texttt{!} & \parbox{4em}{\texttt{\textasciitilde}}\parbox{5em}{\texttt{-}(negative)} \\
+    \texttt{*} & \parbox{4em}{\texttt{/}}\parbox{4em}{\texttt{\%}} \\
+    \texttt{+} & \parbox{4em}{\texttt{-}} \\
+    \texttt{<<} & \parbox{4em}{\texttt{>>}}(bitwise shift operators) \\
+    \texttt{\&} & (bitwise and) \\
+    \texttt{\textasciicircum} & (bitwise xor) \\
+    \texttt{|} & (bitwise or) \\
+    \texttt{..} & (connect or range) \\
+    \texttt{<} & \parbox{4em}{\texttt{<=}}\parbox{4em}{\texttt{>}}\parbox{4em}{\texttt{>=}} \\
+    \texttt{==} & \parbox{4em}{\texttt{!=}} \\
+    \texttt{\&\&} & (stops on \texttt{false}, returns last evaluated value) \\
+    \texttt{||} & (stops on \texttt{true}, returns last evaluated value) \\
+    \texttt{+} & \parbox{4em}{\texttt{-}} \\
+    \texttt{? :} & (conditional expression) \\
+    \texttt{=} & (\texttt{=} and other assignment operators) \\
+    \texttt{:=} & (\texttt{:=} walrus operator assignment, as expression) \\
+\end{tabular}
+
+\subsection*{Conditional expression}
+\hangpar \textib{condition} \texttt{?} \textib{expression1} \texttt{:} \textib{expression2} \\
+If the value of \textib{condition} is \texttt{true}, then \textib{expression1} will be executed, otherwise \textib{expression2} will be executed. The conditional expression return the the last evaluated value.
+    
+\subsection*{Logical operations and Boolean}
+The condition detection operation require a Boolean value, and non-boolean type will do the following conversion:\\
+\begin{tabular}{lp{0.78\columnwidth}}
+    \textsf{nil} & Convert to \texttt{false}. \\
+    \textsf{number} & 0 is converted to \texttt{false}. \\
+    \textsf{string} & empty string converted to \texttt{false}. \\
+    \textsf{comptr} & 0 (NULL) converted to \texttt{false}. \\
+    \textsf{comobj} & 0 (NULL) converted to \texttt{false}. \\
+    \textsf{instance} & Try to use the result of the \texttt{tobool()} method, otherwise it will be converted to \texttt{true}. \\
+    \textsf{other} & Convert to \texttt{true}. \\
+\end{tabular}
+
+
+\subsection*{Scope, blocks and chunks}
+\begin{tabular}{@{}lp{0.84\columnwidth}}
+    \textsf{block} & Is the body of a control structure, body of a function or a chunk. The block consists of several statements. \\
+    \textsf{chunk} & A file or string of script. \\
+\end{tabular}
+
+\begin{quote}
+    Variables defined in the chunk have a global scope, and those defined in other blocks have a local scope.
+\end{quote}
+
+\subsection*{Control structures}
+
+\hangpar \texttb{if} \textib{cond} \textib{block} \{\texttb{elif} \textib{cond} \textib{block}\} [\texttb{else} \textib{block}] \texttb{end}
+
+\hangpar \texttb{do} \textib{block} \texttb{end}
+
+\hangpar \texttb{while} \textib{cond} \textib{block} \texttb{end}
+
+\hangpar \texttb{for} \textib{id} \texttt{:} \textib{expr} \textib{block} \texttb{end}\quad iterative statement.
+
+\hangpar \texttb{break}\quad exits loop (must be in \texttt{while} or \texttt{for} statement).
+
+\hangpar \texttb{continue}\quad start the next iteration of the loop (must be in \texttt{while} or \texttt{for} statement).
+
+\hangpar \texttb{return} [\textib{expr}]\quad exit function and return a (nil) value.
+
+\hangpar \textsf{NOTE}: \textbf{expression} aka. \textbf{expr}; \textbf{identifier} aka. \textbf{id}; and \textbf{condition} aka. \textbf{cond}.
+
+\subsection*{Modules}
+
+Berry has some predefined modules (like \texttt{math}). You can extend the runtime with your own modules, either as Berry code or native code.
+
+\hangpar \texttt{import} \textib{name} \texttt{[}\texttt{as} \textib{variable}\texttt{]}\\
+Load the module \textib{name} and store in local or global variable \textib{name} or \textib{variable} if latter is defined.\\
+
+\hangpar Once a module is loaded, you can't change its content unless you use module \texttt{import introspect}, see below.
+
+\subsection*{Function and Lambda expression}
+
+\hangpar \texttb{def} \textib{name} \texttt{(}\textib{args}\texttt{)} \textib{block} \texttb{end} \\
+A named function is a statement, the \textib{name} is a identifier.
+
+\hangpar \texttb{def} \texttt{(}\textib{args}\texttt{)} \textib{block} \texttb{end} \\
+An anonymous function is an expression.
+
+\hangpar \texttt{/}\textib{args}\texttt{->} \textib{expr}\\
+Lambda expression, the return value is \textib{expr}.
+
+\hangpar \textib{id} \{\texttt{,} \textib{id}\}\\
+Arguments list (aka. \textbf{args}), Lambda expression arguments list can omit ``\texttt{,}''.
+
+\subsection*{Class and Instance}
+\hangpar \texttb{class} \textib{name} [\texttt{:} \textib{super}]\\
+\{\texttb{var} \textib{id}\{\texttt{,} \textib{id}\}\}\\
+    | \{\texttb{static var} \textib{id}\{\texttb{=}\textib{expr}\}\}\{\texttt{,} \textib{id}\{\texttb{=}\textib{expr}\}\}\\
+    | \hangpar \texttt{[}\texttb{static}\texttt{]} \texttb{def} \textib{id} \texttt{(}\textib{args}\texttt{)} \textib{block} \texttb{end}\}
+
+\hangpar \texttb{end} \\
+class consists of the declaration of some member variables and methods. \textib{name} is the class name (an identifier); \textib{super} is the super class (an expression).
+
+\subsection*{Members and static members}
+
+Methods have an implicit first argument \texttt{self} used to access members.\\
+Static methods (or Class methods) have an implicit \texttt{\_class} argument to access the \texttt{class} object.
+
+\subsection*{Accessing members}
+
+\hangpar \textib{instance}\texttt{.}\textib{key}\\
+Access the instance method or variable by literal name.
+
+\hangpar \textib{instance}\texttt{.(}\textib{string}\texttt{)}\\
+Access the instance method or variable dynamically by string.
+
+Use \textib{instance}\texttt{.a} or \textib{instance}\texttt{.("a")}
+
+\hangpar \textib{class}\texttt{.}\textib{key}\\
+Access the class (static) method or variable by literal name.
+
+\hangpar \textib{class}\texttt{.(}\textib{string}\texttt{)}\\
+Access the class (static) method or variable dynamically by string.
+
+
+\subsection*{List Instance}
+\begin{tabular}{@{}lp{0.74\columnwidth}}
+\texttt{l=[]} & New empty list value. \\
+\texttt{l=[0]} & The list has a value ``\texttt{0}''. \\
+\texttt{l=[[],nil]} & \texttt{l[0]==[]} and \texttt{l[1]==nil}; different types of values can be stored in the list. \\
+\end{tabular}
+
+\subsection*{Map Instance}
+\begin{tabular}{@{}lp{0.53\columnwidth}}
+    \texttt{m=\{\}} & New empty map value. \\
+    \texttt{m=[0:'ok','k':nil]} & \texttt{l[0]=='ok'} and \texttt{l['k']==nil}; the key can be any value that is not nil.\\
+\end{tabular}
+
+
+\subsection*{Range Instance}
+\begin{tabular}{@{}lp{0.53\columnwidth}}
+    \texttt{r=0..5} & New range from \texttt{0} to \texttt{5} included. \\
+\end{tabular}
+
+\subsection*{Exception handling}
+\hangpar \texttb{throw} \textib{exception} [\texttt{,} \textib{message}]\\
+Throw a \textib{exception} value and optional \textib{message} value.
+
+\noindent \texttb{try}\\
+\hphantom{m}\textib{block} \{\\
+\texttb{except} ((\textib{expr} \{\texttt{,} \textib{expr}\} | \texttt{..}) [\texttb{as} \textib{id} [\texttt{,} \textib{id}]] | \texttt{..}) \textit{\\
+\hphantom{m}\textbf{block}}\\
+\} \texttb{end}
+\begin{quote}
+    One or more \texttb{except} blocks must exist. Only runtime exceptions can be caught.
+\end{quote}
+
+\hangpar Some \texttb{except} statements examples:\\
+\begin{tabular}{@{}lp{0.58\columnwidth}}
+    \texttb{except} \texttt{..} & Catch all exceptions, but no exception variables. \\
+    \texttb{except} \texttt{0,1} \texttb{as} .. & Capture \texttt{0} and \texttt{1}, no exception variables. \\
+    \texttb{except} \texttt{..} \texttb{as} \textit{e} & Capture all exception to variable \texttt{e}. \\
+    \texttb{except} \texttt{0} \texttb{as} \textit{e} & Capture exception \texttt{0} to variable \texttt{e}. \\
+    \texttb{except} \texttt{..} \texttb{as} \textit{e}\texttt{,}\textit{m} & Capture all exception to variable \texttt{e}, and save the message to variable \textit{m}. \\
+\end{tabular}

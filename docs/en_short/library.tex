@@ -1,0 +1,675 @@
+\section*{Basic Library}
+
+\subsection*{Global Functions}
+
+\hangpar \texttt{assert(}\textib{expr} [\texttt{,} \textib{msg}]\texttt{)}\\
+Throw \texttt{'assert\_failed'} when \textib{expr} is \textbf{false}, and \textib{msg} is an optional exception message.
+
+\hangpar \texttt{print(}\dots\texttt{)}\\
+Print all arguments to stdout.
+
+\hangpar \texttt{input(}[\textib{prompt}]\texttt{)}\\
+Read a line of text from stdin, \textib{prompt} is optional prompt message.
+
+\hangpar \texttt{super(}\textib{object}\texttt{)}\\
+Get the super class of \textib{object}. The \textib{object} is a class or an instance.
+
+\hangpar \texttt{type(}\textib{expr}\texttt{)}\\
+Get the type name string of \textib{expr}.
+
+\hangpar \texttt{classname(}\textib{object}\texttt{)}\\
+Get the class name of \textib{object}. The \textib{object} is a class or an instance.
+
+\hangpar \texttt{classof(}\textib{object}\texttt{)}\\
+Get the class of \textib{object}, and return nil when it fails.
+
+\hangpar \texttt{number(}\textib{expr}\texttt{)}
+
+\hangpar \texttt{int(}\textib{expr}\texttt{)}
+
+\hangpar \texttt{real(}\textib{expr}\texttt{)}\\
+Convert \textib{expr} to a number (automatically detect integer or real), integer or real respectively, and return \texttt{0} or \texttt{0.0} if the conversion fails.
+
+\hangpar \texttt{str(}\textib{expr}\texttt{)}\\
+Convert \textib{expr} to a string. For instance, it will try to call the \texttt{tostring} method.
+
+\hangpar \texttt{bool(}\textib{expr}\texttt{)}\\
+Convert \textib{expr} to a bool.
+
+\hangpar \texttt{module(}[\textib{name}]\texttt{)}\\
+Create an empty module, and name is an optional module name.
+
+\hangpar \texttt{size(}\textib{expr}\texttt{)}\\
+Get the length of the string or instance (by calling the \texttt{size} method).
+
+\hangpar \texttt{compile(}\textib{text} [\texttt{,} \textib{mode}]\texttt{)}\\
+When \textib{mode} is \texttt{'string'}, \textib{text} is evaluated as a script, and when \textib{mode} is \texttt{'file'}, a script file whose path is \textib{text} is read and evaluated. The mode is \texttt{'string'} by default.
+
+\hangpar \texttt{issubclass(}\textib{sub}\texttt{,} \textib{sup}\texttt{)}\\
+Returns \texttt{true} if \textib{sub} (class) is \textib{sup} (class or instance) or its derived class, otherwise return \texttt{false}.
+
+\hangpar \texttt{isinstance(}\textib{obj}\texttt{,} \textib{base}\texttt{)}\\
+Returns \texttt{true} if \textib{obj} is an instance of \textib{base} (class or instance) or its derived class, otherwise return \texttt{false}.
+
+\hangpar \texttt{call(}\textib{function}\texttt{[, }\textib{args}\texttt{ ]}\texttt{[, }\textib{list}\texttt{ ]}\texttt{)}\\
+Call a \textib{function} with arbitrary number of arguments, all \textib{args} are pushed as static arguments. If the last argument is a \textib{list}, all elements are pushed as elementary arguments.
+
+\hangpar \texttt{open(}\textib{path}[\texttt{,} \textib{mode}]\texttt{)}\\
+Open a file by \textib{path} and return an instance of this file. The file is opened in the specified \textib{mode}:\\
+\begin{tabular}{@{}lp{0.82\columnwidth}}
+    \texttt{'r'} & \textsf{read}-only mode, the file must exist. \\
+    \texttt{'w'} & \textsf{write}-only mode, always create a empty file. \\
+    \texttt{'a'} & Create a empty file or \textsf{append} to the end of an existing file. \\
+    \texttt{'r+'} & \textsf{read}-\textsf{write} mode, the file must exist. \\
+    \texttt{'w+'} & \textsf{read}-\textsf{write} mode, always create a empty file. \\
+    \texttt{'a+'} & \textsf{read}-\textsf{write} mode, create a empty file or \textsf{append} to the end of an existing file. \\
+    \texttt{'b'} & \textsf{binary} mode, it can be combined with other access modes. \\
+\end{tabular}
+
+\subsection*{File Members}
+
+\hangpar \textib{file}\texttt{.write(}\textib{string} | \textib{bytes}\texttt{)}\\
+Write the \textib{text} or \textib{raw bytes} to the file.
+
+\hangpar \textib{file}\texttt{.read(}[\textib{count}]\texttt{)}\\
+If the \textib{count} is specified, the number of bytes will be read, otherwise the entire file will be read.
+
+\hangpar \textib{file}\texttt{.readbytes(}[\textib{count}]\texttt{)}\\
+Return raw bytes instead of string. If the \textib{count} is specified, the number of bytes will be read, otherwise the entire file will be read.
+
+\hangpar \textib{file}\texttt{.readline()}\\
+Read a line from the file (the newline character is determined by the platform).
+
+\hangpar \textib{file}\texttt{.seek(}\textib{offset}\texttt{)}\\
+Set the file pointer to \textib{offset}.
+
+\hangpar \textib{file}\texttt{.tell()}\\
+Get the offset of the file pointer.
+
+\hangpar \textib{file}\texttt{.size()}\\
+Get the size of the file.
+
+\hangpar \textib{file}\texttt{.flush()}\\
+Flush the file buffer.
+
+\hangpar \textib{file}\texttt{.close()}\\
+Close the file.
+
+\subsection*{List Members}
+
+\hangpar \href{https://github.com/berry-lang/berry/wiki/Chapter-7\#list-class}{Full documentation}
+
+\hangpar \texttt{list()} or \texttt{list(}\textib{args}\texttt{)}\\
+Constructor, put the elements in \textib{args} into list one by one. Also use \texttt{[]}.
+
+\hangpar  \textib{list}\texttt{[}\textib{index}\texttt{]}\\
+Can be used to read or write at \textib{index}, raises an exception if index is out of bounds. Equivalent to \texttt{list.item()} and \texttt{list.setitem()}.
+
+\hangpar  \textib{list}\texttt{[}\textib{a} \texttt{..} \textib{b}\texttt{]}\\
+Returns a sub-list containing elements from index \textib{a} to \textib{b} included. If \textib{b} is omitted it includes all elements to the end of thelist. If \textib{b} is negative, it counts from the end of the list (ex \texttt{list[1 .. -2]} removes the first and last elements). Equivalent to \texttt{list.item()}.
+
+\hangpar  \textib{list}\texttt{t[}\textib{list}\texttt{]}\\
+Returns a sub-list from the indices of the list, returns \texttt{nil} element if an index is out of bounds. Equivalent to \texttt{list.item()}.
+
+\hangpar \textib{list}\texttt{.tostring()}\\
+Serialized the list instance.
+
+\hangpar \textib{list}\texttt{.push(}\textib{value}\texttt{)}\\
+Append the \textib{value} to the tail of the list.
+
+\hangpar \textib{list}\texttt{.pop(}[\textib{index}]\texttt{)}\\
+Remove the element at \textib{index} (the default index is $-1$) from the list.
+
+\hangpar \textib{list}\texttt{.insert(}\textib{index}\texttt{,} \textib{value}\texttt{)}\\
+Insert the \textib{value} before the element at \textib{index}.
+
+\hangpar \textib{list}\texttt{.item(}\textib{index}\texttt{)}\\
+Get the element at \textib{index}. The \textib{index} can be an \textsf{integer}, and a \textsf{list} or \textsf{range} instance, raises an exception if index is out of bounds.
+
+\hangpar \textib{list}\texttt{.setitem(}\textib{index}\texttt{,} \textib{value}\texttt{)}\\
+Set the element referenced at \textib{index} to \textib{value}, raises an exception if index is out of bounds.
+
+\hangpar \textib{list}\texttt{.size()}\\
+Get the number of elements in the list instance; equivalent of \texttt{size(}\textib{list}\texttt{)}.
+
+\hangpar \textib{list}\texttt{.resize(}\textib{expr}\texttt{)}\\
+Modify the number of elements to the value of \textib{expr}. The added elements are set to \texttt{nil}, and the reduced elements are discarded.
+
+\hangpar \textib{list}\texttt{.clear()}\\
+Clear all elements in the list instance.
+
+\hangpar \textib{list}\texttt{.iter()}\\
+Get the iterator function of the list instance.
+
+\hangpar \textib{list}\texttt{.keys()}\\
+Return a \texttt{range} object containing indices of the list.
+
+\hangpar \textib{list}\texttt{.concat()}\\
+Serialize and concatenate all elements in the list instance into a string.
+
+\hangpar \textib{list}\texttt{.reverse()}\\
+Reverse the order of all elements in the list instance.
+
+\hangpar \textib{list}\texttt{.copy()}\\
+Copy the list instance, not copy the element but keep the reference.
+
+\hangpar \textib{list}\texttt{ .. }\textib{expr}\\
+Append the value of \textib{expr} to the tail of the list instance and return that instance.
+
+\hangpar \textib{list}\texttt{ + }\textib{list}\\
+Concatenate two list instances and return the left operand instance.
+
+\hangpar \textib{list}\texttt{ == }\textib{expr}\\
+Check if two list instances are equal. It checks all elements one by one.
+
+\hangpar \textib{list}\texttt{ != }\textib{expr}\\
+Check if two list instances are not equal. It checks all elements one by one.
+
+\subsection*{Map Members}
+
+\hangpar \href{https://github.com/berry-lang/berry/wiki/Chapter-7\#map-class}{Full documentation}
+
+\hangpar \texttt{map()}\\
+Constructor. Also use \texttt{\{\}}.
+
+\hangpar \textib{map}\texttt{.tostring()}\\
+Serialized the map instance.
+
+\hangpar \textib{map}\texttt{.insert(}\textib{key}\texttt{,} \textib{value}\texttt{)}\\
+Insert a key-value pair and return \texttt{true}, and return \texttt{false} when the insertion fails (e.g. the pair already exists).
+
+\hangpar \textib{map}\texttt{.remove(}\textib{key}\texttt{)}\\
+Remove the key-value pair by the \textib{key}.
+
+\hangpar \textib{map}\texttt{.item(}\textib{key}\texttt{)}\\
+Get the value mapped by the \textib{key}. It will throw a \texttt{"key\_error"} exception when the key-value pair does not exist.
+
+\hangpar \textib{map}\texttt{.setitem(}\textib{key}\texttt{,} \textib{value}\texttt{)}\\
+Set the \textib{value} mapped by the \textib{key}. If the key-value pair does not exist, a new one will be inserted.
+
+\hangpar \textib{map}\texttt{.insert(}\textib{key}\texttt{,} \textib{value}\texttt{)}\\
+Set the \textib{value} mapped by the \textib{key} only if \textib{key} does not exist, and returns \texttt{true}. Returns \texttt{false} and do not update the value if \textib{key} already exists.
+
+\hangpar \textib{map}\texttt{.contains(}\textib{key}\texttt{)}\\
+Returns \texttt{true} if the map contains the \textib{key}.
+
+\hangpar \textib{map}\texttt{.find(}\textib{key}\texttt{)}\\
+Get the value mapped by the \textib{key}. It will return \texttt{nil} when the key-value pair does not exist.
+
+\hangpar \textib{map}\texttt{.size()}\\
+Get the number of key-value pairs in the map instance; equivalent of \texttt{size(}\textib{map}\texttt{)}.
+
+\hangpar \textib{map}\texttt{.iter()}\\
+Get the iterator function over the values of the map instance. 
+
+\hangpar \textib{map}\texttt{.keys()}\\
+Get the iterator function over the keys of the map instance. 
+
+\subsection*{Range Members}
+
+\hangpar \href{https://github.com/berry-lang/berry/wiki/Chapter-7\#range-class}{Full documentation}
+
+\hangpar \texttt{range(}\textib{lower}\texttt{,} \textib{upper}\{, \textib{increment}\}\texttt{)}\\
+The constructor. The range is from \textib{lower} to \textib{upper}, and the step is $1$ or \textib{increment}. \textib{increment} can be negative.
+
+\hangpar \textib{range}\texttt{.tostring()}\\
+Serialized the rang instance.
+
+\hangpar \textib{range}\texttt{.iter()}\\
+Get the value iterator function of the range instance. 
+
+\hangpar \textib{range}\texttt{.lower()}\\
+Get the \textib{lower} value of the range instance.
+
+\hangpar \textib{range}\texttt{.upper()}\\
+Get the \textib{upper} value of the range instance.
+
+\hangpar \textib{range}\texttt{.incr()}\\
+Get the \textib{increment} value of the range instance.
+
+\hangpar \textib{range}\texttt{.setrange(}\textib{lower}\texttt{,} \textib{upper}\{, \textib{increment}\}\texttt{)}\\
+Changes the \textib{lower}, \textib{upper}, and \textib{increment}, does not change an existing iterator.
+
+\section*{The String Library}
+
+\hangpar \texttt{\textbf{import} string}
+
+\hangpar \href{https://github.com/berry-lang/berry/wiki/Chapter-7\#string-module}{Full documentation}
+
+\subsection*{Basic operations}
+
+\hangpar \texttt{string.count(}\textib{s}\texttt{,} \textib{sub}[\texttt{,} \textib{begin}[\texttt{,} \textib{end}]]\texttt{)}\\
+Count the number of occurrences of the \textib{sub} string in the string \textib{s}. Search from the position between \textib{begin} and \textib{end} of \textib{s} (default is $0$ and \texttt{size(}\textib{s}\texttt{)}).
+
+\hangpar \texttt{string.split(}\textib{s}\texttt{,} \textib{pos}\texttt{)}\\
+Split the string \textib{s} into two substrings at position \textib{pos}, and returns the list of those strings.
+
+\hangpar \texttt{string.split(}\textib{s}\texttt{,} \textib{sep}[\texttt{,} \textib{num}]\texttt{)}\\
+Splits the string \textib{s} into substrings wherever \textib{sep} occurs, and returns the list of those strings. Split at most \textib{num} times (default is \texttt{string.count(}\textib{s}\texttt{,} \textib{sep}\texttt{)}).
+
+\hangpar \texttt{string.find(}\textib{s}\texttt{,} \textib{sub}[\texttt{,} \textib{begin}[\texttt{,} \textib{end}]]\texttt{)}\\
+Check whether the string \textib{s} contains the substring \textib{sub}. If the \textib{begin} and \textib{end} (default is $0$ and \texttt{size(}\textib{s}\texttt{)}) are specified, they will be searched in this range. Returns $-1$ if not found.
+
+\hangpar \texttt{string.hex(}\textib{number}\texttt{)}\\
+Convert \textib{number} to hexadecimal string.
+
+\hangpar \texttt{string.byte(}\textib{s}\texttt{)}\\
+Get the code value of the first byte of the string \textib{s}.
+
+\hangpar \texttt{string.char(}\textib{number}\texttt{)}\\
+Convert the \textib{number} used as the code to a character.
+
+\subsection*{Transformation}
+
+\hangpar \texttt{string.toupper(}\textib{text}\texttt{)}
+
+\hangpar \texttt{string.tolower(}\textib{text}\texttt{)}\\
+Convert the \textib{text} to uppercase or lowercase; ASCII only no support for Unicode.
+
+\hangpar \texttt{string.tr(}\textib{char}\texttt{, }\textib{char\_or\_empty\_string}\texttt{)}\\
+Replaces any occurrence of single character \textib{char} to another character, or remove if empty string.
+
+\hangpar \texttt{string.replace(}\textib{text1}\texttt{, }\textib{text2}\texttt{)}\\
+Replaces any occurrence of \textib{text1} with \textib{text2} (this is slower than \texttt{string.tr()}
+
+\hangpar \texttt{string.escape(}\textib{text}\texttt{[, }\textib{berry\_mode}\texttt{] )}\\
+Escapes the string with double quotes suitable for C, if \textib{berry\_mode} is \texttt{true} escape to single quotes suitable for Berry.
+
+\subsection*{Formatting}
+
+\hangpar \texttt{string.format(}\textib{fmt}[\texttt{,} \textib{args}]\texttt{)}
+
+\hangpar \texttt{format(}\textib{fmt}[\texttt{,} \textib{args}]\texttt{)}\\
+Returns a formatted string. The pattern starting with \texttt{'\%'} in the formatting template \textib{fmt} will be replaced by the value of [\textib{args}]: \texttt{\%}[\textsf{flags}][\textsf{fieldwidth}][\texttt{.}\textsf{precision}]\textsf{type}\\
+
+\hangpar \textsf{Types}\\
+\begin{tabular}{@{}llp{0.77\columnwidth}}
+    \texttt{\%d} & & Decimal integer. \\
+    \texttt{\%o} & & Octal integer. \\
+    \texttt{\%x} & \texttt{\%X} & Hexadecimal integer lowercase, uppercase. \\
+    \texttt{\%x} & \texttt{\%X} & Octal integer. \\
+    \texttt{\%f} & & Floating-point in the form [-]nnnn.nnnn. \\
+    \texttt{\%e} & \texttt{\%E} & Floating-point in exp. form [-]n.nnnn e [+|-]nnn,
+    uppercase if \texttt{\%E}. \\
+    \texttt{\%g} & \texttt{\%G} & Floating-point as \texttt{\%f} if $-4<\rm{exp.}\leq precision$, else as \texttt{\%e}; uppercase if \texttt{\%G}. \\
+    \texttt{\%c} & & Character having the code passed as integer. \\
+    \texttt{\%s} & & String with no embedded zeros. \\
+    \texttt{\%\%} & & The \texttt{'\%'} character (escaped). \\
+\end{tabular}\\
+
+\hangpar \textsf{Flags}\\
+\begin{tabular}{@{}lp{0.77\columnwidth}}
+\texttt{-} & Left-justifies, default is right-justify. \\
+\texttt{+} & Prepends sign (applies to numbers). \\
+(space) & Prepends sign if negative, else space. \\
+\texttt{\#} & Adds \texttt{"0x"} before \texttt{\%x}, force decimal point; for \texttt{\%e}, \texttt{\%f}, leaves trailing zeros for \texttt{\%g}. \\
+\end{tabular}\\
+
+\hangpar \textsf{Field width} and \textsf{precision}\\
+\begin{tabular}{@{}lp{0.84\columnwidth}}
+\textsf{n} & Puts at least \textsf{n} characters, pad with blanks. \\
+\textsf{0n} & Puts at least \textsf{n} characters, left-pad with zeros. \\
+\textsf{.n} & Use at least \textsf{n} digits for integers, rounds to \textsf{n} decimals for floating-point or no more than \textsf{n} chars. for strings. \\
+\end{tabular}
+
+\subsection*{Simplified Formatting with f-strings}
+
+\hangpar An alternative syntax using f-strings allows more compact formatting.
+They are synctactic sugar around \texttt{format()} function, so they have the same performance.\\
+
+\hangpar f-strings are preceded by \texttt{f} and can use single or double quotes. String can be split on several literals and lines.
+
+\texttt{f"This uses double quotes"}
+
+\texttt{f'This uses single quotes'}
+
+\texttt{f"This" 'uses' "a combination" 'of quotes'}\\
+
+\hangpar Values and expressions are  surrounded by \texttt{\{ \}}
+
+\texttt{f"Hello \{}\textib{name}\texttt{\}"}
+
+\texttt{f"1 + 1 is \{1 + 1\}"}\\
+
+\hangpar For brackets, use double-brackets. JSON example:
+
+\texttt{f'\{\{"name":"\{}\textib{name}\texttt{\}"\}\}'}\\
+
+\hangpar The default format is \texttt{\%s} (string). You can specify a format after a colon '\texttt{:}'. The character '\texttt{\%}' is not required.
+
+\texttt{f"The price is \{}\textib{price}\texttt{:.2g\}"}\\
+
+\hangpar For fast debugging, use equal sign '\texttt{=}' to dump a value with its name:
+
+\texttt{f"\{}\textib{name}\texttt{=\} \{}\textib{price}\texttt{=:.2g\}"}
+
+\texttt{\# format("name=\%s price=\%.2g", name, price")}
+
+\texttt{\# name=bob price=12.34}\\
+
+\hangpar More examples:
+
+'\texttt{f"a = \{self.a\}"}' is  '\texttt{format("a = \%s", self.a)}'
+
+'\texttt{f"\{self.a:04i\}"}' is  '\texttt{format("\%04i", self.a)}'
+
+'\texttt{f"\{self.a=\}"}' is  '\texttt{format("self.a=\%s", self.a)}'
+
+'\texttt{f"\{self.a=:g\}"}' is  '\texttt{format("self.a=\%g", self.a)}'
+
+\section*{The Math Library}
+
+\hangpar \texttt{\textbf{import} math}
+
+\hangpar \href{https://github.com/berry-lang/berry/wiki/Chapter-7\#math-module}{Full documentation}
+
+\subsection*{Constants}
+
+\hangpar \texttt{math.pi}\\
+Pi number (\texttt{3.14159} or \texttt{3.141592654} depending or resolution).
+
+\hangpar \texttt{math.nan}\\
+\texttt{NaN} Not-a-Number used to indicate an invalid number.
+
+Fun fact: \texttt{math.nan != math.nan}
+
+\hangpar \texttt{math.imin}\\
+Smallest possible integer depending on compilation options (\texttt{-2147483648} or \texttt{-9223372036854775808}).
+
+\hangpar \texttt{math.imax}\\
+Biggest possible integer depending on compilation options (\texttt{2147483647} or \texttt{9223372036854775807}).
+
+\subsection*{Integer conversion}
+
+\hangpar \texttt{math.floor(}\textib{value}\texttt{)} \\
+Return the rounded down \textib{value} as \texttt{real}.
+
+\hangpar \texttt{math.ceil(}\textib{value}\texttt{)} \\
+Return the rounded up \textib{value} as \texttt{real}.
+
+\subsection*{General functions}
+
+\hangpar \texttt{math.abs(}\textib{value}\texttt{)} \\
+Return the positive absolute value of \textib{value} as \texttt{real}.
+
+\hangpar \texttt{math.rand()} \\
+Return a random \texttt{int}. This is not cryptographic quality.
+
+\hangpar \texttt{math.srand(}\textib{int}\texttt{)} \\
+Seed the random generator with \textib{int}.
+
+\hangpar \texttt{math.isnan(}\textib{value}\texttt{)} \\
+Return \texttt{true} if \textib{value} is a \texttt{NaN} Not-a-Number.
+
+\subsection*{Log \& Exponent}
+
+\hangpar \texttt{math.sqrt(}\textib{value}\texttt{)}\\
+Return the square root of \textib{value}.
+
+\hangpar \texttt{math.log(}\textib{value}\texttt{)}\\
+Return the natural logarithm of \textib{value}.
+
+\hangpar \texttt{math.log10(}\textib{value}\texttt{)}\\
+Return the logarithm in base $10$ of \textib{value}.
+
+\hangpar \texttt{math.exp(}\textib{value}\texttt{)}\\
+Return the natural exponent of \textib{value}.
+
+\hangpar \texttt{math.pow(}\textib{x}\texttt{, }\textib{y}\texttt{)}\\
+Return \textib{x} to the power of \textib{y}.
+
+
+\subsection*{Trigonometry}
+
+\hangpar \texttt{math.sin(}\textib{value}\texttt{)}
+
+\hangpar \texttt{math.cos(}\textib{value}\texttt{)}
+
+\hangpar \texttt{math.tan(}\textib{value}\texttt{)}\\
+Return the sine, cosine, tangent of \textib{value} (\texttt{int} or \texttt{real}) in radians, returns a \texttt{real}.
+
+\hangpar \texttt{math.asin(}\textib{value}\texttt{)}
+
+\hangpar \texttt{math.acos(}\textib{value}\texttt{)}
+
+\hangpar \texttt{math.atan(}\textib{value}\texttt{)}\\
+Return the arc sine, arc cosine, arc tangent of \textib{value} (\texttt{int} or \texttt{real}) in radians, returns a \texttt{real}.
+
+\hangpar \texttt{math.atan2(}\textib{y}\texttt{, }\textib{x}\texttt{)}\\
+Return the arc tangent of \textib{y} \texttt{/} \textib{x} in radians, works even if \textib{x} is zero.
+
+\hangpar \texttt{math.deg(}\textib{value}\texttt{)}\\
+Convert radians to degrees.
+
+\hangpar \texttt{math.rad(}\textib{value}\texttt{)}\\
+Convert degrees to radians.
+
+\subsection*{Hyperbolic}
+
+\hangpar \texttt{math.sinh(}\textib{value}\texttt{)}
+
+\hangpar \texttt{math.cosh(}\textib{value}\texttt{)}
+
+\hangpar \texttt{math.tanh(}\textib{value}\texttt{)}\\
+Return the hyperbolic sine, cosine, tangent of \textib{value} (\texttt{int} or \texttt{real}) in radians, returns a \texttt{real}.
+
+\section*{The Bytes Library}
+
+\texttt{bytes()} is a native class used to manipulate raw bytes.
+
+\hangpar \href{https://github.com/berry-lang/berry/wiki/Chapter-7\#bytes-class}{Full documentation}
+
+\hangpar \texttt{bytes()}\\
+Constructor for an empty \texttt{bytes} object.
+
+\hangpar \texttt{bytes(}\textib{size}\texttt{)}\\
+Constructor for an empty \texttt{bytes} object, pre-allocate \textib{size} bytes to optimize memory allocation.\\
+If \textib{size} is negative, pre-allocate \texttt{(-}\textib{size}\texttt{)} bytes and make object fixed size, filling with zeros.
+
+\hangpar \texttt{bytes(}\textib{comptr}\texttt{, }\textib{size}\texttt{)}\\
+Constructor to a \texttt{bytes} object mapped at a fixed memory location \textib{comptr} and of fixed \textib{size}. 
+
+\subsection*{General Functions}
+
+\hangpar \textib{bytes}\texttt{.size()}\\
+Return the size of content in bytes; equivalent of \texttt{size(}\textib{bytes}\texttt{)}.
+
+\hangpar \texttt{bytes.resize(}\textib{size}\texttt{)} \\
+Resize the object to \textib{size} bytes, truncate or fill with zeros if needed; unless the buffer is fixed size.
+
+\hangpar \textib{bytes}\texttt{.clear()}\\
+Reset the object to an empty \texttt{bytes()}; unless the buffer is fixed size.
+
+\hangpar \textib{bytes}\texttt{.reverse([}\textib{start}\texttt{, [}\textib{len}\texttt{, [}\textib{grouplen}\texttt{]]])}\\
+Reverse the bytes from \textib{start} over \textib{len} (or full buffer if not specified) over groups of \textib{grouplen} bytes (or single bytes). This is useful for RGB pixel manipulation.
+
+\hangpar \textib{bytes}\texttt{.copy()}\\
+Copy to a new separate object.
+
+\hangpar \textib{bytes}\texttt{==}\textib{bytes}
+
+\hangpar \textib{bytes}\texttt{!=}\textib{bytes}\\
+Return \texttt{true} if content of \textib{bytes} are equal or different.
+
+\hangpar \textib{bytes}\texttt{ .. }\textib{bytes}\\
+Append the second \textib{bytes} to the first \textib{bytes}.
+
+\hangpar \textib{bytes}\texttt{ + }\textib{bytes}\\
+Create a new \textib{bytes} buffer containing the concatenation of both \textib{bytes}.
+
+\hangpar \textib{bytes}\texttt{.ismapped()}\\
+Return \texttt{true} if the buffer is mapped to a fixed location in memory.
+
+\subsection*{Accessor Functions}
+
+\hangpar \textib{bytes}\texttt{[}\textib{index}\texttt{]} \\
+Read or write byte at \textib{index} as \texttt{int}; throws an exception if index is out of bounds.
+
+\hangpar \textib{bytes}\texttt{[}\textib{start}\texttt{..}\textib{end}\texttt{]} \\
+Return a new instance of \texttt{bytes} containing bytes from \textib{start} to \textib{end} included. Indices can be out of bounds. If \textib{end} is omitted, copy to the end of the buffer. If \textib{start} or \textib{end} are negative, count from end of buffer (\texttt{-1} is last byte).
+
+\hangpar \textib{bytes}\texttt{.get(}\textib{offset}\texttt{, }\textib{size}\texttt{)} \\
+Read the value at \textib{offset} as an unsigned integer of \textib{size} bytes (\textib{size} can be $1$, $2$, $3$, $4$ for Little Endian or $-2$, $-3$, $-4$ for Big Endian). Return \texttt{0} if indices are out of bounds.
+
+\hangpar \textib{bytes}\texttt{.geti(}\textib{offset}\texttt{, }\textib{size}\texttt{)} \\
+Same as \texttt{get} above as signed integer.
+
+\hangpar \textib{bytes}\texttt{.set(}\textib{offset}\texttt{, }\textib{size}\texttt{, }\textib{value}\texttt{)} \\
+Set the value at \textib{offset} as an unsigned integer of \textib{size} bytes with \textib{value} (\textib{size} can be $1$, $2$, $3$, $4$ for Little Endian or $-2$, $-3$, $-4$ for Big Endian). No effect if indices are out of bounds.
+
+\hangpar \textib{bytes}\texttt{.seti(}\textib{offset}\texttt{, }\textib{size}\texttt{, }\textib{value}\texttt{)} \\
+Same as \texttt{set} above as signed integer.
+
+\hangpar \textib{bytes}\texttt{.add(}\textib{value}\texttt{, }\textib{size}\texttt{)} \\
+Append \textib{value} to the \textib{bytes} buffer as \textib{size} bytes (\textib{size} can be $1$, $2$, $3$, $4$ for Little Endian or $-2$, $-3$, $-4$ for Big Endian).
+
+\hangpar \textib{bytes}\texttt{.getfloat(}\textib{offset}\texttt{[, }\textib{big\_endian}\texttt{])} \\
+Read the value at \textib{offset} as a 4 bytes floating point number. If \textib{big\_endian} is \texttt{true} read as Big Endian.
+
+\hangpar \textib{bytes}\texttt{.setfloat(}\textib{offset}\texttt{, }\textib{value}\texttt{[, }\textib{big\_endian}\texttt{])} \\
+Set the value at \textib{offset} to a 4 bytes floating point number from \textib{value}. If \textib{big\_endian} is \texttt{true} read as Big Endian.
+
+\hangpar \textib{bytes}\texttt{.getbits(}\textib{offset\_bits}\texttt{, }\textib{len\_bits}\texttt{, }\textib{value}\texttt{)} \\
+Read at bit level from \textib{offset\_bits} of \textib{len\_bits}.
+
+\hangpar \textib{bytes}\texttt{.setbits(}\textib{offset\_bits}\texttt{, }\textib{len\_bits}\texttt{)} \\
+Set at bit level from \textib{offset\_bits} of \textib{len\_bits} with \textib{value}.
+
+\hangpar \textib{bytes}\texttt{.setbytes(}\textib{offset}\texttt{, }\textib{bytes2}\texttt{, [}\textib{start}\texttt{, [}\textib{len}\texttt{]])}\\
+Set buffer at \textib{offset} from \textib{bytes2}; copy entier buffer or only from \textib{start} with \textib{len}.
+
+\subsection*{Conversion Functions}
+
+\hangpar \textib{bytes}\texttt{.tostring([}\textib{max\_size}\texttt{])}\\
+Convert \textib{bytes} buffer to a string representation. To prevent memory exhaustion, only $32$ bytes or to \textib{max\_size}.
+
+\hangpar \textib{bytes}\texttt{.tohex()}\\
+Convert \textib{bytes} buffer to a hex \texttt{string}, without \texttt{bytes()} decorator.
+
+\hangpar \textib{bytes}\texttt{.fromhex(}\textib{string}\texttt{)}\\
+Replace \textib{bytes} buffer from \textib{string} as hex string.
+
+\hangpar \textib{bytes}\texttt{.asstring()}\\
+Convert \textib{bytes} buffer to a \texttt{string} containing the raw bytes.
+
+\hangpar \textib{bytes}\texttt{.fromstring(}\textib{string}\texttt{)}\\
+Replace \textib{bytes} buffer from \textib{string} as raw bytes.
+
+\hangpar \textib{bytes}\texttt{.tob64()}\\
+Convert \textib{bytes} buffer to a base64 \texttt{string}.
+
+\hangpar \textib{bytes}\texttt{.fromb64(}\textib{string}\texttt{)}\\
+Replace \textib{bytes} buffer from \textib{string} as base64.
+
+\section*{The Global Library}
+
+\hangpar \texttt{\textbf{import} global}
+
+\hangpar \href{https://github.com/berry-lang/berry/wiki/Chapter-7\#module-global}{Full documentation}
+
+\hangpar \texttt{global()}\\
+Return the list of all global variables.
+
+\hangpar \texttt{global.contains(}\textib{id}\texttt{)} \\
+Return \texttt{true} if the global variables exists.
+
+\hangpar \texttt{global.member(}\textib{id}\texttt{)}
+
+\hangpar \texttt{global.}\textib{id} \\	
+Return value of global variable \textib{id} or \texttt{nil} if it does not exists.
+
+\hangpar \texttt{global.(}\textib{string}\texttt{)} \\
+Return value of global variable \textib{string} by name or \texttt{nil} if it does not exists. Example: \texttt{global.("a")}
+
+\hangpar \texttt{global.setmember(}\textib{id}\texttt{, }\textib{value}\texttt{)}
+
+\hangpar \texttt{global.}\textib{id}\texttt{ = }\textib{value} \\
+Set global variable \textib{id} to \textib{value}, create the global variable if needed.
+
+\section*{The JSON Library}
+
+\hangpar \href{https://github.com/berry-lang/berry/wiki/Chapter-7\#json-module}{Full documentation}
+
+\hangpar \texttt{json.load(}\textib{string}\texttt{)} \\
+Concatenate \textib{string} into a complete path.
+
+\hangpar \texttt{json.dump(}\textib{any}\texttt{)} \\
+Convert \textib{any} to a JSON string.
+
+\section*{The Instrospect Library}
+
+\hangpar \texttt{\textbf{import} introspect}
+
+\hangpar \href{https://github.com/berry-lang/berry/wiki/Chapter-7\#module-introspect}{Full documentation}
+
+\hangpar \texttt{introspect.members(}\textib{any}\texttt{)} \\
+Return the list of names of members for the \texttt{class}, \texttt{instance} or \texttt{module}.
+
+\hangpar \texttt{introspect.members()} \\
+Return the list of global variables, equivalent to \texttt{global()}.
+
+\hangpar \texttt{introspect.get(}\textib{any}\texttt{, }\textib{id}\texttt{)} \\
+Read the attribute \textib{id} for \textib{any}, returns \texttt{nil} if key does not exist.
+
+\hangpar \texttt{introspect.set(}\textib{any}\texttt{, }\textib{id}\texttt{, }\textib{value}\texttt{)} \\
+Set the attribute \textib{id} for \textib{any} to \textib{value}.
+
+\hangpar \texttt{introspect.name(}\textib{any}\texttt{)} \\
+Return the name of \texttt{any} (function, class or module) or \textib{nil}.
+
+\hangpar \texttt{introspect.ismethod(}\textib{function}\texttt{)} \\
+Return \texttt{true} if the \textib{function} is a method of a class, \texttt{false} it it's a standalone function.
+
+\hangpar \texttt{introspect.module(}\textib{name}\texttt{)} \\
+Import module passed by \textib{name}.
+
+\hangpar \texttt{introspect.setmodule(}\textib{name}\texttt{, }\textib{any}\texttt{)} \\
+Change the value for module \textib{name}; use with caution as it can disrupt the runtime.
+
+\hangpar \texttt{introspect.toptr(}\textib{int}\texttt{)}  \texttt{introspect.fromptr(}\textib{comptr}\texttt{)} \\
+Convert an \textib{int} to \textib{comptr} and backwards, works only for platforms where integers and pointers are the same size.
+
+\section*{The OS Library}
+
+\hangpar \href{https://github.com/berry-lang/berry/wiki/Chapter-7\#module-os}{Full documentation}
+
+\hangpar \texttt{os.getcmd()} \\
+Get the path of the current directory.
+
+\hangpar \texttt{os.chdir(}\textib{path}\texttt{)} \\
+Switch the current folder to the \textib{path}.
+
+\hangpar \texttt{os.mkdir(}\textib{path}\texttt{)} \\
+Create a level of directory (with \textib{path}).
+
+\hangpar \texttt{os.remove(}\textib{path}\texttt{)} \\
+Delete file of directory form \textib{path}.
+
+\hangpar \texttt{os.listdir(}[\textib{path}]\texttt{)} \\
+Return a list of file and folder names contained in the specified \textib{path} (the default is \texttt{'.'}).
+
+\hangpar \texttt{os.system(}\textib{cmd}[\texttt{,} \textib{args}]\texttt{)} \\
+Execute a system command.
+
+\hangpar \texttt{os.exit()}\\
+Exit the interpreter process.
+
+\subsection*{The \texttt{os.path} Module}
+
+\hangpar \texttt{os.path.isdir(}\textib{path}\texttt{)} \\
+Check if the \textib{path} is a folder.
+
+\hangpar \texttt{os.path.isfile(}\textib{path}\texttt{)} \\
+Check if the \textib{path} is a file.
+
+\hangpar \texttt{os.path.exists(}\textib{path}\texttt{)} \\
+Check if the \textib{path} already exists.
+
+\hangpar \texttt{os.path.split(}\textib{path}\texttt{)} \\
+Split the \textib{path} into dir-name and base-name.
+
+\hangpar \texttt{os.path.splitext(}\textib{path}\texttt{)} \\
+Split the \textib{path} into file-name and ext-name.
+
+\hangpar \texttt{os.path.splitext(}\textib{args}\texttt{)} \\
+Concatenate \textib{args} into a complete path.

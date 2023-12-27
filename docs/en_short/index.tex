@@ -1,0 +1,36 @@
+\documentclass[twocolumn]{article}
+    \usepackage{xpatch}
+    \input{../style.tex}
+    \usepackage{fetamont}
+    \usepackage{lastpage}
+
+    \setlength{\footskip}{8mm}
+    \geometry{left=0.5in, right=0.5in, top=0.5in, bottom=0.5in}
+    \xapptocmd{\ttfamily}{\frenchspacing}{}{}
+    \titlespacing*{\section}{0pt}{4pt}{0pt}
+    \titlespacing*{\subsection}{0pt}{4pt}{0pt}
+    \titleformat{\section}{\color{white}\centering\fontsize{20pt}{20pt}\bfseries\ffmfamily\scshape\rlap{\color{black!50}\rule[-1ex]{\linewidth}{2ex}\vspace{-2ex}}}{\thesection}{}{}
+
+    \lstset{aboveskip=0pt, belowskip=0pt, xleftmargin=0pt}
+
+    \renewenvironment{quote}
+        {\list{}{\listparindent=0pt
+                 \itemindent
+                 \listparindent
+                 \leftmargin=1em
+                 \rightmargin=0pt
+                 \topsep=0pt}
+         \item\relax}
+        {\endlist}
+
+    \newcommand{\hangpar}{\hangafter 1 \hangindent 1em \noindent}
+    \newcommand{\textib}[1]{\textit{\textbf{#1}}}
+    \newcommand{\texttb}[1]{\texttt{\textbf{#1}}}
+
+\begin{document}
+    \pagestyle{fancy}
+    \fancyfoot[C]{\thepage\ of \pageref{LastPage}}
+    %\input{cover.tex} % cover
+    \input{core.tex}
+    \input{library.tex}
+\end{document}
