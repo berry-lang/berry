@@ -318,18 +318,18 @@ static void berry_paths(bvm * vm)
     }
 }
 
-static void berry_custom_paths(bvm * vm, const char *modulepath)
+static void berry_custom_paths(bvm *vm, const char *modulepath)
 {
     const char delim[] = PATH_SEPARATOR;
-    char copy[strlen(modulepath)+1];
+    char *copy = malloc(strlen(modulepath) + 1);
     strcpy(copy, modulepath);
-        
     char *ptr = strtok(copy, delim);
 
     while (ptr != NULL) {
         be_module_path_set(vm, ptr);
         ptr = strtok(NULL, delim);
-    }        
+    }
+    free(copy);
 }
 
 /* 
