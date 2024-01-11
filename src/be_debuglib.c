@@ -257,6 +257,7 @@ be_native_module_attr_table(debug) {
     be_native_module_function("varname", m_varname),
     be_native_module_function("upvname", m_upvname)
 #endif
+    be_native_module_function("caller", m_caller),
     be_native_module_function("gcdebug", m_gcdebug)
 };
 
