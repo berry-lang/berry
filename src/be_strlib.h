@@ -26,6 +26,7 @@ const char* be_splitname(const char *path);
 const char* be_pushvfstr(bvm *vm, const char *format, va_list arg);
 bstring* be_strindex(bvm *vm, bstring *str, bvalue *idx);
 int be_str_format(bvm *vm);
+int be_str_byte(bvm *vm);
 
 #ifdef __cplusplus
 }

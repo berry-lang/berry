@@ -833,7 +833,7 @@ static int str_i2hex(bvm *vm)
     be_return_nil(vm);
 }
 
-static int str_byte(bvm *vm)
+int be_str_byte(bvm *vm)
 {
     if (be_top(vm) && be_isstring(vm, 1)) {
         const bbyte *s = (const bbyte *)be_tostring(vm, 1);
@@ -958,7 +958,7 @@ be_native_module_attr_table(string) {
     be_native_module_function("split", str_split),
     be_native_module_function("find", str_find),
     be_native_module_function("hex", str_i2hex),
-    be_native_module_function("byte", str_byte),
+    be_native_module_function("byte", be_str_byte),
     be_native_module_function("char", str_char),
     be_native_module_function("tolower", str_tolower),
     be_native_module_function("toupper", str_toupper),
@@ -976,7 +976,7 @@ module string (scope: global, depend: BE_USE_STRING_MODULE) {
     split, func(str_split)
     find, func(str_find)
     hex, func(str_i2hex)
-    byte, func(str_byte)
+    byte, func(be_str_byte)
     char, func(str_char)
     tolower, func(str_tolower)
     toupper, func(str_toupper)
