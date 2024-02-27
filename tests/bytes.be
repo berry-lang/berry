@@ -217,6 +217,8 @@ b.setfloat(0, 0.33)
 assert(b == bytes('C3F5A83E'))
 b = bytes("0000C03F")
 assert(b.getfloat(0) == 1.5)
+b.addfloat(0.33)
+assert(b == bytes("0000C03FC3F5A83E"))
 
 #- fromhex -#
 b = bytes("112233")
