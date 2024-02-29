@@ -45,7 +45,7 @@ typedef struct {
     int t; /* patch list of 'exit when true' */
     int f; /* patch list of 'exit when false' */
     bbyte not; /* not mark */
-    bbyte type;
+    exptype_t type;
 } bexpdesc;
 
 typedef struct bblockinfo {
@@ -53,7 +53,8 @@ typedef struct bblockinfo {
     bbyte nactlocals; /* number of active local variables */
     bbyte type;       /* block type mask */
     bbyte hasupval;   /* has upvalue mark */
-    bbyte sideeffect; /* did the last expr/statement had a side effect */ 
+    bbyte sideeffect; /* did the last expr/statement had a side effect */
+    int lastjmp;      /* pc for the last jump, prevents false register optimizations */ 
     int breaklist;    /* break list */
     int beginpc;      /* begin pc */
     int continuelist; /* continue list */
