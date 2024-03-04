@@ -217,6 +217,13 @@ b.setfloat(0, 0.33)
 assert(b == bytes('C3F5A83E'))
 b = bytes("0000C03F")
 assert(b.getfloat(0) == 1.5)
+b.addfloat(0.33)
+assert(b == bytes("0000C03FC3F5A83E"))
+b.addfloat(0.33, true)      #- Big Endian -#
+assert(b == bytes("0000C03FC3F5A83E3EA8F5C3"))
+b = bytes("")
+b.addfloat(42)      #- add integer -#
+assert(b == bytes("00002842"))
 
 #- fromhex -#
 b = bytes("112233")
