@@ -721,10 +721,14 @@ int be_code_setvar(bfuncinfo *finfo, bexpdesc *e1, bexpdesc *e2, bbool keep_reg)
         setsupvar(finfo, OP_SETUPV, e1, src);
         break;
     case ETMEMBER: /* store to member R(A).RK(B) <- RK(C) */
-        setsfxvar(finfo, OP_SETMBR, e1, src);
-        break;
     case ETINDEX: /* store to member R(A)[RK(B)] <- RK(C) */
-        setsfxvar(finfo, OP_SETIDX, e1, src);
+        setsfxvar(finfo, (e1->type == ETMEMBER) ? OP_SETMBR : OP_SETIDX, e1, src);
+        if (keep_reg && e2->type == ETREG && e1->v.ss.obj >= be_list_count(finfo->local)) {
+            /* special case of walrus assignemnt when we need to recreate an ETREG */
+            code_move(finfo, e1->v.ss.obj, src);    /* move from ETREG to MEMBER instance*/
+            free_expreg(finfo, e2); /* free source (checks only ETREG) */
+            e2->v.idx = e1->v.ss.obj; /* update to new register */
+        }
         break;
     default:
         return 1;
