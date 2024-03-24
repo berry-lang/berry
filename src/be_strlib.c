@@ -14,6 +14,7 @@
 #include "be_mem.h"
 #include "be_baselib.h"
 #include <string.h>
+#include <strings.h>
 #include <stdio.h>
 #include <ctype.h>
 
