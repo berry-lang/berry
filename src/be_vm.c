@@ -707,8 +707,9 @@ newframe: /* a new call frame */
                 breal x = var2real(a), y = var2real(b);
                 if (y == cast(breal, 0)) {
                     vm_error(vm, "divzero_error", "division by zero");
+                } else {
+                    var_setreal(dst, x / y);
                 }
-                var_setreal(dst, x / y);
             } else if (var_isinstance(a)) {
                 ins_binop(vm, "/", ins);
             } else {
@@ -719,9 +720,19 @@ newframe: /* a new call frame */
         opcase(MOD): {
             bvalue *dst = RA(), *a = RKB(), *b = RKC();
             if (var_isint(a) && var_isint(b)) {
-                var_setint(dst, ibinop(%, a, b));
+                bint x = var_toint(a), y = var_toint(b);
+                if (y == 0) {
+                    vm_error(vm, "divzero_error", "division by zero");
+                } else {
+                    var_setint(dst, x % y);
+                }
             } else if (var_isnumber(a) && var_isnumber(b)) {
-                var_setreal(dst, mathfunc(fmod)(var_toreal(a), var_toreal(b)));
+                breal x = var2real(a), y = var2real(b);
+                if (y == cast(breal, 0)) {
+                    vm_error(vm, "divzero_error", "division by zero");
+                } else {
+                    var_setreal(dst, mathfunc(fmod)(x, y));
+                }
             } else if (var_isinstance(a)) {
                 ins_binop(vm, "%", ins);
             } else {
