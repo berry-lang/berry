@@ -354,7 +354,9 @@ static btokentype scan_decimal(blexer *lexer)
     if (has_decimal_dots || is_realexp) {
         type = TokenReal;
     }
-    lexer->buf.s[lexer->buf.len] = '\0';
+    /* use save_char to add the null terminator, */
+    /* since it handles expanding the buffer if needed. */
+    save_char(lexer, '\0');
     if (type == TokenReal) {
         setreal(lexer, be_str2real(lexbuf(lexer), NULL));
     } else {
