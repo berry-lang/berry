@@ -243,31 +243,56 @@ int be_baselib_number(bvm *vm)
 
 int be_baselib_int(bvm *vm)
 {
-    if (be_top(vm)) {
+    int argc = be_top(vm);
+    if (argc) {
+        bint val = 0;
         if (be_isstring(vm, 1)) {
             const char *s = be_tostring(vm, 1);
-            be_pushint(vm, be_str2int(s, NULL));
+            val = be_str2int(s, NULL);
         } else if (be_isreal(vm, 1)) {
-            be_pushint(vm, (bint)be_toreal(vm, 1));
+            val = (int)be_toreal(vm, 1);
         } else if (be_isint(vm, 1)) {
-            be_pushvalue(vm, 1);
+            val = be_toint(vm, 1);
         } else if (be_isbool(vm, 1)) {
-            be_pushint(vm, be_tobool(vm, 1) ? 1 : 0);
+            val = be_tobool(vm, 1) ? 1 : 0;
         } else if (be_iscomptr(vm, 1)) {
-            intptr_t p = (intptr_t) be_tocomptr(vm, 1);
-            be_pushint(vm, (int) p);
+            val = (bint) be_tocomptr(vm, 1);    /* works only if pointer and ints are the same size */
         } else if (be_isinstance(vm, 1)) {
             /* try to call `toint` method */
             bvalue *v = be_indexof(vm, 1);
-            bint val;
-            if (obj2int(vm, v, &val)) {
-                be_pushint(vm, val);
-            } else {
+            if (!obj2int(vm, v, &val)) {
                 be_return_nil(vm);
             }
         } else {
             be_return_nil(vm);
         }
+        /* check argument types for arg 2 and arg 3 as they must be int */
+        bbool has_min = (argc > 1) && !(be_isnil(vm, 2));
+        bbool has_max = (argc > 2) && !(be_isnil(vm, 3));
+        if ((has_min && !(be_isint(vm, 2))) ||
+            (has_max && !(be_isint(vm, 3))))  {
+            be_raise(vm, "type_error", "min and max must be int");
+        }
+        bint min = 0;   /* we need to initialize the value to silence a compiler warning */
+        /* check if we have minimum */
+        if (has_min) {     /* we know the argument is int */
+            min = be_toint(vm, 2);
+            if (val < min) {
+                val = min;
+            }
+        }
+        /* check if we have maximum */
+        if (has_max) {     /* we know the argument is int */
+            bint max = be_toint(vm, 3);
+            if (has_min && (max < min)) {
+                be_raise(vm, "range_error", "min cannot be greater than max");
+            }
+            if (val > max) {
+                val = max;
+            }
+        }
+        /* return final value */
+        be_pushint(vm, val);
         be_return(vm);
     }
     be_return_nil(vm);
