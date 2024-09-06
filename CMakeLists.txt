@@ -19,6 +19,12 @@ endif ()
 
 file(MAKE_DIRECTORY generate)
 
+if(NOT WIN32)
+  find_library(MATH_LIBRARY m)
+else()
+  set(MATH_LIBRARY "")
+endif()
+
 # berry library
 file(GLOB SOURCES src/*.c)
 add_library(libberry ${SOURCES})
@@ -35,4 +41,4 @@ add_dependencies(libberry berry-coc)
 # berry default exe
 file(GLOB SOURCES_EXE default/*.c)
 add_executable(berry ${SOURCES_EXE})
-target_link_libraries(berry PUBLIC libberry)
+target_link_libraries(berry PUBLIC libberry ${MATH_LIBRARY})
