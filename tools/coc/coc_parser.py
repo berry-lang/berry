@@ -23,10 +23,12 @@ class coc_parser:
         self.strtab = set()
         self.strtab_weak = set()
         self.strtab_long = set()
+        self.bintab = set()
         self.text = text
         self.parsers = {
             "@const_object_info_begin": self.parse_object,
             "be_const_str_": self.parse_string,
+            "be_const_bytes_instance(": self.parse_bin,
             "be_const_key(": self.parse_string,
             "be_nested_str(": self.parse_string,
             "be_const_key_weak(": self.parse_string_weak,
