@@ -17,6 +17,8 @@
 #include "be_decoder.h"
 #include "be_sys.h"
 #include "be_mem.h"
+#include "be_byteslib.h"
+#include "be_gc.h"
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -24,6 +26,7 @@
 
 extern const bclass be_class_list;
 extern const bclass be_class_map;
+extern const bclass be_class_bytes;
 
 #if BE_USE_SOLIDIFY_MODULE
 #include <inttypes.h>
@@ -263,14 +266,24 @@ static void m_solidify_bvalue(bvm *vm, bbool str_literal, bvalue * value, const 
     {
         binstance * ins = (binstance *) var_toobj(value);
         bclass * cl = ins->_class;
-        if (ins->super || ins->sub) {
+
+        if (cl ==  &be_class_bytes) {
+            const void * bufptr = var_toobj(&ins->members[0]);
+            int32_t len = var_toint(&ins->members[1]);
+            size_t hex_len = len * 2 + 1;
+
+            char * hex_out = be_pushbuffer(vm, hex_len);
+            be_bytes_tohex(hex_out, hex_len, bufptr, len);
+            logfmt("be_const_bytes_instance(%s)", hex_out);
+            be_pop(vm, 1);
+        } else if (ins->super || ins->sub) {
             be_raise(vm, "internal_error", "instance must not have a super/sub class");
-        } else if (cl->nvar != 1) {
-            be_raise(vm, "internal_error", "instance must have only one instance variable");
-        } else if ((cl != &be_class_map && cl != &be_class_list) || 1) {   // TODO
+        } else {
             const char * cl_ptr = "";
             if (cl == &be_class_map) { cl_ptr = "map"; }
-            if (cl == &be_class_list) { cl_ptr = "list"; }
+            else if (cl == &be_class_list) { cl_ptr = "list"; }
+            else { be_raise(vm, "internal_error", "unsupported class"); }
+
             logfmt("be_const_simple_instance(be_nested_simple_instance(&be_class_%s, {\n", cl_ptr);
             if (cl == &be_class_map) {
                 logfmt("        be_const_map( * ");
