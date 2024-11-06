@@ -1548,7 +1548,7 @@ static void class_stmt(bparser *parser)
         bexpdesc e1;                        /* if inline class, we add a second local variable for _class */
         init_exp(&e1, ETLOCAL, 0);
         e1.v.idx = new_localvar(parser, class_str);
-        be_code_setvar(parser->finfo, &e1, &e, 1);
+        be_code_setvar(parser->finfo, &e1, &e, btrue);
 
         begin_varinfo(parser, class_str);
 
