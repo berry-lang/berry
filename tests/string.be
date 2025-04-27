@@ -213,3 +213,6 @@ assert(string.endswith("qwerty", "tY", true) == true)
 assert(string.endswith("qwerty", "TY", true) == true)
 assert(string.endswith("qwerty", "tr", true) == false)
 assert(string.endswith("qwerty", "qwertyw", true) == false)
+
+# unicode literals
+assert("\uF014" == "\xEF\x80\x94")
