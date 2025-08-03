@@ -349,3 +349,8 @@ assert(b.appendb64(c, 2) == bytes("AABBCC49673D3D"))
 b = bytes("AABBCC")
 assert(bytes().fromstring(bytes("11").tob64()) == bytes('45513D3D'))
 assert(b.appendb64(c, 1, 1) == bytes("AABBCC45513D3D"))
+
+# bytes assign 3-byte values
+b = bytes("1122")
+assert(b.add(0x334455, 3) == bytes('1122554433'))
+assert(b.add(0x334455, -3) == bytes('1122554433334455'))
