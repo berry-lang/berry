@@ -258,6 +258,26 @@ static size_t buf_add2_be(buf_impl* attr, const uint16_t data) // append 16 bits
     return attr->len;
 }
 
+static size_t buf_add3_le(buf_impl* attr, const uint32_t data) // append 32 bits value
+{
+    if (attr->len < attr->size - 2) {     // do we have room for 4 bytes
+        attr->bufptr[attr->len++] = data;
+        attr->bufptr[attr->len++] = data >> 8;
+        attr->bufptr[attr->len++] = data >> 16;
+    }
+    return attr->len;
+}
+
+size_t buf_add3_be(buf_impl* attr, const uint32_t data) // append 32 bits value
+{
+    if (attr->len < attr->size - 2) {     // do we have room for 4 bytes
+        attr->bufptr[attr->len++] = data >> 16;
+        attr->bufptr[attr->len++] = data >> 8;
+        attr->bufptr[attr->len++] = data;
+    }
+    return attr->len;
+}
+
 static size_t buf_add4_le(buf_impl* attr, const uint32_t data) // append 32 bits value
 {
     if (attr->len < attr->size - 3) {     // do we have room for 4 bytes
@@ -786,7 +806,8 @@ static int m_asstring(bvm *vm)
 {
     buf_impl attr = bytes_check_data(vm, 0);
     check_ptr(vm, &attr);
-    be_pushnstring(vm, (const char*) attr.bufptr, attr.len);
+    size_t safe_len = strnlen((const char*) attr.bufptr, attr.len);
+    be_pushnstring(vm, (const char*) attr.bufptr, safe_len);
     be_return(vm);
 }
 
@@ -838,10 +859,12 @@ static int m_add(bvm *vm)
             case -1:    /* fallback below */
             case 1:     buf_add1(&attr, v);       break;
             case 2:     buf_add2_le(&attr, v);    break;
+            case 3:     buf_add3_le(&attr, v);    break;
             case 4:     buf_add4_le(&attr, v);    break;
             case -2:    buf_add2_be(&attr, v);    break;
+            case -3:    buf_add3_be(&attr, v);    break;
             case -4:    buf_add4_be(&attr, v);    break;
-            default:    be_raise(vm, "type_error", "size must be -4, -2, -1, 0, 1, 2 or 4.");
+            default:    be_raise(vm, "type_error", "size must be between -4 and 4.");
         }
         be_pop(vm, argc - 1);
         m_write_attributes(vm, 1, &attr);  /* update attributes */
