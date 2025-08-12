@@ -20,6 +20,14 @@
 
 static const char * hex = "0123456789ABCDEF";
 
+size_t strnlength (const char* s, size_t n) {
+  if (strnlen){
+      return strnlen(s, n);
+  }
+  const char* found = memchr(s, '\0', n);
+  return found ? (size_t)(found-s) : n;
+}
+
 /********************************************************************
 ** Base64 lib from https://github.com/Densaugeo/base64_arduino
 **

@@ -36,6 +36,10 @@ typedef struct buf_impl {
 } buf_impl;
 
 size_t be_bytes_tohex(char * out, size_t outsz, const uint8_t * in, size_t insz);
+/*
+ * Not all systems have strnlen defined, so we'll use a wrapper
+ */
+size_t strnlen(const char* s, size_t n) __attribute__((weak));
 
 #if BE_USE_PRECOMPILED_OBJECT
 #include "../generate/be_const_bytes.h"
