@@ -15,7 +15,7 @@
 
 #define READLINE_STEP           100
 
-static int i_write(bvm *vm)
+static void i_write(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     if(be_iscomptr(vm, -1) && (be_isstring(vm, 2) || be_isbytes(vm, 2))) {
@@ -44,7 +44,7 @@ static size_t readsize(bvm *vm, int argc, void *fh)
     return be_fsize(fh) - be_ftell(fh);
 }
 
-static int i_read(bvm *vm)
+static void i_read(bvm *vm)
 {
     int argc = be_top(vm);
     be_getmember(vm, 1, ".p");
@@ -64,7 +64,7 @@ static int i_read(bvm *vm)
     be_return_nil(vm);
 }
 
-static int i_readbytes(bvm *vm)
+static void i_readbytes(bvm *vm)
 {
     int argc = be_top(vm);
     be_getmember(vm, 1, ".p");
@@ -114,7 +114,7 @@ static int i_readbytes(bvm *vm)
     be_return_nil(vm);
 }
 
-static int i_readline(bvm *vm)
+static void i_readline(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     if (be_iscomptr(vm, -1)) {
@@ -138,7 +138,7 @@ static int i_readline(bvm *vm)
     be_return_nil(vm);
 }
 
-static int i_seek(bvm *vm)
+static void i_seek(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     if (be_iscomptr(vm, -1) && be_isint(vm, 2)) {
@@ -148,7 +148,7 @@ static int i_seek(bvm *vm)
     be_return_nil(vm);
 }
 
-static int i_tell(bvm *vm)
+static void i_tell(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     if (be_iscomptr(vm, -1)) {
@@ -160,7 +160,7 @@ static int i_tell(bvm *vm)
     be_return_nil(vm);
 }
 
-static int i_size(bvm *vm)
+static void i_size(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     if (be_iscomptr(vm, -1)) {
@@ -172,7 +172,7 @@ static int i_size(bvm *vm)
     be_return_nil(vm);
 }
 
-static int i_flush(bvm *vm)
+static void i_flush(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     if (be_iscomptr(vm, -1)) {
@@ -182,7 +182,7 @@ static int i_flush(bvm *vm)
     be_return_nil(vm);
 }
 
-static int i_close(bvm *vm)
+static void i_close(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     if (be_iscomptr(vm, -1)) {
@@ -194,7 +194,7 @@ static int i_close(bvm *vm)
     be_return_nil(vm);
 }
 
-static int i_savecode(bvm *vm)
+static void i_savecode(bvm *vm)
 {
     int argc = be_top(vm);
     if (argc >= 2 && be_isclosure(vm, 2)) {
@@ -215,9 +215,9 @@ static int i_savecode(bvm *vm)
 }
 
 #if !BE_USE_PRECOMPILED_OBJECT
-static int m_open(bvm *vm)
+static void m_open(bvm *vm)
 #else
-int be_nfunc_open(bvm *vm)
+void be_nfunc_open(bvm *vm)
 #endif
 {
     int argc = be_top(vm);

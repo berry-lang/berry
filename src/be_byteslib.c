@@ -610,7 +610,7 @@ static void bytes_new_object(bvm *vm, size_t size)
  *    Arg2: int - buffer size. Always fixed (negative or positive)
  *
  * */
-static int m_init(bvm *vm)
+static void m_init(bvm *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = { 0, 0, NULL, 0, -1, NULL, bfalse, bfalse, bfalse }; /* initialize prev_values to invalid to force a write at the end */
@@ -686,7 +686,7 @@ static int m_init(bvm *vm)
 }
 
 /* deallocate buffer */
-static int m_deinit(bvm *vm)
+static void m_deinit(bvm *vm)
 {
     buf_impl attr = m_read_attributes(vm, 1);
     if (attr.bufptr != NULL && !attr.mapped) {
@@ -748,7 +748,7 @@ size_t be_bytes_tohex(char * out, size_t outsz, const uint8_t * in, size_t insz)
   return pout - out;
 }
 
-static int m_tostring(bvm *vm)
+static void m_tostring(bvm *vm)
 {
     int argc = be_top(vm);
     int32_t max_len = 32;  /* limit to 32 bytes by default */
@@ -781,7 +781,7 @@ static int m_tostring(bvm *vm)
     be_return(vm);
 }
 
-static int m_tohex(bvm *vm)
+static void m_tohex(bvm *vm)
 {
     buf_impl attr = m_read_attributes(vm, 1);
     if (attr.bufptr) {              /* pointer looks valid */
@@ -802,7 +802,7 @@ static int m_tohex(bvm *vm)
 /*
  * Copy the buffer into a string without any changes
  */
-static int m_asstring(bvm *vm)
+static void m_asstring(bvm *vm)
 {
     buf_impl attr = bytes_check_data(vm, 0);
     check_ptr(vm, &attr);
@@ -814,7 +814,7 @@ static int m_asstring(bvm *vm)
     be_return(vm);
 }
 
-static int m_fromstring(bvm *vm)
+static void m_fromstring(bvm *vm)
 {
     int argc = be_top(vm);
     if (argc >= 2 && be_isstring(vm, 2)) {
@@ -845,7 +845,7 @@ static int m_fromstring(bvm *vm)
  *       obvisouly -1 is idntical to 1
  *       size==0 does nothing
  */
-static int m_add(bvm *vm)
+static void m_add(bvm *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = bytes_check_data(vm, 4); /* we reserve 4 bytes anyways */
@@ -884,7 +884,7 @@ static int m_add(bvm *vm)
  *       obvisouly -1 is identical to 1
  *       0 returns nil
  */
-static int m_get(bvm *vm, bbool sign)
+static void m_get(bvm *vm, bbool sign)
 {
     int argc = be_top(vm);
     buf_impl attr = bytes_check_data(vm, 0); /* we reserve 4 bytes anyways */
@@ -935,7 +935,7 @@ static int m_get(bvm *vm, bbool sign)
  * Get a float (32 bits)
  * `getfloat(index:int [, big_endian:bool]) -> real`
  */
-static int m_getfloat(bvm *vm)
+static void m_getfloat(bvm *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = bytes_check_data(vm, 0); /* we reserve 4 bytes anyways */
@@ -962,15 +962,15 @@ static int m_getfloat(bvm *vm)
 }
 
 /* signed int */
-static int m_geti(bvm *vm)
+static void m_geti(bvm *vm)
 {
-    return m_get(vm, 1);
+    m_get(vm, 1);
 }
 
 /* unsigned int */
-static int m_getu(bvm *vm)
+static void m_getu(bvm *vm)
 {
-    return m_get(vm, 0);
+    m_get(vm, 0);
 }
 
 /*
@@ -981,7 +981,7 @@ static int m_getu(bvm *vm)
  *       obvisouly -1 is identical to 1
  *       0 returns nil
  */
-static int m_set(bvm *vm)
+static void m_set(bvm *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = bytes_check_data(vm, 0); /* we reserve 4 bytes anyways */
@@ -1023,7 +1023,7 @@ static int m_set(bvm *vm)
  * `setfloat(index:int, value:real or int [, big_endian:bool]) -> nil`
  * 
  */
-static int m_setfloat(bvm *vm)
+static void m_setfloat(bvm *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = bytes_check_data(vm, 0); /* we reserve 4 bytes anyways */
@@ -1054,7 +1054,7 @@ static int m_setfloat(bvm *vm)
  * `addfloat(value:real or int [, big_endian:bool]) -> instance`
  * 
  */
-static int m_addfloat(bvm *vm)
+static void m_addfloat(bvm *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = bytes_check_data(vm, 4); /* we reserve 4 bytes anyways */
@@ -1083,7 +1083,7 @@ static int m_addfloat(bvm *vm)
  * `setbytes(index:int, fill:bytes [, from:int, len:int]) -> nil`
  * 
  */
-static int m_setbytes(bvm *vm)
+static void m_setbytes(bvm *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = bytes_check_data(vm, 0); /* we reserve 4 bytes anyways */
@@ -1130,7 +1130,7 @@ static int m_setbytes(bvm *vm)
  * `reverse([index:int, len:int, grouplen:int]) -> self`
  * 
  */
-static int m_reverse(bvm *vm)
+static void m_reverse(bvm *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = bytes_check_data(vm, 0); /* we reserve 4 bytes anyways */
@@ -1182,7 +1182,7 @@ static int m_reverse(bvm *vm)
     be_return(vm);
 }
 
-static int m_setitem(bvm *vm)
+static void m_setitem(bvm *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = bytes_check_data(vm, 0); /* we reserve 4 bytes anyways */
@@ -1203,7 +1203,7 @@ static int m_setitem(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_item(bvm *vm)
+static void m_item(bvm *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = bytes_check_data(vm, 0); /* we reserve 4 bytes anyways */
@@ -1251,21 +1251,21 @@ static int m_item(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_size(bvm *vm)
+static void m_size(bvm *vm)
 {
     buf_impl attr = m_read_attributes(vm, 1);
     be_pushint(vm, attr.len);
     be_return(vm);
 }
 
-static int m_tobool(bvm *vm)
+static void m_tobool(bvm *vm)
 {
     buf_impl attr = m_read_attributes(vm, 1);
     be_pushbool(vm, attr.len > 0 ? 1 : 0);
     be_return(vm);
 }
 
-static int m_resize(bvm *vm)
+static void m_resize(bvm *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = m_read_attributes(vm, 1);
@@ -1289,7 +1289,7 @@ static int m_resize(bvm *vm)
     be_return(vm);
 }
 
-static int m_clear(bvm *vm)
+static void m_clear(bvm *vm)
 {
     buf_impl attr = m_read_attributes(vm, 1);
     check_ptr_modifiable(vm, &attr);
@@ -1299,7 +1299,7 @@ static int m_clear(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_merge(bvm *vm)
+static void m_merge(bvm *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = m_read_attributes(vm, 1); /* no resize yet */
@@ -1332,7 +1332,7 @@ static int m_merge(bvm *vm)
     be_return_nil(vm); /* return self */
 }
 
-static int m_copy(bvm *vm)
+static void m_copy(bvm *vm)
 {
     buf_impl attr = m_read_attributes(vm, 1);
     check_ptr(vm, &attr);
@@ -1345,7 +1345,7 @@ static int m_copy(bvm *vm)
 }
 
 /* accept bytes or int or nil as operand */
-static int m_connect(bvm *vm)
+static void m_connect(bvm *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = m_read_attributes(vm, 1);
@@ -1378,7 +1378,7 @@ static int m_connect(bvm *vm)
     be_return_nil(vm); /* return self */
 }
 
-static int m_appendhex(bvm *vm)
+static void m_appendhex(bvm *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = m_read_attributes(vm, 1);
@@ -1402,7 +1402,7 @@ static int m_appendhex(bvm *vm)
     be_return_nil(vm); /* return self */
 }
 
-static int m_appendb64(bvm *vm)
+static void m_appendb64(bvm *vm)
 {
     int argc = be_top(vm);
     buf_impl attr = m_read_attributes(vm, 1);
@@ -1439,7 +1439,7 @@ static int m_appendb64(bvm *vm)
     be_return_nil(vm); /* return self */
 }
 
-static int bytes_equal(bvm *vm, bbool iseq)
+static void bytes_equal(bvm *vm, bbool iseq)
 {
     bbool ret;
     buf_impl attr1 = m_read_attributes(vm, 1);
@@ -1458,14 +1458,14 @@ static int bytes_equal(bvm *vm, bbool iseq)
     be_return(vm);
 }
 
-static int m_equal(bvm *vm)
+static void m_equal(bvm *vm)
 {
-    return bytes_equal(vm, btrue);
+    bytes_equal(vm, btrue);
 }
 
-static int m_nequal(bvm *vm)
+static void m_nequal(bvm *vm)
 {
-    return bytes_equal(vm, bfalse);
+    bytes_equal(vm, bfalse);
 }
 
 /*
@@ -1475,7 +1475,7 @@ static int m_nequal(bvm *vm)
  * 
  * `b.tob64() -> string`
  */
-static int m_tob64(bvm *vm)
+static void m_tob64(bvm *vm)
 {
     buf_impl attr = m_read_attributes(vm, 1);
     check_ptr(vm, &attr);
@@ -1495,7 +1495,7 @@ static int m_tob64(bvm *vm)
  * 
  * `bytes().fromb64() -> bytes()`
  */
-static int m_fromb64(bvm *vm)
+static void m_fromb64(bvm *vm)
 {
     int argc = be_top(vm);
     if (argc >= 2 && be_isstring(vm, 2)) {
@@ -1527,7 +1527,7 @@ static int m_fromb64(bvm *vm)
  * 
  * `bytes().fromhexx() -> bytes()`
  */
-static int m_fromhex(bvm *vm)
+static void m_fromhex(bvm *vm)
 {
     int argc = be_top(vm);
     if (argc >= 2 && be_isstring(vm, 2)) {
@@ -1575,7 +1575,7 @@ static int m_fromhex(bvm *vm)
  * 
  * `_buffer() -> comptr`
  */
-static int m_buffer(bvm *vm)
+static void m_buffer(bvm *vm)
 {
     buf_impl attr = m_read_attributes(vm, 1);
     be_pushcomptr(vm, attr.bufptr);
@@ -1588,7 +1588,7 @@ static int m_buffer(bvm *vm)
  * 
  * `ismapped() -> bool`
  */
-static int m_is_mapped(bvm *vm)
+static void m_is_mapped(bvm *vm)
 {
     buf_impl attr = m_read_attributes(vm, 1);
     bbool mapped = (attr.mapped || (attr.bufptr == NULL));
@@ -1601,7 +1601,7 @@ static int m_is_mapped(bvm *vm)
  * 
  * `isreadonly() -> bool`
  */
-static int m_is_readonly(bvm *vm)
+static void m_is_readonly(bvm *vm)
 {
     buf_impl attr = m_read_attributes(vm, 1);
     be_pushbool(vm, attr.solidified);
@@ -1617,7 +1617,7 @@ static int m_is_readonly(bvm *vm)
  * 
  * `_change_buffer(comptr) -> comptr`
  */
-static int m_change_buffer(bvm *vm)
+static void m_change_buffer(bvm *vm)
 {
     int argc = be_top(vm);
     if (argc >= 2 && be_iscomptr(vm, 2)) {

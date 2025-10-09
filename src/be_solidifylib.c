@@ -568,7 +568,7 @@ static void m_solidify_module(bvm *vm, bbool str_literal, bmodule *ml, void* fou
 
 }
 
-static int m_dump(bvm *vm)
+static void m_dump(bvm *vm)
 {
     int top = be_top(vm);
     if (top >= 1) {
@@ -818,7 +818,7 @@ static void m_compact_class(bvm *vm, bbool str_literal, const bclass *cla, void*
 // build a consolidated 'ktab' array
 // check that the array is not bigger than 256 (which is the max acceptable constants)
 // (for now) print the potential saving
-static int m_compact(bvm *vm)
+static void m_compact(bvm *vm)
 {
     int top = be_top(vm);
     if (top >= 1) {
@@ -850,7 +850,7 @@ static int m_compact(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_nocompact(bvm *vm)
+static void m_nocompact(bvm *vm)
 {
     int top = be_top(vm);
     if (top >= 1) {

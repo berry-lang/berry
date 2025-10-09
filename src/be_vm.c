@@ -1371,7 +1371,7 @@ void be_dofunc(bvm *vm, bvalue *v, int argc)
 }
 
 /* Default empty constructor */
-int be_default_init_native_function(bvm *vm)
+void be_default_init_native_function(bvm *vm)
 {
     int argc = be_top(vm);
     if (argc >= 1) {

@@ -365,7 +365,7 @@ static const char* parser_value(bvm *vm, const char *json)
     return NULL;
 }
 
-static int m_json_load(bvm *vm)
+static void m_json_load(bvm *vm)
 {
     if (be_isstring(vm, 1)) {
         const char *json = be_tostring(vm, 1);
@@ -503,7 +503,7 @@ static void value_dump(bvm *vm, int *indent, int idx, int fmt)
     }
 }
 
-static int m_json_dump(bvm *vm)
+static void m_json_dump(bvm *vm)
 {
     int indent = 0, argc = be_top(vm);
     int fmt = 0;

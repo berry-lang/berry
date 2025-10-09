@@ -32,7 +32,7 @@ static void list_getindex(bvm *vm, int index)
     }
 }
 
-static int m_init(bvm *vm)
+static void m_init(bvm *vm)
 {
     int i, argc = be_top(vm);
     if (argc > 1 && be_islist(vm, 2)) {
@@ -57,7 +57,7 @@ static void push_element(bvm *vm)
     be_pop(vm, 1);
 }
 
-static int m_tostring(bvm *vm)
+static void m_tostring(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 1);
@@ -82,7 +82,7 @@ static int m_tostring(bvm *vm)
     be_return(vm);
 }
 
-static int m_push(bvm *vm)
+static void m_push(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 2);
@@ -91,7 +91,7 @@ static int m_push(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_pop(bvm *vm)
+static void m_pop(bvm *vm)
 {
     int argc = be_top(vm);
     be_getmember(vm, 1, ".p");
@@ -108,7 +108,7 @@ static int m_pop(bvm *vm)
     be_return(vm);
 }
 
-static int m_insert(bvm *vm)
+static void m_insert(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 3);
@@ -118,7 +118,7 @@ static int m_insert(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_remove(bvm *vm)
+static void m_remove(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 2);
@@ -127,7 +127,7 @@ static int m_remove(bvm *vm)
     be_return_nil(vm);
 }
 
-static int item_range(bvm *vm)
+static void item_range(bvm *vm)
 {
     bint lower, upper;
     bint size = be_data_size(vm, -1); /* get source list size */
@@ -161,7 +161,7 @@ static int item_range(bvm *vm)
     be_return(vm);
 }
 
-static int item_list(bvm *vm)
+static void item_list(bvm *vm)
 {
     int i, srcsize, idxsize;
     be_getmember(vm, 2, ".p"); /* get index list */
@@ -191,7 +191,7 @@ static int item_list(bvm *vm)
     be_return(vm);
 }
 
-static int m_item(bvm *vm)
+static void m_item(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 2);
@@ -203,17 +203,19 @@ static int m_item(bvm *vm)
     if (be_isinstance(vm, 2)) {
         const char *cname = be_classname(vm, 2);
         if (!strcmp(cname, "range")) {
-            return item_range(vm);
+            item_range(vm);
+            return;
         }
         if (!strcmp(cname, "list")) {
-            return item_list(vm);
+            item_list(vm);
+            return;
         }
     }
     be_raise(vm, "index_error", "list index out of range");
     be_return_nil(vm);
 }
 
-static int m_find(bvm *vm)
+static void m_find(bvm *vm)
 {
     bbool found = bfalse;
     int idx;
@@ -242,7 +244,7 @@ static int m_find(bvm *vm)
     }
 }
 
-static int m_setitem(bvm *vm)
+static void m_setitem(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 3);
@@ -254,7 +256,7 @@ static int m_setitem(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_size(bvm *vm)
+static void m_size(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 1);
@@ -262,7 +264,7 @@ static int m_size(bvm *vm)
     be_return(vm);
 }
 
-static int m_tobool(bvm *vm)
+static void m_tobool(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 1);
@@ -270,7 +272,7 @@ static int m_tobool(bvm *vm)
     be_return(vm);
 }
 
-static int m_resize(bvm *vm)
+static void m_resize(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 2);
@@ -279,7 +281,7 @@ static int m_resize(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_clear(bvm *vm)
+static void m_clear(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 1);
@@ -288,7 +290,7 @@ static int m_clear(bvm *vm)
     be_return_nil(vm);
 }
 
-static int iter_closure(bvm *vm)
+static void iter_closure(bvm *vm)
 {
     /* for better performance, we operate the upvalues
      * directly without using by the stack. */
@@ -307,7 +309,7 @@ static int iter_closure(bvm *vm)
     be_return(vm);
 }
 
-static int m_iter(bvm *vm)
+static void m_iter(bvm *vm)
 {
     be_pushntvclosure(vm, iter_closure, 2);
     be_getmember(vm, 1, ".p");
@@ -318,7 +320,7 @@ static int m_iter(bvm *vm)
     be_return(vm);
 }
 
-static int m_connect(bvm *vm)
+static void m_connect(bvm *vm)
 {
     int argc = be_top(vm);
     if (argc >= 2) {
@@ -330,7 +332,7 @@ static int m_connect(bvm *vm)
     be_return(vm); /* return self */
 }
 
-static int m_merge(bvm *vm)
+static void m_merge(bvm *vm)
 {
     int argc = be_top(vm);
     if (argc >= 2) {
@@ -408,7 +410,7 @@ static void list_concat(bvm *vm, blist *list, const char * delimiter)
     }
 }
 
-static int m_concat(bvm *vm)
+static void m_concat(bvm *vm)
 {
     bvalue *value;
     int top = be_top(vm);
@@ -423,7 +425,7 @@ static int m_concat(bvm *vm)
     be_return(vm);
 }
 
-static int m_reverse(bvm *vm)
+static void m_reverse(bvm *vm)
 {
     int top = be_top(vm);
     be_getmember(vm, 1, ".p");
@@ -433,7 +435,7 @@ static int m_reverse(bvm *vm)
     be_return(vm);
 }
 
-static int m_copy(bvm *vm)
+static void m_copy(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 1);
@@ -444,7 +446,7 @@ static int m_copy(bvm *vm)
     be_return(vm);
 }
 
-static int list_equal(bvm *vm, bbool iseq)
+static void list_equal(bvm *vm, bbool iseq)
 {
     int i, j, res;
     bbool (*eqfunc)(bvm*) = iseq ? be_iseq : be_isneq;
@@ -470,7 +472,7 @@ static int list_equal(bvm *vm, bbool iseq)
     be_return(vm);
 }
 
-static int m_keys(bvm *vm)
+static void m_keys(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     list_check_data(vm, 1);
@@ -483,14 +485,14 @@ static int m_keys(bvm *vm)
     be_return(vm);
 }
 
-static int m_equal(bvm *vm)
+static void m_equal(bvm *vm)
 {
-    return list_equal(vm, btrue);
+    list_equal(vm, btrue);
 }
 
-static int m_nequal(bvm *vm)
+static void m_nequal(bvm *vm)
 {
-    return list_equal(vm, bfalse);
+    list_equal(vm, bfalse);
 }
 
 #if !BE_USE_PRECOMPILED_OBJECT

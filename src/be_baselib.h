@@ -10,22 +10,22 @@
 
 #include "be_object.h"
 
-int be_baselib_assert(bvm *vm);
-int be_baselib_print(bvm *vm);
-int be_baselib_input(bvm *vm);
-int be_baselib_super(bvm *vm);
-int be_baselib_type(bvm *vm);
-int be_baselib_classname(bvm *vm);
-int be_baselib_classof(bvm *vm);
-int be_baselib_number(bvm *vm);
-int be_baselib_str(bvm *vm);
-int be_baselib_int(bvm *vm);
-int be_baselib_real(bvm *vm);
-int be_baselib_module(bvm *vm);
-int be_baselib_size(bvm *vm);
-int be_baselib_compile(bvm *vm);
-int be_baselib_issubclass(bvm *vm);
-int be_baselib_isinstance(bvm *vm);
-int be_baselib_iterator(bvm *vm);
+void be_baselib_assert(bvm *vm);
+void be_baselib_print(bvm *vm);
+void be_baselib_input(bvm *vm);
+void be_baselib_super(bvm *vm);
+void be_baselib_type(bvm *vm);
+void be_baselib_classname(bvm *vm);
+void be_baselib_classof(bvm *vm);
+void be_baselib_number(bvm *vm);
+void be_baselib_str(bvm *vm);
+void be_baselib_int(bvm *vm);
+void be_baselib_real(bvm *vm);
+void be_baselib_module(bvm *vm);
+void be_baselib_size(bvm *vm);
+void be_baselib_compile(bvm *vm);
+void be_baselib_issubclass(bvm *vm);
+void be_baselib_isinstance(bvm *vm);
+void be_baselib_iterator(bvm *vm);
 
 #endif

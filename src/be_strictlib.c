@@ -16,7 +16,7 @@
 
 #if BE_USE_STRICT_MODULE
 
-static int m_init(bvm *vm)
+static void m_init(bvm *vm)
 {
     comp_set_strict(vm);    /* enable compiler strict mode */
     be_return_nil(vm);
