@@ -34,7 +34,7 @@
   #define mathfunc(func)        func
 #endif
 
-static int m_isnan(bvm *vm)
+static void m_isnan(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isreal(vm, 1)) {
         breal x = be_toreal(vm, 1);
@@ -45,7 +45,7 @@ static int m_isnan(bvm *vm)
     be_return(vm);
 }
 
-static int m_isinf(bvm *vm)
+static void m_isinf(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isreal(vm, 1)) {
         breal x = be_toreal(vm, 1);
@@ -56,7 +56,7 @@ static int m_isinf(bvm *vm)
     be_return(vm);
 }
 
-static int m_abs(bvm *vm)
+static void m_abs(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
         breal x = be_toreal(vm, 1);
@@ -67,7 +67,7 @@ static int m_abs(bvm *vm)
     be_return(vm);
 }
 
-static int m_ceil(bvm *vm)
+static void m_ceil(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
         breal x = be_toreal(vm, 1);
@@ -78,7 +78,7 @@ static int m_ceil(bvm *vm)
     be_return(vm);
 }
 
-static int m_floor(bvm *vm)
+static void m_floor(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
         breal x = be_toreal(vm, 1);
@@ -89,7 +89,7 @@ static int m_floor(bvm *vm)
     be_return(vm);
 }
 
-static int m_round(bvm *vm)
+static void m_round(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
         breal x = be_toreal(vm, 1);
@@ -100,7 +100,7 @@ static int m_round(bvm *vm)
     be_return(vm);
 }
 
-static int m_sin(bvm *vm)
+static void m_sin(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
         breal x = be_toreal(vm, 1);
@@ -111,7 +111,7 @@ static int m_sin(bvm *vm)
     be_return(vm);
 }
 
-static int m_cos(bvm *vm)
+static void m_cos(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
         breal x = be_toreal(vm, 1);
@@ -122,7 +122,7 @@ static int m_cos(bvm *vm)
     be_return(vm);
 }
 
-static int m_tan(bvm *vm)
+static void m_tan(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
         breal x = be_toreal(vm, 1);
@@ -133,7 +133,7 @@ static int m_tan(bvm *vm)
     be_return(vm);
 }
 
-static int m_asin(bvm *vm)
+static void m_asin(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
         breal x = be_toreal(vm, 1);
@@ -144,7 +144,7 @@ static int m_asin(bvm *vm)
     be_return(vm);
 }
 
-static int m_acos(bvm *vm)
+static void m_acos(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
         breal x = be_toreal(vm, 1);
@@ -155,7 +155,7 @@ static int m_acos(bvm *vm)
     be_return(vm);
 }
 
-static int m_atan(bvm *vm)
+static void m_atan(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
         breal x = be_toreal(vm, 1);
@@ -166,7 +166,7 @@ static int m_atan(bvm *vm)
     be_return(vm);
 }
 
-static int m_atan2(bvm *vm)
+static void m_atan2(bvm *vm)
 {
     if (be_top(vm) >= 2 && be_isnumber(vm, 1) && be_isnumber(vm, 2)) {
         breal y = be_toreal(vm, 1);
@@ -178,7 +178,7 @@ static int m_atan2(bvm *vm)
     be_return(vm);
 }
 
-static int m_sinh(bvm *vm)
+static void m_sinh(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
         breal x = be_toreal(vm, 1);
@@ -189,7 +189,7 @@ static int m_sinh(bvm *vm)
     be_return(vm);
 }
 
-static int m_cosh(bvm *vm)
+static void m_cosh(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
         breal x = be_toreal(vm, 1);
@@ -200,7 +200,7 @@ static int m_cosh(bvm *vm)
     be_return(vm);
 }
 
-static int m_tanh(bvm *vm)
+static void m_tanh(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
         breal x = be_toreal(vm, 1);
@@ -211,7 +211,7 @@ static int m_tanh(bvm *vm)
     be_return(vm);
 }
 
-static int m_sqrt(bvm *vm)
+static void m_sqrt(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
         breal x = be_toreal(vm, 1);
@@ -222,7 +222,7 @@ static int m_sqrt(bvm *vm)
     be_return(vm);
 }
 
-static int m_exp(bvm *vm)
+static void m_exp(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
         breal x = be_toreal(vm, 1);
@@ -233,7 +233,7 @@ static int m_exp(bvm *vm)
     be_return(vm);
 }
 
-static int m_log(bvm *vm)
+static void m_log(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
         breal x = be_toreal(vm, 1);
@@ -244,7 +244,7 @@ static int m_log(bvm *vm)
     be_return(vm);
 }
 
-static int m_log10(bvm *vm)
+static void m_log10(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
         breal x = be_toreal(vm, 1);
@@ -255,7 +255,7 @@ static int m_log10(bvm *vm)
     be_return(vm);
 }
 
-static int m_deg(bvm *vm)
+static void m_deg(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
         breal x = be_toreal(vm, 1);
@@ -266,7 +266,7 @@ static int m_deg(bvm *vm)
     be_return(vm);
 }
 
-static int m_rad(bvm *vm)
+static void m_rad(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isnumber(vm, 1)) {
         breal x = be_toreal(vm, 1);
@@ -277,7 +277,7 @@ static int m_rad(bvm *vm)
     be_return(vm);
 }
 
-static int m_pow(bvm *vm)
+static void m_pow(bvm *vm)
 {
     if (be_top(vm) >= 2 && be_isnumber(vm, 1) && be_isnumber(vm, 2)) {
         breal x = be_toreal(vm, 1);
@@ -289,7 +289,7 @@ static int m_pow(bvm *vm)
     be_return(vm);
 }
 
-static int m_srand(bvm *vm)
+static void m_srand(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isint(vm, 1)) {
         srand((unsigned int)be_toint(vm, 1));
@@ -297,7 +297,7 @@ static int m_srand(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_rand(bvm *vm)
+static void m_rand(bvm *vm)
 {
     be_pushint(vm, rand());
     be_return(vm);
@@ -318,7 +318,7 @@ static int m_check_int_or_has_real(bvm *vm)
     return has_real;
 }
 
-static int m_min_max(bvm *vm, int is_min) {
+static void m_min_max(bvm *vm, int is_min) {
     int argc = be_top(vm);
     if (argc > 0) {
         /* see if at least one argument is float, else they are all ints */
@@ -348,14 +348,14 @@ static int m_min_max(bvm *vm, int is_min) {
 
 }
 
-int m_min(bvm *vm)
+void m_min(bvm *vm)
 {
-    return m_min_max(vm, 1);
+    m_min_max(vm, 1);
 }
 
-int m_max(bvm *vm)
+void m_max(bvm *vm)
 {
-    return m_min_max(vm, 0);
+    m_min_max(vm, 0);
 }
 
 #if !BE_USE_PRECOMPILED_OBJECT

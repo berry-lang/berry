@@ -1019,19 +1019,17 @@ BERRY_API void be_refpop(bvm *vm)
     }
 }
 
-BERRY_API int be_returnvalue(bvm *vm)
+BERRY_API void be_returnvalue(bvm *vm)
 {
     bvalue *src = vm->top - 1;
     bvalue *ret = retreg(vm);
     var_setval(ret, src);
-    return 0;
 }
 
-BERRY_API int be_returnnilvalue(bvm *vm)
+BERRY_API void be_returnnilvalue(bvm *vm)
 {
     bvalue *ret = retreg(vm);
     var_setnil(ret);
-    return 0;
 }
 
 BERRY_API void be_call(bvm *vm, int argc)
@@ -1087,7 +1085,7 @@ BERRY_API int be_getexcept(bvm *vm, int code)
     return code;
 }
 
-static int _dvfunc(bvm *vm, bbool esc)
+static void _dvfunc(bvm *vm, bbool esc)
 {
     const char* s = esc ?
         be_toescape(vm, 1, 'x') : be_tostring(vm, 1);
@@ -1095,14 +1093,14 @@ static int _dvfunc(bvm *vm, bbool esc)
     be_return_nil(vm);
 }
 
-static int _dumpesc(bvm *vm)
+static void _dumpesc(bvm *vm)
 {
-    return _dvfunc(vm, btrue);
+    _dvfunc(vm, btrue);
 }
 
-static int _dumpdir(bvm *vm)
+static void _dumpdir(bvm *vm)
 {
-    return _dvfunc(vm, bfalse);
+    _dvfunc(vm, bfalse);
 }
 
 static int dump_value(bvm *vm, int index, bbool esc)

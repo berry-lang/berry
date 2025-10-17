@@ -22,7 +22,7 @@
         be_return(vm);                                  \
     }
 
-static int m_init(bvm *vm)
+static void m_init(bvm *vm)
 {
     if (be_top(vm) > 1 && be_ismap(vm, 2)) {
         be_pushvalue(vm, 2);
@@ -54,7 +54,7 @@ static void push_value(bvm *vm)
     }
 }
 
-static int m_tostring(bvm *vm)
+static void m_tostring(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     map_check_data(vm, 1);
@@ -78,7 +78,7 @@ static int m_tostring(bvm *vm)
     be_return(vm);
 }
 
-static int m_remove(bvm *vm)
+static void m_remove(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     map_check_data(vm, 2);
@@ -87,7 +87,7 @@ static int m_remove(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_item(bvm *vm)
+static void m_item(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     map_check_data(vm, 2);
@@ -98,7 +98,7 @@ static int m_item(bvm *vm)
     be_return(vm);
 }
 
-static int m_setitem(bvm *vm)
+static void m_setitem(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     map_check_data(vm, 3);
@@ -108,7 +108,7 @@ static int m_setitem(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_find(bvm *vm)
+static void m_find(bvm *vm)
 {
     int argc = be_top(vm);
     be_getmember(vm, 1, ".p");
@@ -121,7 +121,7 @@ static int m_find(bvm *vm)
     be_return(vm);
 }
 
-static int m_contains(bvm *vm)
+static void m_contains(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     map_check_data(vm, 2);
@@ -130,7 +130,7 @@ static int m_contains(bvm *vm)
     be_return(vm);
 }
 
-static int m_insert(bvm *vm)
+static void m_insert(bvm *vm)
 {
     bbool res;
     be_getmember(vm, 1, ".p");
@@ -142,7 +142,7 @@ static int m_insert(bvm *vm)
     be_return(vm);
 }
 
-static int m_size(bvm *vm)
+static void m_size(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     map_check_data(vm, 1);
@@ -150,7 +150,7 @@ static int m_size(bvm *vm)
     be_return(vm);
 }
 
-static int m_tobool(bvm *vm)
+static void m_tobool(bvm *vm)
 {
     be_getmember(vm, 1, ".p");
     map_check_data(vm, 1);
@@ -158,7 +158,7 @@ static int m_tobool(bvm *vm)
     be_return(vm);
 }
 
-static int iter_closure(bvm *vm)
+static void iter_closure(bvm *vm)
 {
     /* for better performance, we operate the upvalues
      * directly without using by the stack. */
@@ -178,7 +178,7 @@ static int iter_closure(bvm *vm)
     be_return(vm);
 }
 
-static int m_iter(bvm *vm)
+static void m_iter(bvm *vm)
 {
     be_pushntvclosure(vm, iter_closure, 2);
     be_getmember(vm, 1, ".p");
@@ -189,7 +189,7 @@ static int m_iter(bvm *vm)
     be_return(vm);
 }
 
-static int keys_iter_closure(bvm *vm)
+static void keys_iter_closure(bvm *vm)
 {
     /* for better performance, we operate the upvalues
      * directly without using by the stack. */
@@ -209,7 +209,7 @@ static int keys_iter_closure(bvm *vm)
     be_return(vm);
 }
 
-static int m_keys(bvm *vm)
+static void m_keys(bvm *vm)
 {
     be_pushntvclosure(vm, keys_iter_closure, 2);
     be_getmember(vm, 1, ".p");

@@ -10,7 +10,7 @@
 
 #if BE_USE_TIME_MODULE
 
-static int m_time(bvm *vm)
+static void m_time(bvm *vm)
 {
     be_pushint(vm, (bint)time(NULL));
     be_return(vm);
@@ -24,7 +24,7 @@ static void time_insert(bvm *vm, const char *key, int value)
     be_pop(vm, 2);
 }
 
-static int m_dump(bvm *vm)
+static void m_dump(bvm *vm)
 {
     if (be_top(vm) >= 1 && be_isint(vm, 1)) {
         time_t ts = be_toint(vm, 1);
@@ -44,7 +44,7 @@ static int m_dump(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_clock(bvm *vm)
+static void m_clock(bvm *vm)
 {
     be_pushreal(vm, clock() / (breal)CLOCKS_PER_SEC);
     be_return(vm);

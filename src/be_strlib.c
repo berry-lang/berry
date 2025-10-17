@@ -665,7 +665,7 @@ static bbool convert_to_real(bvm *vm, int index, breal *val)
     return converted;
 }
 
-int be_str_format(bvm *vm)
+void be_str_format(bvm *vm)
 {
     int top = be_top(vm);
     if (top > 0 && be_isstring(vm, 1)) {
@@ -798,7 +798,7 @@ static bint _sfind(const char *s1, const char *s2, bint begin, bint end)
     return -1;
 }
 
-static int str_find(bvm *vm)
+static void str_find(bvm *vm)
 {
     be_pushint(vm, str_operation(vm, _sfind, -1));
     be_return(vm);
@@ -815,7 +815,7 @@ static bint _scount(const char *s1, const char *s2, bint begin, bint end)
     return count;
 }
 
-static int str_count(bvm *vm)
+static void str_count(bvm *vm)
 {
     be_pushint(vm, str_operation(vm, _scount, 0));
     be_return(vm);
@@ -866,7 +866,7 @@ static bbool _split_index(bvm *vm)
     return bfalse;
 }
 
-static int str_split(bvm *vm)
+static void str_split(bvm *vm)
 {
     int top = be_top(vm);
     be_newobject(vm, "list");
@@ -878,7 +878,7 @@ static int str_split(bvm *vm)
     be_return(vm);
 }
 
-static int str_i2hex(bvm *vm)
+static void str_i2hex(bvm *vm)
 {
     int top = be_top(vm);
     if (top && be_isint(vm, 1)) {
@@ -897,7 +897,7 @@ static int str_i2hex(bvm *vm)
     be_return_nil(vm);
 }
 
-static int str_byte(bvm *vm)
+static void str_byte(bvm *vm)
 {
     if (be_top(vm) && be_isstring(vm, 1)) {
         const bbyte *s = (const bbyte *)be_tostring(vm, 1);
@@ -907,7 +907,7 @@ static int str_byte(bvm *vm)
     be_return_nil(vm);
 }
 
-static int str_char(bvm *vm)
+static void str_char(bvm *vm)
 {
     if (be_top(vm) && be_isint(vm, 1)) {
         char c = be_toint(vm, 1) & 0xFF;
@@ -918,7 +918,7 @@ static int str_char(bvm *vm)
 }
 
 // boolean to select whether we call toupper() or tolower()
-static int str_touplower(bvm *vm, bbool up)
+static void str_touplower(bvm *vm, bbool up)
 {
     if (be_top(vm) && be_isstring(vm, 1)) {
         const char *p, *s = be_tostring(vm, 1);
@@ -936,15 +936,15 @@ static int str_touplower(bvm *vm, bbool up)
     be_return_nil(vm);
 }
 
-static int str_tolower(bvm *vm) {
-    return str_touplower(vm, bfalse);
+static void str_tolower(bvm *vm) {
+    str_touplower(vm, bfalse);
 }
 
-static int str_toupper(bvm *vm) {
-    return str_touplower(vm, btrue);
+static void str_toupper(bvm *vm) {
+    str_touplower(vm, btrue);
 }
 
-static int str_tr(bvm *vm)
+static void str_tr(bvm *vm)
 {
     if (be_top(vm) == 3 && be_isstring(vm, 1) && be_isstring(vm, 2) && be_isstring(vm, 3)) {
         const char *p, *s = be_tostring(vm, 1);
@@ -977,7 +977,7 @@ static int str_tr(bvm *vm)
     be_return_nil(vm);
 }
 
-static int str_replace(bvm *vm)
+static void str_replace(bvm *vm)
 {
     int top = be_top(vm);
     if (top >= 3 && be_isstring(vm, 1) && be_isstring(vm, 2) && be_isstring(vm, 3)) {
@@ -997,7 +997,7 @@ static int str_replace(bvm *vm)
     be_return_nil(vm);
 }
 
-static int str_escape(bvm *vm)
+static void str_escape(bvm *vm)
 {
     int top = be_top(vm);
     if (top >= 1 && be_isstring(vm, 1)) {
@@ -1015,7 +1015,7 @@ static int str_escape(bvm *vm)
     be_return_nil(vm);
 }
 
-static int str_startswith(bvm *vm)
+static void str_startswith(bvm *vm)
 {
     int top = be_top(vm);
     if (top >= 2 && be_isstring(vm, 1) && be_isstring(vm, 2)) {
@@ -1042,7 +1042,7 @@ static int str_startswith(bvm *vm)
     be_return_nil(vm);
 }
 
-static int str_endswith(bvm *vm)
+static void str_endswith(bvm *vm)
 {
     int top = be_top(vm);
     if (top >= 2 && be_isstring(vm, 1) && be_isstring(vm, 2)) {

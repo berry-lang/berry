@@ -37,7 +37,7 @@ static void dump_map_keys(bvm *vm, bmap *map)
     }
 }
 
-static int m_attrlist(bvm *vm)
+static void m_attrlist(bvm *vm)
 {
     int top = be_top(vm);
     be_newobject(vm, "list");
@@ -63,7 +63,7 @@ static void m_findmember_protected(bvm *vm, void* data)
     be_getmember(vm, 1, (const char*) data);
 }
 
-static int m_findmember(bvm *vm)
+static void m_findmember(bvm *vm)
 {
     int top = be_top(vm);
     bbool protected = btrue; /* run protected, i.e. don't raise an exception if not found */
@@ -93,7 +93,7 @@ static int m_findmember(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_contains(bvm *vm)
+static void m_contains(bvm *vm)
 {
     bbool contains = bfalse;
     int top = be_top(vm);
@@ -106,7 +106,7 @@ static int m_contains(bvm *vm)
     be_return(vm);
 }
 
-static int m_setmember(bvm *vm)
+static void m_setmember(bvm *vm)
 {
     int top = be_top(vm);
     if (top >= 3 && (be_isinstance(vm, 1) || be_ismodule(vm, 1) || be_isclass(vm, 1)) && be_isstring(vm, 2)) {
@@ -116,7 +116,7 @@ static int m_setmember(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_toptr(bvm *vm)
+static void m_toptr(bvm *vm)
 {
     int top = be_top(vm);
     if (top >= 1) {
@@ -137,7 +137,7 @@ static int m_toptr(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_solidified(bvm *vm)
+static void m_solidified(bvm *vm)
 {
     int top = be_top(vm);
     if (top >= 1) {
@@ -151,7 +151,7 @@ static int m_solidified(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_fromptr(bvm *vm)
+static void m_fromptr(bvm *vm)
 {
     int top = be_top(vm);
     if (top >= 1) {
@@ -176,7 +176,7 @@ static int m_fromptr(bvm *vm)
 }
 
 /* load module by name, like `import` would do. But don't create a global variable from it. */
-static int m_getmodule(bvm *vm)
+static void m_getmodule(bvm *vm)
 {
     int top = be_top(vm);
     if (top >= 1) {
@@ -192,7 +192,7 @@ static int m_getmodule(bvm *vm)
 }
 
 /* set or chang the cached value for the named module, this allows monkey patching. **USE WITH CARE** */
-static int m_setmodule(bvm *vm)
+static void m_setmodule(bvm *vm)
 {
     int top = be_top(vm);
     if (top >= 2) {
@@ -206,7 +206,7 @@ static int m_setmodule(bvm *vm)
 }
 
 /* checks if the function (berry bytecode bproto only) is hinted as a method */
-static int m_ismethod(bvm *vm)
+static void m_ismethod(bvm *vm)
 {
     int top = be_top(vm);
     if (top >= 1) {
@@ -221,7 +221,7 @@ static int m_ismethod(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_name(bvm *vm)
+static void m_name(bvm *vm)
 {
     int top = be_top(vm);
     if (top >= 1) {
