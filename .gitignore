@@ -79,3 +79,4 @@ docs/build/html/
 docs/_doxygen/xml/
 build/
 cmake-build-*
+.cache
