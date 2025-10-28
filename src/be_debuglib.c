@@ -58,7 +58,7 @@ static void dump_value(bvalue *value)
     be_writestring(">, attributes:\n");
 }
 
-static int m_attrdump(bvm *vm)
+static void m_attrdump(bvm *vm)
 {
     if (be_top(vm) >= 1) {
         bvalue *v = be_indexof(vm, 1);
@@ -74,7 +74,7 @@ static int m_attrdump(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_codedump(bvm *vm)
+static void m_codedump(bvm *vm)
 {
     if (be_top(vm) >= 1) {
         bvalue *v = be_indexof(vm, 1);
@@ -85,7 +85,7 @@ static int m_codedump(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_gcdebug(bvm *vm) {
+static void m_gcdebug(bvm *vm) {
     int argc = be_top(vm);
     if (argc >= 1 && be_isbool(vm, 1)) {
         if (be_tobool(vm, 1)) {
@@ -98,13 +98,13 @@ static int m_gcdebug(bvm *vm) {
     be_return(vm);
 }
 
-static int m_traceback(bvm *vm)
+static void m_traceback(bvm *vm)
 {
     be_tracestack(vm);
     be_return_nil(vm);
 }
 
-static int m_caller(bvm *vm)
+static void m_caller(bvm *vm)
 {
     int depth = 1;
     if (be_top(vm) >= 1 && be_isint(vm, 1)) {
@@ -125,7 +125,7 @@ static int m_caller(bvm *vm)
 }
 
 #if BE_USE_DEBUG_HOOK
-static int m_sethook(bvm *vm)
+static void m_sethook(bvm *vm)
 {
     if (be_top(vm) >= 2) {
         be_pushvalue(vm, 1);
@@ -137,14 +137,14 @@ static int m_sethook(bvm *vm)
 }
 #endif
 
-static int m_top(bvm *vm)
+static void m_top(bvm *vm)
 {
     bint top = vm->top - vm->stack + 1;
     be_pushint(vm, top);
     be_return(vm);
 }
 
-static int m_calldepth(bvm *vm)
+static void m_calldepth(bvm *vm)
 {
     bint depth = be_stack_count(&vm->callstack);
     be_pushint(vm, depth);
@@ -152,7 +152,7 @@ static int m_calldepth(bvm *vm)
 }
 
 #if BE_DEBUG_VAR_INFO
-static int v_getname(bvm *vm, bbool(*getter)(bvm *vm, int, int))
+static void v_getname(bvm *vm, bbool(*getter)(bvm *vm, int, int))
 {
     int index, level = 1;
     if (be_top(vm) < 1)
@@ -172,14 +172,14 @@ static int v_getname(bvm *vm, bbool(*getter)(bvm *vm, int, int))
     be_return_nil(vm);
 }
 
-static int m_varname(bvm *vm)
+static void m_varname(bvm *vm)
 {
-    return v_getname(vm, be_debug_varname);
+    v_getname(vm, be_debug_varname);
 }
 
-static int m_upvname(bvm *vm)
+static void m_upvname(bvm *vm)
 {
-    return v_getname(vm, be_debug_upvname);
+    v_getname(vm, be_debug_upvname);
 }
 #endif
 
@@ -193,7 +193,7 @@ static void map_insert(bvm *vm, const char *key, int value)
     be_pop(vm, 2);
 }
 
-static int m_counters(bvm *vm)
+static void m_counters(bvm *vm)
 {
     be_newobject(vm, "map");
     map_insert(vm, "instruction", vm->counter_ins);
@@ -213,7 +213,7 @@ static int m_counters(bvm *vm)
 }
 #endif
 
-static int m_allocs(bvm *vm) {
+static void m_allocs(bvm *vm) {
 #if BE_USE_PERF_COUNTERS
     be_pushint(vm, vm->counter_mem_alloc);
     be_return(vm);
@@ -222,7 +222,7 @@ static int m_allocs(bvm *vm) {
 #endif
 }
 
-static int m_frees(bvm *vm) {
+static void m_frees(bvm *vm) {
 #if BE_USE_PERF_COUNTERS
     be_pushint(vm, vm->counter_mem_free);
     be_return(vm);
@@ -231,7 +231,7 @@ static int m_frees(bvm *vm) {
 #endif
 }
 
-static int m_reallocs(bvm *vm) {
+static void m_reallocs(bvm *vm) {
 #if BE_USE_PERF_COUNTERS
     be_pushint(vm, vm->counter_mem_realloc);
     be_return(vm);

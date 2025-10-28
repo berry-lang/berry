@@ -23,7 +23,7 @@ extern "C" {
  * @brief do not modify the version number!
  *
  */
-#define BERRY_VERSION           "1.1.0"
+#define BERRY_VERSION           "1.2.0"
 
 #if BE_STACK_TOTAL_MAX < BE_STACK_FREE_MIN * 2
 #error "The value of the macro BE_STACK_TOTAL_MAX is too small."
@@ -155,7 +155,7 @@ enum berrorcode {
  */
 typedef struct bvm bvm;
 
-typedef int (*bntvfunc)(bvm*); /**< native function pointer */
+typedef void (*bntvfunc)(bvm*); /**< native function pointer */
 
 /**
  * @struct bclass
@@ -703,7 +703,7 @@ typedef int (*bctypefunc)(bvm*, const void*); /**< bctypefunc */
  *
  * @param vm virtual machine instance virtual machine instance
  */
-#define be_return(vm)           return be_returnvalue(vm)
+#define be_return(vm)           {be_returnvalue(vm); return;}
 
 /**
  * @def be_return_nil
@@ -712,7 +712,7 @@ typedef int (*bctypefunc)(bvm*, const void*); /**< bctypefunc */
  *
  * @param vm virtual machine instance virtual machine instance
  */
-#define be_return_nil(vm)       return be_returnnilvalue(vm)
+#define be_return_nil(vm)       {be_returnnilvalue(vm); return;}
 
 /**
  * @def be_loadfile
@@ -2013,7 +2013,7 @@ BERRY_API bbool be_isge(bvm *vm);
  * @param vm virtual machine instance
  * @return (???)
  */
-BERRY_API int be_returnvalue(bvm *vm);
+BERRY_API void be_returnvalue(bvm *vm);
 
 /**
  * @fn int be_returnnilvalue(bvm*)
@@ -2023,7 +2023,7 @@ BERRY_API int be_returnvalue(bvm *vm);
  * @param vm virtual machine instance
  * @return (???)
  */
-BERRY_API int be_returnnilvalue(bvm *vm);
+BERRY_API void be_returnnilvalue(bvm *vm);
 
 /**
  * @fn void be_call(bvm*, int)

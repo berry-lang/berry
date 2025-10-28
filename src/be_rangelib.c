@@ -9,7 +9,7 @@
 #include "be_func.h"
 #include "be_vm.h"
 
-static int m_init(bvm *vm)
+static void m_init(bvm *vm)
 {
     int argc = be_top(vm);
     if (argc < 3) { be_raise(vm, "value_error", "missing arguments"); }
@@ -30,7 +30,7 @@ static int m_init(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_tostring(bvm *vm)
+static void m_tostring(bvm *vm)
 {
     be_getmember(vm, 1, "__incr__");
     int incr = be_toint(vm, -1);
@@ -78,25 +78,25 @@ static int m_tostring(bvm *vm)
     be_return(vm);
 }
 
-static int m_upper(bvm *vm)
+static void m_upper(bvm *vm)
 {
     be_getmember(vm, 1, "__upper__");
     be_return(vm);
 }
 
-static int m_lower(bvm *vm)
+static void m_lower(bvm *vm)
 {
     be_getmember(vm, 1, "__lower__");
     be_return(vm);
 }
 
-static int m_incr(bvm *vm)
+static void m_incr(bvm *vm)
 {
     be_getmember(vm, 1, "__incr__");
     be_return(vm);
 }
 
-static int m_setrange(bvm *vm)
+static void m_setrange(bvm *vm)
 {
     int argc = be_top(vm);
     if (argc < 3) { be_raise(vm, "value_error", "missing arguments"); }
@@ -117,7 +117,7 @@ static int m_setrange(bvm *vm)
     be_return_nil(vm);
 }
 
-static int iter_closure(bvm *vm)
+static void iter_closure(bvm *vm)
 {
     /* for better performance, we operate the upvalues
      * directly without using by the stack. */
@@ -136,7 +136,7 @@ static int iter_closure(bvm *vm)
     be_return(vm);
 }
 
-static int m_iter(bvm *vm)
+static void m_iter(bvm *vm)
 {
     be_pushntvclosure(vm, iter_closure, 3);
     be_getmember(vm, 1, "__lower__");

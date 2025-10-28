@@ -39,7 +39,7 @@ static void dump_map_keys(bvm *vm, bmap *map)
     }
 }
 
-static int m_globals(bvm *vm)
+static void m_globals(bvm *vm)
 {
     be_newobject(vm, "list");
     dump_map_keys(vm, global(vm).vtab);
@@ -47,7 +47,7 @@ static int m_globals(bvm *vm)
     be_return(vm);
 }
 
-static int m_contains(bvm *vm)
+static void m_contains(bvm *vm)
 {
     int top = be_top(vm);
     if (top >= 1 && be_isstring(vm, 1)) {
@@ -59,7 +59,7 @@ static int m_contains(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_findglobal(bvm *vm)
+static void m_findglobal(bvm *vm)
 {
     int top = be_top(vm);
     if (top >= 1 && be_isstring(vm, 1)) {
@@ -70,7 +70,7 @@ static int m_findglobal(bvm *vm)
     be_return_nil(vm);
 }
 
-static int m_setglobal(bvm *vm)
+static void m_setglobal(bvm *vm)
 {
     int top = be_top(vm);
     if (top >= 2 && be_isstring(vm, 1)) {
@@ -83,7 +83,7 @@ static int m_setglobal(bvm *vm)
 /* Remove a global variable from global scope */
 /* Internally the global name cannot be removed but it's value is replaced with BE_NONE */
 /* and global function pretend that BE_NONE is equivalent to the name being absent */
-static int m_undef(bvm *vm)
+static void m_undef(bvm *vm)
 {
     int top = be_top(vm);
     if (top >= 1 && be_isstring(vm, 1)) {
