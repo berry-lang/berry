@@ -35,7 +35,12 @@ extern const bclass be_class_bytes;
     be_vector_count(&(vm)->gbldesc.builtin.vlist)
 
 #ifndef INST_BUF_SIZE
-#define INST_BUF_SIZE   768
+#define INST_BUF_SIZE 768
+#endif
+
+/* reserve an array big enough for max size ktab (256) */
+#ifndef MAX_KTAB_SIZE
+#define MAX_KTAB_SIZE 256
 #endif
 
 #define logfmt(...)                                     \
@@ -137,8 +142,7 @@ static void m_solidify_map(bvm *vm, bbool str_literal, bmap * map, const char *p
         if (node->key.type == BE_STRING) {
             /* convert the string literal to identifier */
             const char * key = str(node->key.v.s);
-            size_t id_len = toidentifier_length(key);
-            char id_buf[id_len];
+            char id_buf[INST_BUF_SIZE];
             toidentifier(id_buf, key);
             if (!str_literal) {
                 logfmt("        { be_const_key(%s, %i), ", id_buf, key_next);
@@ -243,8 +247,7 @@ static void m_solidify_bvalue(bvm *vm, bbool str_literal, const bvalue * value, 
         {
             bclosure *clo = (bclosure*) var_toobj(value);
             const char * func_name = str(clo->proto->name);
-            size_t id_len = toidentifier_length(func_name);
-            char func_name_id[id_len];
+            char func_name_id[INST_BUF_SIZE];
             toidentifier(func_name_id, func_name);
             logfmt("be_const_%sclosure(%s%s%s_closure)",
                 var_isstatic(value) ? "static_" : "",
@@ -356,8 +359,7 @@ static void m_solidify_proto(bvm *vm, bbool str_literal, const bproto *pr, const
     if (pr->nproto > 0) {
         logfmt("%*s( &(const struct bproto*[%2d]) {\n", indent, "", pr->nproto);
         for (int32_t i = 0; i < pr->nproto; i++) {
-            size_t sub_len = strlen(func_name) + 10;
-            char sub_name[sub_len];
+            char sub_name[INST_BUF_SIZE];
             snprintf(sub_name, sizeof(sub_name), "%s_%"PRId32, func_name, i);
             m_solidify_proto(vm, str_literal, pr->ptab[i], sub_name, indent+2, prefix_name, fout);
             logfmt(",\n");
@@ -387,8 +389,7 @@ static void m_solidify_proto(bvm *vm, bbool str_literal, const bproto *pr, const
 
     /* convert the string literal to identifier */
     const char * key = str(pr->name);
-    size_t id_len = toidentifier_length(key);
-    char id_buf[id_len];
+    char id_buf[INST_BUF_SIZE];
     toidentifier(id_buf, key);
     if (!str_literal) {
         logfmt("%*s&be_const_str_%s,\n", indent, "", id_buf);
@@ -441,8 +442,7 @@ static void m_solidify_closure(bvm *vm, bbool str_literal, const bclosure *clo, 
     logfmt("********************************************************************/\n");
 
     {
-        size_t id_len = toidentifier_length(func_name);
-        char func_name_id[id_len];
+        char func_name_id[INST_BUF_SIZE];
         toidentifier(func_name_id, func_name);
         logfmt("be_local_closure(%s%s%s,   /* name */\n",
             prefix_name ? prefix_name : "", prefix_name ? "_" : "",
@@ -466,7 +466,7 @@ static void m_solidify_subclass(bvm *vm, bbool str_literal, const bclass *cla, v
     /* TODO try compacting for now */
     m_compact_class(vm, str_literal, cla, fout);
 
-    char prefix_name[strlen(classname) + 10];
+    char prefix_name[INST_BUF_SIZE];
     snprintf(prefix_name, sizeof(prefix_name), "class_%s", classname);
     /* pre-declare class to support '_class' implicit variable */
     logfmt("\nextern const bclass be_class_%s;\n", classname);
@@ -508,8 +508,7 @@ static void m_solidify_subclass(bvm *vm, bbool str_literal, const bclass *cla, v
         logfmt("    NULL,\n");
     }
 
-    size_t id_len = toidentifier_length(classname);
-    char id_buf[id_len];
+    char id_buf[INST_BUF_SIZE];
     toidentifier(id_buf, classname);
     if (!str_literal) {
         logfmt("    (bstring*) &be_const_str_%s\n", id_buf);
@@ -606,8 +605,7 @@ static void m_compact_class(bvm *vm, bbool str_literal, const bclass *cla, void*
 {
     const char * classname = str(cla->name);
 
-    /* reserve an array big enough for max size ktab (256) */
-    const int MAX_KTAB_SIZE = 256;
+   
     bvalue ktab[MAX_KTAB_SIZE];       /* size is 2048 byte for 32 bits, so fitting in ESP32, may need to be changed on smaller architectures */
     int ktab_size = 0;
 
