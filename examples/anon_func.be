@@ -7,7 +7,7 @@ def count(x)
                 return def ()
                     return n * n
                 end
-            end (i) # define and call anonymous function
+            end(i) # define and call anonymous function
         )
     end
     return arr
