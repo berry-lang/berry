@@ -18,7 +18,7 @@ class node
             if self.r
                 self.r.insert(v)
             else
-                self.r = node (v)
+                self.r = node(v)
             end
         end
     end
