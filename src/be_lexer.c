@@ -18,7 +18,7 @@
 #define SHORT_STR_LEN       32
 #define EOS                 '\0' /* end of source */
 
-#define type_count()        (int)array_count(kwords_tab)
+#define type_count()        (int)array_count(token_strings)
 #define lexbuf(lex)         ((lex)->buf.s)
 #define isvalid(lex)        ((lex)->reader.cursor < (lex)->endbuf)
 #define lgetc(lex)          ((lex)->reader.cursor)
@@ -30,7 +30,7 @@
 #if BE_USE_SCRIPT_COMPILER
 
 /* IMPORTANT: This must follow the enum found in be_lexer.h !!! */
-static const char* const kwords_tab[] = {
+static const char* const token_strings[] = {
     "NONE", "EOS", "ID", "INT", "REAL", "STR",
     "=", "+=","-=", "*=", "/=", "%=", "&=", "|=",
     "^=", "<<=", ">>=", "+", "-", "*", "/", "%",
@@ -57,7 +57,7 @@ static void keyword_registe(bvm *vm)
 {
     int i;
     for (i = KeyIf; i < type_count(); ++i) {
-        bstring *s = be_newstr(vm, kwords_tab[i]);
+        bstring *s = be_newstr(vm, token_strings[i]);
         be_gc_fix(vm, gc_object(s));
         be_str_setextra(s, i);
     }
@@ -67,7 +67,7 @@ static void keyword_unregiste(bvm *vm)
 {
     int i;
     for (i = KeyIf; i < type_count(); ++i) {
-        bstring *s = be_newstr(vm, kwords_tab[i]);
+        bstring *s = be_newstr(vm, token_strings[i]);
         be_gc_unfix(vm, gc_object(s));
     }
 }
@@ -907,13 +907,13 @@ const char* be_token2str(bvm *vm, btoken *token)
     case TokenReal:
         return be_pushfstring(vm, "%g", token->u.r);
     default:
-        return kwords_tab[token->type];
+        return token_strings[token->type];
     }
 }
 
 const char* be_tokentype2str(btokentype type)
 {
-    return kwords_tab[type];
+    return token_strings[type];
 }
 
 #endif
