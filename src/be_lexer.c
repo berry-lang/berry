@@ -686,6 +686,7 @@ static btokentype scan_string(blexer *lexer)
         while ((c = lgetc(lexer)) != EOS && (c != end)) {
             save(lexer);
             if (c == '\\') {
+                if (lgetc(lexer) == EOS) { c = EOS; break; }
                 save(lexer); /* skip '\\.' */
             }
         }
