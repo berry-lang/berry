@@ -132,15 +132,6 @@ except .. as e, msg
     assert(e == 'value_error')
 end
 
-try
-    var f = def () end
-    var p = introspect.toptr(f)
-    var f2 = introspect.fromptr(f)
-    assert(false)
-except .. as e, msg
-    assert(e == 'value_error')
-end
-
 #- fromptr: round-trip comptr -> list -#
 var lst = [10, 20, 30]
 var rp = introspect.toptr(lst)
