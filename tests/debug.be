@@ -1,9 +1,10 @@
+# Test debug module functionality
 import debug
 
 class A end
-debug.attrdump(A)   #- should not crash -#
+debug.attrdump(A)   # Should not crash
 
-# debug.caller()
+# Test debug.caller() function
 def caller_name_chain()
     import debug
     import introspect
@@ -24,6 +25,5 @@ def guess_my_name__()
     return caller_name_chain()
 end
 chain = guess_my_name__()
-print(chain)
 assert(chain[0] == 'caller_name_chain')
 assert(chain[1] == 'guess_my_name__')
