@@ -478,36 +478,7 @@ int be_baselib_isinstance(bvm *vm)
     return _issubv(vm, be_isinstance);
 }
 
-#if !BE_USE_PRECOMPILED_OBJECT
-void be_load_baselib(bvm *vm)
-{
-    be_regfunc(vm, "assert", be_baselib_assert);
-    be_regfunc(vm, "print", be_baselib_print);
-    be_regfunc(vm, "input", be_baselib_input);
-    be_regfunc(vm, "super", be_baselib_super);
-    be_regfunc(vm, "type", be_baselib_type);
-    be_regfunc(vm, "classname", be_baselib_classname);
-    be_regfunc(vm, "classof", be_baselib_classof);
-    be_regfunc(vm, "number", be_baselib_number);
-    be_regfunc(vm, "str", be_baselib_str);
-    be_regfunc(vm, "int", be_baselib_int);
-    be_regfunc(vm, "real", be_baselib_real);
-    be_regfunc(vm, "module", be_baselib_module);
-    be_regfunc(vm, "size", be_baselib_size);
-    be_regfunc(vm, "compile", be_baselib_compile);
-    be_regfunc(vm, "issubclass", be_baselib_issubclass);
-    be_regfunc(vm, "isinstance", be_baselib_isinstance);
-    be_regfunc(vm, "__iterator__", be_baselib_iterator);
-}
 
-/* call must be added later to respect order of builtins */
-void be_load_baselib_next(bvm *vm)
-{
-    be_regfunc(vm, "call", l_call);
-    be_regfunc(vm, "bool", l_bool);
-    be_regfunc(vm, "format", be_str_format);
-}
-#else
 extern const bclass be_class_list;
 extern const bclass be_class_map;
 extern const bclass be_class_range;
@@ -549,4 +520,3 @@ void be_load_baselib(bvm *vm)
 {
     be_const_builtin_set(vm, &m_builtin_map, &m_builtin_vector);
 }
-#endif

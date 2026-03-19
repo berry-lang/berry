@@ -365,7 +365,7 @@ typedef bclass_ptr bclass_array[];
  *
  */
 #define be_native_module_attr_table(name)               \
-    static const bntvmodobj name##_attrs[] =
+    static const struct bntvmodobj name##_attrs[] =
 
 /**
  * @def be_native_module
@@ -387,7 +387,7 @@ typedef bclass_ptr bclass_array[];
  *
  */
 #define be_extern_native_module(name)                   \
-    extern const bntvmodule_t be_native_module(name)
+    extern const struct bntvmodule be_native_module(name)
 
 /**
  * @def be_extern_native_class
@@ -403,22 +403,21 @@ typedef bclass_ptr bclass_array[];
  *
  */
 #ifndef __cplusplus
-#define be_define_native_module(_name, _init)           \
-    const bntvmodule be_native_module(_name) = {        \
+#define be_define_native_module(_name)                  \
+    const struct bntvmodule be_native_module(_name) = { \
         .name = #_name,                                 \
         .attrs = _name##_attrs,                         \
         .size = sizeof(_name##_attrs)                   \
                / sizeof(_name##_attrs[0]),              \
-        .module = NULL,                                 \
-        .init = _init                                   \
+        .module = NULL                                  \
     }
 #else
-#define be_define_native_module(_name, _init)           \
-    const bntvmodule be_native_module(_name) = {        \
+#define be_define_native_module(_name).                 \
+    const struct bntvmodule be_native_module(_name) = { \
         #_name, _name##_attrs,                          \
         sizeof(_name##_attrs)                           \
             / sizeof(_name##_attrs[0]),                 \
-        0, _init                                        \
+        0.                                              \
     }
 #endif
 
@@ -2113,11 +2112,6 @@ BERRY_API void be_stop_iteration(bvm *vm);
  * @fn void be_regfunc(bvm*, const char*, bntvfunc)
  * @note exception API
  * @brief register a native function
- *
- * The specific behavior of this function is related to the value of the BE_USE_PRECOMPILED_OBJECT macro
- * (although the FFI is still available when using the compile-time construction technique,
- * it cannot dynamically register the built-in variables.
- * In this case, please refer to the method of registering the built-in objects.
  *
  * @param vm virtual machine instance
  * @param name name of the native function

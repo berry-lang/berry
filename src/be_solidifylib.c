@@ -24,11 +24,12 @@
 #include <ctype.h>
 #include <inttypes.h>
 
+
+#if BE_USE_SOLIDIFY_MODULE
 extern const bclass be_class_list;
 extern const bclass be_class_map;
 extern const bclass be_class_bytes;
 
-#if BE_USE_SOLIDIFY_MODULE
 #include <inttypes.h>
 
 #define be_builtin_count(vm) \
@@ -868,14 +869,6 @@ static int m_nocompact(bvm *vm)
     be_return_nil(vm);
 }
 
-#if !BE_USE_PRECOMPILED_OBJECT
-be_native_module_attr_table(solidify) {
-    be_native_module_function("dump", m_dump),
-    be_native_module_function("compact", m_compact),
-};
-
-be_define_native_module(solidify, NULL);
-#else
 /* @const_object_info_begin
 module solidify (scope: global, depend: BE_USE_SOLIDIFY_MODULE) {
     dump, func(m_dump)
@@ -884,6 +877,5 @@ module solidify (scope: global, depend: BE_USE_SOLIDIFY_MODULE) {
 }
 @const_object_info_end */
 #include "../generate/be_fixed_solidify.h"
-#endif
 
 #endif /* BE_USE_SOLIFIDY_MODULE */
