@@ -2165,14 +2165,14 @@ BERRY_API void be_vm_delete(bvm *vm);
 BERRY_API void be_set_obs_hook(bvm *vm, bobshook hook);
 
 /**
- * @fn void be_set_ctype_func_hanlder(bvm*, bctypefunc)
+ * @fn void be_set_ctype_func_handler(bvm*, bctypefunc)
  * @note Observability hook
  * @brief (???)
  *
  * @param vm virtual machine instance
  * @param handler
  */
-BERRY_API void be_set_ctype_func_hanlder(bvm *vm, bctypefunc handler);
+BERRY_API void be_set_ctype_func_handler(bvm *vm, bctypefunc handler);
 
 /**
  * @fn bctypefunc be_get_ctype_func_hanlder(bvm*)
