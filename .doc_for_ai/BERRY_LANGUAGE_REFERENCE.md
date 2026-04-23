@@ -312,16 +312,3 @@ try ... except "t1", "t2" as e, msg ... end
 try ... except .. as e, msg ... end        # catch all
 ```
 Many functions return nil on error instead of raising (json.load, map.find, list.find).
-
-## Preprocessor
-Directives must start at beginning of line (`#` mid-line = comment):
-```berry
-#define NAME 1       # truthy
-#define NAME 0       # falsy
-#define NAME         # truthy (defined, no value)
-#undef NAME
-#if NAME ... #elif NAME2 ... #else ... #endif
-#if !UNDEFINED ... #endif    # negation
-```
-Nesting up to 8 levels. `#define` inside skipped blocks is ignored.
-Runtime: `import preproc` → `preproc.define('X','1')` `preproc.undef('X')` `preproc.clear()`
