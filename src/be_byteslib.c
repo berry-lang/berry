@@ -1718,7 +1718,8 @@ class Bytes : bytes
 #-   valuer (int)
 #-------------------------------------------------------------#
   def getbits(offset_bits, len_bits)
-    if len_bits <= 0 || len_bits > 32 raise "value_error", "length in bits must be between 0 and 32" end
+    if len_bits < 0 || len_bits > 32 raise "value_error", "length in bits must be between 0 and 32" end
+    if len_bits == 0 return nil end
     var ret = 0
   
     var offset_bytes = offset_bits >> 3
@@ -1802,39 +1803,43 @@ be_local_closure(getbits,   /* name */
     }),
     &be_const_str_getbits,
     &be_const_str_solidified,
-    ( &(const binstruction[32]) {  /* code */
-      0x180C0500,  //  0000  LE	R3	R2	K0
+    ( &(const binstruction[36]) {  /* code */
+      0x140C0500,  //  0000  LT	R3	R2	K0
       0x740E0002,  //  0001  JMPT	R3	#0005
       0x540E001F,  //  0002  LDINT	R3	32
       0x240C0403,  //  0003  GT	R3	R2	R3
       0x780E0000,  //  0004  JMPF	R3	#0006
       0xB0060302,  //  0005  RAISE	1	K1	K2
-      0x580C0000,  //  0006  LDCONST	R3	K0
-      0x3C100303,  //  0007  SHR	R4	R1	K3
-      0x54160007,  //  0008  LDINT	R5	8
-      0x10040205,  //  0009  MOD	R1	R1	R5
-      0x58140000,  //  000A  LDCONST	R5	K0
-      0x24180500,  //  000B  GT	R6	R2	K0
-      0x781A0011,  //  000C  JMPF	R6	#001F
-      0x541A0007,  //  000D  LDINT	R6	8
-      0x04180C01,  //  000E  SUB	R6	R6	R1
-      0x241C0C02,  //  000F  GT	R7	R6	R2
-      0x781E0000,  //  0010  JMPF	R7	#0012
-      0x5C180400,  //  0011  MOVE	R6	R2
-      0x381E0806,  //  0012  SHL	R7	K4	R6
-      0x041C0F04,  //  0013  SUB	R7	R7	K4
-      0x381C0E01,  //  0014  SHL	R7	R7	R1
-      0x94200004,  //  0015  GETIDX	R8	R0	R4
-      0x2C201007,  //  0016  AND	R8	R8	R7
-      0x3C201001,  //  0017  SHR	R8	R8	R1
-      0x38201005,  //  0018  SHL	R8	R8	R5
-      0x300C0608,  //  0019  OR	R3	R3	R8
-      0x00140A06,  //  001A  ADD	R5	R5	R6
-      0x04080406,  //  001B  SUB	R2	R2	R6
-      0x58040000,  //  001C  LDCONST	R1	K0
-      0x00100904,  //  001D  ADD	R4	R4	K4
-      0x7001FFEB,  //  001E  JMP		#000B
-      0x80040600,  //  001F  RET	1	R3
+      0x1C0C0500,  //  0006  EQ	R3	R2	K0
+      0x780E0001,  //  0007  JMPF	R3	#000A
+      0x4C0C0000,  //  0008  LDNIL	R3
+      0x80040600,  //  0009  RET	1	R3
+      0x580C0000,  //  000A  LDCONST	R3	K0
+      0x3C100303,  //  000B  SHR	R4	R1	K3
+      0x54160007,  //  000C  LDINT	R5	8
+      0x10040205,  //  000D  MOD	R1	R1	R5
+      0x58140000,  //  000E  LDCONST	R5	K0
+      0x24180500,  //  000F  GT	R6	R2	K0
+      0x781A0011,  //  0010  JMPF	R6	#0023
+      0x541A0007,  //  0011  LDINT	R6	8
+      0x04180C01,  //  0012  SUB	R6	R6	R1
+      0x241C0C02,  //  0013  GT	R7	R6	R2
+      0x781E0000,  //  0014  JMPF	R7	#0016
+      0x5C180400,  //  0015  MOVE	R6	R2
+      0x381E0806,  //  0016  SHL	R7	K4	R6
+      0x041C0F04,  //  0017  SUB	R7	R7	K4
+      0x381C0E01,  //  0018  SHL	R7	R7	R1
+      0x94200004,  //  0019  GETIDX	R8	R0	R4
+      0x2C201007,  //  001A  AND	R8	R8	R7
+      0x3C201001,  //  001B  SHR	R8	R8	R1
+      0x38201005,  //  001C  SHL	R8	R8	R5
+      0x300C0608,  //  001D  OR	R3	R3	R8
+      0x00140A06,  //  001E  ADD	R5	R5	R6
+      0x04080406,  //  001F  SUB	R2	R2	R6
+      0x58040000,  //  0020  LDCONST	R1	K0
+      0x00100904,  //  0021  ADD	R4	R4	K4
+      0x7001FFEB,  //  0022  JMP		#000F
+      0x80040600,  //  0023  RET	1	R3
     })
   )
 );

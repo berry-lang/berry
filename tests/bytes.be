@@ -474,6 +474,8 @@ assert(b.getbits(4, 10) == 0x3FF)
 
 
 # length check
+assert(bytes("FF").getbits(0, 0) == nil)
+assert(bytes("FF").setbits(0, 0, 0) == bytes("FF"))
 assert_error(def () bytes("00").getbits(0, 33) end, 'value_error')
 assert_error(def () bytes("00").setbits(0, 33, 0) end, 'value_error')
 assert_error(def () bytes("00").getbits(0, -33) end, 'value_error')
