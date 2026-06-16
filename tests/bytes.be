@@ -381,3 +381,100 @@ assert_error(def () b.addfloat(true) end, 'type_error')
 assert_error(def () b.addfloat(nil) end, 'type_error')
 assert_error(def () b.addfloat('foo') end, 'type_error')
 assert_error(def () b.addfloat() end, 'type_error')
+
+
+#- getbits / setbits -#
+
+#- Single byte - endiannes does't matter -#
+def getbit_and_setbit_roundtrip(byte, offset, length, val)
+    # check for expected value within a predefined byte
+    assert(byte.getbits(offset, length) == val)
+
+    # set the value at a position, roundtrip and should return same value
+    assert(bytes(-2).setbits(offset, length, val).getbits(offset, length) == val)
+end
+
+b = bytes("ABCD") # bytes constructor uses big endian, btw
+assert(b.get(0) == 0xAB)    
+assert(b.get(1) == 0xCD)
+assert(b.get(0,-2) == 0xABCD)
+# little endian
+v=0x3;    o=0;   l= 2;   getbit_and_setbit_roundtrip(b, o, l, v)
+v=0xB;    o=0;   l= 4;   getbit_and_setbit_roundtrip(b, o, l, v)
+v=0xA;    o=4;   l= 4;   getbit_and_setbit_roundtrip(b, o, l, v)
+v=0xAB;   o=0;   l= 8;   getbit_and_setbit_roundtrip(b, o, l, v)
+v=0xDA;   o=4;   l= 8;   getbit_and_setbit_roundtrip(b, o, l, v)
+v=0xDAB;  o=0;   l= 12;  getbit_and_setbit_roundtrip(b, o, l, v)
+v=0xC;    o=12;  l= 4;   getbit_and_setbit_roundtrip(b, o, l, v)
+v=0xCDAB; o=0;   l= 16;  getbit_and_setbit_roundtrip(b, o, l, v)
+
+
+#- LE: read from known pattern -#
+b = bytes("A55A")
+assert(b.getbits(0, 16) == 0x5AA5)
+
+
+#- setbit - input value read/write -#
+b = bytes(-3)
+b.setbits(0, 8, 0xDEADAB)
+assert(b == bytes("AB0000"))
+# endiannes and offset only influences the output
+b = bytes(-3)
+b.setbits(4, 8, 0xBEEFAB)
+assert(b == bytes("B00A00")) # write down bytes vertically if it doesn't make sense ;)
+
+#- setbit - input longer than length - partial byte-#
+b = bytes("0000")
+b.setbits(0, 4, 0xFFFF)
+assert(b == bytes("0F00"))
+assert(b.getbits(0, 4) == 0xF)
+
+
+#- LE: single-bit set -#
+b = bytes("5A")
+b.setbits(0, 1, 1)
+assert(b == bytes("5B"))        #- LSB 0→1 -#
+b = bytes("5A")
+b.setbits(7, 1, 1)
+assert(b == bytes("DA"))        #- MSB 0→1 -#
+b.setbits(7, 1, 0)
+assert(b == bytes("5A"))        #- MSB 1→0 -#
+
+#- LE: partial middle of byte -#
+b = bytes("00")
+b.setbits(2, 3, 5)              #- 5 = 101b at bits 2,3,4 -#
+assert(b == bytes("14"))        #- 0001_0100 -#
+assert(b.getbits(2, 3) == 5)
+
+b = bytes("FF")
+b.setbits(1, 2, 0)
+assert(b == bytes("F9"))        #- clear bits 1,2 → 1111_1001 -#
+assert(b.getbits(1, 2) == 0)
+
+#- LE: full byte -#
+b = bytes("00")
+b.setbits(0, 8, 0x5A)
+assert(b == bytes("5A"))
+b.setbits(0, 8, 0xA5)
+assert(b == bytes("A5"))
+
+#- LE: multi-byte -#
+b = bytes("0000")
+b.setbits(0, 16, 0xA55A)
+assert(b == bytes("5AA5"))      #- LE wire order: LSB first -#
+b = bytes("0000")
+b.setbits(8, 8, 0x5A)
+assert(b == bytes("005A"))
+
+#- LE: cross-byte partial  -#
+b = bytes("0000")
+b.setbits(4, 10, 0xFFF)
+assert(b == bytes("F03F"))      #- byte0 bits 4-7 = 0xF, byte1 bits 0-5 = 0x3F -#
+assert(b.getbits(4, 10) == 0x3FF)
+
+
+# length check
+assert_error(def () bytes("00").getbits(0, 33) end, 'value_error')
+assert_error(def () bytes("00").setbits(0, 33, 0) end, 'value_error')
+assert_error(def () bytes("00").getbits(0, -33) end, 'value_error')
+assert_error(def () bytes("00").setbits(0, -33, 0) end, 'value_error')
