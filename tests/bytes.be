@@ -407,21 +407,41 @@ v=0xDA;   o=4;   l= 8;   getbit_and_setbit_roundtrip(b, o, l, v)
 v=0xDAB;  o=0;   l= 12;  getbit_and_setbit_roundtrip(b, o, l, v)
 v=0xC;    o=12;  l= 4;   getbit_and_setbit_roundtrip(b, o, l, v)
 v=0xCDAB; o=0;   l= 16;  getbit_and_setbit_roundtrip(b, o, l, v)
+# big endian
+v=0xB;    o=4;   l= -4;  getbit_and_setbit_roundtrip(b, o, l, v)
+v=0xA;    o=0;   l= -4;  getbit_and_setbit_roundtrip(b, o, l, v)
+v=0xAB;   o=0;   l= -8;  getbit_and_setbit_roundtrip(b, o, l, v)
+v=0xBC;   o=4;   l= -8;  getbit_and_setbit_roundtrip(b, o, l, v)
+v=0xABC;  o=0;   l= -12; getbit_and_setbit_roundtrip(b, o, l, v)
+v=0xD;    o=12;  l= -4;  getbit_and_setbit_roundtrip(b, o, l, v)
+v=0xABCD; o=0;   l= -16; getbit_and_setbit_roundtrip(b, o, l, v)
 
 
 #- LE: read from known pattern -#
 b = bytes("A55A")
 assert(b.getbits(0, 16) == 0x5AA5)
 
+#- BE: read from known pattern -#
+b = bytes("A55A")
+assert(b.getbits(0, -16) == 0xA55A)
+
 
 #- setbit - input value read/write -#
+# we always truncate input value according to big endian - so in both cases we will see alteration of A and B nibbles in the output
 b = bytes(-3)
 b.setbits(0, 8, 0xDEADAB)
+assert(b == bytes("AB0000"))
+# endiannes doesn't matter for a single contiguous byte:
+b = bytes(-3)
+b.setbits(0, -8, 0xBEEFAB)
 assert(b == bytes("AB0000"))
 # endiannes and offset only influences the output
 b = bytes(-3)
 b.setbits(4, 8, 0xBEEFAB)
 assert(b == bytes("B00A00")) # write down bytes vertically if it doesn't make sense ;)
+b = bytes(-3)
+b.setbits(4, -8, 0xBEEFAB)
+assert(b == bytes("0AB000"))
 
 #- setbit - input longer than length - partial byte-#
 b = bytes("0000")
@@ -440,6 +460,17 @@ assert(b == bytes("DA"))        #- MSB 0→1 -#
 b.setbits(7, 1, 0)
 assert(b == bytes("5A"))        #- MSB 1→0 -#
 
+#- BE: single-bit -#
+b = bytes("5A")
+b.setbits(0, -1, 1)
+assert(b == bytes("DA"))        # MSB-0 bit 0 (phys 7) 0→1
+b = bytes("5A")
+b.setbits(7, -1, 1)
+assert(b == bytes("5B"))        # MSB-0 bit 7 (phys 0) 0→1
+b.setbits(7, -1, 0)
+assert(b == bytes("5A"))
+
+
 #- LE: partial middle of byte -#
 b = bytes("00")
 b.setbits(2, 3, 5)              #- 5 = 101b at bits 2,3,4 -#
@@ -451,12 +482,34 @@ b.setbits(1, 2, 0)
 assert(b == bytes("F9"))        #- clear bits 1,2 → 1111_1001 -#
 assert(b.getbits(1, 2) == 0)
 
+#- BE: partial middle of byte -#
+b = bytes("00")
+b.setbits(1, -3, 5)
+assert(b == bytes("50"))        # 5 = 101b at bits 1,2,3 → phys 6,5,4 = 0101_0000
+assert(b.getbits(1, -3) == 5)
+
+b = bytes("FF")
+b.setbits(1, -2, 0)
+assert(b == bytes("9F"))        # clear bits 1,2 (phys 6,5) → 1001_1111
+assert(b.getbits(1, -2) == 0)
+
+
 #- LE: full byte -#
 b = bytes("00")
 b.setbits(0, 8, 0x5A)
 assert(b == bytes("5A"))
 b.setbits(0, 8, 0xA5)
 assert(b == bytes("A5"))
+
+#- BE: full byte -#
+b = bytes("00")
+b.setbits(0, -8, 0x5A)
+# print(b.getbits(0, 8))
+# print(b)
+assert(b == bytes("5A"))
+b.setbits(0, -8, 0xA5)
+assert(b == bytes("A5"))
+
 
 #- LE: multi-byte -#
 b = bytes("0000")
@@ -466,11 +519,37 @@ b = bytes("0000")
 b.setbits(8, 8, 0x5A)
 assert(b == bytes("005A"))
 
+#- BE multi-byte = MSB-first byte order (opposite of LE) -#
+b = bytes("0000")
+b.setbits(0, -16, 0xA55A)
+assert(b == bytes("A55A"))      # BE wire order: MSB first 
+b = bytes("0000")
+b.setbits(8, -8, 0x5A)
+assert(b == bytes("005A"))
+
+
 #- LE: cross-byte partial  -#
 b = bytes("0000")
 b.setbits(4, 10, 0xFFF)
 assert(b == bytes("F03F"))      #- byte0 bits 4-7 = 0xF, byte1 bits 0-5 = 0x3F -#
 assert(b.getbits(4, 10) == 0x3FF)
+
+
+#- BE: cross-byte partial -#
+b = bytes("0000")
+b.setbits(4, -10, 0xFFF)
+assert(b == bytes("0FFC"))      # byte0 bits 4-7 = 0x0F, byte1 bits 0-5 = 0xFC
+assert(b.getbits(4, -10) == 0x3FF)
+
+#- mixing LE/BE -#
+b = bytes(-3)
+b.setbits(0, -12, 0xABC)
+b.setbits(12, 12, 0xDEF) # F corrupts C nibble, one nibble empty
+assert(b == bytes("ABF0DE")) 
+b = bytes(-4) # let's try again
+b.setbits(0, -12, 0xABC)
+b.setbits(16, 12, 0xDEF) # we need to start in byte 2
+assert(b == bytes("ABC0EF0D"))
 
 
 # length check
