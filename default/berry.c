@@ -19,7 +19,9 @@
 #endif
 
 /* detect operating system name */
-#if defined(__linux)
+#if defined(__NuttX__)
+    #define OS_NAME   "NuttX"
+#elif defined(__linux)
     #define OS_NAME   "Linux"
 #elif defined(__unix)
     #define OS_NAME   "Unix"
@@ -98,7 +100,7 @@
 struct arg_opts {
     int idx;
     const char *pattern;
-    const char *optarg;
+    const char *optvalue;
     const char *errarg;
     const char *src;
     const char *dst;
@@ -144,10 +146,10 @@ static int arg_getopt(struct arg_opts *opt, int argc, char *argv[])
             /* the '?' indicates an optional argument after the option */
             if (++opt->idx < argc && res != NULL
                 && res[1] == '?' && *argv[opt->idx] != '-') {
-                opt->optarg = argv[opt->idx++]; /* save the argument */
+                opt->optvalue = argv[opt->idx++]; /* save the argument */
                 return *res;
             }
-            opt->optarg = NULL;
+            opt->optvalue = NULL;
             opt->errarg = arg;
             return res != NULL ? *res : '?';
         }
@@ -273,20 +275,20 @@ static int parse_arg(struct arg_opts *opt, int argc, char *argv[])
         case 's': args |= arg_s; break;
         case 'e':
             args |= arg_e;
-            opt->execute = opt->optarg;
+            opt->execute = opt->optvalue;
             break;
         case 'm':
             args |= arg_m;
-            opt->modulepath = opt->optarg;
+            opt->modulepath = opt->optvalue;
             break;
         case '?': return args | arg_err;
         case 'c':
             args |= arg_c;
-            opt->src = opt->optarg;
+            opt->src = opt->optvalue;
             break;
         case 'o':
             args |= arg_o;
-            opt->dst = opt->optarg;
+            opt->dst = opt->optvalue;
             break;
         default:
             break;
