@@ -1125,7 +1125,7 @@ static int m_setbytes(bvm *vm)
         if (argc >= 5 && be_isint(vm, 5)) {
             from_len = be_toint(vm, 5);
             if (from_len < 0) { from_len = 0; }
-            if (from_len >= (int32_t)from_len_total) { from_len = from_len_total; }
+            if (from_len > (int32_t)(from_len_total - from_byte)) { from_len = from_len_total - from_byte; }
         }
         if (idx + from_len >= attr.len) { from_len = attr.len - idx; }
 
