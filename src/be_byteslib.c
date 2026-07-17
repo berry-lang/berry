@@ -918,14 +918,14 @@ static int m_get(bvm *vm, bbool sign)
                         if (sign) { ret = (int16_t)(uint16_t) ret; }
                         break;
             case 3:     ret = buf_get3_le(&attr, idx);
-                        if (sign & (ret & 0x800000)) { ret = ret | 0xFF000000; }
+                        if (sign && (ret & 0x800000)) { ret = ret | 0xFF000000; }
                         break;
             case 4:     ret = buf_get4_le(&attr, idx);    break;
             case -2:    ret = buf_get2_be(&attr, idx);
                         if (sign) { ret = (int16_t)(uint16_t) ret; }
                         break;
             case -3:    ret = buf_get3_be(&attr, idx);
-                        if (sign & (ret & 0x800000)) { ret = ret | 0xFF000000; }
+                        if (sign && (ret & 0x800000)) { ret = ret | 0xFF000000; }
                         break;
             case -4:    ret = buf_get4_be(&attr, idx);    break;
             default:    be_raise(vm, "type_error", "size must be -4, -3, -2, -1, 0, 1, 2, 3 or 4.");
