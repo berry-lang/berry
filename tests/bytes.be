@@ -331,6 +331,18 @@ a = bytes("01020304")
 assert(a.get(1, 3) == 0x040302)
 assert(a.get(1, -3) == 0x020304)
 
+# signed 3-bytes get() must sign-extend when the top bit (bit 23) is set
+a = bytes("FFFFFF")
+assert(a.geti(0, 3) == -1)
+assert(a.geti(0, -3) == -1)
+a = bytes("000080")
+assert(a.geti(0, 3) == -8388608)   #- 0x800000 sign-extended -#
+a = bytes("800000")
+assert(a.geti(0, -3) == -8388608)
+# and it must not sign-extend when the top bit is clear
+a = bytes("FFFF7F")
+assert(a.geti(0, 3) == 0x7FFFFF)
+
 # append base64
 b = bytes("AABBCC")
 c = bytes("001122")
