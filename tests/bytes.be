@@ -294,6 +294,19 @@ a = b.copy()
 a.setbytes(0, a0)
 assert(a == bytes('112233445566'))
 
+# explicit len larger than the bytes remaining after `from`: must clamp to
+# what is actually available in the source buffer, not read past its end
+# (regression test: from_len used to be clamped against the source's total
+# length instead of against `from_len_total - from_byte`)
+var src_fixed = bytes(-6)              # fixed-size, exact allocation, no headroom
+src_fixed.setbytes(0, bytes('aabbccddeeff'))
+a = a0.copy()
+a.setbytes(0, src_fixed, 4, 100)        # only 2 bytes (eeff) remain from offset 4
+assert(a == bytes('EEFF33445566778899'))
+a = a0.copy()
+a.setbytes(0, src_fixed, 6, 100)        # from_byte at exact end: 0 bytes remain
+assert(a == a0)
+
 # reverse
 assert(bytes().reverse() == bytes())
 assert(bytes("AA").reverse() == bytes("AA"))
