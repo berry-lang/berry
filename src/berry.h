@@ -725,6 +725,16 @@ typedef int (*bctypefunc)(bvm*, const void*); /**< bctypefunc */
 #define be_loadfile(vm, name)   be_loadmode((vm), (name), 0)
 
 /**
+ * @def be_loadfile
+ * @note FFI function
+ * @brief be_loadfile
+ *
+ * @param vm virtual machine instance virtual machine instance
+ * @param name (???)
+ */
+#define be_loadfile_local(vm, name, islocal)   be_loadmode((vm), (name), islocal)
+
+/**
  * @def be_loadmodule
  * @note FFI function
  * @brief be_loadmodule
@@ -741,11 +751,23 @@ typedef int (*bctypefunc)(bvm*, const void*); /**< bctypefunc */
  * @brief be_loadstring
  *
  * @param vm virtual machine instance virtual machine instance
- * @param str (???)
+ * @param str Berry code to be compiled in global context
  *
  */
 #define be_loadstring(vm, str) \
     be_loadbuffer((vm), "string", (str), strlen(str))
+
+/**
+ * @def be_loadstring_local
+ * @note FFI function
+ * @brief be_loadstring
+ *
+ * @param vm virtual machine instance virtual machine instance
+ * @param str Berry code to be compiled in local or global context
+ *
+ */
+#define be_loadstring_local(vm, str, islocal) \
+    be_loadbuffer_local((vm), "string", (str), strlen(str), islocal)
 
 /**
  * @def be_dostring
@@ -2201,6 +2223,24 @@ BERRY_API bctypefunc be_get_ctype_func_hanlder(bvm *vm);
  * @return (???)
  */
 BERRY_API int be_loadbuffer(bvm *vm, const char *name, const char *buffer, size_t length);
+
+/**
+ * @fn int be_loadbuffer_local(bvm*, const char*, const char*, size_t)
+ * @note code load API
+ * @brief load a piece of source code from the buffer and compile it into bytecode, in local or global context
+ *
+ * f the compilation is successful, be_loadbuffer will compile the source code into a Berry function and place
+ * it on the top of the virtual stack. If the compilation encounters an error, be_loadbuffer will return
+ * an error value of type berrorcode (Section errorcode), and if possible, will store the
+ * specific error message string at the top of the virtual stack.
+ *
+ * @param vm virtual machine instance
+ * @param name string, which is usually used to mark the source of the source code
+ * @param buffer buffer for storing the source code
+ * @param length length of the buffer
+ * @return (???)
+ */
+BERRY_API int be_loadbuffer_local(bvm *vm, const char *name, const char *buffer, size_t length, bbool islocal);
 
 /**
  * @fn int be_loadmode(bvm *vm, const char *name, bbool islocal)
