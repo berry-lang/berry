@@ -1404,7 +1404,7 @@ BERRY_API void be_set_obs_hook(bvm *vm, bobshook hook)
     vm->obshook = hook;
 }
 
-BERRY_API void be_set_ctype_func_hanlder(bvm *vm, bctypefunc handler)
+BERRY_API void be_set_ctype_func_handler(bvm *vm, bctypefunc handler)
 {
     vm->ctypefunc = handler;
 }
