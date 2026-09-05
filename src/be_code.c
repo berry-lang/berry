@@ -550,7 +550,7 @@ static void binaryexp(bfuncinfo *finfo, bopcode op, bexpdesc *e1, bexpdesc *e2, 
     e1->v.idx = dst; /* update register as output */
 }
 
-void be_code_prebinop(bfuncinfo *finfo, int op, bexpdesc *e)
+void be_code_prebinop(bfuncinfo *finfo, int op, bexpdesc *e, int dst)
 {
     switch (op) {
     case OptAnd:
@@ -560,7 +560,7 @@ void be_code_prebinop(bfuncinfo *finfo, int op, bexpdesc *e)
         be_code_jumpbool(finfo, e, btrue);
         break;
     default:
-        exp2anyreg(finfo, e);
+        exp2reg(finfo, e, dst);
         break;
     }
 }
