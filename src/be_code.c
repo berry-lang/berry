@@ -495,6 +495,11 @@ static int exp2reg(bfuncinfo *finfo, bexpdesc *e, int dst)
         pct = code_bool(finfo, reg, 1, 0);
         patchlistaux(finfo, e->f, finfo->pc, pcf);
         patchlistaux(finfo, e->t, finfo->pc, pct);
+        /* the LDBOOL pair wrote the value to `reg`; record that in `e`, so that
+         * callers which re-read the descriptor instead of using the return
+         * value do not pick up the register of the last operand */
+        e->type = ETREG;
+        e->v.idx = reg;
         e->t = NO_JUMP;
         e->f = NO_JUMP;
         e->not = 0;
