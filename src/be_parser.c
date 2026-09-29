@@ -1152,7 +1152,15 @@ static void walrus_expr(bparser *parser, bexpdesc *e)
         expr(parser, e);
         check_var(parser, e);
         if (check_newvar(parser, &e1)) { /* new variable */
-            new_var(parser, e1.v.s, &e1);
+            bstring *name = e1.v.s;
+            new_var(parser, name, &e1);
+            /* a new local takes the register right above the other locals; if the
+             * enclosing expression still holds a temporary there, it would be overwritten */
+            if (e1.type == ETLOCAL && e1.v.idx < base) {
+                parser->lexer.linenumber = line;
+                push_error(parser, "cannot create local '%s' with ':=' inside an expression, "
+                    "declare it with 'var' first", str(name));
+            }
         }
         if (be_code_setvar(parser->finfo, &e1, e, btrue /* do not release register */ )) {
             parser->lexer.linenumber = line;

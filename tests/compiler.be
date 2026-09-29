@@ -177,3 +177,40 @@ assert(wl_i(2) == '13')         # was '3', the index
 import global
 def wl_j() var p = 0 return wl_f(p := global.wl_l, 4) end
 assert(wl_j() == [wl_l, 4])     # was [<module: global>, wl_l]
+
+# Walrus creating a new local while the enclosing expression still holds a
+# temporary register. A new local always takes the register right above the
+# other locals, which was the temporary, so its value was lost:
+#
+# ```berry
+# def t(a)
+#   var r = a * 2 + (n := a + 1)    # computed n + n
+#   return [r, n]                   # [22, 11] instead of [31, 11]
+# end
+# ```
+#
+# This is now a compile error. Declaring the name first still works, and so
+# does a walrus with nothing pending before it.
+import string
+def wl_error(code)
+  try
+    compile(code)
+  except 'syntax_error' as e, m
+    return string.find(m, "cannot create local 'n' with ':='") >= 0
+  end
+  return false
+end
+# was [22, 11]
+assert(wl_error("def t(a) var r = a * 2 + (n := a + 1) return [r, n] end"))
+# was type_error: 'int' value is not callable
+assert(wl_error("def t(a) return wl_f(a, n := a + 1) end"))
+# was 11, the list was overwritten
+assert(wl_error("do var a = 10 var r = [a, (n := a + 1)] print(r) end"))
+def wl_k(a) var n = 0 var r = a * 2 + (n := a + 1) return [r, n] end
+assert(wl_k(10) == [31, 11])
+def wl_m(a) var r = (n := a + 1) + a * 2 return [r, n] end
+assert(wl_m(10) == [31, 11])
+def wl_n(a) if (n := a + 1) > 5 return n end return 0 end
+assert(wl_n(10) == 11)
+wl_r = 2 * 3 + (wl_s := 4)      # a global, not a local
+assert(wl_r == 10 && wl_s == 4)
