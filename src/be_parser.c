@@ -1142,10 +1142,13 @@ static void walrus_expr(bparser *parser, bexpdesc *e)
     sub_expr(parser, e, ASSIGN_OP_PRIO);    /* left expression */
     btokentype op = next_type(parser);
     if (op == OptWalrus) {
+        bfuncinfo *finfo = parser->finfo;
+        int base;
         check_symbol(parser, e);
         bexpdesc e1 = *e;           /* copy var to e1, e will get the result of expression */
         parser->finfo->binfo->sideeffect = 1;   /* has side effect */
         scan_next_token(parser);    /* skip ':=' */
+        base = finfo->freereg;      /* registers below are still in use by the enclosing expression */
         expr(parser, e);
         check_var(parser, e);
         if (check_newvar(parser, &e1)) { /* new variable */
@@ -1155,6 +1158,15 @@ static void walrus_expr(bparser *parser, bexpdesc *e)
             parser->lexer.linenumber = line;
             parser_error(parser,
                 "try to assign constant expressions.");
+        }
+        if (e1.type == ETLOCAL && e->type == ETLOCAL) {
+            /* the value is now held by the local variable: release the temporary
+             * registers used by the right side, e.g. the object of `l[i]` */
+            int nlocal = be_list_count(finfo->local);
+            int top = base > nlocal ? base : nlocal;
+            if (finfo->freereg > top) {
+                finfo->freereg = (bbyte)top;
+            }
         }
     }
 }

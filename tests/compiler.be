@@ -154,3 +154,26 @@ assert(nk_h() == [10, 'x', 2])
 nk_n = nil
 compile("nk_n = [0, 0, 0, 0, 0]  nk_n[nk_n[4]] = 1  nk_n[1] = nk_n[0] + 1")()
 assert(nk_n == [1, 2, 0, 0, 0])
+
+# Walrus into a local, with an index or member expression on the right, as a
+# call argument. The right side is compiled straight into the register of the
+# local, but the registers of its object and index were not released, so the
+# value was passed one slot too high:
+#
+# ```berry
+# def g()
+#   var p = 0
+#   return f(p := l[3], 4)    # passed l and p instead of p and 4
+# end
+# ```
+def wl_f(a, b) return [a, b] end
+wl_l = [10, 11, 12, 13, 14]
+def wl_g() var p = 0 return wl_f(p := wl_l[3], 4) end
+assert(wl_g() == [13, 4])       # was [wl_l, 13]
+def wl_h() var p = 0 return wl_f(4, p := wl_l[3]) end
+assert(wl_h() == [4, 13])       # was [4, wl_l]
+def wl_i(k) var p = 0 return str(p := wl_l[k + 1]) end
+assert(wl_i(2) == '13')         # was '3', the index
+import global
+def wl_j() var p = 0 return wl_f(p := global.wl_l, 4) end
+assert(wl_j() == [wl_l, 4])     # was [<module: global>, wl_l]
